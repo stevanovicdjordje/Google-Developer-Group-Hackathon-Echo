@@ -31,6 +31,30 @@
 
   <title>eho</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Hide the Firebase emulator banners ("Running in emulator mode. Do not use
+    with production credentials."). firebase_auth_web 6.3.0 (JS SDK 12.x) has no
+    disableWarnings option via useAuthEmulator, and the SDK injects
+    <p class="firebase-emulator-warning"> (Auth) or #__firebase__banner
+    (cloud workstations). Dev/demo only: emulators are never used in production.
+  -->
+  <style>
+    .firebase-emulator-warning, #__firebase__banner { display: none !important; }
+  </style>
+  <script>
+    (function () {
+      var sel = '.firebase-emulator-warning, #__firebase__banner';
+      function hit(n) {
+        return n.nodeType === 1 && n.matches(sel);
+      }
+      new MutationObserver(function (muts) {
+        muts.forEach(function (m) {
+          m.addedNodes.forEach(function (n) { if (hit(n)) n.remove(); });
+        });
+      }).observe(document.documentElement, { childList: true, subtree: true });
+    })();
+  </script>
 </head>
 <body>
   <!--
