@@ -8,6 +8,7 @@ import (
 
 	"github.com/Ilij4n/eho/backend/maps/internal/auth"
 	"github.com/Ilij4n/eho/backend/maps/internal/planimage"
+	"github.com/Ilij4n/eho/backend/maps/internal/routing"
 	"github.com/Ilij4n/eho/backend/maps/internal/store"
 )
 
@@ -25,11 +26,15 @@ type server struct {
 	store  store.Store
 	verify auth.Verifier
 	images planimage.Inspector
+	routes *routing.Cache
 }
 
 // NewHandler returns the root HTTP handler with all routes and middleware.
 func NewHandler(opts Options) http.Handler {
-	s := &server{log: opts.Logger, store: opts.Store, verify: opts.Verifier, images: opts.Images}
+	s := &server{
+		log: opts.Logger, store: opts.Store, verify: opts.Verifier, images: opts.Images,
+		routes: routing.NewCache(64),
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", handleHealthz)
 
@@ -53,6 +58,8 @@ func NewHandler(opts Options) http.Handler {
 		mux.Handle("POST /v1/events/{eventId}/features", s.authed(s.createFeature))
 		mux.Handle("PATCH /v1/events/{eventId}/features/{featureId}", s.authed(s.updateFeature))
 		mux.Handle("DELETE /v1/events/{eventId}/features/{featureId}", s.authed(s.deleteFeature))
+		// Attendees: routing on the published map.
+		mux.Handle("POST /v1/events/{eventId}/route", s.authed(s.getRoute))
 	}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
