@@ -10,7 +10,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-17 | Demo event rename (`product-demo-event`): "DevSummit Belgrade 2026" → "DevFest Belgrade 2026" (short "DevFest") in `demo_data.dart` + tests; default `DEMO_EVENT_ID` `devsummit` → `devfest` with `devsummit` still working. Also: drop `.toLowerCase()` on `lookingFor` in `data/repositories.dart` (~l.276/308: "on-device ml"), and serve onboarding `interestOptions` through a repository instead of importing `demo_data` in join_screens. | S | dev | `data/demo_data.dart`, `data/repositories.dart`, `core/config.dart`, `features/join/`, tests, docs | After M-20 + M-21 (both edit demo_data/tests). Seed/replay names: mobile#10, mobile#11. |
 | M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
 
 ## Blocked
@@ -24,12 +23,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-21 | opus | 2026-10-11 01:46 | worktree | Echo contract 0.3.0 (mobile#9): structured summary + trade-offs table with timestamp links, "N similar questions merged", merged submit; Catch up/Ask in Serbian when translate is on |
+| M-17 | dev | 2026-10-11 01:57 | worktree | DevFest rename + lookingFor casing + interestOptions via repository |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-21 | Echo 0.3.0 (mobile#9): structured summary + trade-off time links into the transcript, "N similar questions merged", merged submit, `language=sr` for catch-up/ask/summary when translating; demo repo mirrors it | `91e9ec3` |
 | M-20 | Design polish: missing copy in ARB (21 keys), `Session.isLive`, My events live card + Next row, Top match, results caption, contact notes, Messages pill + "Show on map" → `?spot=1` highlight | `899429a` |
 | V-2 | Redesign screenshot review: all screens match/minor gaps; hex literals 0; follow-ups → M-20 additions, mobile#10 (map chrome, `/o`) | verification |
 | M-10d | Design: Echo + v2 (translated banner/pill, Q&A sheet with sort + votes, paywall sheet, summary page via Navigator.push) | `0a1a027` |
