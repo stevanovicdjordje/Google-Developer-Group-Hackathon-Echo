@@ -10,13 +10,14 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
+| M-16 | QR flow: a new attendee opening `/e/{id}?at={marker}` keeps `?at=` through join + onboarding and lands on the Map tab with the "you are here" dot | S | dev | `features/join/join_screens.dart`, maybe `core/router.dart` | Start **after M-11** (it edits every screen). Found in M-12: `?at=` only applies after joining. |
+| M-17 | Demo-event name: join screen/agenda say "DevSummit Belgrade 2026" while the map event is "Eho Demo Expo" | S | — | — | Cosmetic. Decide with the design pass / demo script; maybe ask feature:maps to seed the same name. |
 
 ## Blocked
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
 | M-10 | Design pass: apply the Claude Design result to `core/theme.dart` + screens | Human runs `/design-login` and makes the design himself. **Don't ask him again.** Then this becomes an opus task. |
-| M-12 | Map tab against the live `backend/maps` (seeded event), incl. route + GPS dot + meeting-spot highlight | Go + Firebase CLI being installed by the human (Java 21 present). Then `cd backend/maps && make dev`, `make seed`, `--dart-define=DEMO_EVENT_ID=<seeded id>`. |
 | M-13 | Wire real endpoints API-1…API-15 as they land | Backend has no owner yet (`mobile#5`) |
 | M-14 | Android build on an emulator/device (`EMULATOR_HOST=10.0.2.2`) + Android App Links for `/e/{id}` | Hosting domain for assetlinks.json; Android SDK on the machine |
 
@@ -30,6 +31,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-12 | Live map verified on this machine (seed `v7y6hpytx3iyhhvd`): Map tab renders the plan, `/map?at=` shows "Vi ste ovde", route API 52 m/43 s, all demo meeting-spot names match seeded features, `/o` login renders. Not tapped through in-app: route button, meeting-spot pin | verification only |
 | M-15 | maps#2: location permissions (Android fine/coarse, iOS when-in-use) | `3cee092` |
 | M-9 | Meeting spot "Show" highlights the place with a "Meeting: <name>" pin (`highlightFeatureId`/`highlightLabel`); not yet seen against a live map | `8c675fa` |
 | M-8 | Event switch: tab roots keyed by eventId so Find/Agenda state from event A never shows on event B (bug found + fixed, `event_switch_test.dart`) | `c2dd1f3` |

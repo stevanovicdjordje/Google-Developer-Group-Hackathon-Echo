@@ -15,7 +15,6 @@ Nothing. No worker branches open.
 ## Waiting on the human (ask only if a ready task depends on it)
 
 - Design (M-10): the human runs `/design-login` and makes the design himself. **Don't ask him about it again.** He wants it to build on the existing navigation skeleton.
-- Go + Firebase CLI: the human is installing them (2026-10-11 ~01:50). When `which go firebase` succeeds, run M-12.
 - 🧭 Who owns the backend (stevanovicdjordje or the 4th teammate)? Not mobile's call, but blocks M-13.
 
 ## Waiting on teammates
@@ -32,6 +31,7 @@ Nothing. No worker branches open.
 
 ## Gotchas
 
+- Live map locally: `cd backend/maps && ./scripts/dev.sh` (emulators + API :8080), then `make seed` with `FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 STORAGE_EMULATOR_HOST=http://127.0.0.1:9199 FIREBASE_PROJECT_ID=demo-eho`; it prints the eventId (2026-10-11: `v7y6hpytx3iyhhvd`, kept in the git-ignored `.emulator-data`). App: `DEMO_EVENT_ID=<id> mobile/scripts/shots.sh …` (config defaults already point at localhost:8080 + emulators). Quote `?at=` args in zsh.
 - `git pull --rebase` after `git merge` of worker branches linearizes the merges (new hashes) if origin moved. Pull **before** merging a batch; record hashes after pushing. Old worker branches then need `git branch -D` (check with `git cherry main <branch>` first).
 - shots.sh loads each route fresh, so it can't show sheets/menus or a draft set in a provider. Interactive states are covered by widget tests only.
 - Worktrees branch from local `main`: commit before dispatching.
