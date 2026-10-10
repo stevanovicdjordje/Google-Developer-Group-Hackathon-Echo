@@ -17,17 +17,31 @@
     "Messages.dc.html": {"x": 0, "y": 2788, "w": 390, "h": 844, "title": "Messages + meeting spot"},
     "OrgUpload.dc.html": {"x": 470, "y": 2788, "w": 390, "h": 844, "title": "Organizer · upload"},
     "OrgReview.dc.html": {"x": 940, "y": 2788, "w": 390, "h": 844, "title": "Organizer · review"},
-    "OrgPublished.dc.html": {"x": 1410, "y": 2788, "w": 390, "h": 844, "title": "Organizer · published"}
+    "OrgPublished.dc.html": {"x": 1410, "y": 2788, "w": 390, "h": 844, "title": "Organizer · published"},
+    "Session.dc.html": {"x": 0, "y": 4032, "w": 390, "h": 844, "title": "Session details"},
+    "EchoTranslated.dc.html": {"x": 470, "y": 4032, "w": 390, "h": 844, "title": "Echo · translated (SR)"},
+    "EchoQA.dc.html": {"x": 940, "y": 4032, "w": 390, "h": 844, "title": "Echo · Q&A sheet"},
+    "EchoEnded.dc.html": {"x": 1410, "y": 4032, "w": 390, "h": 844, "title": "Echo · ended + paywall"},
+    "EchoSummary.dc.html": {"x": 1880, "y": 4032, "w": 390, "h": 844, "title": "Echo · talk summary"},
+    "OnboardingName.dc.html": {"x": 0, "y": 5276, "w": 390, "h": 844, "title": "Onboarding · 1 who are you"},
+    "OnboardingInterests.dc.html": {"x": 470, "y": 5276, "w": 390, "h": 844, "title": "Onboarding · 2 interests"},
+    "FindResults.dc.html": {"x": 940, "y": 5276, "w": 390, "h": 844, "title": "Find · search results"},
+    "Person.dc.html": {"x": 1410, "y": 5276, "w": 390, "h": 844, "title": "Person + contact (tap the button)", "is_interactive": true},
+    "MapDetail.dc.html": {"x": 1880, "y": 5276, "w": 390, "h": 844, "title": "Map · stage details + route"}
   },
   "order": [
     "Main.dc.html", "Join.dc.html", "Onboarding.dc.html", "Events.dc.html",
     "Agenda.dc.html", "Echo.dc.html", "Map.dc.html", "Find.dc.html", "Profile.dc.html",
-    "Messages.dc.html", "OrgUpload.dc.html", "OrgReview.dc.html", "OrgPublished.dc.html"
+    "Messages.dc.html", "OrgUpload.dc.html", "OrgReview.dc.html", "OrgPublished.dc.html",
+    "Session.dc.html", "EchoTranslated.dc.html", "EchoQA.dc.html", "EchoEnded.dc.html", "EchoSummary.dc.html",
+    "OnboardingName.dc.html", "OnboardingInterests.dc.html", "FindResults.dc.html", "Person.dc.html", "MapDetail.dc.html"
   ],
   "notes": {
     "row1": {"x": 0, "y": 0, "text": "Getting in", "kind": "title1", "maxW": 1800},
     "row2": {"x": 0, "y": 1244, "text": "Inside an event", "kind": "title1", "maxW": 2270},
-    "row3": {"x": 0, "y": 2488, "text": "People & organizers", "kind": "title1", "maxW": 1800}
+    "row3": {"x": 0, "y": 2488, "text": "People & organizers", "kind": "title1", "maxW": 1800},
+    "row4": {"x": 0, "y": 3732, "text": "Talks & Echo", "kind": "title1", "maxW": 2270},
+    "row5": {"x": 0, "y": 4976, "text": "People, onboarding & map details", "kind": "title1", "maxW": 2270}
   },
   "designSystems": []
 }

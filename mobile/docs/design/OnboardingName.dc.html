@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Eho · Onboarding step 1</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2F4BFF}a:hover{color:#1A33D6}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F9; color: #0D1321; font-family: 'Instrument Sans', sans-serif; display: flex; flex-direction: column; padding: 20px 24px 28px; gap: 24px">
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="Join.dc.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; color: #0D1321; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></a>
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+<div style="height: 6px; border-radius: 3px; background: #2F4BFF"></div>
+<div style="height: 6px; border-radius: 3px; background: #DDE2EB"></div>
+<div style="height: 6px; border-radius: 3px; background: #DDE2EB"></div>
+</div>
+<div style="font-size: 14px; color: #4A5468">1 of 3</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.05; letter-spacing: -0.5px">Who are you?</h1>
+<p style="margin: 0; font-size: 16px; line-height: 1.45; color: #4A5468">This is how other attendees see you in Find. Only if you choose to be visible.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="name" style="font-size: 14px; font-weight: 600">Name</label>
+<input id="name" value="Ilija" style="height: 56px; box-sizing: border-box; border: 2px solid #2F4BFF; border-radius: 16px; background: #FFFFFF; padding: 0 16px; font: 400 17px 'Instrument Sans', sans-serif; color: #0D1321; outline: none">
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="role" style="font-size: 14px; font-weight: 600">What you do</label>
+<input id="role" placeholder="e.g. Android dev at Fintio" style="height: 56px; box-sizing: border-box; border: 1.5px solid #C9D0DC; border-radius: 16px; background: #FFFFFF; padding: 0 16px; font: 400 17px 'Instrument Sans', sans-serif; color: #0D1321; outline: none">
+</div>
+<div style="flex-grow: 1"></div>
+<a href="OnboardingInterests.dc.html" style="text-decoration: none; height: 56px; border-radius: 16px; background: #2F4BFF; color: #FFFFFF; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center">Continue</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
