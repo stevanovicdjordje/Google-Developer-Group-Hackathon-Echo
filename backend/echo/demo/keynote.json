@@ -1,0 +1,79 @@
+{
+  "sessionId": "s1",
+  "title": "On-device AI: when the model lives in your pocket",
+  "language": "en",
+  "lines": [
+    {
+      "atSeconds": 0,
+      "text": "Good morning everyone, thanks for coming so early."
+    },
+    {
+      "atSeconds": 4,
+      "text": "Today I want to talk about what happens when the model lives on your phone."
+    },
+    {
+      "atSeconds": 9,
+      "text": "Three years ago every AI feature meant a round trip to a data center."
+    },
+    {
+      "atSeconds": 14,
+      "text": "That round trip costs money on every request, and it costs latency."
+    },
+    {
+      "atSeconds": 19,
+      "text": "Small models running locally flip that cost model completely."
+    },
+    {
+      "atSeconds": 24,
+      "text": "Your marginal cost per user drops close to zero."
+    },
+    {
+      "atSeconds": 29,
+      "text": "The second big change is privacy: the data never leaves the device."
+    },
+    {
+      "atSeconds": 34,
+      "text": "For health or finance apps, that alone can unblock a product."
+    },
+    {
+      "atSeconds": 39,
+      "text": "But there are trade-offs. Battery is the first one people forget."
+    },
+    {
+      "atSeconds": 44,
+      "text": "We measured a twelve percent battery hit for continuous transcription."
+    },
+    {
+      "atSeconds": 50,
+      "text": "The fix was batching: process audio in chunks, not every frame."
+    },
+    {
+      "atSeconds": 55,
+      "text": "The second trade-off is model size. You cannot ship forty gigabytes."
+    },
+    {
+      "atSeconds": 60,
+      "text": "Quantization gets you to around one or two gigabytes with small quality loss."
+    },
+    {
+      "atSeconds": 66,
+      "text": "And the third: you need a fallback to the cloud for the hard questions."
+    },
+    {
+      "atSeconds": 71,
+      "text": "We call that a hybrid router. Easy questions local, hard ones remote."
+    },
+    {
+      "atSeconds": 77,
+      "text": "In our app the router keeps eighty percent of requests on the device."
+    },
+    {
+      "atSeconds": 83,
+      "text": "So my advice: start hybrid, measure, and move work down to the device over time."
+    },
+    {
+      "atSeconds": 90,
+      "text": "Thank you. I think we have a few minutes for questions."
+    }
+  ]
+}
