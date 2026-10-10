@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Eho venue map API
-  version: 0.1.0
+  version: 0.2.0
   summary: Venue map feature (floors, rooms, stands, POIs, walkway graph, publish).
   description: |
     Contract between the Flutter app (`mobile/maps/`) and the
@@ -22,6 +22,7 @@ tags:
   - name: events
   - name: floors
   - name: features
+  - name: routing
 paths:
   /healthz:
     get:
@@ -365,6 +366,42 @@ paths:
         "401": { $ref: "#/components/responses/Unauthenticated" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /v1/events/{eventId}/route:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    post:
+      operationId: getRoute
+      tags: [routing]
+      summary: Fastest walking route on the published map (any signed-in user).
+      description: |
+        Each end is a feature (its entrance node; without one, its center is
+        snapped onto the nearest walkway) or a point on a floor (snapped onto
+        the nearest walkway). Cost is walking time: 1.2 m/s, lift 30 s + 5 s
+        per floor, stairs 15 s per floor. Floors without georeferencing use
+        0.05 m per pixel and the answer says the distance is estimated.
+        Positions in the request are used only to compute the route: never
+        stored or logged.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RouteRequest" }
+            example: { $ref: "examples/route.request.json" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Route" }
+              example: { $ref: "examples/route.response.json" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: "`validation_failed` (bad endpoint: unknown feature/floor, both or neither of featureId and floorId+point) or `no_route` (the two places aren't connected, or the floor has no walkways)."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 components:
   securitySchemes:
     firebaseIdToken:
@@ -641,3 +678,44 @@ components:
         graphs:
           type: array
           items: { $ref: "#/components/schemas/Graph" }
+    RouteEndpoint:
+      type: object
+      additionalProperties: false
+      description: "Exactly one of: `featureId`, or `floorId` + `point`."
+      properties:
+        featureId: { type: string }
+        floorId: { type: string }
+        point: { $ref: "#/components/schemas/Point" }
+    RouteRequest:
+      type: object
+      required: [from, to]
+      additionalProperties: false
+      properties:
+        from: { $ref: "#/components/schemas/RouteEndpoint" }
+        to: { $ref: "#/components/schemas/RouteEndpoint" }
+        accessible: { type: boolean, default: false, description: Avoid stairs. }
+    RouteLeg:
+      type: object
+      required: [floorId, points]
+      properties:
+        floorId: { type: string }
+        points:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/Point" }
+        arriveBy:
+          type: string
+          enum: [lift, stairs]
+          description: How this floor is reached; absent on the first leg.
+    Route:
+      type: object
+      required: [publishedVersion, legs, distanceMeters, durationSeconds, distanceEstimated]
+      properties:
+        publishedVersion: { type: integer, minimum: 1, description: Map version the route was computed on. }
+        legs:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/RouteLeg" }
+        distanceMeters: { type: number, minimum: 0, description: Walking distance (lifts/stairs count 0). }
+        durationSeconds: { type: number, minimum: 0 }
+        distanceEstimated: { type: boolean, description: "True if a walked floor has no georeference (0.05 m/px assumed)." }
