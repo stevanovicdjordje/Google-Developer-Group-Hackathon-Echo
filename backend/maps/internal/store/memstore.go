@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/Ilij4n/eho/backend/maps/internal/stats"
 	"github.com/Ilij4n/eho/backend/maps/internal/venue"
 )
 
@@ -16,11 +18,15 @@ type MemStore struct {
 	events    map[string]venue.Event
 	draft     map[string]*venue.Map
 	published map[string]*venue.Map
+	stats     map[string]map[string]*stats.Day // eventID → date → day
 }
 
 // NewMemStore returns an empty MemStore.
 func NewMemStore() *MemStore {
-	return &MemStore{events: map[string]venue.Event{}, draft: map[string]*venue.Map{}, published: map[string]*venue.Map{}}
+	return &MemStore{
+		events: map[string]venue.Event{}, draft: map[string]*venue.Map{}, published: map[string]*venue.Map{},
+		stats: map[string]map[string]*stats.Day{},
+	}
 }
 
 var _ Store = (*MemStore)(nil)
@@ -88,6 +94,7 @@ func (s *MemStore) DeleteEvent(_ context.Context, id string) error {
 	delete(s.events, id)
 	delete(s.draft, id)
 	delete(s.published, id)
+	delete(s.stats, id)
 	return nil
 }
 
@@ -220,4 +227,40 @@ func (s *MemStore) Publish(_ context.Context, id string, check func(*venue.Map) 
 	e.UpdatedAt = now
 	s.events[id] = e
 	return e.PublishedVersion, nil
+}
+
+func (s *MemStore) AddStats(_ context.Context, id string, d *stats.Day) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.events[id]; !ok {
+		return ErrNotFound
+	}
+	days := s.stats[id]
+	if days == nil {
+		days = map[string]*stats.Day{}
+		s.stats[id] = days
+	}
+	cur := days[d.Date]
+	if cur == nil {
+		cur = stats.NewDay(d.Date)
+		days[d.Date] = cur
+	}
+	cur.Merge(d)
+	return nil
+}
+
+func (s *MemStore) ListStats(_ context.Context, id, from, to string) ([]stats.Day, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.events[id]; !ok {
+		return nil, ErrNotFound
+	}
+	out := []stats.Day{}
+	for date, d := range s.stats[id] {
+		if date >= from && date <= to {
+			out = append(out, clone(*d))
+		}
+	}
+	slices.SortFunc(out, func(a, b stats.Day) int { return strings.Compare(a.Date, b.Date) })
+	return out, nil
 }

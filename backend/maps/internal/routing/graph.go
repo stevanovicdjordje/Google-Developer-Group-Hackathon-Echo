@@ -154,6 +154,12 @@ func (g *Graph) addArc(a, b int, meters, seconds float64, move Move) {
 // NodeCount is the number of walkway nodes on all floors.
 func (g *Graph) NodeCount() int { return len(g.nodes) }
 
+// Feature returns a feature of the published map the graph was built from.
+func (g *Graph) Feature(id string) (venue.Feature, bool) {
+	f, ok := g.features[id]
+	return f, ok
+}
+
 // snap is where a point joins the graph: a node, or a spot on an edge.
 type snap struct {
 	floor string

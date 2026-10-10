@@ -10,6 +10,7 @@ import (
 	"cloud.google.com/go/firestore"
 
 	"github.com/Ilij4n/eho/backend/maps/internal/geo"
+	"github.com/Ilij4n/eho/backend/maps/internal/stats"
 	"github.com/Ilij4n/eho/backend/maps/internal/venue"
 )
 
@@ -95,5 +96,46 @@ func TestFirestoreStoreLifecycle(t *testing.T) {
 	}
 	if _, err := s.GetEvent(ctx, e.ID); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("after delete: %v", err)
+	}
+}
+
+func TestFirestoreStats(t *testing.T) {
+	s := emulatorStore(t)
+	ctx := context.Background()
+	now := time.Now().UTC()
+	e := &venue.Event{ID: NewID(), Name: "Stats", StartDate: "2026-10-10", EndDate: "2026-10-10", OwnerUID: "o", CreatedAt: now, UpdatedAt: now}
+	if err := s.CreateEvent(ctx, e); err != nil {
+		t.Fatal(err)
+	}
+	// Search terms are arbitrary text: dots, slashes and backticks must survive.
+	odd := []string{"a.b", "c/d", "`x`", "kafa i čaj"}
+	for _, date := range []string{"2026-10-10", "2026-10-11", "2026-10-11", "2026-10-12"} {
+		d := stats.NewDay(date)
+		for _, q := range odd {
+			d.Add(stats.Event{Kind: stats.Search, Query: q})
+		}
+		d.Add(stats.Event{Kind: stats.Route, FeatureID: "s1"})
+		if err := s.AddStats(ctx, e.ID, d); err != nil {
+			t.Fatal(err)
+		}
+	}
+	days, err := s.ListStats(ctx, e.ID, "2026-10-11", "2026-10-12")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(days) != 2 || days[0].Date != "2026-10-11" || days[0].Routes != 2 || days[1].Routes != 1 {
+		t.Fatalf("days = %+v", days)
+	}
+	for _, q := range odd {
+		if days[0].SearchTerms[q] != 2 || days[0].NoResultTerms[q] != 2 {
+			t.Errorf("term %q = %d", q, days[0].SearchTerms[q])
+		}
+	}
+	if err := s.DeleteEvent(ctx, e.ID); err != nil {
+		t.Fatal(err)
+	}
+	refs, err := s.event(e.ID).Collection(colStats).DocumentRefs(ctx).GetAll()
+	if err != nil || len(refs) != 0 {
+		t.Fatalf("stats left after delete: %d, %v", len(refs), err)
 	}
 }

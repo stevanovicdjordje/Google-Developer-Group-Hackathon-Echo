@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/Ilij4n/eho/backend/maps/internal/stats"
 	"github.com/Ilij4n/eho/backend/maps/internal/venue"
 )
 
@@ -23,11 +24,13 @@ import (
 //	events/{eventId}/draft/map/graphs/{floorId}       venue.Graph
 //	events/{eventId}/published/map                    {version, publishedAt}
 //	events/{eventId}/published/map/...                same as draft
+//	events/{eventId}/stats/{yyyy-mm-dd}               stats.Day (owner only)
 const (
 	colEvents   = "events"
 	colFloors   = "floors"
 	colFeatures = "features"
 	colGraphs   = "graphs"
+	colStats    = "stats"
 	mapDocID    = "map"
 )
 
@@ -141,8 +144,7 @@ func (s *FirestoreStore) DeleteEvent(ctx context.Context, id string) error {
 			return fmt.Errorf("delete %s: %w", m.Path, err)
 		}
 	}
-	// Stats are kept with the event for now; delete them as well.
-	statRefs, err := s.event(id).Collection("stats").DocumentRefs(ctx).GetAll()
+	statRefs, err := s.event(id).Collection(colStats).DocumentRefs(ctx).GetAll()
 	if err != nil {
 		return fmt.Errorf("list stats: %w", err)
 	}
@@ -396,4 +398,42 @@ func (s *FirestoreStore) Publish(ctx context.Context, id string, check func(*ven
 		return 0, fmt.Errorf("publish: %w", err)
 	}
 	return version, nil
+}
+
+func (s *FirestoreStore) AddStats(ctx context.Context, id string, d *stats.Day) error {
+	ref := s.event(id).Collection(colStats).Doc(d.Date)
+	err := s.c.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		// Read, add and write the whole day: the map keys are search terms,
+		// which field-path increments can't always address.
+		day := stats.NewDay(d.Date)
+		snap, err := tx.Get(ref)
+		switch {
+		case err == nil:
+			if err := snap.DataTo(day); err != nil {
+				return fmt.Errorf("decode stats: %w", err)
+			}
+		case !isNotFound(err):
+			return err
+		}
+		day.Merge(d)
+		return tx.Set(ref, day)
+	})
+	if err != nil {
+		return fmt.Errorf("add stats: %w", err)
+	}
+	return nil
+}
+
+func (s *FirestoreStore) ListStats(ctx context.Context, id, from, to string) ([]stats.Day, error) {
+	if _, err := s.GetEvent(ctx, id); err != nil {
+		return nil, err
+	}
+	// A range on one field needs no composite index.
+	snaps, err := s.event(id).Collection(colStats).
+		Where("date", ">=", from).Where("date", "<=", to).OrderBy("date", firestore.Asc).
+		Documents(ctx).GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("list stats: %w", err)
+	}
+	return decodeAll(snaps, func(*stats.Day, string) {})
 }

@@ -61,18 +61,10 @@ func (s *server) getRoute(w http.ResponseWriter, r *http.Request, _ auth.Princip
 		return
 	}
 
-	version := 0
-	g, err := s.routes.Get(e.ID, e.PublishedVersion, func() (*venue.Map, int, error) {
-		m, v, err := s.store.GetPublished(r.Context(), e.ID)
-		version = v
-		return m, v, err
-	})
+	g, version, err := s.publishedGraph(r, e)
 	if err != nil {
 		s.respondErr(w, r, err)
 		return
-	}
-	if version == 0 {
-		version = e.PublishedVersion
 	}
 
 	route, err := g.Route(from, to, routing.Options{Accessible: in.Accessible})

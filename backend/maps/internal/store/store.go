@@ -10,6 +10,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/Ilij4n/eho/backend/maps/internal/stats"
 	"github.com/Ilij4n/eho/backend/maps/internal/venue"
 )
 
@@ -43,6 +44,11 @@ type Store interface {
 	// returns nil, the draft replaces the published map, the event's
 	// publishedVersion is incremented and the new version is returned.
 	Publish(ctx context.Context, eventID string, check func(*venue.Map) error) (int, error)
+
+	// AddStats adds d's counts to the stored day d.Date (stats.Sink).
+	AddStats(ctx context.Context, eventID string, d *stats.Day) error
+	// ListStats returns the stored days with from <= date <= to, oldest first.
+	ListStats(ctx context.Context, eventID, from, to string) ([]stats.Day, error)
 }
 
 // NewID returns a random URL-safe identifier (16 lowercase base32 chars, 80 bits).

@@ -9,6 +9,7 @@ import (
 	"github.com/Ilij4n/eho/backend/maps/internal/auth"
 	"github.com/Ilij4n/eho/backend/maps/internal/planimage"
 	"github.com/Ilij4n/eho/backend/maps/internal/routing"
+	"github.com/Ilij4n/eho/backend/maps/internal/stats"
 	"github.com/Ilij4n/eho/backend/maps/internal/store"
 )
 
@@ -19,21 +20,29 @@ type Options struct {
 	Store          store.Store
 	Verifier       auth.Verifier
 	Images         planimage.Inspector
+	// Stats buffers attendee stats; the caller runs its flush loop. If nil,
+	// counts are flushed only when the organizer reads them (tests).
+	Stats *stats.Aggregator
 }
 
 type server struct {
-	log    *slog.Logger
-	store  store.Store
-	verify auth.Verifier
-	images planimage.Inspector
-	routes *routing.Cache
+	log     *slog.Logger
+	store   store.Store
+	verify  auth.Verifier
+	images  planimage.Inspector
+	routes  *routing.Cache
+	stats   *stats.Aggregator
+	limiter *stats.Limiter
 }
 
 // NewHandler returns the root HTTP handler with all routes and middleware.
 func NewHandler(opts Options) http.Handler {
 	s := &server{
 		log: opts.Logger, store: opts.Store, verify: opts.Verifier, images: opts.Images,
-		routes: routing.NewCache(64),
+		routes: routing.NewCache(64), stats: opts.Stats, limiter: stats.NewLimiter(statsBurst, statsPerMinute),
+	}
+	if s.stats == nil && s.store != nil {
+		s.stats = stats.NewAggregator(s.store, opts.Logger)
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", handleHealthz)
@@ -60,6 +69,9 @@ func NewHandler(opts Options) http.Handler {
 		mux.Handle("DELETE /v1/events/{eventId}/features/{featureId}", s.authed(s.deleteFeature))
 		// Attendees: routing on the published map.
 		mux.Handle("POST /v1/events/{eventId}/route", s.authed(s.getRoute))
+		// Stats: attendees report in batches, the owner reads the aggregates.
+		mux.Handle("POST /v1/events/{eventId}/stats/events", s.authed(s.recordStats))
+		mux.Handle("GET /v1/events/{eventId}/stats", s.authed(s.getStats))
 	}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

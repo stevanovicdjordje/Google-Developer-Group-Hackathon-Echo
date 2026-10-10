@@ -19,6 +19,7 @@ import (
 	"github.com/Ilij4n/eho/backend/maps/internal/config"
 	"github.com/Ilij4n/eho/backend/maps/internal/httpapi"
 	"github.com/Ilij4n/eho/backend/maps/internal/planimage"
+	"github.com/Ilij4n/eho/backend/maps/internal/stats"
 	"github.com/Ilij4n/eho/backend/maps/internal/store"
 )
 
@@ -61,14 +62,29 @@ func run() error {
 	}
 	defer gcs.Close()
 
+	st := store.NewFirestoreStore(fs)
+	// Attendee stats are buffered and written every 10 s, and once more on shutdown.
+	agg := stats.NewAggregator(st, log)
+	aggDone := make(chan struct{})
+	aggCtx, stopAgg := context.WithCancel(context.Background())
+	go func() {
+		agg.Run(aggCtx, 10*time.Second, 5*time.Second)
+		close(aggDone)
+	}()
+	defer func() {
+		stopAgg()
+		<-aggDone
+	}()
+
 	srv := &http.Server{
 		Addr: ":" + cfg.Port,
 		Handler: httpapi.NewHandler(httpapi.Options{
 			Logger:         log,
 			AllowedOrigins: cfg.AllowedOrigins,
-			Store:          store.NewFirestoreStore(fs),
+			Store:          st,
 			Verifier:       auth.FirebaseVerifier{Client: authClient},
 			Images:         planimage.GCSInspector{Bucket: gcs.Bucket(cfg.StorageBucket)},
+			Stats:          agg,
 		}),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
