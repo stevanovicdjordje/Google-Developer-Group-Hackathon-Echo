@@ -13,10 +13,13 @@ final eventSummaryProvider = FutureProvider.family<EventSummary, String>(
 );
 
 /// `/e/{eventId}` for someone who hasn't joined yet (the deep-link landing).
+/// [markerId] is the optional "you are here" QR marker (`?at=`); after joining
+/// the user lands on the map with it instead of the agenda.
 class JoinScreen extends ConsumerStatefulWidget {
-  const JoinScreen({super.key, required this.eventId});
+  const JoinScreen({super.key, required this.eventId, this.markerId});
 
   final String eventId;
+  final String? markerId;
 
   @override
   ConsumerState<JoinScreen> createState() => _JoinScreenState();
@@ -35,7 +38,12 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     await ref.read(eventRepositoryProvider).join(event.id);
     ref.read(joinedEventsProvider.notifier).add(event);
     if (!mounted) return;
-    context.go('/e/${event.id}/agenda');
+    final at = widget.markerId;
+    context.go(
+      at == null
+          ? '/e/${event.id}/agenda'
+          : '/e/${event.id}/map?at=${Uri.encodeComponent(at)}',
+    );
   }
 
   @override
