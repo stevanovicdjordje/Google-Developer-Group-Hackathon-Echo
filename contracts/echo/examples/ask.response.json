@@ -1,0 +1,5 @@
+{
+  "text": "About 12% of the battery. The speaker said they fixed it by processing audio in batches instead of every frame.",
+  "model": "gemma-3-27b-it",
+  "basedOnLines": 11
+}

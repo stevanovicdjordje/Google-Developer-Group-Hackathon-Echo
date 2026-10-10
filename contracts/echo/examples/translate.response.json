@@ -1,0 +1,9 @@
+{
+  "language": "sr",
+  "lines": [
+    { "index": 0, "text": "Dobro jutro svima, hvala što ste došli ovako rano." },
+    { "index": 1, "text": "Danas želim da pričam o tome šta se dešava kada model živi na vašem telefonu." }
+  ],
+  "nextIndex": 2,
+  "model": "gemma-3-27b-it"
+}

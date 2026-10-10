@@ -1,0 +1,5 @@
+{
+  "text": "• Cost: local inference drops the marginal cost per user close to zero.\n• Privacy: data never leaves the device, which can unblock health and finance apps.\n• Battery: continuous transcription cost 12%; batching audio fixed it.\n• Size: quantization brings models to 1–2 GB with a small quality loss.\n• Hybrid router: easy questions on the device, hard ones in the cloud; 80% stay local.\n• Advice: start hybrid, measure, and move work to the device over time.",
+  "model": "gemma-3-27b-it",
+  "basedOnLines": 18
+}
