@@ -59,3 +59,7 @@ The human asked for the missing screens/flows. 10 new frames, same tokens and sh
 | `MapDetail.dc.html` | Map: stage details + route | Map tab, feature selected | Route line from "You are here" to the stage; sheet with name, capacity, walk time (big blue "2 min"), "NOW" session row → session, **Start route** + **Open Echo**. The map drawing itself belongs to `feature:maps` (request it there); the sheet content is mobile's |
 
 Also visible in v1 frames but not yet in the app: Agenda's live session card ("LIVE NOW · ECHO ON", orange border), Echo's "Ask about this" chip under a highlighted line, organizer review rows flagged by the AI ("Check: room missing in the PDF", tinted `#FFF8F4`), upload progress text "Found 3 stages, 6 sessions, 6 speakers so far…".
+
+## Event name (2026-10-11)
+
+The demo event is **"DevFest Belgrade 2026"** (`docs/decisions/product-demo-event.md`). The frames in this folder were updated accordingly. The live canvas still says "DevSummit" until it's edited from the owner's account: this folder is the source of truth.
