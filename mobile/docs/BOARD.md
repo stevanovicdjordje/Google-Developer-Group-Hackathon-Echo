@@ -10,12 +10,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-10b | Design: Start, Join, Onboarding, My events | M | dev | `features/start/`, `features/join/` | After M-10a. Design: `mobile/docs/design/{Main,Join,Onboarding,Events}.dc.html` |
-| M-10c | Design: Agenda + session detail | M | dev | `features/agenda/` | After M-10a. `Agenda.dc.html` |
 | M-10d | Design: Echo screen | M | dev | `features/echo/` | After M-10a **and M-18** (both touch Echo). `Echo.dc.html` |
-| M-10e | Design: Find, person, Messages + meeting spot | M | dev | `features/find/` | After M-10a. `Find.dc.html`, `Messages.dc.html` |
-| M-10f | Design: Profile + Map tab chrome + event shell nav | M | dev | `features/profile/`, `features/map/map_tab.dart`, `features/event/event_shell.dart` | After M-10a. `Profile.dc.html`, `Map.dc.html`, nav in `Agenda.dc.html` |
-| M-10g | Design: Organizer upload/review/published | M | dev | `features/organizer/` | After M-10a. `Org*.dc.html` |
 | M-17 | Demo-event name: join screen/agenda say "DevSummit Belgrade 2026" while the map event is "Eho Demo Expo" | S | — | — | Cosmetic. Decide with the design pass / demo script; maybe ask feature:maps to seed the same name. |
 
 ## Blocked
@@ -29,13 +24,18 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-10a | opus | 2026-10-11 01:16 | worktree | Design foundation: `core/theme.dart` tokens + component themes, bundled fonts (`pubspec.yaml`, `assets/fonts/`), shared widgets in `core/ui/` |
+| M-10b | dev | 2026-10-11 01:26 | worktree | Design: Start, Join, Onboarding, My events |
+| M-10c | dev | 2026-10-11 01:26 | worktree | Design: Agenda + session detail |
+| M-10e | dev | 2026-10-11 01:26 | worktree | Design: Find, person, Messages + meeting spot |
+| M-10f | dev | 2026-10-11 01:26 | worktree | Design: Profile + Map tab chrome + event shell nav |
+| M-10g | dev | 2026-10-11 01:26 | worktree | Design: Organizer upload/review/published |
 | M-18 | opus | 2026-10-11 01:16 | worktree | echo#1: wire `EchoRepository` to the Echo API (`backend/echo`, :8082) + Firestore transcript; demo repo stays the fallback |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-10a | Design foundation: theme tokens (`EhoColors`, `context.eho`), bundled Bricolage Grotesque + Instrument Sans, component themes, `core/ui/` widgets | `9fc22c1` |
 | M-16 | QR flow: `/e/{id}?at=` survives join + onboarding → `/e/{id}/map?at=` (`qr_join_test.dart`). Note: `/e/{id}/stand/{id}` still opens the map without the join screen (fine for the demo) | `89c6163` |
 | M-11 | English UI by default (`locale: en`), 138 strings in ARB (en template + sr), `product-ui-language` | `35ffbd5` |
 | M-12 | Live map verified on this machine (seed `v7y6hpytx3iyhhvd`): Map tab renders the plan, `/map?at=` shows "Vi ste ovde", route API 52 m/43 s, all demo meeting-spot names match seeded features, `/o` login renders. Not tapped through in-app: route button, meeting-spot pin | verification only |

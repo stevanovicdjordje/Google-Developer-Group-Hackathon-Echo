@@ -39,6 +39,7 @@ Nothing. No worker branches open. The maps emulators + API may still be running 
 ## Gotchas
 
 - Live map locally: `cd backend/maps && ./scripts/dev.sh` (emulators + API :8080), then `make seed` with `FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 STORAGE_EMULATOR_HOST=http://127.0.0.1:9199 FIREBASE_PROJECT_ID=demo-eho`; it prints the eventId (2026-10-11: `v7y6hpytx3iyhhvd`, kept in the git-ignored `.emulator-data`). App: `DEMO_EVENT_ID=<id> mobile/scripts/shots.sh …` (config defaults already point at localhost:8080 + emulators). Quote `?at=` args in zsh.
+- Use `git pull --rebase=merges --autostash` after merging worker branches: it keeps merge commits and their hashes.
 - `git pull --rebase` after `git merge` of worker branches linearizes the merges (new hashes) if origin moved. Pull **before** merging a batch; record hashes after pushing. Old worker branches then need `git branch -D` (check with `git cherry main <branch>` first).
 - shots.sh loads each route fresh, so it can't show sheets/menus or a draft set in a provider. Interactive states are covered by widget tests only.
 - Worktrees branch from local `main`: commit before dispatching.
