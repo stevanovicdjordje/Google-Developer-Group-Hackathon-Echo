@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Eho Echo API
-  version: 0.1.0
+  version: 0.2.0
   summary: Talk companion (transcript AI, translation, audience Q&A).
   description: |
     Contract between the app's Echo screens (`mobile/app/lib/features/echo`,
@@ -392,6 +392,8 @@ components:
         status: { type: string, enum: [live, ended] }
         lineCount: { type: integer, minimum: 0 }
         language: { $ref: "#/components/schemas/Language" }
+        title: { type: string, description: "Talk title (since 0.2.0, optional)." }
+        speaker: { type: string, description: "Speaker name(s) (since 0.2.0, optional)." }
     TranscriptLine:
       description: Firestore document `…/sessions/{sessionId}/lines/{index}` (`realtime.md`).
       type: object

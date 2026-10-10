@@ -2,6 +2,16 @@
 
 Echo feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## 0.2.0 — 2026-10-11
+- **Impact:** additive
+- **Affected:** backend/echo (writes), mobile (may read)
+- **Changes:**
+  - ADDED optional `title` and `speaker` on the `EchoSession` Firestore document (`realtime.md`). The AI gets them too,
+    so Ask can say who said something and when ("Mara mentions it at 00:50.").
+  - The demo keynote (`backend/echo/demo/keynote.json`, session `s1`) is now 68 lines / 6:52; the first 16 lines and
+    their times are unchanged (00:44 battery, 00:50 batching).
+- **Consumer action:** none required.
+
 ## 0.1.0 (fixtures) — 2026-10-11
 - **Impact:** fixture-only
 - **Changes:** `model` in the examples is now `gemma-4-26b-a4b-it`, the model the service actually uses.

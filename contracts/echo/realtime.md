@@ -16,7 +16,8 @@ writes the lines one by one at their recorded pace.
 | `events/{eventId}/published/echo/sessions/{sessionId}/lines/{index}` | same | `TranscriptLine` (doc ID = `index`, zero-padded to 5 digits: `00000`, `00001`, …) |
 
 ```
-EchoSession     { status: "live" | "ended", lineCount: int, language: "en", startedAt: timestamp, updatedAt: timestamp }
+EchoSession     { status: "live" | "ended", lineCount: int, language: "en", title?: string, speaker?: string,
+                  startedAt: timestamp, updatedAt: timestamp }
 TranscriptLine  { index: int, atSeconds: int, text: string }
 ```
 
