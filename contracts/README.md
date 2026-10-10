@@ -1,5 +1,7 @@
 # contracts/ — shared API contract
 
+**In plain words:** this folder is the agreement between the apps (`mobile/`, `organizer-web/`) and the server (`backend/`). It lists exactly what the server offers (e.g. "give me the agenda for event X") and what each answer looks like, plus fake sample answers so the apps can be built before the server exists. Nobody changes it unilaterally: the change is agreed here first, then everyone builds to it.
+
 > **Status: Draft.** `openapi.yaml` is a valid but **empty** OpenAPI skeleton. No endpoint, field name, response shape, auth scheme or upload format has been agreed yet. These are defined together with the workstream owners.
 
 ## Why this folder exists

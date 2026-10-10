@@ -4,6 +4,15 @@
 
 You don't need to learn how the agents coordinate. They handle it themselves and only come to you for **design direction** and **big architecture calls**.
 
+**What you do:** tell your agent what to build ("make the agenda screen", "make it look like X"), and answer its occasional questions. Everything else (keeping other agents informed, agreeing how the apps talk to the server, picking up teammates' changes) is the agent's job.
+
+**The parts of the project** (more detail in the [README](README.md#what-each-part-is-plain-language)):
+- `mobile/`: the attendee app
+- `organizer-web/`: the organizer website
+- `backend/`: the server both apps talk to; the only part that uses the AI
+- `contracts/`: the agreement on how the apps and the server talk, plus sample data
+- `docs/`: what we're building, the demo plan, and every decision made
+
 1. **Clone** (once):
    ```bash
    git clone git@github.com:Ilij4n/eho.git      # or https://github.com/Ilij4n/eho.git

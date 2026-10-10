@@ -17,6 +17,32 @@ Product scope, priorities and stack are **not locked**. See [`docs/PRODUCT.md`](
 - **Constraints:** very short development window (~24h), team of 4.
 - **Judging:** four areas — Problem, Technology, Business, Delivery. The exact questions are listed in [`docs/PRODUCT.md`](docs/PRODUCT.md#judging-criteria). Note especially: real user research, a **working demo (not a mockup)**, and at least one technical problem explained with how it was solved.
 
+## What each part is (plain language)
+
+Eho is planned as **two apps that share one server**, plus an agreed rulebook for how they talk:
+
+```
+  Attendee's phone             Organizer's laptop
+ ┌──────────────┐             ┌────────────────┐
+ │   mobile/    │             │ organizer-web/ │
+ └──────┬───────┘             └───────┬────────┘
+        │   both follow contracts/    │
+        └──────────────┬──────────────┘
+                ┌──────▼──────┐
+                │  backend/   │──► Gemma (AI), speech-to-text, database
+                └─────────────┘
+```
+
+| Part | What it is | Who uses it | What it does (planned, nothing is built yet) |
+| --- | --- | --- | --- |
+| **`mobile/`** | The **attendee app** | People attending the event | Join the event (QR/link), see the agenda and venue map, follow talks and ask questions, optionally meet other attendees |
+| **`organizer-web/`** | The **organizer website** | The people running the event | Create the event, upload the agenda/speakers/map/slides, generate the join QR code, see questions and activity |
+| **`backend/`** | The **server** both apps talk to | Nobody directly. The two apps use it. | Stores the event data, checks who's allowed to do what, and is the **only place that talks to the AI** (Gemma) and speech-to-text |
+| **`contracts/`** | The **agreement between the apps and the server** | The agents building the three parts above | Lists exactly what the server offers (e.g. "give me the agenda for event X") and what the answer looks like, plus fake sample answers so the apps can be built before the server is ready. If an app needs something new, the change is agreed here first. |
+| **`docs/`** | **Project knowledge** | Everyone, mostly the agents | What we're building and why, the demo plan, privacy rules, and a record of every decision (`docs/decisions/`) |
+
+Each app folder also has a **`STATUS.md`**, that module's noticeboard: what works right now, how to use it, and messages for the other agents. The agents keep these up to date. Humans can read them but never have to.
+
 ## Repository layout
 
 This is a deliberately simple monorepo: plain folders, no Nx/Turborepo, no submodules, no shared build system. Each module is opened and built independently in its owner's preferred IDE.
