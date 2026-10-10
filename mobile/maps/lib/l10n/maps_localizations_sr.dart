@@ -627,4 +627,46 @@ class MapsLocalizationsSr extends MapsLocalizations {
   @override
   String get statsPrivacy =>
       'Samo zbirni brojevi po danu. Bez lokacija i bez podataka o osobama.';
+
+  @override
+  String get qrOpen => 'QR oznake za štampu';
+
+  @override
+  String get qrTitle => 'QR oznake';
+
+  @override
+  String get qrIntro =>
+      'Odštampajte i postavite svaku oznaku na mesto koje ste označili na planu. Posetilac skenira kod i odmah vidi gde je i put do štanda ili sale.';
+
+  @override
+  String get qrNotPublished =>
+      'Događaj još nije objavljen. Kodovi rade tek kad objavite mapu.';
+
+  @override
+  String get qrPublishFirst =>
+      'Nova ili pomerena oznaka radi tek posle objave.';
+
+  @override
+  String get qrNone =>
+      'Još nema QR oznaka. Dodajte ih alatom „QR marker“ na planu, pa objavite.';
+
+  @override
+  String get qrPrint => 'Štampaj';
+
+  @override
+  String get qrScanHint =>
+      'Skenirajte kamerom telefona: plan objekta i put do štanda ili sale.';
+
+  @override
+  String get qrPopupBlocked =>
+      'Pregledač je blokirao novu karticu. Dozvolite iskačuće prozore za ovu stranicu.';
+
+  @override
+  String get qrCopy => 'Kopiraj link';
+
+  @override
+  String get qrCopied => 'Link je kopiran.';
+
+  @override
+  String get qrLoadFailed => 'Oznake trenutno nije moguće učitati.';
 }

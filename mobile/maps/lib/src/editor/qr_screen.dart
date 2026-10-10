@@ -42,7 +42,7 @@ class MapQrScreen extends ConsumerWidget {
         appBar: AppBar(title: Text(l10n.qrTitle)),
         body: Center(
           child: state.hasError
-              ? Text(l10n.loadFailed)
+              ? Text(l10n.qrLoadFailed)
               : const CircularProgressIndicator(),
         ),
       );
@@ -79,9 +79,8 @@ class MapQrScreen extends ConsumerWidget {
         ),
       );
       if (!(openPage ?? openPrintPage)(html)) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.qrPopupBlocked)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.qrPopupBlocked)));
       }
     }
 
@@ -178,9 +177,8 @@ class _QrTile extends StatelessWidget {
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: card.link));
                   if (context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(l10n.qrCopied)));
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(l10n.qrCopied)));
                   }
                 },
                 icon: const Icon(Icons.copy, size: 18),
