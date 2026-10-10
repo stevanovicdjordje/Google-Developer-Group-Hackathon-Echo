@@ -16,7 +16,8 @@ mobile/
 │   │   ├── app.dart          # MaterialApp.router, theme, l10n delegates
 │   │   ├── core/
 │   │   │   ├── router.dart   # ALL routes (see below)
-│   │   │   ├── theme.dart    # the ONLY place for colors/typography
+│   │   │   ├── theme.dart    # the ONLY place for colors/typography (see Theme)
+│   │   │   ├── ui/           # shared widgets (LiveBadge, SectionLabel, IconTile, AiHint, EhoCard)
 │   │   │   ├── api/api_client.dart   # HTTP client for real endpoints (Bearer Firebase token)
 │   │   │   ├── config.dart, providers.dart, firebase/
 │   │   ├── data/
@@ -65,6 +66,58 @@ Use `context.go` for tab/top-level navigation and `context.push` for drill-down 
 - Colors and text styles only via `Theme.of(context)` (`colorScheme`, `textTheme`). No hex colors in screens (exception: white behind the QR code).
 - Material 3 components. Phone-first: check 412 px width (no `RenderFlex overflowed`).
 - UI text is English and comes from the ARB files (see Strings). No hardcoded user-visible strings in screens.
+
+## Theme (design tokens → API)
+
+Design source: `mobile/docs/design/` (README token table + one `.dc.html` per screen). Everything lives in `core/theme.dart`; the app is **light only** (`themeMode: ThemeMode.light`). Fonts are bundled assets (`assets/fonts/`, OFL): **Bricolage Grotesque** 700 (`displayFont`) and **Instrument Sans** 400/500/600 (`bodyFont`, the default family).
+
+| Design token | Use in code |
+| --- | --- |
+| background `#F3F5F9` (screen ground) | `scaffoldBackgroundColor` (automatic), `colorScheme.surfaceContainer`, `context.eho.background` |
+| surface `#FFFFFF` (cards, inputs, nav) | `colorScheme.surface` |
+| ink `#0D1321` (text) | `colorScheme.onSurface`; dark hero blocks / selected chip: `context.eho.ink` + `context.eho.onInk` (= `inverseSurface`/`onInverseSurface`) |
+| ink-secondary `#4A5468` | `colorScheme.onSurfaceVariant` |
+| body-on-tint `#1F2A44` | `context.eho.bodyOnTint` |
+| outline `#C9D0DC` / divider `#DDE2EB` | `colorScheme.outline` / `colorScheme.outlineVariant` (also `Divider()`) |
+| primary `#2F4BFF`, pressed `#1A33D6` | `colorScheme.primary`; `colorScheme.onPrimaryContainer` = `context.eho.primaryPressed` |
+| primary-container `#E6EAFF` | `colorScheme.primaryContainer` |
+| live `#E85D1F` | `context.eho.live` (= `colorScheme.secondary` = `tertiary`), text on it `eho.onLive` |
+| live-container `#FFEDE3` / on-live-container `#C2410C` | `context.eho.liveContainer` / `context.eho.onLiveContainer` (= `secondaryContainer`/`onSecondaryContainer`, same for tertiary) |
+| on-dark `#D5DBE6` / `#B9C3FF` / `#FFB48C` | `context.eho.onInkMuted` / `onInkPrimary` / `onInkLive`; round button on ink: `eho.inkOverlay` |
+
+`context.eho` needs `import 'package:eho/core/theme.dart';` (relative: `../../core/theme.dart`). Note: Material widgets that default to `secondaryContainer` (`FilledButton.tonal`, `SegmentedButton` without the theme) come out live-orange; use `primaryContainer` explicitly when you want blue tint.
+
+**Text styles** (`Theme.of(context).textTheme`):
+
+| Style | Font / size / weight | Design use |
+| --- | --- | --- |
+| `displayLarge` | Bricolage 72/700, -2 | Start wordmark |
+| `displayMedium` | Bricolage 40/700, -1 | Join hero title |
+| `displaySmall` | Bricolage 34/700, -0.5 | big titles (34 px screens) |
+| `headlineLarge` | Bricolage 32/700, -0.5 | screen titles ("Agenda", "Find people") |
+| `headlineMedium` | Bricolage 26/700, -0.5 | event card title |
+| `headlineSmall` | Bricolage 24/700, -0.3 | section/sheet headlines |
+| `titleLarge` | Bricolage 20/700 | app bar title, dialog/sheet titles |
+| `titleMedium` | Instrument 17/600 | card titles (session, person) |
+| `titleSmall` | Instrument 15/600 | small headings, time column |
+| `bodyLarge` | Instrument 17/400, 1.45 | transcript, list rows |
+| `bodyMedium` | Instrument 15/400, 1.45 | default body |
+| `bodySmall` | Instrument 14/400 | meta lines (pair with `onSurfaceVariant`) |
+| `labelLarge` | Instrument 14/600 | chips, small buttons, AI hint |
+| `labelMedium` | Instrument 13/500 | captions |
+| `labelSmall` | Instrument 12/600, +0.6 | overline / LIVE label (upper-case it) |
+
+**Component themes** (no per-screen styling needed): Filled/Elevated buttons 56 h, radius 16, 17/600, primary; Outlined = white, 1.5 `outline` border; TextButton = primary 16/600; IconButton 44×44 circle; Chips radius 18 (stadium), white + `outline` border, selected = ink fill + white label, no checkmark; Card white, radius 18, no elevation, no margin; inputs filled white, radius 16, 1.5 `outline`, focused `primary`; NavigationBar white, primary-container stadium indicator, label 12, active primary / inactive ink-secondary (Material can't draw the 1 px top border: put a `Divider()` above the bar in the shell if wanted); AppBar = scaffold color, no elevation/scroll tint, Bricolage `titleLarge`; ListTile title 17/500, subtitle 14 `onSurfaceVariant`; SnackBar floating ink; BottomSheet white, radius 24 top, drag handle; SegmentedButton = `surfaceContainer` track, selected white + primary text.
+
+**Shared widgets** (`import '../../core/ui/ui.dart';`, all colors from the theme):
+
+| Widget | Usage |
+| --- | --- |
+| `LiveBadge('Live now · Echo on')` | live dot + upper-cased 12/600 label in `onLiveContainer`; `onDark: true` on ink blocks |
+| `SectionLabel('With Eho you get')` | upper-case 13/600 +0.8 overline in `onSurfaceVariant`, 8 px bottom padding |
+| `IconTile(Icons.calendar_today)` | 40×40 `primaryContainer` rounded square, `primary` icon; `live: true` for the live tint; `size:` to scale |
+| `AiHint('Catch-up')` | sparkle (`Icons.auto_awesome`) + `labelLarge` text in `primary`; `color:`/`style:` to override |
+| `EhoCard(child: …, onTap: …)` | white radius-18 card, 16 padding, ink ripple; `borderColor: context.eho.live` for live sessions, `color:` for tinted cards |
 
 ## Strings
 

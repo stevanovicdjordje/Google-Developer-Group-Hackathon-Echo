@@ -25,7 +25,7 @@ class _EhoAppState extends State<EhoApp> {
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: lightTheme,
-      darkTheme: darkTheme,
+      themeMode: ThemeMode.light,
       locale: const Locale('en'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
