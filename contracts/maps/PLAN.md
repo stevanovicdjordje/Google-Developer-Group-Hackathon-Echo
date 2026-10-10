@@ -19,7 +19,7 @@ Status: ✅ done · 🔄 in progress · ⏳ not started
 | 1 | Setup: Flutter app, Go skeleton (`/healthz`, config, slog, Dockerfile), Firebase emulators, one-command local run | App and backend run locally against the emulators | ✅ |
 | 2 | Backend CRUD + auth: OpenAPI spec, ID-token middleware, CRUD for event/floor/feature/graph, validation, publish, seed script (~3 rooms, ~15 stands, POIs, graph, 3 QR markers) | `go test ./...` passes, incl. handler tests with a fake store | ✅ |
 | 3 | Attendee map viewer: realtime read of the published seed event, zoom/pan, tap → details, search | Works on the seed event | ✅ |
-| 4 | Organizer editor: plan upload, drawing via API, publish | A published change is visible on another device in < 2 s | ⏳ |
+| 4 | Organizer editor: plan upload, drawing via API, publish | A published change is visible on another device in < 2 s | ✅ |
 | 5 | Routing: Go package (A*, snapping, multi-floor) + endpoint + cache; Flutter draws the route from a QR marker to a stand | Tests and benchmark pass (< 100 ms for a few thousand nodes) | ⏳ |
 | 6 | Location: georeferencing (3 points, affine), GPS dot with accuracy, QR/manual fallback, tracking, re-routing, "Stigli ste" | Go and Dart transform tests pass on the same vectors (`contracts/maps/testdata/`) | ⏳ |
 | 7 | Stats: batched events, daily aggregation, rate limit, organizer screen | | ⏳ |
@@ -39,22 +39,23 @@ Before reporting a phase as done: `go vet ./...`, `go test ./...`, `flutter anal
 | Firebase rules + emulator config | `backend/maps/firebase/` |
 | Indoor-GPS problem and solution (for the pitch) | `contracts/maps/implementation-notes.md` |
 
-## Where we stopped (2026-10-10 ~23:30)
+## Where we stopped (2026-10-10 23:48)
 
-Phase 3 (attendee viewer) is done: `mobile/maps/lib/src/viewer/`, mounted at `/e/{eventId}` in `mobile/app`.
-Realtime Firestore read, zoom/pan without rotation, rooms/stands/POIs/labels, gold sponsors highlighted, tap → details sheet,
-diacritic-tolerant search ("cacak" finds "Čačak Dev") with kind/category filters, floor switcher, legend, deep link `/e/{id}/stand/{id}`.
+Phases 1–4 are done.
 
-The intermittent "Učitavam plan…" bug is fixed. On web, FlutterFire restored the anonymous user saved by the previous page
-load before `useAuthEmulator` ran. That restore called the real Google endpoint ("api-key-not-valid"), connecting the
-emulator then failed silently, and every sign-in went to production, so it broke on every second load. Fix: in emulator mode the
-web app clears the saved Auth session before `Firebase.initializeApp` (`mobile/app/lib/core/firebase/clear_auth_session_web.dart`).
-`mapsSignedInProvider` now times out after 10 s with no auto-retry, so the viewer shows "Server nije dostupan" + retry instead of
-spinning. Verified in headless Chrome: 10/10 reloads with a kept profile show the plan; with the auth emulator blocked the error
-screen appears. `flutter analyze` clean, `flutter test` 16/16 (mobile/maps) and 4/4 (mobile/app).
+**Phase 4 (organizer editor)** is in `mobile/maps/lib/src/editor/`, routes `/o` (organizer sign-in + "My events" + new event)
+and `/o/e/{eventId}` (editor). Tools: select, room (2 taps = rect, 3+ = polygon), stand (2 corners), place/POI, QR marker,
+walkway (tap to add nodes, tap a node to connect; saved as one `PUT graph` 400 ms after the last tap). Add/rename/delete a floor
+(the plan image goes to Storage, then `createFloor`). Properties panel per type, move, delete, "Nearest node" as route entrance
+(new features get the nearest node automatically). Publish shows localized errors/warnings; tapping one selects that feature.
+Verified in headless Chrome against the emulators: whole flow from a new event to publish, and an open attendee viewer showed a
+moved stand **0.6 s** after "Objavi". `flutter analyze` clean; `flutter test` 33/33 (mobile/maps), 4/4 (mobile/app).
 
-**Next:** phase 4 (organizer editor). Product note: the demo storyline has "Agenda → picks a talk → Map shows the stage", so the
+Known limits: no undo; moving a feature is "Move" + tap (no drag); node connectors between floors (lift/stairs) and georef are
+not editable in the UI yet (phases 5/6).
+
+**Next:** phase 5 (routing). Product note: the demo storyline has "Agenda → picks a talk → Map shows the stage", so the
 agenda feature will need a link to a room on the map; `/e/{id}/stand/{featureId}` already opens any feature (rooms too).
 
-How to run: `cd backend/maps && make dev`, `make seed`, `cd mobile/app && flutter build web`, serve `build/web` with SPA fallback on :5000, open `/e/<eventId>`.
-
+How to run: `cd backend/maps && make dev`, `make seed`, `cd mobile/app && flutter build web`, serve `build/web` with SPA fallback
+on :5000, open `/e/<eventId>` (attendee) or `/o` (organizer, emulator login `organizer@eho.test` / `eho-demo-123`).

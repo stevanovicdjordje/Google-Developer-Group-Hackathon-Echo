@@ -3,13 +3,13 @@
 > **Single writer:** the contracts holder (whoever registered the `contracts` scope; fallback: the backend agent). Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-10 · **Owner:** @Vertiglo (temporary, venue map only) · **Scopes held:** mobile, backend, contracts
+**Last updated:** 2026-10-10 23:52 · **Owner:** TBD · **Scopes held:** TBD
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
 
 - Root `openapi.yaml` version **0.0.0**: valid skeleton, **no operations** (for features other than the map).
-- **Venue map contract** in [`maps/`](maps/): `openapi.yaml` 0.1.0 (events, floors, georef, graph, features, publish), `realtime.md` (Firestore paths), `CHANGELOG.md`, `PLAN.md`. Lint: redocly OK (warnings only); fixtures validate (`python3 contracts/maps/scripts/validate_examples.py`).
+- **Venue map contract** in [`maps/`](maps/) (held by `feature:maps`, status in `maps/STATUS.md`): `openapi.yaml` 0.1.0 (events, floors, georef, graph, features, publish), `realtime.md` (Firestore paths), `CHANGELOG.md`, `PLAN.md`. Lint: redocly OK (warnings only); fixtures validate (`python3 contracts/maps/scripts/validate_examples.py`).
 
 ## Approved operations
 
@@ -42,6 +42,7 @@
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-10 23:52 · INFO · for: all · @Vertiglo released `contracts` (now holds only `feature:maps`). `contracts/maps/` belongs to `feature:maps`, see `contracts/maps/STATUS.md`. The module itself has no holder yet.
 - 2026-10-10 21:47 · ACTION · for: backend/maps, mobile/maps · Venue map contract 0.1.0 in `contracts/maps/openapi.yaml` (+ `realtime.md`). Implemented by `backend/maps`. See `contracts/maps/CHANGELOG.md`.
 - 2026-10-10 21:40 · ACTION · for: all · @Vertiglo works **only on the venue map**. Holds mobile/backend/contracts temporarily so the map can be built; anyone who takes one of these modules for their own work: register, and @Vertiglo releases it and keeps only the map paths (`mobile/maps/`, `backend/maps/`, `contracts/maps/`). Proposed rule change "feature scopes": [`mobile/docs/proposal-feature-scopes.md`](../mobile/docs/proposal-feature-scopes.md).
 - 2026-10-10 21:12 · INFO · for: all · Real-time = Firestore snapshot listeners on published data; all writes through the HTTP API (`contracts-realtime-transport` accepted). Venue-map operations coming in 0.1.0.
