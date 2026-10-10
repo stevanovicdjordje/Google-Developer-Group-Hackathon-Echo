@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
 import 'demo_data.dart' as demo;
 import 'echo_api_repository.dart';
+import 'echo_models.dart';
 import 'models.dart';
 
 // ---------------------------------------------------------------- interfaces
@@ -34,17 +35,29 @@ abstract interface class EchoRepository {
   /// Live transcript of a session. [API-4]
   Stream<List<TranscriptLine>> transcript(String eventId, String sessionId);
 
-  /// Short rolling "catch up" summary of the talk so far. [API-5]
-  Future<String> catchUp(String eventId, String sessionId);
+  /// Short rolling "catch up" summary of the talk so far, written in
+  /// [language] (`contracts/echo` `Language`, e.g. `en`, `sr`). [API-5]
+  Future<String> catchUp(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  });
 
-  /// Answer a question about the talk, grounded in the transcript. [API-6]
-  Future<String> ask(String eventId, String sessionId, String question);
+  /// Answer a question about the talk, grounded in the transcript, in
+  /// [language]. [API-6]
+  Future<String> ask(
+    String eventId,
+    String sessionId,
+    String question, {
+    String language = 'en',
+  });
 
   /// Audience questions for the speaker. [API-7]
   Future<List<SpeakerQuestion>> questions(String eventId, String sessionId);
 
-  /// Submit a question for the speaker. [API-7]
-  Future<SpeakerQuestion> submitQuestion(
+  /// Submit a question for the speaker. The server may merge it into a
+  /// similar existing question (`merged`). [API-7]
+  Future<QuestionSubmission> submitQuestion(
     String eventId,
     String sessionId,
     String text,
@@ -59,8 +72,12 @@ abstract interface class EchoRepository {
     required bool up,
   });
 
-  /// Full post-talk summary (premium). [API-8]
-  Future<String> fullSummary(String eventId, String sessionId);
+  /// Full post-talk summary (premium), in [language]. [API-8]
+  Future<EchoSummary> fullSummary(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  });
 
   /// Translations of the transcript lines from [fromIndex] on (a line's index
   /// is its position in [transcript]). Call again from `nextIndex` when new
@@ -173,19 +190,32 @@ class DemoEchoRepository implements EchoRepository {
   }
 
   @override
-  Future<String> catchUp(String eventId, String sessionId) async {
+  Future<String> catchUp(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  }) async {
     await _think(500);
-    return demo.keynoteCatchUp;
+    return language == 'sr' ? demo.keynoteCatchUpSr : demo.keynoteCatchUp;
   }
 
   @override
-  Future<String> ask(String eventId, String sessionId, String question) async {
+  Future<String> ask(
+    String eventId,
+    String sessionId,
+    String question, {
+    String language = 'en',
+  }) async {
     await _think(1400);
+    final sr = language == 'sr';
     final q = question.toLowerCase();
     for (final entry in demo.keynoteAnswers.entries) {
-      if (q.contains(entry.key)) return entry.value;
+      final serbian = demo.keynoteAnswerKeywordsSr[entry.key] ?? entry.key;
+      if (q.contains(entry.key) || q.contains(serbian)) {
+        return sr ? demo.keynoteAnswersSr[entry.key]! : entry.value;
+      }
     }
-    return demo.keynoteDefaultAnswer;
+    return sr ? demo.keynoteDefaultAnswerSr : demo.keynoteDefaultAnswer;
   }
 
   @override
@@ -195,24 +225,42 @@ class DemoEchoRepository implements EchoRepository {
   ) async {
     await _think(300);
     return [
-      for (final (id, text, votes) in demo.keynoteQuestions)
-        SpeakerQuestion(id: id, text: text, votes: votes),
+      for (final (id, text, votes, merged) in demo.keynoteQuestions)
+        SpeakerQuestion(id: id, text: text, votes: votes, mergedCount: merged),
     ];
   }
 
+  /// Like the server's AI grouping, but by keyword: a question that mentions
+  /// [demo.keynoteMergeKeyword] is merged into the first demo question.
   @override
-  Future<SpeakerQuestion> submitQuestion(
+  Future<QuestionSubmission> submitQuestion(
     String eventId,
     String sessionId,
     String text,
   ) async {
     await _think(400);
-    return SpeakerQuestion(
-      id: 'mine-${DateTime.now().millisecondsSinceEpoch}',
-      text: text,
-      votes: 1,
-      mine: true,
-      voted: true,
+    if (text.toLowerCase().contains(demo.keynoteMergeKeyword)) {
+      final (id, original, votes, merged) = demo.keynoteQuestions.first;
+      return QuestionSubmission(
+        SpeakerQuestion(
+          id: id,
+          text: original,
+          votes: votes + 1,
+          mine: true,
+          voted: true,
+          mergedCount: merged + 1,
+        ),
+        merged: true,
+      );
+    }
+    return QuestionSubmission(
+      SpeakerQuestion(
+        id: 'mine-${DateTime.now().millisecondsSinceEpoch}',
+        text: text,
+        votes: 1,
+        mine: true,
+        voted: true,
+      ),
     );
   }
 
@@ -231,13 +279,26 @@ class DemoEchoRepository implements EchoRepository {
       votes: (question.votes + change).clamp(0, 1 << 30),
       mine: question.mine,
       voted: up,
+      mergedCount: question.mergedCount,
     );
   }
 
   @override
-  Future<String> fullSummary(String eventId, String sessionId) async {
+  Future<EchoSummary> fullSummary(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  }) async {
     await _think(1600);
-    return demo.keynoteSummary;
+    return language == 'sr'
+        ? const EchoSummary(
+            text: demo.keynoteSummaryTextSr,
+            summary: demo.keynoteTalkSummarySr,
+          )
+        : const EchoSummary(
+            text: demo.keynoteSummary,
+            summary: demo.keynoteTalkSummary,
+          );
   }
 
   @override

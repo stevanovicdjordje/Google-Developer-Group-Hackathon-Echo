@@ -288,6 +288,27 @@ class AppLocalizationsSr extends AppLocalizations {
   String get echoQuestionSent => 'Pitanje je poslato predavaču';
 
   @override
+  String get echoQuestionMerged =>
+      'Spojeno sa sličnim pitanjem · vaš glas se računa';
+
+  @override
+  String echoMergedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Spojeno je $count sličnih pitanja',
+      few: 'Spojena su $count slična pitanja',
+      one: 'Spojeno 1 slično pitanje',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String echoJumpToTime(String time) {
+    return 'Prikaži $time u transkriptu';
+  }
+
+  @override
   String get echoShowOriginal => 'Prikaži original';
 
   @override

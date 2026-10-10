@@ -283,6 +283,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get echoQuestionSent => 'Question sent to the speaker';
 
   @override
+  String get echoQuestionMerged =>
+      'Merged with a similar question · your vote counts';
+
+  @override
+  String echoMergedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count similar questions merged',
+      one: '1 similar question merged',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String echoJumpToTime(String time) {
+    return 'Show $time in the transcript';
+  }
+
+  @override
   String get echoShowOriginal => 'Show original';
 
   @override

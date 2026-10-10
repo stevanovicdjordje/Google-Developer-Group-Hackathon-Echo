@@ -1,4 +1,6 @@
 import 'package:eho/data/app_state.dart';
+import 'package:eho/data/demo_data.dart' as demo;
+import 'package:eho/data/echo_models.dart';
 import 'package:eho/data/models.dart';
 import 'package:eho/data/repositories.dart';
 import 'package:eho/features/echo/echo_screen.dart';
@@ -21,6 +23,32 @@ class _EndingEcho extends DemoEchoRepository {
     yield const [a];
     await Future<void>.delayed(const Duration(milliseconds: 200));
     yield const [a, b];
+  }
+}
+
+/// The demo keynote, ending while you watch, with the summary requested
+/// languages recorded.
+class _KeynoteEcho extends DemoEchoRepository {
+  final summaryLanguages = <String>[];
+
+  @override
+  Stream<List<TranscriptLine>> transcript(
+    String eventId,
+    String sessionId,
+  ) async* {
+    yield demo.keynoteTranscript.take(3).toList();
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    yield demo.keynoteTranscript;
+  }
+
+  @override
+  Future<EchoSummary> fullSummary(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  }) {
+    summaryLanguages.add(language);
+    return super.fullSummary(eventId, sessionId, language: language);
   }
 }
 
@@ -126,6 +154,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(_questionOrder(tester), ['Mine: what about iOS?']);
 
+    // The AI grouped 3 similar questions into the first one (design chip).
+    await tester.tap(find.text('Top'));
+    await tester.pumpAndSettle();
+    expect(find.text('3 similar questions merged'), findsOneWidget);
+
     // The vote button is the design's 52×56 and filled when voted.
     final voteBox = find.ancestor(
       of: find.text('1'),
@@ -134,6 +167,73 @@ void main() {
       ),
     );
     expect(voteBox, findsOneWidget);
+  });
+
+  testWidgets('a question the server merged highlights the existing one', (
+    tester,
+  ) async {
+    await _pump(tester, _LiveEcho());
+    await tester.tap(find.byIcon(Icons.forum_outlined));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Ask Mara a question…'),
+      'What model runs the router?',
+    );
+    await tester.tap(find.byTooltip('Send question'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Merged with a similar question · your vote counts'),
+      findsOneWidget,
+    );
+    // No new question: the existing one is now yours, with your vote.
+    expect(
+      find.text('3 questions · shown to the speaker at the end'),
+      findsOneWidget,
+    );
+    expect(find.text('What model runs the router?'), findsNothing);
+    expect(find.text('YOUR QUESTION'), findsOneWidget);
+    expect(
+      _questionOrder(tester).first,
+      'Which model did you use for the hybrid router?',
+    );
+    expect(find.text('15'), findsOneWidget);
+    expect(find.text('4 similar questions merged'), findsOneWidget);
+  });
+
+  testWidgets('summary: structured rows; a timestamp jumps to the line', (
+    tester,
+  ) async {
+    final repo = _KeynoteEcho();
+    await _pump(tester, repo);
+    await tester.tap(find.text('Unlock summary'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Model size'), findsOneWidget);
+    expect(find.text('Hard questions'), findsOneWidget);
+    expect(repo.summaryLanguages, ['en']);
+
+    // Serbian from the header button, requested with language=sr.
+    await tester.tap(find.byTooltip('Translate to Serbian'));
+    await tester.pumpAndSettle();
+    expect(repo.summaryLanguages, ['en', 'sr']);
+    expect(find.text('Baterija'), findsOneWidget);
+    await tester.tap(find.byTooltip('Show original'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('00:55'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('00:55'));
+    await tester.pumpAndSettle();
+    // Back on Echo with the 00:55 line highlighted ("Ask about this").
+    expect(find.text('AI SUMMARY · PREMIUM'), findsNothing);
+    expect(find.text('Ask about this'), findsOneWidget);
+    expect(
+      find.text(
+        'The second trade-off is model size. You cannot ship forty gigabytes.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('talk ends → paywall → unlock → summary screen', (tester) async {
@@ -169,6 +269,14 @@ void main() {
     expect(find.text('Key points'), findsOneWidget);
     expect(find.text('Trade-offs and fixes'), findsOneWidget);
     expect(find.text('Battery'), findsOneWidget);
+    // This transcript has no line near 00:44: the time is shown, not linked.
+    expect(
+      find.text(
+        '12% hit for continuous transcription → process audio in '
+        'batches. 00:44',
+      ),
+      findsOneWidget,
+    );
 
     // Back on Echo the card says Unlocked and opens the summary directly.
     await tester.tap(find.byTooltip('Back'));

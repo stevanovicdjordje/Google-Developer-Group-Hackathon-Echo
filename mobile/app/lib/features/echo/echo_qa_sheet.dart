@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
+import '../../core/ui/ui.dart';
+import '../../data/echo_models.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -11,13 +13,13 @@ enum _Sort { top, newest, mine }
 
 /// Opens the "Questions for (speaker)" sheet: sort chips, vote buttons and
 /// an ask-the-speaker input. [questions] is the screen's live list (newest
-/// first); [onAsk] returns true once the question was sent.
+/// first); [onAsk] returns the submission once sent (null on failure).
 Future<void> showEchoQuestions(
   BuildContext context, {
   required ValueListenable<List<SpeakerQuestion>> questions,
   required String? speakerName,
   required ValueChanged<SpeakerQuestion> onVote,
-  required Future<bool> Function(String text) onAsk,
+  required Future<QuestionSubmission?> Function(String text) onAsk,
 }) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
@@ -41,7 +43,7 @@ class EchoQaSheet extends StatefulWidget {
   final ValueListenable<List<SpeakerQuestion>> questions;
   final String? speakerName;
   final ValueChanged<SpeakerQuestion> onVote;
-  final Future<bool> Function(String text) onAsk;
+  final Future<QuestionSubmission?> Function(String text) onAsk;
 
   @override
   State<EchoQaSheet> createState() => _EchoQaSheetState();
@@ -51,6 +53,9 @@ class _EchoQaSheetState extends State<EchoQaSheet> {
   final _input = TextEditingController();
   _Sort _sort = _Sort.top;
   bool _sending = false;
+
+  /// The last question you sent was merged into a similar one.
+  bool _merged = false;
 
   @override
   void dispose() {
@@ -73,13 +78,14 @@ class _EchoQaSheetState extends State<EchoQaSheet> {
     final text = _input.text.trim();
     if (text.isEmpty || _sending) return;
     setState(() => _sending = true);
-    final ok = await widget.onAsk(text);
+    final sent = await widget.onAsk(text);
     if (!mounted) return;
     setState(() {
       _sending = false;
-      if (ok) {
+      if (sent != null) {
         _input.clear();
         _sort = _Sort.newest; // show it at the top
+        _merged = sent.merged;
       }
     });
   }
@@ -185,6 +191,15 @@ class _EchoQaSheetState extends State<EchoQaSheet> {
                             ),
                           ),
                   ),
+                  if (_merged) ...[
+                    const SizedBox(height: 10),
+                    AiHint(
+                      l10n.echoQuestionMerged,
+                      style: t.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   TextField(
                     controller: _input,
@@ -234,8 +249,46 @@ class _QuestionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final scheme = theme.colorScheme;
+    final eho = context.eho;
     final l10n = AppLocalizations.of(context);
-    final text = Text(q.text, style: t.bodyLarge?.copyWith(height: 1.4));
+    final question = Text(q.text, style: t.bodyLarge?.copyWith(height: 1.4));
+    // "3 similar questions merged" (design: AI chip under the text).
+    final text = q.mergedCount <= 0
+        ? question
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              question,
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 12,
+                      color: eho.primaryPressed,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        l10n.echoMergedCount(q.mergedCount),
+                        style: t.labelSmall?.copyWith(
+                          color: eho.primaryPressed,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(

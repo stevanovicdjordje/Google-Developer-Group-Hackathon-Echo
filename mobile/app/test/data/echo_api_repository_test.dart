@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:eho/data/echo_api_repository.dart';
+import 'package:eho/data/echo_models.dart';
 import 'package:eho/data/models.dart';
 import 'package:eho/data/repositories.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +23,10 @@ class _FakeSource implements EchoTranscriptSource {
   Stream<List<Map<String, Object?>>> lines(String eventId, String sessionId) =>
       lineDocs.stream;
 }
+
+/// A fixture from `contracts/echo/examples/` (tests run in `mobile/app`).
+Object? _fixture(String name) =>
+    jsonDecode(File('../../contracts/echo/examples/$name').readAsStringSync());
 
 Map<String, Object?> _line(int i, [String? text]) => {
   'index': i,
@@ -141,6 +147,47 @@ void main() {
         'http://echo.test/v1/events/ev/sessions/s1/catch-up?language=en',
         'http://echo.test/v1/events/ev/sessions/s1/summary?language=en',
       ]);
+    });
+
+    test('language=sr reaches catch-up, ask and summary', () async {
+      final r = repo(
+        (req) async => json({'text': 'ok', 'model': 'm', 'basedOnLines': 1}),
+      );
+      await r.catchUp('ev', 's1', language: 'sr');
+      await r.ask('ev', 's1', 'Baterija?', language: 'sr');
+      await r.fullSummary('ev', 's1', language: 'sr');
+      expect(requests[0].url.queryParameters['language'], 'sr');
+      expect(jsonDecode(requests[1].body)['language'], 'sr');
+      expect(requests[2].url.queryParameters['language'], 'sr');
+    });
+
+    test('summary: structured fields from the 0.3.0 fixture', () async {
+      final r = repo((req) async => json(_fixture('summary.response.json')!));
+      final s = await r.fullSummary('ev', 's1');
+      expect(s.text, startsWith('• Cost:'));
+      final t = s.summary!;
+      expect(
+        t.takeaway,
+        'Start hybrid, measure, and move work down to the device over time.',
+      );
+      expect(t.keyPoints, hasLength(2));
+      expect(t.tradeoffs.map((x) => x.topic), [
+        'Battery',
+        'Model size',
+        'Hard questions',
+      ]);
+      expect(t.tradeoffs.map((x) => x.atSeconds), [44, 60, 71]);
+      expect(
+        t.tradeoffs.first.fix,
+        'Batch audio in 2-second chunks (down to 4%)',
+      );
+    });
+
+    test('summary without `summary` (older server) has text only', () async {
+      final r = repo((req) async => json(_fixture('catch-up.response.json')!));
+      final s = await r.fullSummary('ev', 's1');
+      expect(s.text, isNotEmpty);
+      expect(s.summary, isNull);
     });
 
     test('model text is capped and must be a string', () async {
@@ -295,9 +342,29 @@ void main() {
       final r = repo(
         (req) async => json({...q1, 'mine': true, 'votes': 1}, 201),
       );
-      final q = await r.submitQuestion('ev', 's1', ' Does it run on iOS? ');
-      expect(q.mine, isTrue);
+      final sent = await r.submitQuestion('ev', 's1', ' Does it run on iOS? ');
+      expect(sent.question.mine, isTrue);
+      expect(sent.merged, isFalse);
       expect(jsonDecode(requests.single.body), {'text': 'Does it run on iOS?'});
+    });
+
+    test('mergedCount from the 0.3.0 list fixture', () async {
+      final r = repo((req) async => json(_fixture('questions.response.json')!));
+      final qs = await r.questions('ev', 's1');
+      expect(qs.map((q) => q.mergedCount), [3, 0]);
+    });
+
+    test('200 with merged: true is a merged submission', () async {
+      final r = repo(
+        (req) async => json(_fixture('submit-question-merged.response.json')!),
+      );
+      final sent = await r.submitQuestion('ev', 's1', 'What router model?');
+      expect(sent.merged, isTrue);
+      expect(sent.question.id, 'q_3fZx81');
+      expect(sent.question.votes, 15);
+      expect(sent.question.mergedCount, 4);
+      expect(sent.question.mine, isTrue);
+      expect(sent.question.voted, isTrue);
     });
 
     test('vote uses PUT, unvote DELETE', () async {
@@ -309,6 +376,53 @@ void main() {
         'PUT /v1/events/ev/sessions/s1/questions/q_1/vote',
         'DELETE /v1/events/ev/sessions/s1/questions/q_1/vote',
       ]);
+    });
+  });
+
+  group('TalkSummary.tryParse (untrusted model output)', () {
+    test('drops wrong types, caps lengths and list sizes', () {
+      final t = TalkSummary.tryParse({
+        'takeaway': '  ${'x' * 400}  ',
+        'keyPoints': ['One', '', 7, null, for (var i = 0; i < 9; i++) 'P$i'],
+        'tradeoffs': [
+          {'topic': 'Battery', 'issue': 'a', 'fix': 'b', 'atSeconds': 44},
+          {'topic': 'No time', 'issue': 'a', 'fix': 'b', 'atSeconds': 'soon'},
+          {'topic': 'Negative', 'issue': 'a', 'fix': 'b', 'atSeconds': -3},
+          {'topic': '', 'issue': 'a', 'fix': 'b', 'atSeconds': 1},
+          {'topic': 'Empty', 'issue': '', 'fix': ' '},
+          'junk',
+          for (var i = 0; i < 9; i++)
+            {'topic': 'T$i', 'issue': 'a', 'fix': 'b', 'atSeconds': i},
+        ],
+      })!;
+      expect(t.takeaway.length, 301); // 300 + ellipsis
+      expect(t.keyPoints, hasLength(5));
+      expect(t.keyPoints.first, 'One');
+      expect(t.tradeoffs, hasLength(5));
+      expect(t.tradeoffs[0].atSeconds, 44);
+      expect(t.tradeoffs[1].atSeconds, isNull);
+      expect(t.tradeoffs[2].atSeconds, isNull);
+      expect(t.tradeoffs.map((x) => x.topic), isNot(contains('Empty')));
+    });
+
+    test('null when nothing usable (falls back to text)', () {
+      expect(TalkSummary.tryParse(null), isNull);
+      expect(TalkSummary.tryParse('text'), isNull);
+      expect(
+        TalkSummary.tryParse({
+          'takeaway': ' ',
+          'keyPoints': [],
+          'tradeoffs': [],
+        }),
+        isNull,
+      );
+      // No takeaway: the first key point stands in.
+      expect(
+        TalkSummary.tryParse({
+          'keyPoints': ['A', 'B'],
+        })!.takeaway,
+        'A',
+      );
     });
   });
 
