@@ -81,7 +81,8 @@ class TranscriptLine {
   final int atSeconds;
   final String text;
 
-  /// Demo translation (Serbian). The backend will translate on request.
+  /// Demo translation (Serbian). Empty for lines from the Echo API, which
+  /// translates on request (`EchoRepository.translate`).
   final String translated;
 }
 
@@ -98,12 +99,16 @@ class SpeakerQuestion {
     required this.text,
     required this.votes,
     this.mine = false,
+    this.voted = false,
   });
 
   final String id;
   final String text;
   int votes;
   final bool mine;
+
+  /// The current user has voted for it.
+  bool voted;
 }
 
 class Person {

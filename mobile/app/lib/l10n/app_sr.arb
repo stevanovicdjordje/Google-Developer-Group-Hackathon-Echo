@@ -137,5 +137,14 @@
   "eventTitle": "Događaj {eventId}",
   "backendUnavailable": "Server trenutno nije dostupan. Proverite internet vezu i pokušajte ponovo.",
   "openEventLabel": "ID događaja",
-  "openEvent": "Otvori plan"
+  "openEvent": "Otvori plan",
+  "echoThinking": "Echo razmišlja…",
+  "echoRetry": "Pokušaj ponovo",
+  "echoErrorAiBusy": "Echo trenutno ne može da odgovori.",
+  "echoErrorRateLimited": "Trenutno ima mnogo zahteva. Sačekaj malo i pokušaj ponovo.",
+  "echoErrorOffline": "Echo nije dostupan. Proveri vezu.",
+  "echoErrorNoTranscript": "Ovo predavanje još nema transkript uživo.",
+  "echoErrorFailed": "Nešto nije u redu.",
+  "echoWaitingForTalk": "Čekamo da predavanje počne…",
+  "echoTranscriptUnavailable": "Transkript uživo trenutno nije dostupan."
 }

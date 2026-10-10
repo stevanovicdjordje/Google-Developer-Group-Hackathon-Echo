@@ -19,15 +19,41 @@ class _FakeEcho extends DemoEchoRepository {
             translated: 'Izgovorena linija $i',
           ),
       ]);
+
+  @override
+  Future<TranscriptTranslation> translate(
+    String eventId,
+    String sessionId, {
+    required String language,
+    int fromIndex = 0,
+  }) async => (
+    lines: {for (var i = fromIndex; i < 40; i++) i: 'Prevedena linija $i'},
+    nextIndex: 40,
+  );
 }
 
-Future<void> _pumpEcho(WidgetTester tester) async {
+/// Fails the first Ask with `502 ai_unavailable`, then answers.
+class _FlakyEcho extends _FakeEcho {
+  int asks = 0;
+
+  @override
+  Future<String> ask(String eventId, String sessionId, String question) async {
+    if (asks++ == 0) {
+      throw const EchoException(EchoErrorKind.aiBusy, 'ai_unavailable');
+    }
+    return 'Grounded answer';
+  }
+}
+
+Future<void> _pumpEcho(WidgetTester tester, [EchoRepository? repo]) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [echoRepositoryProvider.overrideWithValue(_FakeEcho())],
+      overrides: [
+        echoRepositoryProvider.overrideWithValue(repo ?? _FakeEcho()),
+      ],
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -80,5 +106,46 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Jump to live'), findsNothing);
     expect(find.text('Spoken line number 39'), findsOneWidget);
+  });
+
+  testWidgets('AI failure shows a friendly message and Try again', (
+    tester,
+  ) async {
+    await _pumpEcho(tester, _FlakyEcho());
+
+    await tester.enterText(find.byType(TextField), 'What about battery?');
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pumpAndSettle();
+    expect(find.text("Echo couldn't answer right now."), findsOneWidget);
+
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(find.text('Grounded answer'), findsOneWidget);
+    expect(find.text("Echo couldn't answer right now."), findsNothing);
+  });
+
+  testWidgets('voting toggles the count in the questions sheet', (
+    tester,
+  ) async {
+    await _pumpEcho(tester);
+    await tester.tap(find.byIcon(Icons.forum_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('14'), findsOneWidget);
+
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+    expect(find.text('15'), findsOneWidget);
+
+    await tester.tap(find.text('15'));
+    await tester.pumpAndSettle();
+    expect(find.text('14'), findsOneWidget);
+  });
+
+  testWidgets('translate toggle shows translated lines', (tester) async {
+    await _pumpEcho(tester);
+    await tester.tap(find.byTooltip('Translate to Serbian'));
+    await tester.pumpAndSettle();
+    expect(find.text('Prevedena linija 39'), findsOneWidget);
+    expect(find.text('Spoken line number 39'), findsNothing);
   });
 }

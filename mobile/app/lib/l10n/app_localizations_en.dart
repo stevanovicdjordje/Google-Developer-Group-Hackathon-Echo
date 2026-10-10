@@ -507,4 +507,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openEvent => 'Open map';
+
+  @override
+  String get echoThinking => 'Echo is thinking…';
+
+  @override
+  String get echoRetry => 'Try again';
+
+  @override
+  String get echoErrorAiBusy => 'Echo couldn\'t answer right now.';
+
+  @override
+  String get echoErrorRateLimited =>
+      'Lots of requests right now. Wait a moment and try again.';
+
+  @override
+  String get echoErrorOffline =>
+      'Echo can\'t be reached. Check your connection.';
+
+  @override
+  String get echoErrorNoTranscript => 'This talk has no live transcript yet.';
+
+  @override
+  String get echoErrorFailed => 'Something went wrong.';
+
+  @override
+  String get echoWaitingForTalk => 'Waiting for the talk to start…';
+
+  @override
+  String get echoTranscriptUnavailable =>
+      'The live transcript isn\'t available right now.';
 }

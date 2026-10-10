@@ -925,6 +925,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open map'**
   String get openEvent;
+
+  /// No description provided for @echoThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo is thinking…'**
+  String get echoThinking;
+
+  /// No description provided for @echoRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get echoRetry;
+
+  /// No description provided for @echoErrorAiBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo couldn\'t answer right now.'**
+  String get echoErrorAiBusy;
+
+  /// No description provided for @echoErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Lots of requests right now. Wait a moment and try again.'**
+  String get echoErrorRateLimited;
+
+  /// No description provided for @echoErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo can\'t be reached. Check your connection.'**
+  String get echoErrorOffline;
+
+  /// No description provided for @echoErrorNoTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'This talk has no live transcript yet.'**
+  String get echoErrorNoTranscript;
+
+  /// No description provided for @echoErrorFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong.'**
+  String get echoErrorFailed;
+
+  /// No description provided for @echoWaitingForTalk.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the talk to start…'**
+  String get echoWaitingForTalk;
+
+  /// No description provided for @echoTranscriptUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The live transcript isn\'t available right now.'**
+  String get echoTranscriptUnavailable;
 }
 
 class _AppLocalizationsDelegate
