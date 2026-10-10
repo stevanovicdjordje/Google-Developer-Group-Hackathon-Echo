@@ -7,14 +7,10 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 ## Ready
 
+Nothing ready: batch 1 (M-1…M-7) dispatched in parallel.
+
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-1 | Hide the Firebase "Running in emulator mode" bar on web | S | dev | `lib/core/firebase/` | It ruins video frames. Firebase JS `connectAuthEmulator(..., {disableWarnings: true})`; check how FlutterFire exposes it, else hide via CSS in `web/index.html`. |
-| M-2 | Persist client state across reloads (profile, joined events, contacts, meeting spot, unlocked summaries) | M | dev | `data/app_state.dart`, `pubspec.yaml` (shared_preferences) | Web reload currently resets everything; a deep link opened in a new tab loses the joined state. **Hot files.** |
-| M-3 | Organizer review: make the ✏️ on a session open a simple edit sheet (title, time, stage) | S | dev | `features/organizer/organizer_screens.dart`, `data/models.dart` (copyWith) | Today the icon does nothing. Touches a hot file only if `copyWith` is needed. |
-| M-4 | Widget test for the organizer flow (upload → extract → review → publish → link screen) | S | dev | `test/features/organizer_flow_test.dart` | FilePicker can't run in tests: add a test seam (e.g. inject picked files) or start the test from `/organizer/review` with a draft in `organizerDraftProvider`. |
-| M-5 | Keep each tab's state when switching tabs (scroll, Find results) | M | opus | `core/router.dart`, `features/event/event_shell.dart` | `StatefulShellRoute` failed because branch default locations can't contain `:eventId`. Options: branch `initialLocation` built from the current event, or keep `ShellRoute` + `PageStorageKey`s. **Hot file.** |
-| M-6 | Echo polish: "Ask about this" chip when long-pressing a line (today it silently pre-fills the input); auto-scroll pauses when the user scrolls up | S | dev | `features/echo/echo_screen.dart` | |
 
 ## Blocked
 
@@ -30,7 +26,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| — | | | | |
+| M-1 | dev | 2026-10-11 00:40 | worktree | Hide Firebase emulator bar on web |
+| M-2 | dev | 2026-10-11 00:40 | worktree | Persist client state (shared_preferences) |
+| M-3 | dev | 2026-10-11 00:40 | worktree | Organizer session edit sheet |
+| M-4 | dev | 2026-10-11 00:40 | worktree | Organizer flow widget test |
+| M-5 | opus | 2026-10-11 00:40 | worktree | Keep tab state across tab switches |
+| M-6 | dev | 2026-10-11 00:40 | worktree | Echo polish (ask chip, scroll pause) |
+| M-7 | dev | 2026-10-11 00:40 | worktree | maps#1 (b)+(c): maps base URL + Profile → /o |
 
 ## Done
 
