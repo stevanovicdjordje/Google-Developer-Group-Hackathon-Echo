@@ -1,0 +1,21 @@
+# Eho API contract — DRAFT.
+# This is an intentionally empty, valid OpenAPI skeleton.
+# No endpoints, schemas, auth schemes or upload formats have been agreed.
+# Changes are made only by the contract/integration owner — see contracts/AGENTS.md.
+openapi: 3.1.0
+info:
+  title: Eho API
+  version: 0.0.0
+  summary: Shared contract between mobile, organizer-web and backend (draft).
+  description: |
+    **Status: draft — no agreed endpoints.**
+
+    This document is the integration boundary for the Eho hackathon project.
+    Endpoints, models, authorization and upload formats will be designed
+    together with the workstream owners. Anything added before approval
+    must be marked `x-status: illustrative`.
+servers:
+  - url: http://localhost:8080
+    description: Placeholder — local development server (not yet implemented)
+paths: {}
+components: {}

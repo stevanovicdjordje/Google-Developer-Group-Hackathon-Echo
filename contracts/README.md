@@ -1,0 +1,43 @@
+# contracts/ — shared API contract
+
+> **Status: Draft.** `openapi.yaml` is a valid but **empty** OpenAPI skeleton. No endpoint, field name, response shape, auth scheme or upload format has been agreed yet. These are defined together with the workstream owners.
+
+## Why this folder exists
+
+`contracts/` is the integration boundary between `mobile/`, `organizer-web/` and `backend/`. Clients build against the contract and its fixtures, and the backend implements it. That lets the team work in parallel without waiting on each other.
+
+## Policy
+
+- **Who changes it:** only the contract/integration owner, or a member they explicitly authorize (see `docs/OWNERSHIP.md`).
+- **How:** a separate PR that only touches `contracts/**`. In the PR, describe the **compatibility impact** (additive / breaking / fixture-only) and which consumers are affected.
+- **Agree first:** server and client owners agree on a change *before* anyone implements against it. Breaking changes need explicit sign-off from every affected consumer.
+- **Status:** until it is marked approved, an endpoint in the spec is a *proposal*. It is not a working API.
+- **Fixtures follow the spec:** every approved endpoint should have example request/response JSON in `examples/` that validates against the schema.
+
+## Candidate API areas (illustrative — NOT agreed)
+
+These are topics the contract will probably need to cover. They are listed for discussion only:
+
+- Event join (QR / link / code)
+- Agenda: sessions, rooms, speakers
+- Room / session details
+- Organizer event setup and file upload
+- Transcripts / captions
+- Q&A (submit, list, cluster/summarize)
+- Networking profiles and search (opt-in)
+- Organizer dashboard data
+
+## Versioning (proposal)
+
+- `info.version` uses semver. Bump the minor version for additive changes and the major version for breaking ones.
+- No URL versioning is decided yet.
+
+## Validation
+
+Lint the spec before merging a contract PR, e.g.:
+
+```bash
+npx @redocly/cli lint contracts/openapi.yaml
+```
+
+(No tooling is installed in the repo; any OpenAPI linter is fine.)
