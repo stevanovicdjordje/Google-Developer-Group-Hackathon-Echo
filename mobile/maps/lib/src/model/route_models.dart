@@ -117,13 +117,14 @@ class RouteQuery {
   final int version;
   final bool accessible;
 
-  RouteQuery copyWith({bool? accessible, int? version}) => RouteQuery(
-    eventId: eventId,
-    from: from,
-    to: to,
-    version: version ?? this.version,
-    accessible: accessible ?? this.accessible,
-  );
+  RouteQuery copyWith({RouteEndpoint? from, bool? accessible, int? version}) =>
+      RouteQuery(
+        eventId: eventId,
+        from: from ?? this.from,
+        to: to,
+        version: version ?? this.version,
+        accessible: accessible ?? this.accessible,
+      );
 
   @override
   bool operator ==(Object other) =>

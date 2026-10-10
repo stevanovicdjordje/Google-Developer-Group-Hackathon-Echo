@@ -5,6 +5,28 @@ import '../model/map_models.dart';
 import '../model/route_models.dart';
 import 'labels.dart';
 
+/// One line about the GPS state ("tražim signal", "neprecizan", …).
+class GpsHintCard extends StatelessWidget {
+  const GpsHintCard({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    elevation: 4,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(Icons.gps_not_fixed, color: MapPalette.of(context).route),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Distance, time and the "no stairs" switch of the shown route.
 class RouteSummaryCard extends StatelessWidget {
   const RouteSummaryCard({

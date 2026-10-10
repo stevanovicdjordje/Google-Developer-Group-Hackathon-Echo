@@ -132,5 +132,14 @@
   "routeStartsOn": "The way starts on {floor}",
   "routeShowFloor": "Show",
   "closeRoute": "Close the way",
-  "routeAlreadyHere": "You're already here."
+  "routeAlreadyHere": "You're already here.",
+  "gpsMyLocation": "My location",
+  "gpsSearching": "Looking for a GPS signal…",
+  "gpsWeak": "GPS is imprecise (±{meters} m). Scan a QR code or pick your spot on the map.",
+  "gpsOutside": "You don't seem to be at the venue.",
+  "gpsNoGeoref": "GPS isn't set up for this floor.",
+  "gpsDenied": "Location isn't allowed. Scan a QR code or pick your spot on the map.",
+  "gpsServiceOff": "Location is turned off on this device.",
+  "gpsFailed": "Location isn't available right now.",
+  "arrived": "You've arrived: {name}"
 }

@@ -7,6 +7,42 @@ import '../model/route_models.dart';
 import 'labels.dart';
 import 'plan_projection.dart';
 
+/// The GPS accuracy circle (plan pixels scaled to the current zoom).
+class GpsAccuracyLayer extends StatelessWidget {
+  const GpsAccuracyLayer({
+    super.key,
+    required this.at,
+    required this.radiusPixels,
+    required this.proj,
+    this.weak = false,
+  });
+
+  final PlanPoint at;
+  final double radiusPixels;
+  final PlanProjection proj;
+
+  /// Too imprecise to navigate by: drawn fainter.
+  final bool weak;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = MapPalette.of(context);
+    final scale = proj.scaleAt(MapCamera.of(context).zoom);
+    return CircleLayer(
+      circles: [
+        CircleMarker(
+          key: const ValueKey('gps-accuracy'),
+          point: proj.toLatLng(at),
+          radius: radiusPixels * scale,
+          color: palette.route.withValues(alpha: weak ? 0.08 : 0.15),
+          borderColor: palette.route.withValues(alpha: weak ? 0.3 : 0.5),
+          borderStrokeWidth: 1.5,
+        ),
+      ],
+    );
+  }
+}
+
 /// The route's lines on [floorId] (drawn under the labels).
 Widget routeLines(
   BuildContext context,

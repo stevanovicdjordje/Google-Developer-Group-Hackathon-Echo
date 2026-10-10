@@ -465,4 +465,36 @@ class MapsLocalizationsSr extends MapsLocalizations {
 
   @override
   String get routeAlreadyHere => 'Već ste ovde.';
+
+  @override
+  String get gpsMyLocation => 'Moja lokacija';
+
+  @override
+  String get gpsSearching => 'Tražim GPS signal…';
+
+  @override
+  String gpsWeak(int meters) {
+    return 'GPS je neprecizan (±$meters m). Skenirajte QR kod ili izaberite mesto na mapi.';
+  }
+
+  @override
+  String get gpsOutside => 'Izgleda da niste u objektu.';
+
+  @override
+  String get gpsNoGeoref => 'Za ovaj sprat GPS nije podešen.';
+
+  @override
+  String get gpsDenied =>
+      'Lokacija nije dozvoljena. Skenirajte QR kod ili izaberite mesto na mapi.';
+
+  @override
+  String get gpsServiceOff => 'Lokacija je isključena na uređaju.';
+
+  @override
+  String get gpsFailed => 'Lokacija trenutno nije dostupna.';
+
+  @override
+  String arrived(String name) {
+    return 'Stigli ste: $name';
+  }
 }

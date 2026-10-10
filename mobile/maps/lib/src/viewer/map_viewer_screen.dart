@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/maps_localizations.dart';
 import '../data/published_map_repository.dart';
 import '../editor/maps_api.dart';
+import '../location/location_source.dart';
+import '../location/tracking.dart';
 import '../model/map_models.dart';
 import '../model/route_models.dart';
 import 'feature_sheet.dart';
@@ -100,6 +104,9 @@ class _Message extends StatelessWidget {
   );
 }
 
+/// At most one re-route per this long while following the GPS.
+const _rerouteEvery = Duration(seconds: 8);
+
 /// Room for the search bar / banner on top and the route card at the bottom.
 const _routePadding = EdgeInsets.fromLTRB(48, 130, 48, 240);
 
@@ -140,6 +147,20 @@ class _ViewerState extends ConsumerState<_Viewer> {
   /// Where the attendee said they are by tapping the map.
   ({String floorId, PlanPoint at})? _pickedHere;
 
+  /// Live GPS (only after the attendee taps "Moja lokacija"). Kept in
+  /// memory only; never stored or logged.
+  StreamSubscription<GpsFix>? _gpsSub;
+  GpsFix? _gps;
+  bool _gpsOn = false;
+  bool _centerOnNextFix = false;
+
+  /// The shown route starts at the GPS position and follows it.
+  bool _routeFromGps = false;
+  DateTime _lastReroute = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Fit the camera to the next route answer (not after a re-route).
+  bool _fitNextRoute = true;
+
   VenueMap get _map => widget.event.map;
 
   /// The scanned QR marker (`?at=`), if it is on the map.
@@ -147,8 +168,21 @@ class _ViewerState extends ConsumerState<_Viewer> {
       ? null
       : _map.features.where((f) => f.id == widget.markerId).firstOrNull;
 
-  /// "You are here": a picked point, else the scanned QR marker.
+  bool get _anyGeoref => _map.floors.any((f) => f.georef != null);
+
+  /// The GPS fix on the floor being looked at (GPS has no floor).
+  PlanFix? get _planFix {
+    final f = _floor;
+    final gps = _gps;
+    if (!_gpsOn || gps == null || f == null) return null;
+    return placeFix(gps, f);
+  }
+
+  /// "You are here": a good GPS fix, else a picked point, else the scanned
+  /// QR marker.
   ({String floorId, PlanPoint at})? get _here {
+    final fix = _planFix;
+    if (fix != null && fix.usable) return (floorId: fix.floorId, at: fix.at);
     if (_pickedHere != null) return _pickedHere;
     final m = _marker;
     return m == null ? null : (floorId: m.floorId, at: m.geometry.center);
@@ -204,6 +238,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
 
   @override
   void dispose() {
+    _gpsSub?.cancel();
     _controller.dispose();
     _searchCtrl.dispose();
     _searchFocus.dispose();
@@ -276,6 +311,11 @@ class _ViewerState extends ConsumerState<_Viewer> {
   Future<void> _routeTo(Feature to) async {
     final marker = _marker;
     final here = _pickedHere;
+    final fix = _planFix;
+    if (fix != null && fix.usable) {
+      _requestRoute(RouteEndpoint.point(fix.floorId, fix.at), to, gps: true);
+      return;
+    }
     if (here != null) {
       _requestRoute(RouteEndpoint.point(here.floorId, here.at), to);
       return;
@@ -327,7 +367,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
     _requestRoute(RouteEndpoint.point(floor.id, at), to);
   }
 
-  void _requestRoute(RouteEndpoint from, Feature to) {
+  void _requestRoute(RouteEndpoint from, Feature to, {bool gps = false}) {
     if (from.featureId == to.id) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(_l10n.routeAlreadyHere)));
@@ -338,6 +378,8 @@ class _ViewerState extends ConsumerState<_Viewer> {
     setState(() {
       _selectedId = null;
       _routeTarget = to;
+      _routeFromGps = gps;
+      _fitNextRoute = true;
       _routeQuery = RouteQuery(
         eventId: widget.event.id,
         from: from,
@@ -351,7 +393,122 @@ class _ViewerState extends ConsumerState<_Viewer> {
   void _closeRoute() => setState(() {
     _routeQuery = null;
     _routeTarget = null;
+    _routeFromGps = false;
   });
+
+  /// "Moja lokacija": turns GPS on, or centers on the dot, or (while still
+  /// searching) turns it off again.
+  void _onMyLocation() {
+    final fix = _planFix;
+    if (_gpsOn && fix != null && fix.inside) {
+      _centerOn(fix);
+      return;
+    }
+    if (_gpsOn) {
+      _stopGps();
+      return;
+    }
+    setState(() {
+      _gpsOn = true;
+      _gps = null;
+      _centerOnNextFix = true;
+    });
+    _gpsSub = ref
+        .read(locationSourceProvider)
+        .watch()
+        .listen(_onFix, onError: _onGpsError, cancelOnError: true);
+  }
+
+  void _stopGps() {
+    _gpsSub?.cancel();
+    _gpsSub = null;
+    setState(() {
+      _gpsOn = false;
+      _gps = null;
+    });
+  }
+
+  void _onGpsError(Object e) {
+    final problem = e is LocationUnavailable
+        ? e.problem
+        : LocationProblem.failed;
+    _stopGps();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(switch (problem) {
+          LocationProblem.denied => _l10n.gpsDenied,
+          LocationProblem.serviceOff => _l10n.gpsServiceOff,
+          LocationProblem.failed => _l10n.gpsFailed,
+        }),
+      ),
+    );
+  }
+
+  void _centerOn(PlanFix fix) {
+    final floor = _floor;
+    if (floor == null) return;
+    final proj = PlanProjection(floor.width, floor.height);
+    final r = fix.accuracyPixels + 80;
+    // Clamped to the plan: a weak fix's circle can be larger than the venue.
+    double cx(double v) => v.clamp(0, floor.width.toDouble());
+    double cy(double v) => v.clamp(0, floor.height.toDouble());
+    _controller.fitCamera(
+      proj.fit(
+        LatLngBounds(
+          proj.toLatLng(PlanPoint(cx(fix.at.x - r), cy(fix.at.y + r))),
+          proj.toLatLng(PlanPoint(cx(fix.at.x + r), cy(fix.at.y - r))),
+        ),
+        padding: _routePadding,
+        maxScale: 2,
+      ),
+    );
+  }
+
+  void _onFix(GpsFix gps) {
+    if (!mounted) return;
+    setState(() => _gps = gps);
+    final fix = _planFix;
+    if (fix == null) return;
+    if (_centerOnNextFix && fix.inside) {
+      _centerOnNextFix = false;
+      _centerOn(fix);
+    }
+    // Follow a route that started at the GPS position.
+    final q = _routeQuery;
+    final target = _routeTarget;
+    final route = q == null ? null : ref.read(mapsRouteProvider(q)).value;
+    if (!_routeFromGps || q == null || target == null || route == null) return;
+    if (!fix.usable) return;
+    switch (trackRoute(route, fix)) {
+      case TrackStep.arrived:
+        _closeRoute();
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_l10n.arrived(target.name))));
+      case TrackStep.offRoute:
+        final now = DateTime.now();
+        if (now.difference(_lastReroute) < _rerouteEvery) return;
+        _lastReroute = now;
+        setState(() {
+          _fitNextRoute = false;
+          _routeQuery = q.copyWith(
+            from: RouteEndpoint.point(fix.floorId, fix.at),
+          );
+        });
+      case TrackStep.onRoute:
+        break;
+    }
+  }
+
+  /// A short hint about the GPS state, or null when all is well.
+  String? _gpsHint(Floor floor) {
+    if (!_gpsOn) return null;
+    if (floor.georef == null) return _l10n.gpsNoGeoref;
+    final fix = _planFix;
+    if (fix == null) return _l10n.gpsSearching;
+    if (!fix.inside) return _l10n.gpsOutside;
+    if (!fix.usable) return _l10n.gpsWeak(fix.accuracyMeters.round());
+    return null;
+  }
 
   MapsLocalizations get _l10n => MapsLocalizations.of(context);
 
@@ -453,6 +610,8 @@ class _ViewerState extends ConsumerState<_Viewer> {
       ref.listen(mapsRouteProvider(q), (_, next) {
         next.whenOrNull(
           data: (r) {
+            if (!_fitNextRoute) return; // a re-route keeps the camera
+            _fitNextRoute = false;
             final first = r.legs.first.floorId;
             // Show where the route starts, unless it passes the open floor.
             _showRouteOn(
@@ -474,6 +633,8 @@ class _ViewerState extends ConsumerState<_Viewer> {
         !picking &&
         (_searchFocus.hasFocus || _searchCtrl.text.isNotEmpty);
     final here = _here;
+    final fix = _planFix;
+    final gpsHint = floor == null ? null : _gpsHint(floor);
     final banner = routing && route != null && floor != null
         ? _floorBanner(route, floor)
         : null;
@@ -504,6 +665,13 @@ class _ViewerState extends ConsumerState<_Viewer> {
                       _select(f);
                     },
                     underLabels: [
+                      if (fix != null && fix.inside)
+                        GpsAccuracyLayer(
+                          at: fix.at,
+                          radiusPixels: fix.accuracyPixels,
+                          proj: PlanProjection(floor.width, floor.height),
+                          weak: !fix.usable,
+                        ),
                       if (routing && route != null)
                         routeLines(
                           context,
@@ -575,6 +743,10 @@ class _ViewerState extends ConsumerState<_Viewer> {
                             _fabs(l10n, floor),
                           ],
                         ),
+                        if (gpsHint != null) ...[
+                          const SizedBox(height: 12),
+                          GpsHintCard(text: gpsHint),
+                        ],
                         if (routing) ...[
                           const SizedBox(height: 12),
                           RouteSummaryCard(
@@ -601,6 +773,21 @@ class _ViewerState extends ConsumerState<_Viewer> {
   Widget _fabs(MapsLocalizations l10n, Floor floor) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
+      if (_anyGeoref) ...[
+        FloatingActionButton.small(
+          heroTag: 'gps',
+          tooltip: l10n.gpsMyLocation,
+          onPressed: _onMyLocation,
+          child: Icon(
+            !_gpsOn
+                ? Icons.location_searching
+                : (_planFix?.usable ?? false)
+                ? Icons.my_location
+                : Icons.gps_not_fixed,
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
       FloatingActionButton.small(
         heroTag: 'legend',
         tooltip: l10n.legend,

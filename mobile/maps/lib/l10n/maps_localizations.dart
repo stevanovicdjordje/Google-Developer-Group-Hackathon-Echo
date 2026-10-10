@@ -895,6 +895,60 @@ abstract class MapsLocalizations {
   /// In sr, this message translates to:
   /// **'Već ste ovde.'**
   String get routeAlreadyHere;
+
+  /// No description provided for @gpsMyLocation.
+  ///
+  /// In sr, this message translates to:
+  /// **'Moja lokacija'**
+  String get gpsMyLocation;
+
+  /// No description provided for @gpsSearching.
+  ///
+  /// In sr, this message translates to:
+  /// **'Tražim GPS signal…'**
+  String get gpsSearching;
+
+  /// No description provided for @gpsWeak.
+  ///
+  /// In sr, this message translates to:
+  /// **'GPS je neprecizan (±{meters} m). Skenirajte QR kod ili izaberite mesto na mapi.'**
+  String gpsWeak(int meters);
+
+  /// No description provided for @gpsOutside.
+  ///
+  /// In sr, this message translates to:
+  /// **'Izgleda da niste u objektu.'**
+  String get gpsOutside;
+
+  /// No description provided for @gpsNoGeoref.
+  ///
+  /// In sr, this message translates to:
+  /// **'Za ovaj sprat GPS nije podešen.'**
+  String get gpsNoGeoref;
+
+  /// No description provided for @gpsDenied.
+  ///
+  /// In sr, this message translates to:
+  /// **'Lokacija nije dozvoljena. Skenirajte QR kod ili izaberite mesto na mapi.'**
+  String get gpsDenied;
+
+  /// No description provided for @gpsServiceOff.
+  ///
+  /// In sr, this message translates to:
+  /// **'Lokacija je isključena na uređaju.'**
+  String get gpsServiceOff;
+
+  /// No description provided for @gpsFailed.
+  ///
+  /// In sr, this message translates to:
+  /// **'Lokacija trenutno nije dostupna.'**
+  String get gpsFailed;
+
+  /// No description provided for @arrived.
+  ///
+  /// In sr, this message translates to:
+  /// **'Stigli ste: {name}'**
+  String arrived(String name);
 }
 
 class _MapsLocalizationsDelegate

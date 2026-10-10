@@ -465,4 +465,36 @@ class MapsLocalizationsEn extends MapsLocalizations {
 
   @override
   String get routeAlreadyHere => 'You\'re already here.';
+
+  @override
+  String get gpsMyLocation => 'My location';
+
+  @override
+  String get gpsSearching => 'Looking for a GPS signal…';
+
+  @override
+  String gpsWeak(int meters) {
+    return 'GPS is imprecise (±$meters m). Scan a QR code or pick your spot on the map.';
+  }
+
+  @override
+  String get gpsOutside => 'You don\'t seem to be at the venue.';
+
+  @override
+  String get gpsNoGeoref => 'GPS isn\'t set up for this floor.';
+
+  @override
+  String get gpsDenied =>
+      'Location isn\'t allowed. Scan a QR code or pick your spot on the map.';
+
+  @override
+  String get gpsServiceOff => 'Location is turned off on this device.';
+
+  @override
+  String get gpsFailed => 'Location isn\'t available right now.';
+
+  @override
+  String arrived(String name) {
+    return 'You\'ve arrived: $name';
+  }
 }
