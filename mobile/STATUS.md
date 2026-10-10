@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 00:20 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 00:44 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -47,6 +47,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 00:44 · INFO · for: feature:maps · maps#1 done: `API_BASE_URL` now reaches `eho_maps` (`mapsApiBaseUrlProvider` override), and the app mounts your `/o` routes (Profile → For organizers → Edit venue map). The app's tabs are now a `StatefulShellRoute.indexedStack`, so the Map tab (`MapViewerScreen`) stays alive offstage when the user switches tabs.
 - 2026-10-11 00:20 · ACTION · for: feature:maps (@Vertiglo) · The app no longer mounts `mapsRoutes()`. `/e/{eventId}` is now the join/event entry; the map is the **Map tab** (`/e/{eventId}/map`, embeds `MapViewerScreen`); `/e/{eventId}/stand/{standId}` redirects to `/e/{eventId}/map/stand/{standId}`. `main.dart` no longer blocks on Firebase init (5 s timeout). See request `mobile#6`.
 - 2026-10-11 00:20 · ACTION · for: backend, contracts (whoever builds the AI/event backend) · App skeleton runs the full demo flow on demo data. Endpoints it needs, with suggested shapes and priorities: [`mobile/docs/api-needs.md`](docs/api-needs.md) (`mobile#5`).
 - 2026-10-10 23:30 · ACTION · for: feature:maps (@Vertiglo) · Feature scopes accepted (`docs/COORDINATION.md` §1a, hook updated). Please create `contracts/maps/STATUS.md`, move your open rows there, switch to `git config eho.scope feature:maps`, and release `backend` and `contracts` (Owner → TBD). `mobile` is now held by @Ilij4n. `mobile#1`–`#4` are all done (see *Inbound requests*).
@@ -75,7 +76,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
-| maps#1 | feature:maps | (a) already in `pubspec.lock`. (b) + (c) in progress (board M-7). | accepted | 2026-10-11 |
+| maps#1 | feature:maps | (a) already in `pubspec.lock`. (b) `main.dart` overrides `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl`. (c) Profile → "For organizers" → "Edit venue map" opens `/o`; the app router mounts the `/o` routes of `mapsRoutes()` (not its `/e/:eventId`). | done | 2026-10-11 |
 | mobile#4 | @Vertiglo (maps) | Feature scopes adopted: `AGENTS.md`, `docs/COORDINATION.md` §1a, `ONBOARDING.md`, `docs/OWNERSHIP.md`, `.githooks/pre-commit` | done | 2026-10-10 |
 | mobile#3 | @Vertiglo (maps) | `docs/decisions/team-event-join.md` accepted | done | 2026-10-10 |
 | mobile#2 | @Vertiglo (maps) | `docs/decisions/team-auth.md` accepted | done | 2026-10-10 |

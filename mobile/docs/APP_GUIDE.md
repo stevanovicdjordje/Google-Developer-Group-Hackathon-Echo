@@ -40,9 +40,10 @@ mobile/
 | `/` | Start | `features/start/start_screen.dart` |
 | `/events` | My events (picker) | `features/join/join_screens.dart` |
 | `/onboarding` | 3-step onboarding, pops `true` | `features/join/join_screens.dart` |
+| `/o`, `/o/e/:eventId` | Venue map editor from `eho_maps` (only these routes of `mapsRoutes()` are mounted); reachable from Profile → For organizers | `mobile/maps` (feature:maps, read-only) |
 | `/organizer` → `/review` → `/published?url&name` | Organizer upload / review / link+QR | `features/organizer/organizer_screens.dart` |
 | `/e/:eventId` | `EventEntry`: join screen, or redirect to agenda (or map if `?at=`) | `core/router.dart`, `features/join/` |
-| `/e/:eventId/{agenda,map,find,profile}` | Tabs inside `EventShell` (a `ShellRoute`; tab index from URL) | `features/event/event_shell.dart` + per-tab folders |
+| `/e/:eventId/{agenda,map,find,profile}` | Tabs inside `EventShell` (a `StatefulShellRoute.indexedStack`: each tab is a branch kept alive, so state survives tab switches; tab index from URL; branch `initialLocation`s are `/e/_/<tab>` placeholders that are never opened. Navigate tabs with `context.go('/e/{id}/<tab>')`, never `goBranch`) | `features/event/event_shell.dart` + per-tab folders |
 | `/e/:eventId/map/stand/:standId` | Map tab focused on a feature | `features/map/map_tab.dart` |
 | `/e/:eventId/stand/:standId` | redirect → `/map/stand/…` (link format from `team-event-join`) | |
 | `/e/:eventId/find/person/:personId?why=` | Person + contact | `features/find/find_screens.dart` |
@@ -78,4 +79,4 @@ flutter test                # all tests must pass
 
 - Widget tests: follow `test/features/happy_path_test.dart`. Use a phone-sized `tester.view`, `pumpAndSettle` for navigation, and an extra `pump` after stream/async updates (Echo uses timed streams; `pumpAndSettle` alone won't wait for them).
 - Look at screenshots with the Read tool. The Map tab shows "Server trenutno nije dostupan" unless the `backend/maps` emulators are running. That's expected locally.
-- The red "Running in emulator mode" bar on web screenshots comes from the Firebase Auth emulator. It's a known item on the board.
+- The Firebase Auth emulator banner is hidden on web by CSS + a MutationObserver in `web/index.html` (FlutterFire doesn't expose `disableWarnings`).

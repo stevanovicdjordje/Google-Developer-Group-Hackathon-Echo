@@ -7,7 +7,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 ## Ready
 
-Nothing ready: batch 1 (M-1…M-7) dispatched in parallel.
+Nothing ready: batch 1 (M-1…M-7) is done; the rest is blocked on the human or teammates.
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
@@ -26,16 +26,17 @@ Nothing ready: batch 1 (M-1…M-7) dispatched in parallel.
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-1 | dev | 2026-10-11 00:40 | worktree | Hide Firebase emulator bar on web |
-| M-5 | opus | 2026-10-11 00:40 | worktree | Keep tab state across tab switches |
-| M-6 | dev | 2026-10-11 00:40 | worktree | Echo polish (ask chip, scroll pause) |
-| M-7 | dev | 2026-10-11 00:40 | worktree | maps#1 (b)+(c): maps base URL + Profile → /o |
+| — | | | | |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-7 | maps#1: map API base URL override in `main.dart`; Profile → For organizers (Create event, Edit venue map → `/o`); `/o` mounted in the router | `5535095` + router fix |
+| M-6 | Echo polish: "Ask about this" menu on long-press, auto-scroll pauses + "Jump to live" | `64b2937` |
+| M-5 | Tabs keep their state (`StatefulShellRoute.indexedStack`, placeholder branch locations) | `03cfe1f` |
+| M-1 | Firebase emulator banner hidden on web (`web/index.html`) | `afcdcd7` |
 | M-4 | Organizer flow widget test (review → publish → link/QR; extract via repo) | `cad9c08` |
-| M-3 | Organizer review: edit-session sheet | `66f4999` |
-| M-2 | Persist client state across reloads (shared_preferences, `data/local_store.dart`) | `75419f4` |
+| M-3 | Organizer review: edit-session sheet | `ba75856` |
+| M-2 | Persist client state across reloads (shared_preferences, `data/local_store.dart`) | `095749b` |
 | M-0 | Full app skeleton on demo data (all flows from `docs/MVP.md`) | `b72ca57` |
