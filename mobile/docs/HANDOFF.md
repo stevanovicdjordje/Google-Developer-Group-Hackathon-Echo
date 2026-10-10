@@ -14,9 +14,8 @@ Nothing. No worker branches open.
 
 ## Waiting on the human (ask only if a ready task depends on it)
 
-- 🧭 UI language for the video (Serbian or English) → unblocks M-11. (asked 2026-10-11 ~00:45, no answer yet)
-- 🧭/🙋 Design: `/design-login`, then design in Claude Design → unblocks M-10. The human wants the design to build on the existing navigation skeleton. (asked 2026-10-11 ~00:45, no answer yet)
-- 🙋 Install Go + Firebase CLI to see the Map tab with real data (M-12). (asked 2026-10-11 ~00:45, no answer yet)
+- Design (M-10): the human runs `/design-login` and makes the design himself. **Don't ask him about it again.** He wants it to build on the existing navigation skeleton.
+- Go + Firebase CLI: the human is installing them (2026-10-11 ~01:50). When `which go firebase` succeeds, run M-12.
 - 🧭 Who owns the backend (stevanovicdjordje or the 4th teammate)? Not mobile's call, but blocks M-13.
 
 ## Waiting on teammates

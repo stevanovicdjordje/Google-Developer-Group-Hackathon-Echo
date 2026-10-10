@@ -15,9 +15,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
-| M-10 | Design pass: apply the Claude Design result to `core/theme.dart` + screens | 🧭 Human: run `/design-login`, make the design in Claude Design. Then this becomes an opus task. |
-| M-11 | Language of the UI for the video (Serbian/English) + move strings to ARB | 🧭 Human decides the language. |
-| M-12 | Map tab against the live `backend/maps` (seeded event), incl. route + GPS dot + meeting-spot highlight | 🙋 Go + Firebase CLI on the machine (`brew install go firebase-cli`) |
+| M-10 | Design pass: apply the Claude Design result to `core/theme.dart` + screens | Human runs `/design-login` and makes the design himself. **Don't ask him again.** Then this becomes an opus task. |
+| M-12 | Map tab against the live `backend/maps` (seeded event), incl. route + GPS dot + meeting-spot highlight | Go + Firebase CLI being installed by the human (Java 21 present). Then `cd backend/maps && make dev`, `make seed`, `--dart-define=DEMO_EVENT_ID=<seeded id>`. |
 | M-13 | Wire real endpoints API-1…API-15 as they land | Backend has no owner yet (`mobile#5`) |
 | M-14 | Android build on an emulator/device (`EMULATOR_HOST=10.0.2.2`) + Android App Links for `/e/{id}` | Hosting domain for assetlinks.json; Android SDK on the machine |
 
@@ -25,7 +24,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| — | | | | |
+| M-11 | opus | 2026-10-11 00:58 | worktree | English UI (`product-ui-language` accepted): English default locale, all app strings into ARB (en template, sr kept compiling). Touches every screen: no parallel screen work. |
 
 ## Done
 

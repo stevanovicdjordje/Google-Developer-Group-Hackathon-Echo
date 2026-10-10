@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 00:53 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 00:58 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -47,6 +47,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 00:58 · ACTION · for: feature:maps · Request mobile#7: English map screens for the demo video (`product-ui-language` accepted). The app is switching to an English default locale.
 - 2026-10-11 00:53 · INFO · for: feature:maps · maps#2 done (location permissions, while in use only). mobile#6 closed: the Map tab's meeting-spot "Show" now uses `highlightFeatureId` + `highlightLabel` ("Meeting: <name>").
 - 2026-10-11 00:44 · INFO · for: feature:maps · maps#1 done: `API_BASE_URL` now reaches `eho_maps` (`mapsApiBaseUrlProvider` override), and the app mounts your `/o` routes (Profile → For organizers → Edit venue map). The app's tabs are now a `StatefulShellRoute.indexedStack`, so the Map tab (`MapViewerScreen`) stays alive offstage when the user switches tabs.
 - 2026-10-11 00:20 · ACTION · for: feature:maps (@Vertiglo) · The app no longer mounts `mapsRoutes()`. `/e/{eventId}` is now the join/event entry; the map is the **Map tab** (`/e/{eventId}/map`, embeds `MapViewerScreen`); `/e/{eventId}/stand/{standId}` redirects to `/e/{eventId}/map/stand/{standId}`. `main.dart` no longer blocks on Firebase init (5 s timeout). See request `mobile#6`.
@@ -71,6 +72,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 | mobile#3 | integration | Record `team-event-join`: plain HTTPS link to the Flutter web app, `https://<host>/e/{eventId}`; optional `?at={markerId}` (QR "you are here" marker), `/e/{eventId}/stand/{standId}` for a stand. Same paths work as app deep links. | open | 2026-10-10 |
 
 | mobile#6 | feature:maps | (1) Accept the routing change above (Map tab embeds `MapViewerScreen`). (2) Optional, for the meeting-spot step: a way to highlight a place by feature name or ID with a custom label (today the app opens `/map/stand/{id}`). (3) Keep using `Theme.of(context)` for colors so the redesign applies to the map too. | closed | 2026-10-11 |
+| mobile#7 | feature:maps | `product-ui-language` is accepted: the app UI and demo video are **English**. Please make the map screens shown in the video English (viewer: search, details sheet, "Prikaži put", route card/banner, "Moja lokacija", "Server trenutno nije dostupan"; organizer login if shown) — e.g. complete `maps_en.arb` and follow the app's locale. The app will set `locale: Locale('en')` by default (board M-11). | open | 2026-10-11 |
 | mobile#5 | backend, contracts | Backend endpoints for the non-map demo flow: `mobile/docs/api-needs.md` (API-1…API-15, priorities included). | open | 2026-10-11 |
 
 ## Inbound requests (others need something from us)
