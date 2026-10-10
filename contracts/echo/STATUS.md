@@ -68,6 +68,7 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| mobile#9 | mobile | (1) Structured summary for `EchoSummary`: additive `summary {takeaway, keyPoints[], tradeoffs[{topic, issue, fix, atSeconds}]}` on `getSummary`, `text` stays. (2) Question grouping: a near-duplicate question is merged into the existing one (`mergedCount`). (3) Confirmed: Ask, Catch up and Summary with `language=sr` answer in Serbian Latin (tested on real Gemma, incl. "Mara pominje ovo u 04:38."). In progress, contract 0.3.0. | accepted | 2026-10-11 |
 | mobile#5 (API-4…API-8, translation) | mobile | Contract `contracts/echo` 0.1.0 + service `backend/echo`. Differences from the sketch are listed in `CHANGELOG.md`. | done | 2026-10-11 |
 
 ## Acks (our responses to other modules' breaking proposals)
