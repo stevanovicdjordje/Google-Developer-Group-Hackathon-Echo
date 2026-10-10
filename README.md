@@ -6,7 +6,7 @@
 
 > 🇷🇸 **Kratko:** Eho je hakaton projekat (tim od 4 osobe, ~24h razvoja). Ovaj repozitorijum je trenutno samo kostur i dokumentacija — ništa još nije implementirano. Svaki član radi isključivo u svom modulu; zajednički ugovor je u `contracts/`, a pravila za AI agente u `AGENTS.md`.
 
-> **New teammate? Start with [`ONBOARDING.md`](ONBOARDING.md)**: setup, how to start your AI agent, and the kickoff prompt.
+> **New teammate? Start with [`ONBOARDING.md`](ONBOARDING.md)**: a 2-minute setup. Your AI agent handles the rest.
 
 Product scope, priorities and stack are **not locked**. See [`docs/PRODUCT.md`](docs/PRODUCT.md) and [`docs/MVP.md`](docs/MVP.md) for what is proposed and what is still open.
 
@@ -36,12 +36,7 @@ This is a deliberately simple monorepo: plain folders, no Nx/Turborepo, no submo
 
 ## Getting started (team members)
 
-Full instructions: **[`ONBOARDING.md`](ONBOARDING.md)**. The short version:
-
-1. Clone, find your workstream in [`docs/OWNERSHIP.md`](docs/OWNERSHIP.md), enable the scope guard (`git config core.hooksPath .githooks && git config eho.scope <scope>`).
-2. Open **your module** in your IDE: `mobile/` → Android Studio / Fleet, `backend/` → WebStorm / VS Code, `organizer-web/` → any web IDE (once each is initialized).
-3. Start your AI agent from the **repo root** and paste the kickoff prompt from `ONBOARDING.md`.
-4. Until an API is agreed and implemented, build UI against fixtures in `contracts/examples/`.
+See **[`ONBOARDING.md`](ONBOARDING.md)**. In short: clone, start your AI agent (`claude` or `codex`) **from the repo root**, and paste the one-paragraph kickoff prompt naming your module. The agent sets itself up, coordinates with the other agents on its own, and only asks you about design direction and big architecture decisions.
 
 ## Central rules
 
@@ -55,7 +50,7 @@ Full instructions: **[`ONBOARDING.md`](ONBOARDING.md)**. The short version:
 - **Trunk-based on `main`.** Module paths don't overlap, so commit small, `git pull --rebase --autostash`, push often. Stage only your paths (`git add -- <your-module>/`).
 - **Coordination updates** (`STATUS.md`, decisions, contracts) are committed separately and pushed **immediately**, so teammates' agents see them at their next sync.
 - **Use a PR** (template in `.github/pull_request_template.md`) for breaking contract changes, rule changes, or anything you want reviewed.
-- **Contract changes:** request them from the contracts owner via your module's `STATUS.md` (see `contracts/README.md`). Never change a contract and a consumer in one unreviewed step.
+- **Contract changes:** agents request them from the contracts holder via their module's `STATUS.md` (see `contracts/README.md`).
 - No force-pushes, no `--no-verify`, no rebasing other people's pushed work.
 
 ## Open decisions (undecided)
@@ -70,7 +65,7 @@ One file per decision in [`docs/decisions/`](docs/decisions/) (how it works: [`d
 - Speech-to-text provider, and whether live captions are in scope at all.
 - Persistence / auth (Firebase or alternatives).
 - Which organizer file formats are imported, and how they are validated.
-- Owners for each workstream.
+- Owners for each workstream (agents register their humans automatically in `*/STATUS.md`).
 
 ## What this repo does **not** contain yet
 

@@ -3,7 +3,8 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-10 · **Owner:** TBD
+**Last updated:** 2026-10-10 · **Owner:** TBD · **Scopes held:** TBD
+<!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
 
@@ -45,3 +46,9 @@ Undecided. See [`docs/decisions/mobile-stack.md`](../docs/decisions/mobile-stack
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
 | — | | | | |
+
+## Acks (our responses to other modules' breaking proposals)
+
+| Proposal ID | Response (`ack` / `object: <reason + counter-proposal>`) | Date |
+| --- | --- | --- |
+| — | | |

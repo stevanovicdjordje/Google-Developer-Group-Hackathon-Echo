@@ -19,4 +19,4 @@ Example JSON request/response payloads that:
 
 ## Who changes this folder
 
-Same policy as `contracts/`: the contract/integration owner, or an explicitly authorized member. Other modules may keep their own local mocks inside their module.
+Same policy as `contracts/`: the contracts holder (`docs/COORDINATION.md` §1). Other modules may keep their own local mocks inside their module.

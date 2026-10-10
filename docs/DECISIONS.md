@@ -20,11 +20,11 @@ The filename prefix names the only workstream allowed to write it (see `docs/COO
 | `mobile-` | Mobile owner |
 | `backend-` | Backend owner |
 | `organizer-web-` | Organizer-web owner |
-| `contracts-` | Contracts owner |
-| `product-` | Product/demo owner |
-| `team-` | Integration owner, after the team agrees |
+| `contracts-` | Contracts holder (fallback: backend agent) |
+| `product-` | Product holder (fallback: repo owner's agent) |
+| `team-` | Integration holder (fallback: repo owner's agent), recording what the humans agreed |
 
-Need a decision you can't write? Open a request to its writer (`docs/COORDINATION.md` §4).
+Need a decision you can't write? Open a request to its writer (`docs/COORDINATION.md` §5).
 
 ## Lifecycle
 
@@ -33,7 +33,7 @@ Need a decision you can't write? Open a request to its writer (`docs/COORDINATIO
 When a decision becomes `accepted`:
 
 1. Fill in **Decision** and **Decided** date.
-2. Do the follow-ups listed in the file, using the change impact map (`docs/COORDINATION.md` §3).
+2. Do the follow-ups listed in the file, using the change impact map (`docs/COORDINATION.md` §4).
 3. If it affects other modules, add an announcement to your `STATUS.md` and push right away.
 
 Never edit an accepted decision to mean something else. Supersede it with a new file.

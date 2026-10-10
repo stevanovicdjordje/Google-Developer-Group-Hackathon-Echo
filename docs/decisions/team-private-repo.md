@@ -2,7 +2,7 @@
 
 - **ID:** `team-private-repo`
 - **Status:** proposed
-- **Writer:** Integration owner, after team agreement · handle TBD
+- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · handle TBD
 - **Affects:** all
 - **Created:** 2026-10-10 · **Decided:** —
 

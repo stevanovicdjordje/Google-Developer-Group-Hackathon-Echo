@@ -2,7 +2,7 @@
 
 - **ID:** `team-event-join`
 - **Status:** open
-- **Writer:** Integration owner, after team agreement · handle TBD
+- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · handle TBD
 - **Affects:** organizer-web, mobile, backend
 - **Created:** 2026-10-10 · **Decided:** —
 

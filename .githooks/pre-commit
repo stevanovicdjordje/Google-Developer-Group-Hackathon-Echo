@@ -2,7 +2,7 @@
 # Eho scope guard — opt-in pre-commit hook. Setup (see ONBOARDING.md):
 #   git config core.hooksPath .githooks
 #   git config eho.scope backend             # or several: "contracts,product"
-# Scopes: mobile | backend | organizer-web | contracts | product | all
+# Scopes: mobile | backend | organizer-web | contracts | integration | product | all
 # Blocks commits whose staged paths fall outside your scope(s).
 # Not a security boundary: humans can bypass with --no-verify; agents must never do so.
 
@@ -11,7 +11,7 @@ scopes=$(git config --get eho.scope | tr ',' ' ')
 
 for s in $scopes; do
   case "$s" in
-    all|mobile|backend|organizer-web|contracts|product) ;;
+    all|mobile|backend|organizer-web|contracts|integration|product) ;;
     *) echo "eho scope guard: unknown scope '$s' in git config eho.scope" >&2; exit 1 ;;
   esac
 done
@@ -23,9 +23,10 @@ allowed() {
     mobile|backend|organizer-web)
       case "$1" in "$2"/*|docs/decisions/"$2"-*) return 0 ;; esac ;;
     contracts)
+      case "$1" in contracts/*|docs/decisions/contracts-*) return 0 ;; esac ;;
+    integration)
       case "$1" in
-        contracts/*|docs/decisions/contracts-*|docs/decisions/team-*) return 0 ;;
-        .github/*|.githooks/*) return 0 ;;
+        docs/decisions/team-*|.github/*|.githooks/*) return 0 ;;
         AGENTS.md|CLAUDE.md|README.md|ONBOARDING.md|.gitignore|.editorconfig) return 0 ;;
         docs/COORDINATION.md|docs/OWNERSHIP.md|docs/INTEGRATION.md|docs/DECISIONS.md) return 0 ;;
       esac ;;

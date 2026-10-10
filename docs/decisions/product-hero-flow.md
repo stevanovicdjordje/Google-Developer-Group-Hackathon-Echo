@@ -2,7 +2,7 @@
 
 - **ID:** `product-hero-flow`
 - **Status:** open
-- **Writer:** Product/demo owner · handle TBD
+- **Writer:** Product holder (fallback: repo owner's agent) · handle TBD
 - **Affects:** all
 - **Created:** 2026-10-10 · **Decided:** —
 

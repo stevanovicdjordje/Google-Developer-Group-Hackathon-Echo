@@ -8,8 +8,8 @@
 
 ## Policy
 
-- **Who changes it:** only the contract/integration owner, or a member they explicitly authorize (see `docs/OWNERSHIP.md`).
-- **How to ask for a change:** add an outbound request addressed to `contracts` in **your own** module's `STATUS.md` (`docs/COORDINATION.md` §4), with what you need, why, and when it blocks you.
+- **Who changes it:** only the **contracts holder**: whoever registered the `contracts` scope, otherwise the backend agent (`docs/COORDINATION.md` §1).
+- **How to ask for a change:** add an outbound request addressed to `contracts` in **your own** module's `STATUS.md` (`docs/COORDINATION.md` §5), with what you need, why, and when it blocks you.
 - **How changes land:** the procedure in [`AGENTS.md`](AGENTS.md): agree, edit spec + fixtures, validate, then write a [`CHANGELOG.md`](CHANGELOG.md) entry with **compatibility impact** (additive / breaking / fixture-only) and affected consumers, then announce in [`STATUS.md`](STATUS.md). Breaking changes go via a PR.
 - **Agree first:** server and client owners agree on a change *before* anyone implements against it. Breaking changes need explicit sign-off from every affected consumer.
 - **Status:** until it is marked approved, an endpoint in the spec is a *proposal*. It is not a working API.

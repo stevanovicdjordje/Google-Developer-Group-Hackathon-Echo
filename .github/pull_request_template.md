@@ -17,7 +17,7 @@
 ## Contract change?
 
 - [ ] No contract change
-- [ ] Yes — `contracts/**` changed (contract/integration owner must review)
+- [ ] Yes — `contracts/**` changed (contracts holder must agree; affected consumers ack)
   - Compatibility impact: <!-- additive / breaking / fixture-only -->
   - Affected consumers: <!-- mobile / organizer-web / backend -->
 

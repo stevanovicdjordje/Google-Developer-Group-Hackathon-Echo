@@ -2,7 +2,7 @@
 
 - **ID:** `contracts-realtime-transport`
 - **Status:** open
-- **Writer:** Contracts owner · handle TBD
+- **Writer:** Contracts holder (fallback: backend agent) · handle TBD
 - **Affects:** all
 - **Created:** 2026-10-10 · **Decided:** —
 

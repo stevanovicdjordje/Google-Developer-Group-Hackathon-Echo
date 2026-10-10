@@ -22,7 +22,7 @@ Clients never wait on the backend. Each client keeps a way to run on `contracts/
 
 ## Branching and review
 
-- **Trunk-based on `main`** (`COORDINATION.md` §6). Module paths don't overlap, so small direct commits are the low-friction default.
+- **Trunk-based on `main`** (`COORDINATION.md` §7). Module paths don't overlap, so small direct commits are the low-friction default.
 - **PRs** for breaking contract changes, rule/process changes, and anything someone wants reviewed. The owner of each touched path reviews. Contract PRs also get a consumer review.
 - Contract changes are committed separately from implementation changes.
 

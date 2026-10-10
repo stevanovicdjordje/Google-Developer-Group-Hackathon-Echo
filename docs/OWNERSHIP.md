@@ -1,44 +1,42 @@
 # Eho — Ownership
 
-> **Status: Owners TBD.** Fill in GitHub handles when the team assigns roles. There are 4 people and 5 workstreams, so one person can hold several. Once handles are known, add `.github/CODEOWNERS`. It's absent until then so no identities are invented.
-
 ## Team (GitHub)
 
-| Handle | Repo access | Workstream(s) |
-| --- | --- | --- |
-| `Ilij4n` | Admin (repo owner) | TBD |
-| `stevanovicdjordje` | Write (invited 2026-10-10) | TBD |
-| `Vertiglo` | Write (invited 2026-10-10) | TBD |
-| TBD | — | TBD |
+| Handle | Repo access |
+| --- | --- |
+| `Ilij4n` | Admin (repo owner) |
+| `stevanovicdjordje` | Write (accepted) |
+| `Vertiglo` | Write (accepted) |
+| TBD (4th member) | Not invited yet |
 
-## Workstreams
+## Who holds which workstream
 
-| Workstream | Owner GitHub handle | Owned paths | Publishes in | Dependencies | Status |
-| --- | --- | --- | --- | --- | --- |
-| Mobile (attendee app) | TBD | `mobile/**`, `docs/decisions/mobile-*` | `mobile/STATUS.md` | `contracts/`, backend API | Not initialized |
-| Backend (API, AI adapters) | TBD | `backend/**`, `docs/decisions/backend-*` | `backend/STATUS.md` | `contracts/`, Gemma/STT providers (TBD) | Not initialized |
-| Organizer web | TBD | `organizer-web/**`, `docs/decisions/organizer-web-*` | `organizer-web/STATUS.md` | `contracts/`, backend API | Not initialized |
-| Contracts / integration | TBD | `contracts/**`, `docs/decisions/contracts-*`, `docs/decisions/team-*`, root rules files, `.github/`, `.githooks/`, `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md` | `contracts/STATUS.md`, `contracts/CHANGELOG.md` | All modules | Skeleton only |
-| Product / demo | TBD | Other `docs/**`, `docs/decisions/product-*` | `docs/MVP.md`, `docs/TASKS.md` | Everyone; user research | Draft |
+Holders **register themselves**: on their first session, each agent writes its human's handle and scopes on the `Owner` line of its module's `STATUS.md` (`docs/COORDINATION.md` §2). This table therefore doesn't track live owners. To see them:
 
-Live module status is **not** tracked here. It's in each module's `STATUS.md`.
+```bash
+grep -H '^\*\*Last updated' */STATUS.md
+```
+
+| Workstream (scope) | Owned paths | Publishes in | Fallback holder if nobody registered |
+| --- | --- | --- | --- |
+| `mobile` | `mobile/**`, `docs/decisions/mobile-*` | `mobile/STATUS.md` | — |
+| `backend` | `backend/**`, `docs/decisions/backend-*` | `backend/STATUS.md` | — |
+| `organizer-web` | `organizer-web/**`, `docs/decisions/organizer-web-*` | `organizer-web/STATUS.md` | — |
+| `contracts` | `contracts/**`, `docs/decisions/contracts-*` | `contracts/STATUS.md`, `contracts/CHANGELOG.md` | Backend agent |
+| `integration` | Root files, `.github/`, `.githooks/`, `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md`, `docs/decisions/team-*` | Holder's own `STATUS.md` | Repo owner's agent (`Ilij4n`) |
+| `product` | Other `docs/**`, `docs/decisions/product-*` | `docs/MVP.md`, `docs/TASKS.md` | Repo owner's agent (`Ilij4n`) |
+
+Once owners are stable, the integration holder may add `.github/CODEOWNERS` from the registered handles.
 
 ## Rules for shared changes
 
-1. Write only in your owned paths. Everything else is read-only for you and your agents.
-2. Need something elsewhere? Open a request in your own `STATUS.md` (`docs/COORDINATION.md` §4) and ping the owner in chat if it blocks you.
-3. Contract changes go through the contracts owner, following the procedure in `contracts/AGENTS.md`.
-4. Cross-cutting (`team-*`) decisions are agreed by the team, then written by the integration owner.
-
-## Git workflow
-
-- Trunk-based on `main`. Commit small, pull with rebase, push often (`docs/COORDINATION.md` §6).
-- Use a PR for breaking contract changes, rule changes, or when you want a review. The reviewer is the owner of each touched path. Contract PRs also need a consumer owner.
+1. Write only in the scopes you hold. Everything else is read-only.
+2. Need something elsewhere? The agent opens a request (`docs/COORDINATION.md` §5). The other agent handles it at its next sync, with no human involved unless §0 says so.
+3. Contract changes go through the contracts holder, following `contracts/AGENTS.md`.
+4. `team-*` decisions are high-level. Humans make them, and the integration holder records them.
 
 ## Escalation
 
-1. Talk directly with the other owner.
-2. If you're still blocked, the contracts/integration owner decides API questions and the product/demo owner decides scope.
-3. Record the outcome in `docs/decisions/`.
-
-No automated orchestration is needed. This is a 4-person, ~24h project.
+1. Agents settle it themselves with the tie-break rules (`docs/COORDINATION.md` §5).
+2. If that fails, each agent asks its human with a 🧭 that lays out both options.
+3. The humans decide, and the outcome is recorded in `docs/decisions/`.
