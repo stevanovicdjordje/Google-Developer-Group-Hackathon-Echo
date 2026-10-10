@@ -23,5 +23,5 @@ Decided by the backend owner (@Vertiglo) on 2026-10-10.
 
 ## Consequences / follow-ups
 
-- Code in `backend/` (`cmd/api`, `internal/...`). Providers (Gemma, STT) go in their own `internal/` packages behind interfaces when someone adds them.
+- Each feature is an independent Go module/service in its own subfolder, e.g. `backend/maps/` (venue map). Gemma/STT adapters and other features get their own subfolders.
 - Local run instructions and base URL in `backend/STATUS.md` → How to consume.

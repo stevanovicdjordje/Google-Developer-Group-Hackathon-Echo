@@ -25,4 +25,4 @@ Decided by the contracts holder (@Vertiglo) on 2026-10-10.
 
 ## Consequences / follow-ups
 
-- `contracts/realtime.md` documents the readable Firestore paths and document shapes.
+- `contracts/features/maps/realtime.md` documents the readable Firestore paths and document shapes of the venue map.

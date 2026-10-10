@@ -26,5 +26,5 @@ Decided by the mobile owner (@Vertiglo) on 2026-10-10.
 
 ## Consequences / follow-ups
 
-- Project lives in `mobile/app/`. Feature folders under `lib/features/` so other features (captions, Q&A, networking) can be added next to `map_viewer/`, `map_editor/`, `location/`, `stats/`, `auth/`.
+- Project lives in `mobile/app/`. Feature folders under `lib/features/` so other features (captions, Q&A, networking) can be added next to `maps/` (venue map: viewer, editor, location, stats) and `auth/`.
 - How to build/run is recorded in `mobile/STATUS.md`.

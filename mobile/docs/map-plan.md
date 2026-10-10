@@ -1,6 +1,6 @@
 # Venue map module: plan and phases
 
-Owner: @Vertiglo. Covers `mobile/app/` (attendee viewer + organizer editor), `backend/` and the map part of `contracts/`.
+Owner: @Vertiglo (works **only** on the venue map). Covers the map parts of `mobile/app/` (`lib/features/maps/`), `backend/maps/` and `contracts/features/maps/`.
 No Gemma/LLM in this module. Other Eho features (captions, Q&A, networking) are out of scope here.
 
 ## Goal
@@ -21,7 +21,7 @@ Status: ✅ done · 🔄 in progress · ⏳ not started
 | 3 | Attendee map viewer: realtime read of the published seed event, zoom/pan, tap → details, search | Works on the seed event | ⏳ |
 | 4 | Organizer editor: plan upload, drawing via API, publish | A published change is visible on another device in < 2 s | ⏳ |
 | 5 | Routing: Go package (A*, snapping, multi-floor) + endpoint + cache; Flutter draws the route from a QR marker to a stand | Tests and benchmark pass (< 100 ms for a few thousand nodes) | ⏳ |
-| 6 | Location: georeferencing (3 points, affine), GPS dot with accuracy, QR/manual fallback, tracking, re-routing, "Stigli ste" | Go and Dart transform tests pass on the same vectors (`contracts/testdata/`) | ⏳ |
+| 6 | Location: georeferencing (3 points, affine), GPS dot with accuracy, QR/manual fallback, tracking, re-routing, "Stigli ste" | Go and Dart transform tests pass on the same vectors (`contracts/features/maps/testdata/`) | ⏳ |
 | 7 | Stats: batched events, daily aggregation, rate limit, organizer screen | | ⏳ |
 | 8 | Polish + deploy: security-rule tests, QR print page, Cloud Run + Firebase Hosting, docs | | ⏳ |
 
@@ -31,10 +31,10 @@ Before reporting a phase as done: `go vet ./...`, `go test ./...`, `flutter anal
 
 | What | Where |
 | --- | --- |
-| Flutter app | `mobile/app/` (`lib/features/map_viewer`, `map_editor`, `location`, `stats`, `auth`) |
-| Go API | `backend/` (`cmd/api`, `internal/...`) |
-| HTTP contract | `contracts/openapi.yaml` |
-| Firestore paths readable by clients | `contracts/realtime.md` |
-| Shared transform test vectors | `contracts/testdata/` |
-| Firebase rules + emulator config | `backend/firebase/` |
-| Indoor-GPS problem and solution (for the pitch) | `backend/docs/implementation-notes.md` |
+| Flutter app | `mobile/app/lib/features/maps/` (`viewer/`, `editor/`, `location/`, `stats/`) |
+| Go API | `backend/maps/` (own Go module: `cmd/api`, `internal/...`) |
+| HTTP contract | `contracts/features/maps/openapi.yaml` |
+| Firestore paths readable by clients | `contracts/features/maps/realtime.md` |
+| Shared transform test vectors | `contracts/features/maps/testdata/` |
+| Firebase rules + emulator config | `backend/maps/firebase/` |
+| Indoor-GPS problem and solution (for the pitch) | `backend/maps/docs/implementation-notes.md` |

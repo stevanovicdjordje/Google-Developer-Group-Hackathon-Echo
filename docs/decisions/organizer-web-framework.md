@@ -1,10 +1,10 @@
 # Organizer web framework
 
 - **ID:** `organizer-web-framework`
-- **Status:** accepted
-- **Writer:** Organizer-web owner · @Vertiglo
+- **Status:** open
+- **Writer:** Organizer-web owner · handle TBD
 - **Affects:** organizer-web
-- **Created:** 2026-10-10 · **Decided:** 2026-10-10
+- **Created:** 2026-10-10 · **Decided:** —
 
 ## Context
 
@@ -17,10 +17,11 @@ The organizer client needs a framework. The organizer-web owner decides.
 
 ## Decision
 
-The organizer UI is **not a separate project**. It is the organizer role inside the Flutter app in `mobile/app/` (built for web), sharing the map rendering and coordinate code with the attendee view. `organizer-web/` holds no code for now.
-Decided by the organizer-web owner (@Vertiglo) on 2026-10-10.
+_Open — for the organizer-web owner._
+
+Known so far: the organizer's **venue-map editor and map stats** are part of the Flutter app (`mobile/app/lib/features/maps/`, web build), because they share the map rendering and coordinate code with the attendee view (@Vertiglo, venue map feature, 2026-10-10). Everything else for organizers is undecided.
 
 ## Consequences / follow-ups
 
-- Organizer dev URL = the Flutter web build of `mobile/app/`; see `mobile/STATUS.md`.
-- If a separate organizer site is needed later, it goes here and consumes the same contract.
+- Record the dev URL and how to run it in `organizer-web/STATUS.md`.
+- If organizer-web becomes a separate site, it can link to the Flutter map editor or embed it.

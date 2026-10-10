@@ -3,16 +3,16 @@
 > **Single writer:** the organizer-web owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-10 · **Owner:** @Vertiglo · **Scopes held:** mobile, organizer-web, backend, contracts
+**Last updated:** 2026-10-10 · **Owner:** TBD · **Scopes held:** TBD
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
 
-No code here by decision: the organizer UI is the organizer role inside the Flutter app in `mobile/app/` (see `docs/decisions/organizer-web-framework.md`).
+Not initialized. No project, no framework chosen. (The venue-map editor lives in the Flutter app, see `docs/decisions/organizer-web-framework.md`.)
 
 ## Stack
 
-None. See [`docs/decisions/organizer-web-framework.md`](../docs/decisions/organizer-web-framework.md).
+Undecided. See [`docs/decisions/organizer-web-framework.md`](../docs/decisions/organizer-web-framework.md).
 
 ## How to consume / run (interface for teammates)
 
@@ -33,7 +33,7 @@ None. See [`docs/decisions/organizer-web-framework.md`](../docs/decisions/organi
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
-- 2026-10-10 21:12 · INFO · for: all · Organizer UI lives in the Flutter app (`mobile/app/`, web build). This folder stays empty for now.
+- 2026-10-10 21:58 · INFO · for: all · @Vertiglo released organizer-web (works only on the venue map). Module is free to register. The map editor is in the Flutter app.
 - 2026-10-10 · INFO · for: all · STATUS file created. Nothing implemented yet.
 
 ## Outbound requests (we need something from another module)
