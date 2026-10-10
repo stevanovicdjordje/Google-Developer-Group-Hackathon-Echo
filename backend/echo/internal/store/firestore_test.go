@@ -41,7 +41,7 @@ func TestFirestoreStore(t *testing.T) {
 	}
 
 	for round := range 2 {
-		if err := s.ResetTranscript(ctx, ev, "s1", "en"); err != nil {
+		if err := s.ResetTranscript(ctx, ev, "s1", SessionMeta{Language: "en", Title: "T", Speaker: "Mara"}); err != nil {
 			t.Fatal(err)
 		}
 		for i := range 12 {
@@ -50,7 +50,7 @@ func TestFirestoreStore(t *testing.T) {
 			}
 		}
 		tr, err := s.GetTranscript(ctx, ev, "s1")
-		if err != nil || len(tr.Lines) != 12 || tr.Status != StatusEnded || tr.Lines[10].Index != 10 {
+		if err != nil || len(tr.Lines) != 12 || tr.Status != StatusEnded || tr.Lines[10].Index != 10 || tr.Speaker != "Mara" {
 			t.Fatalf("round %d: %+v %v", round, tr, err)
 		}
 	}

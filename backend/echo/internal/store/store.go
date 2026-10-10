@@ -44,6 +44,8 @@ type Line struct {
 type Transcript struct {
 	Status   string
 	Language string
+	Title    string
+	Speaker  string
 	Lines    []Line
 }
 
@@ -99,9 +101,16 @@ type Cached struct {
 // Replayer writes the transcript (cmd/replay).
 type Replayer interface {
 	// ResetTranscript deletes old lines and marks the session live with 0 lines.
-	ResetTranscript(ctx context.Context, eventID, sessionID, language string) error
+	ResetTranscript(ctx context.Context, eventID, sessionID string, meta SessionMeta) error
 	// AppendLine writes one line; last marks the session ended.
 	AppendLine(ctx context.Context, eventID, sessionID string, l Line, last bool) error
+}
+
+// SessionMeta describes the talk a transcript belongs to.
+type SessionMeta struct {
+	Language string
+	Title    string
+	Speaker  string
 }
 
 // NewID returns a random, URL-safe ID with the given prefix.

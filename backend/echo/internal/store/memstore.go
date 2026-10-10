@@ -59,13 +59,15 @@ func (m *MemStore) GetTranscript(_ context.Context, eventID, sessionID string) (
 	if !ok {
 		return Transcript{}, ErrNoTranscript
 	}
-	return Transcript{Status: t.Status, Language: t.Language, Lines: slices.Clone(t.Lines)}, nil
+	c := *t
+	c.Lines = slices.Clone(t.Lines)
+	return c, nil
 }
 
-func (m *MemStore) ResetTranscript(_ context.Context, eventID, sessionID, language string) error {
+func (m *MemStore) ResetTranscript(_ context.Context, eventID, sessionID string, meta SessionMeta) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.sessions[sk(eventID, sessionID)] = &Transcript{Status: StatusLive, Language: language}
+	m.sessions[sk(eventID, sessionID)] = &Transcript{Status: StatusLive, Language: meta.Language, Title: meta.Title, Speaker: meta.Speaker}
 	return nil
 }
 

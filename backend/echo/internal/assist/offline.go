@@ -26,7 +26,8 @@ func (Offline) Model() string { return OfflineModel }
 const notCovered = "The speaker hasn't covered that yet."
 
 // Ask implements Assistant: the (up to) two lines sharing the most words with the question.
-func (Offline) Ask(_ context.Context, lines []store.Line, question, _ string) (string, error) {
+func (Offline) Ask(_ context.Context, t store.Transcript, question, _ string) (string, error) {
+	lines := t.Lines
 	q := words(question)
 	lw := make([]map[string]bool, len(lines))
 	df := map[string]int{}
@@ -66,7 +67,8 @@ func (Offline) Ask(_ context.Context, lines []store.Line, question, _ string) (s
 }
 
 // CatchUp implements Assistant: the opening line and the latest two.
-func (Offline) CatchUp(_ context.Context, lines []store.Line, _ string) (string, error) {
+func (Offline) CatchUp(_ context.Context, t store.Transcript, _ string) (string, error) {
+	lines := t.Lines
 	if len(lines) == 0 {
 		return "The talk hasn't started yet.", nil
 	}
@@ -82,7 +84,8 @@ func (Offline) CatchUp(_ context.Context, lines []store.Line, _ string) (string,
 }
 
 // Summary implements Assistant: up to six evenly spaced lines as bullets.
-func (Offline) Summary(_ context.Context, lines []store.Line, _ string) (string, error) {
+func (Offline) Summary(_ context.Context, t store.Transcript, _ string) (string, error) {
+	lines := t.Lines
 	if len(lines) == 0 {
 		return "The talk hasn't started yet.", nil
 	}

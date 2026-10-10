@@ -79,6 +79,8 @@ type sessionDoc struct {
 	Status    string    `firestore:"status"`
 	LineCount int       `firestore:"lineCount"`
 	Language  string    `firestore:"language"`
+	Title     string    `firestore:"title,omitempty"`
+	Speaker   string    `firestore:"speaker,omitempty"`
 	StartedAt time.Time `firestore:"startedAt"`
 	UpdatedAt time.Time `firestore:"updatedAt"`
 }
@@ -95,7 +97,7 @@ func (s *FirestoreStore) GetTranscript(ctx context.Context, eventID, sessionID s
 	if err := snap.DataTo(&sd); err != nil {
 		return Transcript{}, fmt.Errorf("decode session: %w", err)
 	}
-	t := Transcript{Status: sd.Status, Language: sd.Language}
+	t := Transcript{Status: sd.Status, Language: sd.Language, Title: sd.Title, Speaker: sd.Speaker}
 	it := snap.Ref.Collection(colLines).OrderBy("index", firestore.Asc).Documents(ctx)
 	defer it.Stop()
 	for {
@@ -115,7 +117,7 @@ func (s *FirestoreStore) GetTranscript(ctx context.Context, eventID, sessionID s
 	return t, nil
 }
 
-func (s *FirestoreStore) ResetTranscript(ctx context.Context, eventID, sessionID, language string) error {
+func (s *FirestoreStore) ResetTranscript(ctx context.Context, eventID, sessionID string, meta SessionMeta) error {
 	ref := s.session(eventID, sessionID)
 	refs, err := ref.Collection(colLines).DocumentRefs(ctx).GetAll()
 	if err != nil {
@@ -129,7 +131,9 @@ func (s *FirestoreStore) ResetTranscript(ctx context.Context, eventID, sessionID
 	}
 	bw.End()
 	now := time.Now().UTC()
-	if _, err := ref.Set(ctx, sessionDoc{Status: StatusLive, Language: language, StartedAt: now, UpdatedAt: now}); err != nil {
+	if _, err := ref.Set(ctx, sessionDoc{
+		Status: StatusLive, Language: meta.Language, Title: meta.Title, Speaker: meta.Speaker, StartedAt: now, UpdatedAt: now,
+	}); err != nil {
 		return fmt.Errorf("reset session: %w", err)
 	}
 	return nil

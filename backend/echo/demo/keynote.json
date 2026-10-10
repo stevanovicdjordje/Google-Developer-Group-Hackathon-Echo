@@ -1,6 +1,8 @@
 {
   "sessionId": "s1",
   "title": "On-device AI: when the model lives in your pocket",
+  "speaker": "Mara Ilić",
+  "stage": "Glavna sala",
   "language": "en",
   "lines": [
     {
@@ -69,10 +71,210 @@
     },
     {
       "atSeconds": 83,
+      "text": "Let me unpack each of these, because the details are where teams get hurt."
+    },
+    {
+      "atSeconds": 89,
+      "text": "Start with cost. Last year we ran our note-taking app, Lumen Notes, fully in the cloud."
+    },
+    {
+      "atSeconds": 96,
+      "text": "At about forty thousand daily users, inference was our second biggest bill after salaries."
+    },
+    {
+      "atSeconds": 102,
+      "text": "Roughly eleven thousand euros a month, and it grew linearly with every new user."
+    },
+    {
+      "atSeconds": 108,
+      "text": "When we moved summarization onto the phone, that line dropped by seventy percent in two months."
+    },
+    {
+      "atSeconds": 115,
+      "text": "The remaining thirty percent is the hard questions the router still sends to the cloud."
+    },
+    {
+      "atSeconds": 122,
+      "text": "Latency changed even more than cost. A cloud round trip was about nine hundred milliseconds for us."
+    },
+    {
+      "atSeconds": 129,
+      "text": "On a mid-range Android phone, the local model starts answering in around one hundred twenty milliseconds."
+    },
+    {
+      "atSeconds": 136,
+      "text": "Users notice that. Our session length went up by a quarter after the switch."
+    },
+    {
+      "atSeconds": 142,
+      "text": "Now privacy. This is the part I underestimated when we started."
+    },
+    {
+      "atSeconds": 147,
+      "text": "Two hospital networks had said no to us because audio would leave the building."
+    },
+    {
+      "atSeconds": 153,
+      "text": "With everything on the device, their security review took two weeks instead of never."
+    },
+    {
+      "atSeconds": 159,
+      "text": "So privacy is not just a feature for us. It opened a whole customer segment."
+    },
+    {
+      "atSeconds": 166,
+      "text": "Let's go back to battery, because that's where I see most prototypes die."
+    },
+    {
+      "atSeconds": 172,
+      "text": "That twelve percent was measured over one hour of continuous transcription on a Pixel 8."
+    },
+    {
+      "atSeconds": 179,
+      "text": "The problem was that we woke the model for every audio frame, about fifty times a second."
+    },
+    {
+      "atSeconds": 186,
+      "text": "Batching means we buffer two seconds of audio and process it in one pass."
+    },
+    {
+      "atSeconds": 192,
+      "text": "The phone's chip is much happier doing one big job than fifty small ones."
+    },
+    {
+      "atSeconds": 198,
+      "text": "After batching, the battery hit for the same hour went down to about four percent."
+    },
+    {
+      "atSeconds": 205,
+      "text": "The cost is two seconds of delay on the captions, and in user tests nobody noticed."
+    },
+    {
+      "atSeconds": 212,
+      "text": "We also pause the model when the screen is off and nobody is speaking."
+    },
+    {
+      "atSeconds": 218,
+      "text": "The second trade-off was model size, so let me give you the real numbers."
+    },
+    {
+      "atSeconds": 224,
+      "text": "We started from a model with about two billion parameters."
+    },
+    {
+      "atSeconds": 229,
+      "text": "In sixteen-bit precision that is roughly four gigabytes, too much for most phones."
+    },
+    {
+      "atSeconds": 235,
+      "text": "With four-bit quantization it fits in about one point four gigabytes."
+    },
+    {
+      "atSeconds": 240,
+      "text": "On our evaluation set, the quality loss was under two percent, which users could not see."
+    },
+    {
+      "atSeconds": 247,
+      "text": "Don't ship the model inside the app package. Download it on Wi-Fi after the first launch."
+    },
+    {
+      "atSeconds": 254,
+      "text": "Our install conversion dropped by a third the one week we bundled it."
+    },
+    {
+      "atSeconds": 260,
+      "text": "The third piece is the hybrid router, and this is the one I'd copy first."
+    },
+    {
+      "atSeconds": 267,
+      "text": "Every request first goes to the small model on the device."
+    },
+    {
+      "atSeconds": 272,
+      "text": "The small model also reports how confident it is in its own answer."
+    },
+    {
+      "atSeconds": 278,
+      "text": "If the confidence is below zero point seven, we send the request to the cloud instead."
+    },
+    {
+      "atSeconds": 285,
+      "text": "Long documents and questions that need fresh information from the web always go to the cloud."
+    },
+    {
+      "atSeconds": 292,
+      "text": "That is how eighty percent of requests stay on the device in our app."
+    },
+    {
+      "atSeconds": 298,
+      "text": "The router itself is about forty lines of code. The hard part is choosing the threshold."
+    },
+    {
+      "atSeconds": 305,
+      "text": "We picked it by measuring, not by guessing. Which brings me to evaluation."
+    },
+    {
+      "atSeconds": 311,
+      "text": "Build a small test set from real user requests, two or three hundred is enough."
+    },
+    {
+      "atSeconds": 318,
+      "text": "Run it on every model change, on real phones, not only in the simulator."
+    },
+    {
+      "atSeconds": 324,
+      "text": "Track three numbers: answer quality, time to first token, and battery per hour."
+    },
+    {
+      "atSeconds": 330,
+      "text": "If you only track quality, you will ship something that drains the phone by lunch."
+    },
+    {
+      "atSeconds": 337,
+      "text": "A quick word on tools. We use an open model from the Gemma family on the device."
+    },
+    {
+      "atSeconds": 344,
+      "text": "Open weights matter here, because you need to quantize and test the model yourself."
+    },
+    {
+      "atSeconds": 350,
+      "text": "On Android we run it with a mobile inference runtime, and on iOS with the equivalent."
+    },
+    {
+      "atSeconds": 357,
+      "text": "A few things that went wrong, so you don't repeat them."
+    },
+    {
+      "atSeconds": 362,
+      "text": "Older phones with four gigabytes of memory killed our app in the background. We now check memory before loading the model."
+    },
+    {
+      "atSeconds": 371,
+      "text": "Thermal throttling: after ten minutes of heavy use, the phone slows the chip down. Batching helped here too."
+    },
+    {
+      "atSeconds": 379,
+      "text": "And people expect the app to work in airplane mode once they hear it is on-device. Make sure it does."
+    },
+    {
+      "atSeconds": 387,
+      "text": "So, to sum up. On-device gives you near-zero marginal cost, privacy, and speed."
+    },
+    {
+      "atSeconds": 393,
+      "text": "You pay for it with battery, model size and complexity."
+    },
+    {
+      "atSeconds": 398,
+      "text": "Batching fixes most of the battery problem, quantization fixes the size, and a router handles the rest."
+    },
+    {
+      "atSeconds": 405,
       "text": "So my advice: start hybrid, measure, and move work down to the device over time."
     },
     {
-      "atSeconds": 90,
+      "atSeconds": 412,
       "text": "Thank you. I think we have a few minutes for questions."
     }
   ]

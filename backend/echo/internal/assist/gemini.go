@@ -36,6 +36,10 @@ type Gemini struct {
 
 const defaultGeminiBaseURL = "https://generativelanguage.googleapis.com/v1beta"
 
+// retryBackoff is the wait before each retry of an HTTP 5xx, which the Gemini
+// API returns now and then for Gemma.
+var retryBackoff = []time.Duration{300 * time.Millisecond, time.Second}
+
 // Name implements Model.
 func (g *Gemini) Name() string { return g.Model }
 
@@ -112,7 +116,12 @@ func (g *Gemini) Generate(ctx context.Context, prompt string, maxTokens int) (st
 		if status == http.StatusOK {
 			break
 		}
-		if status >= 500 && attempt == 0 {
+		if status >= 500 && attempt < len(retryBackoff) {
+			select {
+			case <-ctx.Done():
+				return "", fmt.Errorf("%w: %v", ErrModel, ctx.Err())
+			case <-time.After(retryBackoff[attempt]):
+			}
 			continue
 		}
 		return "", fmt.Errorf("%w: HTTP %d: %s", ErrModel, status, truncate(string(raw), 300))

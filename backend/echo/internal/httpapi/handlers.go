@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -25,7 +26,8 @@ import (
 const (
 	maxBodyBytes       = 16 << 10
 	maxTranslateLines  = 50
-	translateChunk     = 20
+	translateChunk     = 10
+	translateParallel  = 4
 	defaultLanguage    = "en"
 	notStartedResponse = "The talk hasn't started yet."
 )
@@ -207,7 +209,7 @@ func (s *server) ask(w http.ResponseWriter, r *http.Request, p auth.Principal) {
 	sum := sha256.Sum256([]byte(strings.ToLower(q)))
 	key := fmt.Sprintf("ask_%s_%d_%s", lang, len(t.Lines), hex.EncodeToString(sum[:8]))
 	c, err := s.cachedAI(r.Context(), p.UID, eventID, sessionID, key, len(t.Lines), func(ctx context.Context) (string, error) {
-		return s.ai.Ask(ctx, t.Lines, q, lang)
+		return s.ai.Ask(ctx, t, q, lang)
 	})
 	s.writeAI(w, r, c, err)
 }
@@ -221,7 +223,7 @@ func (s *server) summary(w http.ResponseWriter, r *http.Request, p auth.Principa
 }
 
 func (s *server) summarize(w http.ResponseWriter, r *http.Request, p auth.Principal, kind string,
-	gen func(context.Context, []store.Line, string) (string, error)) {
+	gen func(context.Context, store.Transcript, string) (string, error)) {
 	eventID, sessionID, t, ok := s.session(w, r, p)
 	if !ok {
 		return
@@ -236,7 +238,7 @@ func (s *server) summarize(w http.ResponseWriter, r *http.Request, p auth.Princi
 	}
 	key := fmt.Sprintf("%s_%s_%d", kind, lang, len(t.Lines))
 	c, err := s.cachedAI(r.Context(), p.UID, eventID, sessionID, key, len(t.Lines), func(ctx context.Context) (string, error) {
-		return gen(ctx, t.Lines, lang)
+		return gen(ctx, t, lang)
 	})
 	s.writeAI(w, r, c, err)
 }
@@ -318,31 +320,66 @@ func (s *server) translate(w http.ResponseWriter, r *http.Request, p auth.Princi
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// translateLines translates in chunks of translateChunk lines, up to
+// translateParallel chunks at a time, so a 50-line backlog takes about as long
+// as two model calls.
 func (s *server) translateLines(ctx context.Context, eventID, sessionID, cacheLang, lang string, lines []store.Line) (map[int]string, error) {
-	out := make(map[int]string, len(lines))
+	var (
+		mu       sync.Mutex
+		out      = make(map[int]string, len(lines))
+		firstErr error
+		wg       sync.WaitGroup
+		sem      = make(chan struct{}, translateParallel)
+	)
 	for start := 0; start < len(lines); start += translateChunk {
 		chunk := lines[start:min(start+translateChunk, len(lines))]
-		texts := make([]string, len(chunk))
-		for i, l := range chunk {
-			texts[i] = l.Text
-		}
-		res, err := s.ai.Translate(ctx, texts, lang)
-		if err != nil {
-			return nil, err
-		}
-		if len(res) != len(chunk) {
-			return nil, fmt.Errorf("%w: got %d translations for %d lines", assist.ErrModel, len(res), len(chunk))
-		}
-		got := make(map[int]string, len(chunk))
-		for i, l := range chunk {
-			got[l.Index] = res[i]
-			out[l.Index] = res[i]
-		}
-		if err := s.store.PutTranslations(ctx, eventID, sessionID, cacheLang, got); err != nil {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func() {
+			defer func() { <-sem; wg.Done() }()
+			got, err := s.translateChunk(ctx, lang, chunk)
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				if firstErr == nil {
+					firstErr = err
+				}
+				return
+			}
+			for i, t := range got {
+				out[i] = t
+			}
+		}()
+	}
+	wg.Wait()
+	if len(out) > 0 {
+		if err := s.store.PutTranslations(ctx, eventID, sessionID, cacheLang, out); err != nil {
 			s.log.WarnContext(ctx, "translation cache write failed", "err", err)
 		}
 	}
+	if firstErr != nil {
+		return nil, firstErr
+	}
 	return out, nil
+}
+
+func (s *server) translateChunk(ctx context.Context, lang string, chunk []store.Line) (map[int]string, error) {
+	texts := make([]string, len(chunk))
+	for i, l := range chunk {
+		texts[i] = l.Text
+	}
+	res, err := s.ai.Translate(ctx, texts, lang)
+	if err != nil {
+		return nil, err
+	}
+	if len(res) != len(chunk) {
+		return nil, fmt.Errorf("%w: got %d translations for %d lines", assist.ErrModel, len(res), len(chunk))
+	}
+	got := make(map[int]string, len(chunk))
+	for i, l := range chunk {
+		got[l.Index] = res[i]
+	}
+	return got, nil
 }
 
 func toJSON(q store.Question, uid string) questionJSON {

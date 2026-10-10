@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -28,27 +29,29 @@ func (fakeVerifier) Verify(_ context.Context, tok string) (auth.Principal, error
 
 type countingAI struct {
 	assist.Offline
-	calls atomic.Int32
-	fail  bool
+	calls      atomic.Int32
+	translated atomic.Int32
+	fail       bool
 }
 
 func (c *countingAI) Model() string { return "fake-gemma" }
 
-func (c *countingAI) Ask(ctx context.Context, lines []store.Line, q, lang string) (string, error) {
+func (c *countingAI) Ask(ctx context.Context, t store.Transcript, q, lang string) (string, error) {
 	c.calls.Add(1)
 	if c.fail {
 		return "", assist.ErrModel
 	}
-	return c.Offline.Ask(ctx, lines, q, lang)
+	return c.Offline.Ask(ctx, t, q, lang)
 }
 
-func (c *countingAI) Summary(ctx context.Context, lines []store.Line, lang string) (string, error) {
+func (c *countingAI) Summary(ctx context.Context, t store.Transcript, lang string) (string, error) {
 	c.calls.Add(1)
-	return c.Offline.Summary(ctx, lines, lang)
+	return c.Offline.Summary(ctx, t, lang)
 }
 
 func (c *countingAI) Translate(ctx context.Context, texts []string, lang string) ([]string, error) {
 	c.calls.Add(1)
+	c.translated.Add(int32(len(texts)))
 	return c.Offline.Translate(ctx, texts, lang)
 }
 
@@ -67,7 +70,7 @@ func newFixture(t *testing.T, lines ...string) *fixture {
 	st.PutEvent("ev1", store.Event{OwnerUID: "org", PublishedVersion: 1})
 	st.PutEvent("draft", store.Event{OwnerUID: "org"})
 	ctx := context.Background()
-	if err := st.ResetTranscript(ctx, "ev1", "s1", "en"); err != nil {
+	if err := st.ResetTranscript(ctx, "ev1", "s1", store.SessionMeta{Language: "en"}); err != nil {
 		t.Fatal(err)
 	}
 	for i, l := range lines {
@@ -287,5 +290,26 @@ func TestCORSPreflight(t *testing.T) {
 	h.ServeHTTP(rec, req)
 	if rec.Code != 204 || rec.Header().Get("Access-Control-Allow-Origin") != "http://localhost:5000" {
 		t.Fatalf("got %d %v", rec.Code, rec.Header())
+	}
+}
+
+func TestTranslateLongBacklogInParallelChunks(t *testing.T) {
+	lines := make([]string, 60)
+	for i := range lines {
+		lines[i] = "line " + strconv.Itoa(i)
+	}
+	f := newFixture(t, lines...)
+	code, body := f.do("POST", sessPath+"/translate", "a1", `{"language":"de"}`)
+	if code != 200 || body["nextIndex"] != float64(50) || len(body["lines"].([]any)) != 50 {
+		t.Fatalf("got %d nextIndex=%v", code, body["nextIndex"])
+	}
+	for i, l := range body["lines"].([]any) {
+		m := l.(map[string]any)
+		if m["index"] != float64(i) || m["text"] != "[de] line "+strconv.Itoa(i) {
+			t.Fatalf("line %d: %v", i, m)
+		}
+	}
+	if c, n := f.ai.calls.Load(), f.ai.translated.Load(); c != 5 || n != 50 {
+		t.Fatalf("calls=%d lines=%d, want 5 chunks of 10", c, n)
 	}
 }

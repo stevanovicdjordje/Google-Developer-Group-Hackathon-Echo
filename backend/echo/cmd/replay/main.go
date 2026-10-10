@@ -31,6 +31,7 @@ const demoEventName = "Eho Demo Expo"
 type transcriptFile struct {
 	SessionID string `json:"sessionId"`
 	Title     string `json:"title"`
+	Speaker   string `json:"speaker"`
 	Language  string `json:"language"`
 	Lines     []struct {
 		AtSeconds int    `json:"atSeconds"`
@@ -122,7 +123,7 @@ func run(ctx context.Context, project, eventID, sessionID, file string, speed fl
 		fmt.Fprintln(os.Stderr, "warning: the event is not published, attendees can't read the transcript yet")
 	}
 
-	if err := st.ResetTranscript(ctx, eventID, sessionID, tf.Language); err != nil {
+	if err := st.ResetTranscript(ctx, eventID, sessionID, store.SessionMeta{Language: tf.Language, Title: tf.Title, Speaker: tf.Speaker}); err != nil {
 		return err
 	}
 	fmt.Printf("replaying %q (%d lines) into event %s, session %s\n", tf.Title, len(tf.Lines), eventID, sessionID)
