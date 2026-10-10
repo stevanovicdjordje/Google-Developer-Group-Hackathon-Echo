@@ -7,7 +7,7 @@
 - **The deliverable is a demo video of the happy path.** We build only what the video shows. Error states, edge cases and admin screens are out unless they're on camera.
 - **What's on camera really runs.** Judges ask for "actual use, not a mockup", so the shown flow goes through the real app and backend, on **demo data** (one fake conference, ~20 fake attendees).
 - **Build almost everything for real.** Mock only what is genuinely hard or needs heavy cross-module coordination (messaging, payments, live speech-to-text). Every mocked part is listed in the table below, so nobody is surprised.
-- **AI: Gemma through the Gemini API** (one API key, no GPU hosting). It's used for real wherever the video says "AI". If a call is too slow on camera, precompute the answer for the demo data, but keep the real call path.
+- **AI: a model per feature.** Gemma (via the Gemini API) for translation; other models may be used for other features, whichever works best. Each feature calls its model through a backend adapter so it can be swapped. If a call is too slow on camera, precompute the answer for the demo data, but keep the real call path.
 
 ## The video storyline (happy path)
 
@@ -21,7 +21,7 @@
 
 ## Feature status
 
-| Feature | For the video | Mocked / faked part | AI (Gemma via Gemini API) |
+| Feature | For the video | Mocked / faked part | AI |
 | --- | --- | --- | --- |
 | Organizer upload → AI extraction → publish → link/QR | **Build** | Uses prepared demo files | ✅ extraction |
 | Join via link/QR (opens in browser) | **Build** | — | — |
@@ -32,7 +32,7 @@
 | Meeting spot on the map | **Build** | — | — |
 | Organizer stats | **Build** if time allows (`feature:maps` phase 7) | — | — |
 | Echo: transcript | **Build, faked input** | A pre-recorded transcript is replayed as if live. Live speech-to-text is a stretch goal. | — |
-| Echo: translation | **Build** | — | ✅ translation |
+| Echo: translation | **Build** | — | ✅ Gemma |
 | Echo: Q&A | **Build** | — | optional: group similar questions |
 | Echo: Ask the talk | **Build** | — | ✅ answers from the transcript |
 | Talk summary (paid) | **Build** | **Mock** "unlock" button, no real payment | ✅ summary |

@@ -20,7 +20,7 @@ We can demo one end-to-end Gemma-powered flow well, not eight. See `docs/MVP.md`
 
 The demo is a **video of the happy path** across the whole app, not one flow. Feature set: `docs/PRODUCT.md` → *The app*. Video storyline and per-feature status (build / faked input / mock): `docs/MVP.md`.
 
-Gemma (via the Gemini API) is used for real in five places: organizer file extraction, Echo translation, Ask the talk, talk summaries, and Find (recommendations + prompt search).
+AI is used in five places: organizer file extraction, Echo translation (Gemma via the Gemini API), Ask the talk, talk summaries, and Find (recommendations + prompt search). Models other than Gemma may be used per feature; the model actually used is recorded in `docs/decisions/backend-gemma-hosting.md` / the feature's STATUS.
 
 Agreed by the team (relayed by @Ilij4n), 2026-10-10. This also resolves request `mobile#1` (venue map is part of the demo).
 
