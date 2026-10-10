@@ -46,48 +46,70 @@ GoRouter buildRouter() => GoRouter(
       ],
     ),
 
-    // Event: bottom-nav tabs
-    ShellRoute(
-      builder: (c, s, child) =>
-          EventShell(eventId: _id(s), location: s.uri.path, child: child),
-      routes: [
-        GoRoute(
-          path: '/e/:eventId/agenda',
-          builder: (c, s) => AgendaScreen(eventId: _id(s)),
-        ),
-        GoRoute(
-          path: '/e/:eventId/map',
-          builder: (c, s) => MapTab(
-            eventId: _id(s),
-            markerId: s.uri.queryParameters['at'],
-          ),
+    // Event: bottom-nav tabs. Each tab is a branch with its own Navigator
+    // kept alive in an IndexedStack, so switching tabs keeps scroll
+    // position, Find results, the map camera and pushed pages.
+    StatefulShellRoute.indexedStack(
+      builder: (c, s, shell) =>
+          EventShell(eventId: _id(s), location: s.uri.toString(), child: shell),
+      branches: [
+        StatefulShellBranch(
+          initialLocation: _tabPlaceholder('agenda'),
           routes: [
             GoRoute(
-              path: 'stand/:standId',
+              path: '/e/:eventId/agenda',
+              builder: (c, s) => AgendaScreen(eventId: _id(s)),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          initialLocation: _tabPlaceholder('map'),
+          routes: [
+            GoRoute(
+              path: '/e/:eventId/map',
               builder: (c, s) => MapTab(
                 eventId: _id(s),
-                featureId: s.pathParameters['standId'],
+                markerId: s.uri.queryParameters['at'],
               ),
+              routes: [
+                GoRoute(
+                  path: 'stand/:standId',
+                  builder: (c, s) => MapTab(
+                    eventId: _id(s),
+                    featureId: s.pathParameters['standId'],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        GoRoute(
-          path: '/e/:eventId/find',
-          builder: (c, s) => FindScreen(eventId: _id(s)),
+        StatefulShellBranch(
+          initialLocation: _tabPlaceholder('find'),
           routes: [
             GoRoute(
-              path: 'person/:personId',
-              builder: (c, s) => PersonScreen(
-                eventId: _id(s),
-                personId: s.pathParameters['personId']!,
-                why: s.uri.queryParameters['why'],
-              ),
+              path: '/e/:eventId/find',
+              builder: (c, s) => FindScreen(eventId: _id(s)),
+              routes: [
+                GoRoute(
+                  path: 'person/:personId',
+                  builder: (c, s) => PersonScreen(
+                    eventId: _id(s),
+                    personId: s.pathParameters['personId']!,
+                    why: s.uri.queryParameters['why'],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        GoRoute(
-          path: '/e/:eventId/profile',
-          builder: (c, s) => const ProfileScreen(),
+        StatefulShellBranch(
+          initialLocation: _tabPlaceholder('profile'),
+          routes: [
+            GoRoute(
+              path: '/e/:eventId/profile',
+              builder: (c, s) => const ProfileScreen(),
+            ),
+          ],
         ),
       ],
     ),
@@ -131,6 +153,12 @@ GoRouter buildRouter() => GoRouter(
 
 String _id(GoRouterState s) => s.pathParameters['eventId']!;
 
+/// go_router needs a concrete initial location per branch, but ours depend on
+/// `:eventId`. This placeholder only satisfies that check: [EventShell]
+/// always navigates with real `/e/{eventId}/…` locations (never `goBranch`),
+/// and branches are not preloaded, so it is never opened.
+String _tabPlaceholder(String tab) => '/e/_/$tab';
+
 /// `/e/{eventId}`: joined users go straight in (to the map when a
 /// "you are here" QR was scanned); everyone else sees the join screen.
 class EventEntry extends ConsumerWidget {
@@ -141,9 +169,7 @@ class EventEntry extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final joined = ref
-        .watch(joinedEventsProvider)
-        .any((e) => e.id == eventId);
+    final joined = ref.watch(joinedEventsProvider).any((e) => e.id == eventId);
     if (!joined) return JoinScreen(eventId: eventId);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
