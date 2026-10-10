@@ -183,7 +183,7 @@ class EventEntry extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final joined = ref.watch(joinedEventsProvider).any((e) => e.id == eventId);
-    if (!joined) return JoinScreen(eventId: eventId);
+    if (!joined) return JoinScreen(eventId: eventId, markerId: markerId);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
       context.go(
