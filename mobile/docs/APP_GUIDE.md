@@ -43,7 +43,7 @@ mobile/
 | `/o`, `/o/e/:eventId` | Venue map editor from `eho_maps` (only these routes of `mapsRoutes()` are mounted); reachable from Profile → For organizers | `mobile/maps` (feature:maps, read-only) |
 | `/organizer` → `/review` → `/published?url&name` | Organizer upload / review / link+QR | `features/organizer/organizer_screens.dart` |
 | `/e/:eventId` | `EventEntry`: join screen, or redirect to agenda (or map if `?at=`) | `core/router.dart`, `features/join/` |
-| `/e/:eventId/{agenda,map,find,profile}` | Tabs inside `EventShell` (a `StatefulShellRoute.indexedStack`: each tab is a branch kept alive, so state survives tab switches; tab index from URL; branch `initialLocation`s are `/e/_/<tab>` placeholders that are never opened. Navigate tabs with `context.go('/e/{id}/<tab>')`, never `goBranch`) | `features/event/event_shell.dart` + per-tab folders |
+| `/e/:eventId/{agenda,map,find,profile}` | Tabs inside `EventShell` (a `StatefulShellRoute.indexedStack`: each tab is a branch kept alive, so state survives tab switches; tab index from URL; branch `initialLocation`s are `/e/_/<tab>` placeholders that are never opened. Navigate tabs with `context.go('/e/{id}/<tab>')`, never `goBranch`. Tab root pages get `key: ValueKey(eventId)` so switching events never shows another event's state) | `features/event/event_shell.dart` + per-tab folders |
 | `/e/:eventId/map/stand/:standId` | Map tab focused on a feature | `features/map/map_tab.dart` |
 | `/e/:eventId/stand/:standId` | redirect → `/map/stand/…` (link format from `team-event-join`) | |
 | `/e/:eventId/find/person/:personId?why=` | Person + contact | `features/find/find_screens.dart` |
