@@ -14,7 +14,7 @@
 Holders **register themselves**: on their first session, each agent writes its human's handle and scopes on the `Owner` line of its module's `STATUS.md` (`docs/COORDINATION.md` §2). This table therefore doesn't track live owners. To see them:
 
 ```bash
-grep -H '^\*\*Last updated' */STATUS.md
+grep -H '^\*\*Last updated' */STATUS.md contracts/*/STATUS.md
 ```
 
 | Workstream (scope) | Owned paths | Publishes in | Fallback holder if nobody registered |
@@ -25,6 +25,7 @@ grep -H '^\*\*Last updated' */STATUS.md
 | `contracts` | `contracts/**`, `docs/decisions/contracts-*` | `contracts/STATUS.md`, `contracts/CHANGELOG.md` | Backend agent |
 | `integration` | Root files, `.github/`, `.githooks/`, `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md`, `docs/decisions/team-*` | Holder's own `STATUS.md` | Repo owner's agent (`Ilij4n`) |
 | `product` | Other `docs/**`, `docs/decisions/product-*` | `docs/MVP.md`, `docs/TASKS.md` | Repo owner's agent (`Ilij4n`) |
+| `feature:<name>` | `<module>/<name>/**` in every module, `docs/decisions/feature-<name>-*` | `contracts/<name>/STATUS.md` | — (see `docs/COORDINATION.md` §1a) |
 
 Once owners are stable, the integration holder may add `.github/CODEOWNERS` from the registered handles.
 

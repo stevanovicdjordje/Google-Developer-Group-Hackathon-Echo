@@ -1,6 +1,6 @@
 # Eho — Tasks (initial)
 
-> Every task is **TODO** with owner **TBD** unless stated otherwise. Build only what `MVP.md` marks **Build** for the demo video. Everything else is design only.
+> Every task is **TODO** with owner **TBD** unless stated otherwise. Build what `MVP.md` marks **Build** for the demo video; only the parts it marks **Mock** stay mocked.
 
 ## Definition: "Ready for integration"
 

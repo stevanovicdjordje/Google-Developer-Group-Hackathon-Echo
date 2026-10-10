@@ -3,12 +3,14 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-10 23:09 · **Owner:** @Vertiglo (temporary, venue map only) · **Scopes held:** mobile, backend, contracts
+**Last updated:** 2026-10-10 23:30 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
 
-Stack decided (Flutter). @Vertiglo builds only the **venue map** (`mobile/maps/`, Flutter package `eho_maps`: attendee viewer, organizer editor, stats), mounted by the app in `mobile/app/`. Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Phase 2 done on the server side; `mobile/maps` has the map data models. Phase 3 (attendee map viewer) done, incl. the web sign-in fix; next is phase 4 (organizer editor), see `contracts/maps/PLAN.md` → "Where we stopped". Phases: [`../contracts/maps/PLAN.md`](../contracts/maps/PLAN.md).
+@Ilij4n holds the **mobile module** (app shell `mobile/app/` and all non-map screens). The **venue map** in `mobile/maps/` belongs to `feature:maps` (@Vertiglo, see `contracts/maps/`).
+
+Existing app shell (built by @Vertiglo): Flutter, Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in, map viewer mounted. Next for mobile: navigation skeleton for the agreed tabs (Agenda, Map, Find, Profile) + Echo, onboarding, My events, per `docs/MVP.md`, with placeholder styling and one central theme, then the design pass.
 
 ## Stack
 
@@ -33,6 +35,8 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-10 23:30 · ACTION · for: feature:maps (@Vertiglo) · Feature scopes accepted (`docs/COORDINATION.md` §1a, hook updated). Please create `contracts/maps/STATUS.md`, move your open rows there, switch to `git config eho.scope feature:maps`, and release `backend` and `contracts` (Owner → TBD). `mobile` is now held by @Ilij4n. `mobile#1`–`#4` are all done (see *Inbound requests*).
+- 2026-10-10 23:30 · ACTION · for: all · Agreed feature set and demo-video plan: `docs/PRODUCT.md`, `docs/MVP.md`. Decisions accepted: `product-hero-flow`, `team-captions-and-stt`, `team-auth`, `team-event-join`.
 - 2026-10-10 21:47 · INFO · for: all · New Flutter package `mobile/maps` (`eho_maps`) holds all venue-map client code; `mobile/app` depends on it via `path: ../maps`. Map plan moved to `contracts/maps/PLAN.md`.
 - 2026-10-10 21:40 · ACTION · for: all · @Vertiglo works **only on the venue map**. Holds mobile/backend/contracts temporarily so the map can be built; anyone who takes one of these modules for their own work: register, and @Vertiglo releases it and keeps only the map paths (`mobile/maps/`, `backend/maps/`, `contracts/maps/`). Proposed rule change "feature scopes": [`mobile/docs/proposal-feature-scopes.md`](../mobile/docs/proposal-feature-scopes.md).
 - 2026-10-10 21:25 · INFO · for: all · Flutter app skeleton in `mobile/app/` runs on web against the local API and Firebase emulators. Run: `mobile/scripts/dev_all.sh`.
@@ -40,6 +44,8 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 - 2026-10-10 · INFO · for: all · STATUS file created. Nothing implemented yet.
 
 ## Outbound requests (we need something from another module)
+
+> Rows `mobile#1`–`#4` were opened by @Vertiglo while holding mobile; they're answered under *Inbound requests*. @Vertiglo's agent closes them in `contracts/maps/STATUS.md`.
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
@@ -52,7 +58,10 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
-| — | | | | |
+| mobile#4 | @Vertiglo (maps) | Feature scopes adopted: `AGENTS.md`, `docs/COORDINATION.md` §1a, `ONBOARDING.md`, `docs/OWNERSHIP.md`, `.githooks/pre-commit` | done | 2026-10-10 |
+| mobile#3 | @Vertiglo (maps) | `docs/decisions/team-event-join.md` accepted | done | 2026-10-10 |
+| mobile#2 | @Vertiglo (maps) | `docs/decisions/team-auth.md` accepted | done | 2026-10-10 |
+| mobile#1 | @Vertiglo (maps) | Map is in the demo (`docs/MVP.md`, `product-hero-flow`); location rules added to `docs/DATA_PRIVACY.md` | done | 2026-10-10 |
 
 ## Acks (our responses to other modules' breaking proposals)
 

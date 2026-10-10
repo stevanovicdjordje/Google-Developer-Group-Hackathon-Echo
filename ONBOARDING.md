@@ -26,9 +26,11 @@ You don't need to learn how the agents coordinate. They handle it themselves and
 4. **Paste this, filling in your module:**
    ```text
    You are my agent for the Eho hackathon repo; the current directory is the repo root.
-   I'm working on: <mobile | backend | organizer-web | product>.
+   I'm working on: <mobile | backend | organizer-web | product | feature:<name>>.
    Read ONBOARDING.md ("For agents") and follow it.
    ```
+
+Working on one feature across app + server (like the venue map)? Use `feature:<name>`, e.g. `feature:maps`.
 
 That's it. From then on, just tell your agent what you want built. It will occasionally show you one of these:
 

@@ -78,6 +78,25 @@ One writer per file means parallel pushes don't conflict, and every fact has one
 
 `team-` decisions are high-level by definition. They're made by humans (§0), and the integration holder only records them.
 
+### 1a. Feature scopes
+
+A feature that spans the app, the server and the contract (e.g. the venue map) can be held as **`feature:<name>`** (lowercase) instead of whole modules. A feature owns the folder `<name>/` in every module, and only that:
+
+| Area | Feature paths |
+| --- | --- |
+| App | `mobile/<name>/**` (a Flutter package the app shell depends on) |
+| Organizer web | `organizer-web/<name>/**` |
+| Backend | `backend/<name>/**` (its own service/module) |
+| Contract + feature home | `contracts/<name>/**`: the feature's `openapi.yaml`, fixtures, `CHANGELOG.md`, **`STATUS.md`**, `PLAN.md` |
+| Decisions | `docs/decisions/feature-<name>-*.md` |
+
+1. **Registering** a feature = creating `contracts/<name>/STATUS.md` (same format as module STATUS files) with `**Owner:** @<handle> · **Scopes held:** feature:<name>`. From then on, `<module>/<name>/` folders belong to that feature, and module holders don't write there (the scope guard enforces it).
+2. **Module shells stay with the module holder:** everything outside feature folders (e.g. `mobile/app/` with `pubspec.yaml`, router, `main.dart`; root `contracts/openapi.yaml`; shared backend code). The feature holder asks via a request in its feature STATUS.
+3. **Unheld module → don't block:** if a module has no registered holder, the feature holder may make the **minimal additive** change it needs in the module shell (add the package dependency, mount a route) and announces it as `ACTION`.
+4. **Features never edit each other's folders.** Shared code is a request to the module holder.
+5. The feature holder acts as contracts holder **for `contracts/<name>/` only**, following `contracts/AGENTS.md`.
+6. Feature names must not collide with existing module subfolders (`app`, `docs`, `examples`, `scripts`).
+
 ---
 
 ## 2. First session in a new clone — set yourself up
@@ -85,8 +104,8 @@ One writer per file means parallel pushes don't conflict, and every fact has one
 Do this once per clone, without bothering your human except to learn which module they're working on (if the kickoff prompt didn't say).
 
 1. **Identify your human:** `gh api user -q .login` (or `git config user.name`).
-2. **Work out your scopes:** the module your human named, plus any fallback workstreams from §1 that apply to you and that nobody else registered (check `grep -H '^\*\*Last updated' */STATUS.md`).
-3. **Register:** in your primary module's `STATUS.md`, set `**Owner:** @<handle> · **Scopes held:** <list>`. If you hold contracts, also set the Owner line in `contracts/STATUS.md`. Commit with `coord(<module>): register owner` and push.
+2. **Work out your scopes:** the module **or feature** (`feature:<name>`, §1a) your human named, plus any fallback workstreams from §1 that apply to you and that nobody else registered (check `grep -H '^\*\*Last updated' */STATUS.md`).
+3. **Register:** in your primary module's `STATUS.md` (or, for a feature, create `contracts/<name>/STATUS.md`), set `**Owner:** @<handle> · **Scopes held:** <list>`. If you hold contracts, also set the Owner line in `contracts/STATUS.md`. Commit with `coord(<module>): register owner` and push.
 4. **Turn on the scope guard** (blocks commits outside your scopes):
    ```bash
    git config core.hooksPath .githooks
@@ -104,14 +123,14 @@ Do this once per clone, without bothering your human except to learn which modul
 ```bash
 git status --short                      # note local changes; never touch ones you didn't make
 git fetch origin
-git log --oneline HEAD..origin/main -- contracts docs '*/STATUS.md'   # coordination-relevant
+git log --oneline HEAD..origin/main -- contracts docs '*/STATUS.md'   # coordination-relevant (includes feature STATUS files)
 git diff HEAD...origin/main -- contracts docs '*/STATUS.md'           # read what changed
 git pull --rebase --autostash           # replays only YOUR unpushed commits
 ```
 
 If the pull conflicts in a file you don't hold: `git rebase --abort` and tell your human (🙋). Don't resolve someone else's file.
 
-Then read every `*/STATUS.md` (announcements, and requests/proposals mentioning you), `contracts/CHANGELOG.md`, and the decision statuses (`grep -H '^- \*\*Status' docs/decisions/*.md`).
+Then read every `*/STATUS.md` and `contracts/*/STATUS.md` (announcements, and requests/proposals mentioning you), `contracts/CHANGELOG.md`, and the decision statuses (`grep -H '^- \*\*Status' docs/decisions/*.md`).
 
 **Handle what you find before continuing your own task**, in this order:
 1. `BREAKING` / `ACTION` announcements that affect you → adapt your module (or plan it as your next task).

@@ -25,8 +25,11 @@ Read any file for context. Write **only** inside the scopes you hold. Never chan
 | `contracts` | `contracts/**`, `docs/decisions/contracts-*.md` | The backend agent |
 | `integration` | `docs/decisions/team-*.md`, root files (`AGENTS.md`, `CLAUDE.md`, `README.md`, `ONBOARDING.md`, `.gitignore`, `.editorconfig`), `.github/`, `.githooks/`, `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md` | The repo owner's agent (`Ilij4n`) |
 | `product` | Other `docs/**`, `docs/decisions/product-*.md` | The repo owner's agent (`Ilij4n`) |
+| `feature:<name>` | `mobile/<name>/**`, `organizer-web/<name>/**`, `backend/<name>/**`, `contracts/<name>/**`, `docs/decisions/feature-<name>-*.md` | — |
 
-Everything outside your scopes is read-only. An agent usually holds one module plus maybe a fallback role. Who holds what: `grep -H '^\*\*Last updated' */STATUS.md`.
+**Register for what you actually work on:** a module, or a **feature** that spans modules (e.g. `feature:maps`), see `docs/COORDINATION.md` §1a. A module holder never writes inside a registered feature's folders.
+
+Everything outside your scopes is read-only. An agent usually holds one module plus maybe a fallback role. Who holds what: `grep -H '^\*\*Last updated' */STATUS.md contracts/*/STATUS.md`.
 
 ## Session protocol (mandatory)
 

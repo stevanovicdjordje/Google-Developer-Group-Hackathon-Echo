@@ -2,7 +2,9 @@
 # Eho scope guard — opt-in pre-commit hook. Setup (see ONBOARDING.md):
 #   git config core.hooksPath .githooks
 #   git config eho.scope backend             # or several: "contracts,product"
-# Scopes: mobile | backend | organizer-web | contracts | integration | product | all
+# Scopes: mobile | backend | organizer-web | contracts | integration | product | feature:<name> | all
+# A folder <module>/<name>/ belongs to feature:<name> when contracts/<name>/STATUS.md exists;
+# module scopes may not write inside feature folders.
 # Blocks commits whose staged paths fall outside your scope(s).
 # Not a security boundary: humans can bypass with --no-verify; agents must never do so.
 
@@ -12,17 +14,36 @@ scopes=$(git config --get eho.scope | tr ',' ' ')
 for s in $scopes; do
   case "$s" in
     all|mobile|backend|organizer-web|contracts|integration|product) ;;
+    feature:[a-z0-9]*) ;;
     *) echo "eho scope guard: unknown scope '$s' in git config eho.scope" >&2; exit 1 ;;
   esac
 done
 
 # allowed <path> <scope> -> exit 0 if <scope> may write <path>
+# in_feature <path> -> exit 0 if <path> is inside a registered feature folder
+in_feature() {
+  case "$1" in
+    mobile/*/*|backend/*/*|organizer-web/*/*|contracts/*/*)
+      sub=$(printf '%s' "$1" | cut -d/ -f2)
+      [ -f "contracts/$sub/STATUS.md" ] ;;
+    *) return 1 ;;
+  esac
+}
+
 allowed() {
   case "$2" in
     all) return 0 ;;
+    feature:*)
+      feat=${2#feature:}
+      case "$1" in
+        mobile/"$feat"/*|organizer-web/"$feat"/*|backend/"$feat"/*|contracts/"$feat"/*) return 0 ;;
+        docs/decisions/feature-"$feat"-*) return 0 ;;
+      esac ;;
     mobile|backend|organizer-web)
+      in_feature "$1" && return 1
       case "$1" in "$2"/*|docs/decisions/"$2"-*) return 0 ;; esac ;;
     contracts)
+      in_feature "$1" && return 1
       case "$1" in contracts/*|docs/decisions/contracts-*) return 0 ;; esac ;;
     integration)
       case "$1" in

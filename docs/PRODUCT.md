@@ -72,7 +72,7 @@ Speakers are a stakeholder but not a separate role yet.
 | Tab | What it does |
 | --- | --- |
 | **Agenda** | Sessions per stage and time, speakers, session details. From a session you open its Echo screen. |
-| **Map** | The venue plan: stages, rooms, stands, search, details (Vertiglo's venue map). Later maybe also where you've agreed to meet a match, never anyone's live position. |
+| **Map** | The venue plan: stages, rooms, stands, search, details (Vertiglo's venue map). Also shows the meeting spot you agreed on with a match, never anyone's live position. |
 | **Find** | People to meet. Two ways: **recommendations** (the AI ranks opted-in attendees by your interests), and a **prompt search** ("someone who has shipped on-device ML"), where the AI returns attendees who fit. Each result says *why* it matched and has a **Contact** button. |
 | **Profile** | Your interests and what you're looking for (used by Find), your visibility/consent switches, and **My events**. |
 
@@ -80,17 +80,17 @@ Speakers are a stakeholder but not a separate role yet.
 
 | Feature | What it does |
 | --- | --- |
-| **Echo** (per session) | Live transcript of the talk, **Q&A** (submit questions to the speaker), and **Ask**: ask the AI about the talk and get an answer grounded in the transcript. |
+| **Echo** (per session) | Live transcript of the talk (translatable into your language), **Q&A** (submit questions to the speaker), and **Ask**: ask the AI about the talk and get an answer grounded in the transcript. |
 | **Talk summary** (paid) | After a talk, an AI summary of what was said. Planned as a **premium feature** (the monetization hook). For the demo the paywall can be a mock "unlock" button. |
 | **Join via link / QR** | Opens the event. The link is a normal web address, so it works in the browser when the app isn't installed. |
 | **Attendee onboarding** | First time: name, interests, what you're looking for, and consent (be visible in Find, allow contact). |
 | **My events** | All events you joined via links. Switch between them, leave one. |
-| **Contact a match** | A simple way to reach someone you matched with (contact request, or a minimal chat). Both sides must have opted in. |
+| **Contact a match** | Send a contact request; once accepted, a **Messages** screen and the option to agree on a **meeting spot** shown on the Map. Both sides must have opted in. |
 | **Organizer web** | Upload unstructured files (PDF, docs, spreadsheets, images of the agenda) → the AI extracts sessions, speakers, stages → the organizer reviews/edits → publish → gets the **signup link + QR**. |
 
 ### Status of each feature in the demo
 
-See [`MVP.md`](MVP.md): every feature is either **built for the video** (really runs, possibly on hardcoded demo data) or **design only**.
+See [`MVP.md`](MVP.md): almost everything is **built for the video** on demo data. Only messaging, payments and live speech-to-text are mocked.
 
 ## Business (to be researched)
 

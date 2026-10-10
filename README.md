@@ -8,7 +8,7 @@
 
 > **New teammate? Start with [`ONBOARDING.md`](ONBOARDING.md)**: a 2-minute setup. Your AI agent handles the rest.
 
-**The feature set and the demo plan are agreed:** [`docs/PRODUCT.md`](docs/PRODUCT.md) (what the app does) and [`docs/MVP.md`](docs/MVP.md) (what we build for the demo video, and what stays design only).
+**The feature set and the demo plan are agreed:** [`docs/PRODUCT.md`](docs/PRODUCT.md) (what the app does) and [`docs/MVP.md`](docs/MVP.md) (what we build for the demo video, and the few parts that are mocked).
 
 ## Hackathon context
 

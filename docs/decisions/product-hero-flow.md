@@ -18,13 +18,13 @@ We can demo one end-to-end Gemma-powered flow well, not eight. See `docs/MVP.md`
 
 ## Decision
 
-The demo is a **video of the happy path** across the whole app, not one flow. Feature set: `docs/PRODUCT.md` → *The app*. Video storyline and per-feature status (build / faked input / design only): `docs/MVP.md`.
+The demo is a **video of the happy path** across the whole app, not one flow. Feature set: `docs/PRODUCT.md` → *The app*. Video storyline and per-feature status (build / faked input / mock): `docs/MVP.md`.
 
-Gemma is used for real in four places: organizer file extraction, Ask the talk, talk summaries, and Find (recommendations + prompt search).
+Gemma (via the Gemini API) is used for real in five places: organizer file extraction, Echo translation, Ask the talk, talk summaries, and Find (recommendations + prompt search).
 
 Agreed by the team (relayed by @Ilij4n), 2026-10-10. This also resolves request `mobile#1` (venue map is part of the demo).
 
 ## Consequences / follow-ups
 
 - Drives the first contract operations, `docs/TASKS.md` and every module's first milestone.
-- Each module builds only what `docs/MVP.md` marks **Build**. Design-only features exist only as designs.
+- Each module builds what `docs/MVP.md` marks **Build**. Mocked parts stay mocked.

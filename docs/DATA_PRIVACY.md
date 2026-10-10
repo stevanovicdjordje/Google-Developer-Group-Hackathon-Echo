@@ -32,7 +32,7 @@ Each people-related action has **its own opt-in switch** in onboarding and Profi
 | --- | --- |
 | **Visible in Find** | Your profile (name, interests, what you're looking for) can appear in other attendees' recommendations and prompt searches, within the same event only. |
 | **Allow contact requests** | Matches can send you a contact request. Your contact details are shared only if you **accept** the request. |
-| **Share a meeting spot** *(design only)* | You and a match can agree on a place on the map. Only with both people's consent. Never a live position. |
+| **Share a meeting spot** | You and a match can agree on a place on the map. Only with both people's consent. Never a live position. |
 
 - Profile text is sent to the AI (Gemma) only to compute matches and "why" explanations, and only for people with **Visible in Find** on.
 - A future in-app chat would follow the same rule: both sides opted in.
