@@ -49,18 +49,29 @@ class GeolocatorLocationSource implements LocationSource {
         permission == LocationPermission.deniedForever) {
       throw const LocationUnavailable(LocationProblem.denied);
     }
-    try {
-      yield* Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
-          distanceFilter: 1,
-        ),
-      ).map((p) => GpsFix(LatLngDeg(p.latitude, p.longitude), p.accuracy));
-    } on PermissionDeniedException {
-      throw const LocationUnavailable(LocationProblem.denied);
-    } on LocationServiceDisabledException {
-      throw const LocationUnavailable(LocationProblem.serviceOff);
-    }
+    // Errors inside the stream are forwarded (not thrown here), so they are
+    // translated on the stream itself. A lost signal is `failed` and the
+    // stream goes on.
+    yield* Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.best,
+            distanceFilter: 1,
+          ),
+        )
+        .map((p) => GpsFix(LatLngDeg(p.latitude, p.longitude), p.accuracy))
+        .transform(
+          StreamTransformer<GpsFix, GpsFix>.fromHandlers(
+            handleError: (e, st, sink) => sink.addError(
+              LocationUnavailable(switch (e) {
+                PermissionDeniedException() => LocationProblem.denied,
+                LocationServiceDisabledException() =>
+                  LocationProblem.serviceOff,
+                _ => LocationProblem.failed,
+              }),
+              st,
+            ),
+          ),
+        );
   }
 }
 

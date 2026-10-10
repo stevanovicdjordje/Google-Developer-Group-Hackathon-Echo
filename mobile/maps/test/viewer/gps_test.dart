@@ -262,6 +262,28 @@ void main() {
     expect(find.text('Vi ste ovde'), findsNothing);
   });
 
+  testWidgets('a lost signal shows "searching" and the dot comes back', (
+    tester,
+  ) async {
+    final h = Harness();
+    await h.start(tester);
+    await tester.tap(find.byTooltip('Moja lokacija'));
+    await tester.pumpAndSettle();
+    await h.gps(tester, fixAt(300, 600));
+    expect(find.text('Vi ste ovde'), findsOneWidget);
+
+    h.location.controller.addError(
+      const LocationUnavailable(LocationProblem.failed),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Tražim GPS signal…'), findsOneWidget);
+    expect(find.text('Vi ste ovde'), findsNothing);
+
+    await h.gps(tester, fixAt(320, 600));
+    expect(find.text('Vi ste ovde'), findsOneWidget);
+    expect(h.location.watching, 1); // still the same subscription
+  });
+
   testWidgets('denied permission explains the fallback', (tester) async {
     final h = Harness();
     await h.start(tester);

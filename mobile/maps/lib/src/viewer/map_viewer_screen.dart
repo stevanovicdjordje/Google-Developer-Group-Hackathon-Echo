@@ -416,7 +416,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
     _gpsSub = ref
         .read(locationSourceProvider)
         .watch()
-        .listen(_onFix, onError: _onGpsError, cancelOnError: true);
+        .listen(_onFix, onError: _onGpsError);
   }
 
   void _stopGps() {
@@ -432,6 +432,11 @@ class _ViewerState extends ConsumerState<_Viewer> {
     final problem = e is LocationUnavailable
         ? e.problem
         : LocationProblem.failed;
+    if (problem == LocationProblem.failed) {
+      // Indoors the signal comes and goes: keep listening, show "searching".
+      if (mounted) setState(() => _gps = null);
+      return;
+    }
     _stopGps();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
