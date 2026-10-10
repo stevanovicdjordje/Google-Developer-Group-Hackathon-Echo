@@ -1,27 +1,27 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/published_map_repository.dart';
 
 /// Ensures a signed-in user (attendees: anonymous) before reading Firestore.
-/// Overridden in tests.
-final mapsSignedInProvider = FutureProvider<String>((ref) async {
-  final auth = FirebaseAuth.instance;
-  debugPrint('[maps] waiting for auth state');
-  // On web the persisted user is restored asynchronously; wait for it first.
-  final restored = await auth.authStateChanges().first;
-  debugPrint('[maps] auth state: ${restored?.uid}');
-  User user;
-  try {
-    user = restored ?? (await auth.signInAnonymously()).user!;
-  } catch (e, st) {
-    debugPrint('[maps] sign-in failed: $e\n$st');
-    rethrow;
-  }
-  debugPrint('[maps] signed in: ${user.uid}');
-  return user.uid;
-});
+/// Fails after [_signInTimeout] instead of retrying, so the viewer can show
+/// "server unavailable" with a retry button. Overridden in tests.
+final mapsSignedInProvider = FutureProvider<String>(
+  (ref) async {
+    final auth = FirebaseAuth.instance;
+    Future<String> signIn() async {
+      // On web the persisted user is restored asynchronously; wait for it first.
+      final restored = await auth.authStateChanges().first;
+      final user = restored ?? (await auth.signInAnonymously()).user!;
+      return user.uid;
+    }
+
+    return signIn().timeout(_signInTimeout);
+  },
+  retry: (_, _) => null,
+);
+
+const _signInTimeout = Duration(seconds: 10);
 
 final publishedMapRepositoryProvider = Provider<PublishedMapRepository>(
   (ref) => FirestorePublishedMapRepository(),

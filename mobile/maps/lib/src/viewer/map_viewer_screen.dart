@@ -54,8 +54,10 @@ class MapViewerScreen extends ConsumerWidget {
         child: e is EventNotFound
             ? null
             : FilledButton.icon(
-                onPressed: () =>
-                    ref.invalidate(publishedEventProvider(eventId)),
+                onPressed: () {
+                  ref.invalidate(mapsSignedInProvider);
+                  ref.invalidate(publishedEventProvider(eventId));
+                },
                 icon: const Icon(Icons.refresh),
                 label: Text(l10n.retry),
               ),
