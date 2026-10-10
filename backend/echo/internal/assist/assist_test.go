@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/Ilij4n/eho/backend/echo/internal/store"
@@ -104,6 +105,7 @@ func TestOffline(t *testing.T) {
 }
 
 func TestGeminiClient(t *testing.T) {
+	var calls atomic.Int32
 	var gotKey, gotPath string
 	var gotBody geminiRequest
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -115,19 +117,39 @@ func TestGeminiClient(t *testing.T) {
 			_, _ = w.Write([]byte(`{"error":{"message":"quota"}}`))
 			return
 		}
-		_, _ = w.Write([]byte(`{"candidates":[{"content":{"parts":[{"text":" Hello "},{"text":"there"}]},"finishReason":"STOP"}]}`))
+		if strings.Contains(string(raw), "flaky") && calls.Add(1) == 1 {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write([]byte(`{"candidates":[{"content":{"parts":[{"text":"plan the answer","thought":true},{"text":" Hello "},{"text":"there"}]},"finishReason":"STOP"}]}`))
 	}))
 	defer srv.Close()
 
-	g := &Gemini{APIKey: "k", Model: "gemma-3-27b-it", BaseURL: srv.URL}
+	g := &Gemini{APIKey: "k", Model: "gemma-4-26b-a4b-it", Thinking: "minimal", BaseURL: srv.URL}
 	out, err := g.Generate(context.Background(), "hi", 50)
 	if err != nil || out != "Hello there" {
 		t.Fatalf("got %q %v", out, err)
 	}
-	if gotKey != "k" || gotPath != "/models/gemma-3-27b-it:generateContent" || gotBody.GenerationConfig.MaxOutputTokens != 50 {
+	if gotKey != "k" || gotPath != "/models/gemma-4-26b-a4b-it:generateContent" || gotBody.GenerationConfig.MaxOutputTokens != 50 ||
+		gotBody.GenerationConfig.ThinkingConfig == nil || gotBody.GenerationConfig.ThinkingConfig.ThinkingLevel != "minimal" {
 		t.Fatalf("request: key=%q path=%q body=%+v", gotKey, gotPath, gotBody)
+	}
+	if out, err := g.Generate(context.Background(), "flaky", 50); err != nil || out != "Hello there" || calls.Load() != 2 {
+		t.Fatalf("retry after 500: %q %v calls=%d", out, err, calls.Load())
 	}
 	if _, err := g.Generate(context.Background(), "quota", 50); !errors.Is(err, ErrModel) {
 		t.Fatalf("429: %v", err)
+	}
+}
+
+func TestTranslateRejectsLatinForCyrillic(t *testing.T) {
+	m := &scripted{replies: []string{`["Hvala vam."]`, "Хвала вам."}}
+	got, err := LLM{M: m}.Translate(context.Background(), []string{"Thank you."}, "sr-Cyrl")
+	if err != nil || got[0] != "Хвала вам." || len(m.prompts) != 2 {
+		t.Fatalf("got %v %v after %d calls", got, err, len(m.prompts))
+	}
+	m = &scripted{replies: []string{`["Hvala."]`, "Hvala."}}
+	if _, err := (LLM{M: m}).Translate(context.Background(), []string{"Thanks."}, "sr-Cyrl"); !errors.Is(err, ErrModel) {
+		t.Fatalf("latin twice: %v", err)
 	}
 }

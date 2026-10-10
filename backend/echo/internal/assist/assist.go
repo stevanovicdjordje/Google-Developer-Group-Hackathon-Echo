@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/Ilij4n/eho/backend/echo/internal/store"
@@ -18,7 +19,7 @@ import (
 
 // PromptVersion is part of every cache key: bump it when a prompt changes so
 // cached answers from the old prompt are not served.
-const PromptVersion = "p1"
+const PromptVersion = "p2"
 
 // MaxTextRunes caps every generated text (contract: AiText.text).
 const MaxTextRunes = 4000
@@ -36,7 +37,7 @@ type Assistant interface {
 var Languages = map[string]string{
 	"en":      "English",
 	"sr":      "Serbian, written in the Latin script",
-	"sr-Cyrl": "Serbian, written in the Cyrillic script",
+	"sr-Cyrl": "Serbian, written in the Cyrillic script (ћирилица) only, never in Latin letters",
 	"de":      "German",
 	"fr":      "French",
 	"es":      "Spanish",
@@ -81,7 +82,8 @@ func sanitize(s string) string {
 func (a LLM) Ask(ctx context.Context, lines []store.Line, question, language string) (string, error) {
 	prompt := "You are Echo, an assistant that answers attendees' questions about a conference talk that is in progress.\n" +
 		guard + "\n" +
-		"If the transcript does not answer the question, say that the speaker hasn't covered it yet, and nothing else.\n" +
+		"If the transcript does not answer the question, reply with exactly this sentence, translated into the answer language: \"" +
+		notCovered + "\"\n" +
 		"Answer in " + Languages[language] + ", in at most 3 short sentences.\n\n" +
 		formatTranscript(lines) + "\n\n<question>\n" + sanitize(question) + "\n</question>"
 	out, err := a.M.Generate(ctx, prompt, 300)
@@ -133,7 +135,7 @@ func (a LLM) Translate(ctx context.Context, texts []string, language string) ([]
 	if err != nil {
 		return nil, err
 	}
-	if res, perr := ParseTranslations(out, texts); perr == nil {
+	if res, perr := ParseTranslations(out, texts); perr == nil && scriptOK(res, language) {
 		return res, nil
 	}
 	res := make([]string, len(texts))
@@ -145,6 +147,9 @@ func (a LLM) Translate(ctx context.Context, texts []string, language string) ([]
 		}
 		if res[i], err = checkTranslation(one, t); err != nil {
 			return nil, err
+		}
+		if !scriptOK(res[i:i+1], language) {
+			return nil, fmt.Errorf("%w: translation is not in the %s script", ErrModel, language)
 		}
 	}
 	return res, nil
@@ -170,6 +175,26 @@ func ParseTranslations(out string, src []string) ([]string, error) {
 		}
 	}
 	return res, nil
+}
+
+// scriptOK rejects a Cyrillic translation that came back in Latin letters,
+// which Gemma does for sr-Cyrl unless pushed.
+func scriptOK(texts []string, language string) bool {
+	if language != "sr-Cyrl" && language != "ru" && language != "mk" {
+		return true
+	}
+	var cyr, lat int
+	for _, t := range texts {
+		for _, r := range t {
+			switch {
+			case unicode.Is(unicode.Cyrillic, r):
+				cyr++
+			case unicode.Is(unicode.Latin, r):
+				lat++
+			}
+		}
+	}
+	return cyr > lat
 }
 
 func checkTranslation(t, src string) (string, error) {

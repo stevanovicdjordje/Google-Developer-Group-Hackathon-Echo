@@ -23,6 +23,8 @@ type Config struct {
 	GeminiAPIKey string
 	// Model is the Gemma model name on the Gemini API.
 	Model string
+	// Thinking is the Gemma thinking level ("minimal" = off); empty sends none.
+	Thinking string
 	// AITimeout bounds one model call.
 	AITimeout time.Duration
 	// LogLevel is one of debug, info, warn, error.
@@ -38,7 +40,8 @@ func Load() (Config, error) {
 		ProjectID:       getenv("FIREBASE_PROJECT_ID", getenv("GOOGLE_CLOUD_PROJECT", "")),
 		AllowedOrigins:  splitList(getenv("ALLOWED_ORIGINS", "http://localhost:*,http://127.0.0.1:*")),
 		GeminiAPIKey:    strings.TrimSpace(os.Getenv("GEMINI_API_KEY")),
-		Model:           getenv("GEMMA_MODEL", "gemma-3-27b-it"),
+		Model:           getenv("GEMMA_MODEL", "gemma-4-26b-a4b-it"),
+		Thinking:        getenv("GEMMA_THINKING", "minimal"),
 		AITimeout:       20 * time.Second,
 		LogLevel:        getenv("LOG_LEVEL", "info"),
 		ShutdownTimeout: 10 * time.Second,

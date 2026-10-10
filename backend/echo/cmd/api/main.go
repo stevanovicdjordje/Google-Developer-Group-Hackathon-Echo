@@ -57,7 +57,7 @@ func run() error {
 
 	var ai assist.Assistant = assist.Offline{}
 	if cfg.GeminiAPIKey != "" {
-		ai = assist.LLM{M: &assist.Gemini{APIKey: cfg.GeminiAPIKey, Model: cfg.Model, Timeout: cfg.AITimeout}}
+		ai = assist.LLM{M: &assist.Gemini{APIKey: cfg.GeminiAPIKey, Model: cfg.Model, Thinking: cfg.Thinking, Timeout: cfg.AITimeout}}
 	} else {
 		log.Warn("GEMINI_API_KEY is not set: using the offline assistant (quotes the transcript, no real AI)")
 	}

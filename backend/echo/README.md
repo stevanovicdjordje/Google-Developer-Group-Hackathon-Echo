@@ -45,7 +45,8 @@ To use Gemma: copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 
 | Item | Value |
 | --- | --- |
-| Timeout | 20 s per model call (`AI_TIMEOUT_SECONDS`) → `502 ai_unavailable` |
+| Latency (measured, Gemma 4 26B A4B) | Ask ~1 s, Catch up ~3 s, Summary 3–4 s, translating one new line ~1 s (the first full 18-line backlog ~10 s) |
+| Timeout | 20 s per model call, one retry on HTTP 5xx (`AI_TIMEOUT_SECONDS`) → `502 ai_unavailable` |
 | Caching | Per session, language and number of revealed lines (Ask also per question). The first caller pays the latency, everyone after gets the cached answer. |
 | Rate limits | 30 AI cache misses and 10 questions per user per minute → `429 rate_limited` + `Retry-After` |
 | Output | Plain text, `•` bullets in the summary, at most 4000 characters |
