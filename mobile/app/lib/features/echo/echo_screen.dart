@@ -38,6 +38,7 @@ class _Answer extends _Entry {
 class _EchoScreenState extends ConsumerState<EchoScreen> {
   final _input = TextEditingController();
   final _scroll = ScrollController();
+  final _inputFocus = FocusNode();
   final _entries = <_Entry>[];
   final _answers = <_Answer>[];
   List<SpeakerQuestion> _questions = [];
@@ -46,6 +47,11 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
   bool _ended = false;
   _Mode _mode = _Mode.ai;
   int _lineCount = 0;
+
+  /// Auto-scroll follows new lines only while the user is at the bottom.
+  /// Scrolling up pauses it and shows "Jump to live".
+  bool _atBottom = true;
+  int _autoScrolls = 0; // in-flight programmatic scrolls
 
   EchoRepository get _repo => ref.read(echoRepositoryProvider);
 
@@ -75,15 +81,48 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
     });
   }
 
-  void _toBottom() => WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (_scroll.hasClients) {
-      _scroll.animateTo(
-        _scroll.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
-  });
+  @override
+  void dispose() {
+    _input.dispose();
+    _inputFocus.dispose();
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Scrolls to the newest entry, unless the user scrolled up (then pass
+  /// [force] to resume following).
+  void _toBottom({bool force = false}) {
+    if (force) setState(() => _atBottom = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if ((!_atBottom && !force) || !_scroll.hasClients) return;
+      _autoScrolls++;
+      try {
+        await _scroll.animateTo(
+          _scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      } finally {
+        _autoScrolls--;
+      }
+    });
+  }
+
+  bool _onScroll(ScrollNotification n) {
+    if (_autoScrolls > 0 || n.depth != 0) return false;
+    final atBottom = n.metrics.extentAfter < 48;
+    if (atBottom != _atBottom) setState(() => _atBottom = atBottom);
+    return false;
+  }
+
+  void _askAbout(TranscriptLine line) {
+    setState(() => _mode = _Mode.ai);
+    _input.text = 'What did the speaker mean by: "${line.text}"';
+    _input.selection = TextSelection.collapsed(offset: _input.text.length);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _inputFocus.requestFocus();
+    });
+  }
 
   Future<void> _send([String? preset]) async {
     final text = (preset ?? _input.text).trim();
@@ -107,7 +146,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
       _entries.add(a);
       _answers.add(a);
     });
-    _toBottom();
+    _toBottom(force: true);
     final answer = await _repo.ask(widget.eventId, widget.sessionId, text);
     if (!mounted) return;
     setState(() => a.answer = answer);
@@ -146,28 +185,43 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
             ended: _ended,
           ),
           Expanded(
-            child: ListView.builder(
-              controller: _scroll,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              itemCount: _entries.length + (_ended ? 1 : 0),
-              itemBuilder: (context, i) {
-                if (i == _entries.length) return const _EndedMarker();
-                return switch (_entries[i]) {
-                  _Line(:final line) => _TranscriptRow(
-                    line: line,
-                    translate: _translate,
-                    onAsk: () {
-                      setState(() => _mode = _Mode.ai);
-                      _input.text = 'What did she mean by: "${line.text}"';
+            child: Stack(
+              children: [
+                NotificationListener<ScrollNotification>(
+                  onNotification: _onScroll,
+                  child: ListView.builder(
+                    controller: _scroll,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    itemCount: _entries.length + (_ended ? 1 : 0),
+                    itemBuilder: (context, i) {
+                      if (i == _entries.length) return const _EndedMarker();
+                      return switch (_entries[i]) {
+                        _Line(:final line) => _TranscriptRow(
+                          line: line,
+                          translate: _translate,
+                          onAsk: () => _askAbout(line),
+                        ),
+                        final _Answer a => _AnswerCard(a.question, a.answer),
+                      };
                     },
                   ),
-                  final _Answer a => _AnswerCard(a.question, a.answer),
-                };
-              },
+                ),
+                if (!_atBottom)
+                  Positioned(
+                    right: 16,
+                    bottom: 12,
+                    child: FilledButton.tonalIcon(
+                      icon: const Icon(Icons.arrow_downward, size: 18),
+                      label: const Text('Jump to live'),
+                      onPressed: () => _toBottom(force: true),
+                    ),
+                  ),
+              ],
             ),
           ),
           _Composer(
             controller: _input,
+            focusNode: _inputFocus,
             mode: _mode,
             questionCount: _questions.length,
             onMode: (m) => setState(() => _mode = m),
@@ -337,7 +391,37 @@ class _TranscriptRow extends StatelessWidget {
     final m = (line.atSeconds ~/ 60).toString().padLeft(2, '0');
     final s = (line.atSeconds % 60).toString().padLeft(2, '0');
     return InkWell(
-      onLongPress: onAsk,
+      onLongPress: () async {
+        // Anchor a small "Ask about this" menu to the pressed row.
+        final box = context.findRenderObject() as RenderBox;
+        final overlay =
+            Overlay.of(context).context.findRenderObject() as RenderBox;
+        final rect = Rect.fromPoints(
+          box.localToGlobal(Offset.zero, ancestor: overlay),
+          box.localToGlobal(
+            box.size.bottomRight(Offset.zero),
+            ancestor: overlay,
+          ),
+        );
+        final ask = await showMenu<bool>(
+          context: context,
+          position: RelativeRect.fromRect(
+            Rect.fromLTWH(rect.left + 48, rect.bottom - 8, 0, 0),
+            Offset.zero & overlay.size,
+          ),
+          items: const [
+            PopupMenuItem(
+              value: true,
+              child: ListTile(
+                leading: Icon(Icons.auto_awesome),
+                title: Text('Ask about this'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+        );
+        if (ask == true) onAsk();
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
@@ -418,6 +502,7 @@ class _EndedMarker extends StatelessWidget {
 class _Composer extends StatelessWidget {
   const _Composer({
     required this.controller,
+    required this.focusNode,
     required this.mode,
     required this.questionCount,
     required this.onMode,
@@ -426,6 +511,7 @@ class _Composer extends StatelessWidget {
   });
 
   final TextEditingController controller;
+  final FocusNode focusNode;
   final _Mode mode;
   final int questionCount;
   final ValueChanged<_Mode> onMode;
@@ -472,6 +558,7 @@ class _Composer extends StatelessWidget {
             const SizedBox(height: 8),
             TextField(
               controller: controller,
+              focusNode: focusNode,
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => onSend(),
               decoration: InputDecoration(
