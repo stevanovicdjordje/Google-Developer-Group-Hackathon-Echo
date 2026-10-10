@@ -11,6 +11,7 @@ import '../location/location_source.dart';
 import '../location/tracking.dart';
 import '../model/map_models.dart';
 import '../model/route_models.dart';
+import '../stats/stats_reporter.dart';
 import 'feature_sheet.dart';
 import 'hit_test.dart';
 import 'labels.dart';
@@ -149,6 +150,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
   Feature? _pendingFocus;
   SearchFilter _filter = SearchFilter.all;
   String? _category;
+  Timer? _searchDebounce;
 
   /// The route being shown, and where it goes.
   RouteQuery? _routeQuery;
@@ -211,7 +213,13 @@ class _ViewerState extends ConsumerState<_Viewer> {
   void initState() {
     super.initState();
     _searchCtrl.addListener(() => setState(() {}));
+    _searchCtrl.addListener(_onSearchChanged);
     _searchFocus.addListener(() => setState(() {}));
+    if (_marker case final m?) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _stats.qrScan(m.id);
+      });
+    }
     final initial = _map.features
         .where((f) => f.id == widget.initialFeatureId)
         .firstOrNull;
@@ -260,6 +268,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _gpsSub?.cancel();
     _controller.dispose();
     _searchCtrl.dispose();
@@ -307,6 +316,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
   Future<void> _select(Feature? f) async {
     setState(() => _selectedId = f?.id);
     if (f == null) return;
+    if (f.type != FeatureType.marker) _stats.featureView(f.id);
     final floorName = _map.floors.length > 1
         ? _map.floors.where((x) => x.id == f.floorId).firstOrNull?.name
         : null;
@@ -395,6 +405,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
           .showSnackBar(SnackBar(content: Text(_l10n.routeAlreadyHere)));
       return;
     }
+    _stats.route(to.id);
     _searchFocus.unfocus();
     _searchCtrl.clear(); // closing the route goes back to the plain map
     setState(() {
@@ -621,7 +632,30 @@ class _ViewerState extends ConsumerState<_Viewer> {
     );
   }
 
+  /// Map usage stats (never positions); see [StatsReporter].
+  StatsReporter get _stats =>
+      ref.read(mapsStatsReporterProvider(widget.event.id));
+
+  /// A search counts once the attendee stops typing or opens a result.
+  void _onSearchChanged() {
+    _searchDebounce?.cancel();
+    if (_searchCtrl.text.trim().isEmpty) return;
+    _searchDebounce = Timer(const Duration(milliseconds: 1500), _reportSearch);
+  }
+
+  void _reportSearch() {
+    _searchDebounce?.cancel();
+    final text = _searchCtrl.text;
+    if (!mounted || text.trim().isEmpty) return;
+    final results = FeatureSearch(
+      _map.features,
+      labelOf: (f) => kindLabel(_l10n, f),
+    ).search(text, filter: _filter, category: _category);
+    _stats.search(text, results.length);
+  }
+
   void _openResult(Feature f) {
+    _reportSearch();
     _searchFocus.unfocus();
     _focus(f);
     _select(f);
@@ -630,6 +664,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
   @override
   Widget build(BuildContext context) {
     final l10n = MapsLocalizations.of(context);
+    ref.watch(mapsStatsReporterProvider(widget.event.id)); // alive while open
     final floor = _floor;
     final q = _routeQuery;
     final routeAsync = q == null ? null : ref.watch(mapsRouteProvider(q));

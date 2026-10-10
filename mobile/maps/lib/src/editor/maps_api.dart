@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../location/georef.dart';
 import '../model/map_models.dart';
 import '../model/route_models.dart';
+import '../model/stats_models.dart';
 
 /// Error in the API's uniform `{code, message, details}` format, or a
 /// client-side failure (`network`, `timeout`, `bad_response`).
@@ -248,6 +249,35 @@ class MapsApi {
       return MapRoute.fromJson(j);
     } on Object {
       throw const MapsApiException(0, 'bad_response', 'invalid route');
+    }
+  }
+
+  /// Reports attendee events (at most 50). `rate_limited` (429) means the
+  /// batch was not counted.
+  Future<void> recordStats(String eventId, List<StatsEvent> events) =>
+      _send('POST', '/v1/events/$eventId/stats/events', {
+        'events': [for (final e in events) e.toJson()],
+      });
+
+  /// Owner-only usage stats; [from] and [to] are YYYY-MM-DD (server default:
+  /// the last 30 days).
+  Future<EventStats> getStats(
+    String eventId, {
+    String? from,
+    String? to,
+  }) async {
+    final query = [
+      if (from != null) 'from=$from',
+      if (to != null) 'to=$to',
+    ].join('&');
+    final j = await _obj(
+      'GET',
+      '/v1/events/$eventId/stats${query.isEmpty ? '' : '?$query'}',
+    );
+    try {
+      return EventStats.fromJson(j);
+    } on Object {
+      throw const MapsApiException(0, 'bad_response', 'invalid stats');
     }
   }
 

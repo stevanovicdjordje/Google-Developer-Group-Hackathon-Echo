@@ -394,5 +394,39 @@
   "georefBadPoint": "Moguća greška je velika: neka tačka je verovatno pogrešno postavljena.",
   "georefRemove": "Ukloni GPS",
   "georefSaved": "GPS je podešen. Posetioci ga dobijaju posle objave.",
-  "georefRemoved": "GPS je uklonjen."
+  "georefRemoved": "GPS je uklonjen.",
+  "statsOpen": "Statistika",
+  "statsTitle": "Statistika mape",
+  "statsRangeToday": "Danas",
+  "statsRange7": "7 dana",
+  "statsRange30": "30 dana",
+  "statsRangeEvent": "Tokom događaja",
+  "statsSearches": "Pretrage",
+  "statsNoResults": "Bez rezultata",
+  "statsFeatureViews": "Otvoreni detalji",
+  "statsRoutes": "Tražene rute",
+  "statsQrScans": "QR skeniranja",
+  "statsPerDay": "Aktivnost po danu",
+  "statsPerDayHint": "Pretrage, otvoreni detalji, rute i QR skeniranja zajedno",
+  "statsDayTooltip": "{date}: {count}",
+  "@statsDayTooltip": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNotFound": "Traže, a ne nalaze",
+  "statsNotFoundHint": "Pretrage bez ijednog rezultata. Možda na planu fali mesto, naziv ili kategorija.",
+  "statsTopSearches": "Najčešće pretrage",
+  "statsTopFeatures": "Najčešće otvarano",
+  "statsTopRoutes": "Najčešći ciljevi ruta",
+  "statsQrList": "Skeniranja po QR markeru",
+  "statsRemoved": "(uklonjeno sa plana)",
+  "statsEmpty": "Još nema podataka za ovaj period. Brojke stižu kad posetioci koriste mapu, uz kašnjenje do 10 sekundi.",
+  "statsError": "Statistika trenutno nije dostupna.",
+  "statsPrivacy": "Samo zbirni brojevi po danu. Bez lokacija i bez podataka o osobama."
 }

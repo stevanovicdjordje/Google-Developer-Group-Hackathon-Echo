@@ -2,11 +2,13 @@ import 'package:go_router/go_router.dart';
 
 import 'editor/map_editor_screen.dart';
 import 'editor/organizer_screens.dart';
+import 'stats/stats_screen.dart';
 import 'viewer/map_viewer_screen.dart';
 
 /// Venue map routes, mounted by the app's router:
 /// `/e/{eventId}` (optional `?at={markerId}`) and `/e/{eventId}/stand/{standId}`
-/// for attendees, `/o` (events) and `/o/e/{eventId}` (map editor) for organizers.
+/// for attendees, `/o` (events), `/o/e/{eventId}` (map editor) and
+/// `/o/e/{eventId}/stats` (map usage stats) for organizers.
 List<RouteBase> mapsRoutes() => [
   GoRoute(
     path: '/e/:eventId',
@@ -32,6 +34,13 @@ List<RouteBase> mapsRoutes() => [
         path: 'e/:eventId',
         builder: (context, state) =>
             MapEditorScreen(eventId: state.pathParameters['eventId']!),
+        routes: [
+          GoRoute(
+            path: 'stats',
+            builder: (context, state) =>
+                MapStatsScreen(eventId: state.pathParameters['eventId']!),
+          ),
+        ],
       ),
     ],
   ),

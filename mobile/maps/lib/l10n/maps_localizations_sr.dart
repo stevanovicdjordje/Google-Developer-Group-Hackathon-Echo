@@ -549,4 +549,82 @@ class MapsLocalizationsSr extends MapsLocalizations {
 
   @override
   String get georefRemoved => 'GPS je uklonjen.';
+
+  @override
+  String get statsOpen => 'Statistika';
+
+  @override
+  String get statsTitle => 'Statistika mape';
+
+  @override
+  String get statsRangeToday => 'Danas';
+
+  @override
+  String get statsRange7 => '7 dana';
+
+  @override
+  String get statsRange30 => '30 dana';
+
+  @override
+  String get statsRangeEvent => 'Tokom događaja';
+
+  @override
+  String get statsSearches => 'Pretrage';
+
+  @override
+  String get statsNoResults => 'Bez rezultata';
+
+  @override
+  String get statsFeatureViews => 'Otvoreni detalji';
+
+  @override
+  String get statsRoutes => 'Tražene rute';
+
+  @override
+  String get statsQrScans => 'QR skeniranja';
+
+  @override
+  String get statsPerDay => 'Aktivnost po danu';
+
+  @override
+  String get statsPerDayHint =>
+      'Pretrage, otvoreni detalji, rute i QR skeniranja zajedno';
+
+  @override
+  String statsDayTooltip(String date, int count) {
+    return '$date: $count';
+  }
+
+  @override
+  String get statsNotFound => 'Traže, a ne nalaze';
+
+  @override
+  String get statsNotFoundHint =>
+      'Pretrage bez ijednog rezultata. Možda na planu fali mesto, naziv ili kategorija.';
+
+  @override
+  String get statsTopSearches => 'Najčešće pretrage';
+
+  @override
+  String get statsTopFeatures => 'Najčešće otvarano';
+
+  @override
+  String get statsTopRoutes => 'Najčešći ciljevi ruta';
+
+  @override
+  String get statsQrList => 'Skeniranja po QR markeru';
+
+  @override
+  String get statsRemoved => '(uklonjeno sa plana)';
+
+  @override
+  String get statsEmpty =>
+      'Još nema podataka za ovaj period. Brojke stižu kad posetioci koriste mapu, uz kašnjenje do 10 sekundi.';
+
+  @override
+  String get statsError => 'Statistika trenutno nije dostupna.';
+
+  @override
+  String get statsPrivacy =>
+      'Samo zbirni brojevi po danu. Bez lokacija i bez podataka o osobama.';
 }

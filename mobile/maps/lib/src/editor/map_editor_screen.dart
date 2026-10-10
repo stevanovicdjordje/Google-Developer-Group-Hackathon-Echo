@@ -602,6 +602,12 @@ class _EditorState extends ConsumerState<_Editor> {
               icon: const Icon(Icons.visibility_outlined),
               onPressed: () => context.push('/e/${widget.eventId}'),
             ),
+          if (s.event.publishedVersion > 0)
+            IconButton(
+              tooltip: l10n.statsOpen,
+              icon: const Icon(Icons.insights_outlined),
+              onPressed: () => context.push('/o/e/${widget.eventId}/stats'),
+            ),
           IconButton(
             tooltip: l10n.reload,
             icon: const Icon(Icons.refresh),

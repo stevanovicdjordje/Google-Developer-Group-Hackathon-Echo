@@ -549,4 +549,82 @@ class MapsLocalizationsEn extends MapsLocalizations {
 
   @override
   String get georefRemoved => 'GPS removed.';
+
+  @override
+  String get statsOpen => 'Stats';
+
+  @override
+  String get statsTitle => 'Map stats';
+
+  @override
+  String get statsRangeToday => 'Today';
+
+  @override
+  String get statsRange7 => '7 days';
+
+  @override
+  String get statsRange30 => '30 days';
+
+  @override
+  String get statsRangeEvent => 'Event dates';
+
+  @override
+  String get statsSearches => 'Searches';
+
+  @override
+  String get statsNoResults => 'No results';
+
+  @override
+  String get statsFeatureViews => 'Details opened';
+
+  @override
+  String get statsRoutes => 'Routes asked';
+
+  @override
+  String get statsQrScans => 'QR scans';
+
+  @override
+  String get statsPerDay => 'Activity per day';
+
+  @override
+  String get statsPerDayHint =>
+      'Searches, opened details, routes and QR scans together';
+
+  @override
+  String statsDayTooltip(String date, int count) {
+    return '$date: $count';
+  }
+
+  @override
+  String get statsNotFound => 'Looked for, not found';
+
+  @override
+  String get statsNotFoundHint =>
+      'Searches without a single result. A place, name or category may be missing from the plan.';
+
+  @override
+  String get statsTopSearches => 'Top searches';
+
+  @override
+  String get statsTopFeatures => 'Most opened';
+
+  @override
+  String get statsTopRoutes => 'Top route targets';
+
+  @override
+  String get statsQrList => 'Scans per QR marker';
+
+  @override
+  String get statsRemoved => '(removed from the plan)';
+
+  @override
+  String get statsEmpty =>
+      'No data for this period yet. Numbers arrive as attendees use the map, up to 10 seconds later.';
+
+  @override
+  String get statsError => 'Stats are not available right now.';
+
+  @override
+  String get statsPrivacy =>
+      'Daily totals only. No locations and no data about people.';
 }

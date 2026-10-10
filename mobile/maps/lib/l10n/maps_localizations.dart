@@ -1033,6 +1033,150 @@ abstract class MapsLocalizations {
   /// In sr, this message translates to:
   /// **'GPS je uklonjen.'**
   String get georefRemoved;
+
+  /// No description provided for @statsOpen.
+  ///
+  /// In sr, this message translates to:
+  /// **'Statistika'**
+  String get statsOpen;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In sr, this message translates to:
+  /// **'Statistika mape'**
+  String get statsTitle;
+
+  /// No description provided for @statsRangeToday.
+  ///
+  /// In sr, this message translates to:
+  /// **'Danas'**
+  String get statsRangeToday;
+
+  /// No description provided for @statsRange7.
+  ///
+  /// In sr, this message translates to:
+  /// **'7 dana'**
+  String get statsRange7;
+
+  /// No description provided for @statsRange30.
+  ///
+  /// In sr, this message translates to:
+  /// **'30 dana'**
+  String get statsRange30;
+
+  /// No description provided for @statsRangeEvent.
+  ///
+  /// In sr, this message translates to:
+  /// **'Tokom događaja'**
+  String get statsRangeEvent;
+
+  /// No description provided for @statsSearches.
+  ///
+  /// In sr, this message translates to:
+  /// **'Pretrage'**
+  String get statsSearches;
+
+  /// No description provided for @statsNoResults.
+  ///
+  /// In sr, this message translates to:
+  /// **'Bez rezultata'**
+  String get statsNoResults;
+
+  /// No description provided for @statsFeatureViews.
+  ///
+  /// In sr, this message translates to:
+  /// **'Otvoreni detalji'**
+  String get statsFeatureViews;
+
+  /// No description provided for @statsRoutes.
+  ///
+  /// In sr, this message translates to:
+  /// **'Tražene rute'**
+  String get statsRoutes;
+
+  /// No description provided for @statsQrScans.
+  ///
+  /// In sr, this message translates to:
+  /// **'QR skeniranja'**
+  String get statsQrScans;
+
+  /// No description provided for @statsPerDay.
+  ///
+  /// In sr, this message translates to:
+  /// **'Aktivnost po danu'**
+  String get statsPerDay;
+
+  /// No description provided for @statsPerDayHint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Pretrage, otvoreni detalji, rute i QR skeniranja zajedno'**
+  String get statsPerDayHint;
+
+  /// No description provided for @statsDayTooltip.
+  ///
+  /// In sr, this message translates to:
+  /// **'{date}: {count}'**
+  String statsDayTooltip(String date, int count);
+
+  /// No description provided for @statsNotFound.
+  ///
+  /// In sr, this message translates to:
+  /// **'Traže, a ne nalaze'**
+  String get statsNotFound;
+
+  /// No description provided for @statsNotFoundHint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Pretrage bez ijednog rezultata. Možda na planu fali mesto, naziv ili kategorija.'**
+  String get statsNotFoundHint;
+
+  /// No description provided for @statsTopSearches.
+  ///
+  /// In sr, this message translates to:
+  /// **'Najčešće pretrage'**
+  String get statsTopSearches;
+
+  /// No description provided for @statsTopFeatures.
+  ///
+  /// In sr, this message translates to:
+  /// **'Najčešće otvarano'**
+  String get statsTopFeatures;
+
+  /// No description provided for @statsTopRoutes.
+  ///
+  /// In sr, this message translates to:
+  /// **'Najčešći ciljevi ruta'**
+  String get statsTopRoutes;
+
+  /// No description provided for @statsQrList.
+  ///
+  /// In sr, this message translates to:
+  /// **'Skeniranja po QR markeru'**
+  String get statsQrList;
+
+  /// No description provided for @statsRemoved.
+  ///
+  /// In sr, this message translates to:
+  /// **'(uklonjeno sa plana)'**
+  String get statsRemoved;
+
+  /// No description provided for @statsEmpty.
+  ///
+  /// In sr, this message translates to:
+  /// **'Još nema podataka za ovaj period. Brojke stižu kad posetioci koriste mapu, uz kašnjenje do 10 sekundi.'**
+  String get statsEmpty;
+
+  /// No description provided for @statsError.
+  ///
+  /// In sr, this message translates to:
+  /// **'Statistika trenutno nije dostupna.'**
+  String get statsError;
+
+  /// No description provided for @statsPrivacy.
+  ///
+  /// In sr, this message translates to:
+  /// **'Samo zbirni brojevi po danu. Bez lokacija i bez podataka o osobama.'**
+  String get statsPrivacy;
 }
 
 class _MapsLocalizationsDelegate
