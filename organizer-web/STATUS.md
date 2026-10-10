@@ -3,16 +3,16 @@
 > **Single writer:** the organizer-web owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-10 · **Owner:** TBD · **Scopes held:** TBD
+**Last updated:** 2026-10-10 · **Owner:** @Vertiglo · **Scopes held:** mobile, organizer-web, backend, contracts
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
 
-Not initialized. No project, no framework chosen.
+No code here by decision: the organizer UI is the organizer role inside the Flutter app in `mobile/app/` (see `docs/decisions/organizer-web-framework.md`).
 
 ## Stack
 
-Undecided. See [`docs/decisions/organizer-web-framework.md`](../docs/decisions/organizer-web-framework.md).
+None. See [`docs/decisions/organizer-web-framework.md`](../docs/decisions/organizer-web-framework.md).
 
 ## How to consume / run (interface for teammates)
 
@@ -33,6 +33,7 @@ Undecided. See [`docs/decisions/organizer-web-framework.md`](../docs/decisions/o
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-10 21:12 · INFO · for: all · Organizer UI lives in the Flutter app (`mobile/app/`, web build). This folder stays empty for now.
 - 2026-10-10 · INFO · for: all · STATUS file created. Nothing implemented yet.
 
 ## Outbound requests (we need something from another module)

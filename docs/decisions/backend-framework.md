@@ -1,10 +1,10 @@
 # Backend language and framework
 
 - **ID:** `backend-framework`
-- **Status:** open
-- **Writer:** Backend owner · handle TBD
+- **Status:** accepted
+- **Writer:** Backend owner · @Vertiglo
 - **Affects:** backend (clients only via how to run it)
-- **Created:** 2026-10-10 · **Decided:** —
+- **Created:** 2026-10-10 · **Decided:** 2026-10-10
 
 ## Context
 
@@ -13,12 +13,15 @@ The API server needs a runtime and framework.
 ## Options
 
 - TypeScript/Node.js with Fastify, NestJS or Express
+- Go with net/http
 - Other
 
 ## Decision
 
-_Open — not decided._
+**Go** (latest stable, toolchain pinned in `go.mod`), standard library `net/http` with Go 1.22+ route patterns, no web framework. `log/slog` logging, env-var config, graceful shutdown, `/healthz`. Firebase Admin SDK (`firebase.google.com/go/v4`) for ID-token verification, `cloud.google.com/go/firestore` and `cloud.google.com/go/storage`. Deployed as a container to **Cloud Run**.
+Decided by the backend owner (@Vertiglo) on 2026-10-10.
 
 ## Consequences / follow-ups
 
-- Record local run instructions and base URL in `backend/STATUS.md` → How to consume.
+- Code in `backend/` (`cmd/api`, `internal/...`). Providers (Gemma, STT) go in their own `internal/` packages behind interfaces when someone adds them.
+- Local run instructions and base URL in `backend/STATUS.md` → How to consume.

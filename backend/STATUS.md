@@ -3,16 +3,16 @@
 > **Single writer:** the backend owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-10 · **Owner:** TBD · **Scopes held:** TBD
+**Last updated:** 2026-10-10 · **Owner:** @Vertiglo · **Scopes held:** mobile, organizer-web, backend, contracts
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
 
-Not initialized. No code, no framework chosen, nothing running or deployed.
+Stack decided (Go + Firestore + Cloud Run). Phase 1 (skeleton: `/healthz`, config, slog, Dockerfile, Firebase emulators) in progress. Venue-map API next.
 
 ## Stack
 
-Undecided. See [`docs/decisions/backend-framework.md`](../docs/decisions/backend-framework.md), [`backend-persistence.md`](../docs/decisions/backend-persistence.md) and [`backend-gemma-hosting.md`](../docs/decisions/backend-gemma-hosting.md).
+Go (net/http, slog), Firebase Admin SDK, Firestore, Cloud Storage, Cloud Run. See [`backend-framework.md`](../docs/decisions/backend-framework.md), [`backend-persistence.md`](../docs/decisions/backend-persistence.md). Gemma hosting still open ([`backend-gemma-hosting.md`](../docs/decisions/backend-gemma-hosting.md)).
 
 ## How to consume / run (interface for teammates)
 
@@ -34,6 +34,7 @@ Undecided. See [`docs/decisions/backend-framework.md`](../docs/decisions/backend
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-10 21:12 · INFO · for: all · Backend is Go + Firestore. Need an endpoint (Gemma, captions, Q&A…)? Open a request to `contracts`/`backend`; @Vertiglo's agent handles it.
 - 2026-10-10 · INFO · for: all · STATUS file created. Nothing implemented yet.
 
 ## Outbound requests (we need something from another module)

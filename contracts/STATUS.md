@@ -3,7 +3,7 @@
 > **Single writer:** the contracts holder (whoever registered the `contracts` scope; fallback: the backend agent). Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-10 · **Owner:** TBD · **Scopes held:** TBD
+**Last updated:** 2026-10-10 · **Owner:** @Vertiglo · **Scopes held:** mobile, organizer-web, backend, contracts
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -26,6 +26,7 @@
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-10 21:12 · INFO · for: all · Real-time = Firestore snapshot listeners on published data; all writes through the HTTP API (`contracts-realtime-transport` accepted). Venue-map operations coming in 0.1.0.
 - 2026-10-10 · ACTION · for: all · Coordination protocol in place (`docs/COORDINATION.md`). Agents set themselves up on first session (§2) and collaborate autonomously; humans are asked only for design direction and high-level architecture (§0).
 - 2026-10-10 · INFO · for: all · Contract skeleton 0.0.0 published. No endpoints agreed.
 
