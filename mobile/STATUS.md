@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 01:32 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 01:33 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -42,11 +42,14 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 | operationId | Status (`not started` / `on fixtures` / `on real API` / `verified e2e`) |
 | --- | --- |
 | maps: published venue (Firestore realtime) | on real API (via `eho_maps`) |
-| API-1…API-15 (`docs/api-needs.md`) | on demo data |
+| echo: transcript (Firestore), `getCatchUp`, `ask`, `listQuestions`, `submitQuestion`, vote/unvote, `getSummary`, `translateTranscript` | verified e2e (transcript, catch-up, questions in the app; ask/translate/submit/unvote via curl; UI paths by widget tests) |
+| maps: `getRoute`, `/o` editor | verified e2e (via `eho_maps`) |
+| API-1…3, API-9…15 (join, agenda, Find, organizer; `docs/api-needs.md`) | on demo data (no backend owner) |
 
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 01:33 · INFO · for: feature:echo · echo#1 done: the Echo screen consumes Echo API 0.1.0 (+ Firestore transcript). Run: maps `make dev`+`make seed`, echo `make dev`+`make replay`, app with `--dart-define=DEMO_EVENT_ID=<seeded id>` (`ECHO_API_BASE_URL` default `http://localhost:8082`). Contract 0.2.0 `title`/`speaker` not used yet.
 - 2026-10-11 01:32 · ACTION · for: feature:maps, feature:echo · New design for the app (`mobile/docs/design/`, v1 + v2). Requests: `mobile#8` (maps: route to the selected stage + app-provided sheet content), `mobile#9` (echo: structured summary, optional question grouping, Serbian answers). Both additive; the app keeps working without them.
 - 2026-10-11 00:58 · ACTION · for: feature:maps · Request mobile#7: English map screens for the demo video (`product-ui-language` accepted). The app is switching to an English default locale.
 - 2026-10-11 00:53 · INFO · for: feature:maps · maps#2 done (location permissions, while in use only). mobile#6 closed: the Map tab's meeting-spot "Show" now uses `highlightFeatureId` + `highlightLabel` ("Meeting: <name>").
@@ -82,7 +85,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
-| echo#1 | feature:echo | Wire the Echo screens to Echo API 0.1.0 + Firestore transcript: board M-18, in progress. | accepted | 2026-10-11 |
+| echo#1 | feature:echo | Done (`138b7be`): `EchoApiRepository` — transcript from the Firestore listener, catch-up/ask/questions/submit/vote/summary/translate over HTTP with the anonymous ID token; demo fallback when `/healthz` fails or `USE_ECHO_API=false`. Translate targets `sr`. Verified e2e against `backend/echo` (offline assistant) on the seeded event. | done | 2026-10-11 |
 | maps#2 | feature:maps | Added: Android `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION`, iOS `NSLocationWhenInUseUsageDescription` (no background/Always). Commit `3cee092`. | done | 2026-10-11 |
 | maps#1 | feature:maps | (a) already in `pubspec.lock`. (b) `main.dart` overrides `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl`. (c) Profile → "For organizers" → "Edit venue map" opens `/o`; the app router mounts the `/o` routes of `mapsRoutes()` (not its `/e/:eventId`). | done | 2026-10-11 |
 | mobile#4 | @Vertiglo (maps) | Feature scopes adopted: `AGENTS.md`, `docs/COORDINATION.md` §1a, `ONBOARDING.md`, `docs/OWNERSHIP.md`, `.githooks/pre-commit` | done | 2026-10-10 |

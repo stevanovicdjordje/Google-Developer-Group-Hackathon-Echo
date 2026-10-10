@@ -10,7 +10,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-10d | Design: Echo screen + v2 Echo frames (EchoTranslated, EchoQA sheet, EchoEnded paywall with the app's mock price, EchoSummary) | L | opus | `features/echo/` | After **M-18** merges (same files). Structured summary/table needs `mobile#9` from feature:echo; render plain-text summary until then. |
 | M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
 | M-17 | Demo-event name: join screen/agenda say "DevSummit Belgrade 2026" while the map event is "Eho Demo Expo" | S | — | — | Cosmetic. Decide with the design pass / demo script; maybe ask feature:maps to seed the same name. |
 
@@ -25,17 +24,18 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| M-10d | opus | 2026-10-11 01:33 | worktree | Design: Echo + v2 Echo frames (translated, Q&A sheet, ended/paywall, summary) |
 | M-10b | dev | 2026-10-11 01:26 | worktree | Design: Start, Join, Onboarding (+ v2 OnboardingName/Interests), My events (resumed after the 01:30 session limit) |
 | M-10c | dev | 2026-10-11 01:26 | worktree | Design: Agenda + session detail (+ v2 Session) (resumed) |
 | M-10e | dev | 2026-10-11 01:26 | worktree | Design: Find (+ v2 FindResults, Person), Messages + meeting spot (resumed) |
 | M-10f | dev | 2026-10-11 01:26 | worktree | Design: Profile + Map tab chrome + event shell nav (resumed) |
 | M-10g | dev | 2026-10-11 01:32 | worktree | Design: Organizer upload/review/published + flagged rows, progress text (relaunched) |
-| M-18 | opus | 2026-10-11 01:16 | worktree | echo#1 (resumed; committed `138b7be`, finishing verification): wire `EchoRepository` to the Echo API (`backend/echo`, :8082) + Firestore transcript; demo repo stays the fallback |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-18 | echo#1: Echo screen on the real Echo API (Firestore transcript, catch-up, ask, Q&A + votes, summary, translate to sr; health-check fallback to demo data). E2E: server transcript shown in the web app | `138b7be` |
 | M-10a | Design foundation: theme tokens (`EhoColors`, `context.eho`), bundled Bricolage Grotesque + Instrument Sans, component themes, `core/ui/` widgets | `9fc22c1` |
 | M-16 | QR flow: `/e/{id}?at=` survives join + onboarding → `/e/{id}/map?at=` (`qr_join_test.dart`). Note: `/e/{id}/stand/{id}` still opens the map without the join screen (fine for the demo) | `89c6163` |
 | M-11 | English UI by default (`locale: en`), 138 strings in ARB (en template + sr), `product-ui-language` | `35ffbd5` |
