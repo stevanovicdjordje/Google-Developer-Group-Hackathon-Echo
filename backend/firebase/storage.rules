@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Floor plans: events/{eventId}/floors/{fileName}
+// Upload only by the event owner; read by the owner, or by any signed-in user once the event is published.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function event(eventId) { return firestore.get(/databases/(default)/documents/events/$(eventId)).data; }
+    function isOwner(eventId) { return request.auth != null && event(eventId).ownerUid == request.auth.uid; }
+    function isPublished(eventId) { return event(eventId).publishedVersion > 0; }
+
+    match /events/{eventId}/floors/{fileName} {
+      allow read: if request.auth != null && (isOwner(eventId) || isPublished(eventId));
+      allow create, update: if isOwner(eventId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg)');
+      allow delete: if isOwner(eventId);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

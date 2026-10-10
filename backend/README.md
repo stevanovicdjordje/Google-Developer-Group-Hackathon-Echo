@@ -1,6 +1,6 @@
 # backend/ — Eho API and AI services
 
-> **Setup status: Not initialized yet — the module owner will initialize it.** There is no `package.json`, framework or source code here yet.
+> **Stack:** Go + `net/http`, Firestore, Cloud Storage, Firebase Auth, Cloud Run (see `docs/decisions/backend-framework.md`, `backend-persistence.md`). Currently implements the venue-map API (in progress).
 
 ## Purpose
 
@@ -37,4 +37,28 @@ All AI calls go through this module. Keep each provider behind an adapter so the
 
 ## Setup
 
-`Not initialized yet — module owner will initialize.` When initialized, document here: the runtime version, install/run commands, the `.env.example` variables (placeholders only), how to run a smoke test, and how to validate against `contracts/`.
+Requirements: Go (any ≥ 1.21; `go.mod` pins toolchain 1.27.2, downloaded automatically), Java 21 and the Firebase CLI (`firebase`) for the emulators.
+
+```bash
+cd backend
+make dev        # Firebase emulators (Auth 9099, Firestore 8081, Storage 9199, UI 4000) + API on :8080
+make test       # go test ./...
+make vet
+curl localhost:8080/healthz
+```
+
+Emulators run as the demo project `demo-eho` (no real Firebase project or credentials needed). Emulator data is persisted in `firebase/.emulator-data/` (git-ignored).
+
+Configuration is env-only; see `.env.example`. In production the server uses Application Default Credentials on Cloud Run.
+
+### Layout
+
+```
+cmd/api/            entry point (config, slog, graceful shutdown)
+internal/config/    env configuration
+internal/httpapi/   router, handlers, middleware (CORS, logging, recover; auth and rate limit follow)
+firebase/           firebase.json, Firestore + Storage security rules, emulator config
+scripts/dev.sh      one-command local run
+```
+
+Logs never include request bodies or query strings (attendee positions must not be logged).
