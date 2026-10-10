@@ -10,7 +10,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-10d | Design: Echo screen | M | dev | `features/echo/` | After M-10a **and M-18** (both touch Echo). `Echo.dc.html` |
+| M-10d | Design: Echo screen + v2 Echo frames (EchoTranslated, EchoQA sheet, EchoEnded paywall with the app's mock price, EchoSummary) | L | opus | `features/echo/` | After **M-18** merges (same files). Structured summary/table needs `mobile#9` from feature:echo; render plain-text summary until then. |
+| M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
 | M-17 | Demo-event name: join screen/agenda say "DevSummit Belgrade 2026" while the map event is "Eho Demo Expo" | S | — | — | Cosmetic. Decide with the design pass / demo script; maybe ask feature:maps to seed the same name. |
 
 ## Blocked
@@ -24,12 +25,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-10b | dev | 2026-10-11 01:26 | worktree | Design: Start, Join, Onboarding, My events |
-| M-10c | dev | 2026-10-11 01:26 | worktree | Design: Agenda + session detail |
-| M-10e | dev | 2026-10-11 01:26 | worktree | Design: Find, person, Messages + meeting spot |
-| M-10f | dev | 2026-10-11 01:26 | worktree | Design: Profile + Map tab chrome + event shell nav |
-| M-10g | dev | 2026-10-11 01:26 | worktree | Design: Organizer upload/review/published |
-| M-18 | opus | 2026-10-11 01:16 | worktree | echo#1: wire `EchoRepository` to the Echo API (`backend/echo`, :8082) + Firestore transcript; demo repo stays the fallback |
+| M-10b | dev | 2026-10-11 01:26 | worktree | Design: Start, Join, Onboarding (+ v2 OnboardingName/Interests), My events (resumed after the 01:30 session limit) |
+| M-10c | dev | 2026-10-11 01:26 | worktree | Design: Agenda + session detail (+ v2 Session) (resumed) |
+| M-10e | dev | 2026-10-11 01:26 | worktree | Design: Find (+ v2 FindResults, Person), Messages + meeting spot (resumed) |
+| M-10f | dev | 2026-10-11 01:26 | worktree | Design: Profile + Map tab chrome + event shell nav (resumed) |
+| M-10g | dev | 2026-10-11 01:32 | worktree | Design: Organizer upload/review/published + flagged rows, progress text (relaunched) |
+| M-18 | opus | 2026-10-11 01:16 | worktree | echo#1 (resumed; committed `138b7be`, finishing verification): wire `EchoRepository` to the Echo API (`backend/echo`, :8082) + Firestore transcript; demo repo stays the fallback |
 
 ## Done
 

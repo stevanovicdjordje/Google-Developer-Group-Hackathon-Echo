@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 01:16 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 01:32 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -47,6 +47,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 01:32 · ACTION · for: feature:maps, feature:echo · New design for the app (`mobile/docs/design/`, v1 + v2). Requests: `mobile#8` (maps: route to the selected stage + app-provided sheet content), `mobile#9` (echo: structured summary, optional question grouping, Serbian answers). Both additive; the app keeps working without them.
 - 2026-10-11 00:58 · ACTION · for: feature:maps · Request mobile#7: English map screens for the demo video (`product-ui-language` accepted). The app is switching to an English default locale.
 - 2026-10-11 00:53 · INFO · for: feature:maps · maps#2 done (location permissions, while in use only). mobile#6 closed: the Map tab's meeting-spot "Show" now uses `highlightFeatureId` + `highlightLabel` ("Meeting: <name>").
 - 2026-10-11 00:44 · INFO · for: feature:maps · maps#1 done: `API_BASE_URL` now reaches `eho_maps` (`mapsApiBaseUrlProvider` override), and the app mounts your `/o` routes (Profile → For organizers → Edit venue map). The app's tabs are now a `StatefulShellRoute.indexedStack`, so the Map tab (`MapViewerScreen`) stays alive offstage when the user switches tabs.
@@ -72,6 +73,8 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 | mobile#3 | integration | Record `team-event-join`: plain HTTPS link to the Flutter web app, `https://<host>/e/{eventId}`; optional `?at={markerId}` (QR "you are here" marker), `/e/{eventId}/stand/{standId}` for a stand. Same paths work as app deep links. | open | 2026-10-10 |
 
 | mobile#6 | feature:maps | (1) Accept the routing change above (Map tab embeds `MapViewerScreen`). (2) Optional, for the meeting-spot step: a way to highlight a place by feature name or ID with a custom label (today the app opens `/map/stand/{id}`). (3) Keep using `Theme.of(context)` for colors so the redesign applies to the map too. | closed | 2026-10-11 |
+| mobile#9 | feature:echo | For the new design (`mobile/docs/design/EchoSummary.dc.html`, `EchoQA.dc.html`; README "v2 additions"): (1) **structured summary**, additive to `getSummary`: e.g. `takeaway` (1–2 sentences), `keyPoints[]`, `tradeoffs[]` of `{issue, fix, atSeconds}` (the rows link back to the transcript time) — keep `text` for old clients. (2) Optional: question grouping ("3 similar questions merged") as e.g. `mergedCount` on a question. (3) When translate is on, Ask/Catch up/Summary are requested with `language=sr`: please confirm answers come back in Serbian (Latin). | open | 2026-10-11 |
+| mobile#8 | feature:maps | For the new design (`mobile/docs/design/MapDetail.dc.html`): when a stage/room is selected, (1) draw the route line from "You are here" (QR marker/GPS) to it, as "Prikaži put" already does, and (2) let the app supply the details-sheet content, e.g. `MapViewerScreen(featureSheetBuilder: (context, feature, route) => Widget?)` (null = your default sheet), so the app can show capacity, walk time, the session happening NOW there, **Start route** and **Open Echo**. Additive; the app keeps working without it. | open | 2026-10-11 |
 | mobile#7 | feature:maps | `product-ui-language` is accepted: the app UI and demo video are **English**. Please make the map screens shown in the video English (viewer: search, details sheet, "Prikaži put", route card/banner, "Moja lokacija", "Server trenutno nije dostupan"; organizer login if shown) — e.g. complete `maps_en.arb` and follow the app's locale. The app will set `locale: Locale('en')` by default (board M-11). | open | 2026-10-11 |
 | mobile#5 | backend, contracts | Backend endpoints for the non-map demo flow: `mobile/docs/api-needs.md` (API-1…API-15, priorities included). | open | 2026-10-11 |
 
