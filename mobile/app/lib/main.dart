@@ -1,3 +1,4 @@
+import 'package:eho_maps/eho_maps.dart' show mapsApiBaseUrlProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -29,7 +30,13 @@ Future<void> main() async {
   }
   runApp(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        // The venue-map package uses the same API base URL as the app.
+        mapsApiBaseUrlProvider.overrideWithValue(
+          AppConfig.fromEnvironment().apiBaseUrl,
+        ),
+      ],
       child: const EhoApp(),
     ),
   );

@@ -75,6 +75,23 @@ class ProfileScreen extends ConsumerWidget {
               '${ref.watch(unlockedSummariesProvider).length} unlocked',
             ),
           ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text('For organizers'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.add_circle_outline),
+            title: const Text('Create event'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/organizer'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit_location_alt_outlined),
+            title: const Text('Edit venue map'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/o'),
+          ),
         ],
       ),
     );
