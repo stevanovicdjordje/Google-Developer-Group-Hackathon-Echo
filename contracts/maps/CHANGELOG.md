@@ -2,6 +2,14 @@
 
 Venue map feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## Unreleased — 2026-10-11
+- **Impact:** fixture-only
+- **Affected:** backend/maps, mobile/maps (tests)
+- **Requested by:** venue map plan, phase 6 (`PLAN.md`)
+- **Changes:**
+  - ADDED `testdata/georef.json`: georeferencing vectors (3 control points ↔ pixels/lat-lng, metersPerPixel, quality, a degenerate case) that the Go and Dart transforms must both match
+- **Consumer action:** none; regenerate with `go test ./internal/geo -run TestSharedVectors -update` in `backend/maps`.
+
 ## 0.2.0 — 2026-10-11
 - **Impact:** additive
 - **Affected:** backend/maps (implements), mobile/maps (consumes)

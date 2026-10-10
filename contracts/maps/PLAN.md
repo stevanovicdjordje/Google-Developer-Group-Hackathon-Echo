@@ -21,7 +21,7 @@ Status: ✅ done · 🔄 in progress · ⏳ not started
 | 3 | Attendee map viewer: realtime read of the published seed event, zoom/pan, tap → details, search | Works on the seed event | ✅ |
 | 4 | Organizer editor: plan upload, drawing via API, publish | A published change is visible on another device in < 2 s | ✅ |
 | 5 | Routing: Go package (A*, snapping, multi-floor) + endpoint + cache; Flutter draws the route from a QR marker to a stand | Tests and benchmark pass (< 100 ms for a few thousand nodes) | ✅ |
-| 6 | Location: georeferencing (3 points, affine), GPS dot with accuracy, QR/manual fallback, tracking, re-routing, "Stigli ste" | Go and Dart transform tests pass on the same vectors (`contracts/maps/testdata/`) | ⏳ |
+| 6 | Location: georeferencing (3 points, affine), GPS dot with accuracy, QR/manual fallback, tracking, re-routing, "Stigli ste" | Go and Dart transform tests pass on the same vectors (`contracts/maps/testdata/`) | ✅ |
 | 7 | Stats: batched events, daily aggregation, rate limit, organizer screen | | ⏳ |
 | 8 | Polish + deploy: security-rule tests, QR print page, Cloud Run + Firebase Hosting, docs | | ⏳ |
 
@@ -39,28 +39,31 @@ Before reporting a phase as done: `go vet ./...`, `go test ./...`, `flutter anal
 | Firebase rules + emulator config | `backend/maps/firebase/` |
 | Indoor-GPS problem and solution (for the pitch) | `contracts/maps/implementation-notes.md` |
 
-## Where we stopped (2026-10-11 00:20)
+## Where we stopped (2026-10-11 00:45)
 
-Phases 1–5 are done (viewer `/e/{id}`, editor `/o`, `/o/e/{id}`, routing; details in git history and `STATUS.md`).
+Phases 1–6 are done (viewer `/e/{id}`, editor `/o`, `/o/e/{id}`, routing, location; details in git history and `STATUS.md`).
 
-**Phase 5 (routing) ✅.**
-- Server: `backend/maps/internal/routing/` (A* over all floors, snapping, cache per published version), `POST /v1/events/{id}/route`,
-  contract 0.2.0 `getRoute`.
-- App (`mobile/maps`): `MapsApi.getRoute`, models in `lib/src/model/route_models.dart`, `mapsRouteProvider` (keyed by from/to/
-  accessible/published version, so a new publish recomputes the route). Viewer: "Prikaži put" in the details sheet; start = the
-  `?at=` QR marker, else a picker (QR markers, entrances, "Izaberite na mapi" → tap on the map); route line per floor with start dot,
-  destination pin and lift/stairs points (`viewer/route_layers.dart`); summary card (m, min, "procena", "Bez stepenica" on
-  multi-floor maps, close) and the "Idite liftom/stepenicama na sprat X" banner that switches the floor (`viewer/route_panels.dart`);
-  "Vi ste ovde" dot for `?at=` or the picked point. Fixed: switching floors kept the old floor's camera (shared `MapController`),
-  now fitted after the new floor's first frame.
-- Tests: `flutter test` 40/40 (new: `test/viewer/route_test.dart`, `getRoute` cases in `maps_api_test.dart` against the contract
-  fixture), `flutter analyze` clean in `mobile/maps` and `mobile/app`. Headless Chrome against the emulators on the demo event,
-  inside the app's Map tab: `?at=` Ulaz (QR) → Glavna sala 52 m · 1 min; without `?at=` the picker and tap-on-map work (13 m).
-  The demo event has one floor, so the lift/stairs banner is covered only by widget tests.
-- Open: `contracts/maps/KAKO-RADI.md` §9 (routing) is for @Vertiglo to update (asked not to commit that file again).
+**Phase 6 (location) ✅.**
+- Shared vectors `contracts/maps/testdata/georef.json` (5 cases + 1 degenerate), generated and checked by
+  `backend/maps/internal/geo/vectors_test.go` (`go test ./internal/geo -run TestSharedVectors -update` rewrites them) and checked by
+  `mobile/maps/test/location/georef_vectors_test.dart` against `lib/src/location/georef.dart` (mirror of `geo/affine.go`).
+- Editor: floor menu "Podesi GPS (georeferenciranje)" → `editor/georef_screen.dart`: tap 3 spots, paste "lat, lng" from Google Maps;
+  live scale / error estimate (warning above 5 m, collinear points refused); `putFloorGeoref` / `deleteFloorGeoref`.
+- Viewer: "Moja lokacija" (only if a floor is georeferenced) → `location/location_source.dart` (geolocator, same version the app
+  locks). Dot + accuracy circle on the floor being viewed (GPS has no floor). Usable fix = inside the plan and ±25 m or better; then it
+  is "Vi ste ovde" and the route start. Otherwise a hint (searching / imprecise / outside / floor without GPS / denied) and the QR or
+  "tap on the map" fallback. Following (`location/tracking.dart`): > max(15 m, 1.5 × accuracy) off the route → new route (at most every
+  8 s, camera kept); within ~6 m of the end → "Stigli ste: …" and the route closes. A lost signal keeps listening ("Tražim GPS
+  signal…"); denied / location off stop GPS with an explanation. Positions are never stored or logged (`DATA_PRIVACY.md`).
+- Tests: `go test ./...` + `go vet` pass; `flutter test` 63/63, `flutter analyze` clean (`mobile/maps`, `mobile/app`). Headless Chrome
+  with an emulated position on the demo event (seed floor is georeferenced): dot + circle, route from GPS 46 m (same as the API),
+  ~18 m off → re-routed (35 m), at the end → "Stigli ste: Glavna sala". The editor GPS screen is covered by widget tests (fake server),
+  not run against the real API.
+- Native builds need location permission entries in `mobile/app` (request maps#2); web works as is.
+- Open: `contracts/maps/KAKO-RADI.md` §9 (routing) and a new section on GPS are for @Vertiglo (asked not to commit that file again).
+- Testing tip: CDP clicks into Flutter web need a `mouseMoved` first; an emulated position is lost when the CDP session closes.
 
-**Next: phase 6** (georeferencing: 3 control points → affine transform, GPS dot with accuracy, QR/manual fallback, re-routing,
-"Stigli ste"). Start with shared test vectors in `contracts/maps/testdata/`, then the Go and Dart transforms.
+**Next: phase 7** (stats: batched events, daily aggregation, rate limit, organizer screen; never positions).
 
 How to run: `cd backend/maps && make dev`, `make seed`, `cd mobile/app && flutter build web`, serve `build/web` with SPA fallback
 on :5000, open `/e/<eventId>` (attendee) or `/o` (organizer, emulator login `organizer@eho.test` / `eho-demo-123`).
