@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme.dart';
 import '../../core/ui/ui.dart';
-import '../../data/demo_data.dart' as demo;
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
@@ -132,20 +131,6 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
   }
 }
 
-/// TODO(api): the data layer has no "live" flag yet. For the demo the keynote
-/// is the talk Echo replays; switch to a field on `Session` once it exists.
-bool _isLive(Session s) => s.id == demo.keynoteId;
-
-/// Label of the live badge. TODO(l10n): move to ARB (`agendaLiveNow`).
-const _liveLabel = 'Live now · Echo on';
-
-// TODO(l10n): session detail strings the design adds; move to ARB.
-const _liveNowLabel = 'Live now';
-const _echoOnTitle = 'Echo is on for this talk';
-const _echoOnBody =
-    'Live transcript, translation, ask the AI about what was said, and send '
-    'questions to the speaker.';
-
 class _SessionTile extends StatelessWidget {
   const _SessionTile(this.eventId, this.session);
 
@@ -155,6 +140,7 @@ class _SessionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final t = theme.textTheme;
     final secondary = t.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
@@ -177,7 +163,7 @@ class _SessionTile extends StatelessWidget {
         ),
       );
     }
-    final live = _isLive(session);
+    final live = session.isLive;
     final speakers = session.speakers.map((p) => p.name).join(', ');
     return EhoCard(
       borderColor: live ? context.eho.live : null,
@@ -192,7 +178,7 @@ class _SessionTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (live) ...[
-                  const LiveBadge(_liveLabel),
+                  LiveBadge(l10n.agendaLiveEchoOn),
                   const SizedBox(height: 8),
                 ],
                 Text(
@@ -248,7 +234,7 @@ class SessionScreen extends ConsumerWidget {
     if (s == null) {
       return Scaffold(appBar: AppBar(), body: const SizedBox.shrink());
     }
-    final live = _isLive(s);
+    final live = s.isLive;
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -284,7 +270,7 @@ class SessionScreen extends ConsumerWidget {
                       ),
                     if (live)
                       _Pill(
-                        label: _liveNowLabel,
+                        label: l10n.agendaLiveNow,
                         color: eho.liveContainer,
                         foreground: eho.onLiveContainer,
                         dot: eho.live,
@@ -356,7 +342,7 @@ class SessionScreen extends ConsumerWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          _echoOnTitle,
+                          l10n.agendaEchoOnTitle,
                           style: t.titleMedium?.copyWith(color: eho.onInk),
                         ),
                       ),
@@ -364,7 +350,7 @@ class SessionScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _echoOnBody,
+                    l10n.agendaEchoOnBody,
                     style: t.bodySmall?.copyWith(
                       color: eho.onInkMuted,
                       height: 1.45,

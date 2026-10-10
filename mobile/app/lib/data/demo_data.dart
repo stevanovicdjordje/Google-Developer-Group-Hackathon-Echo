@@ -49,6 +49,7 @@ const sessions = [
     end: '10:45',
     speakers: [_mara],
     track: 'AI',
+    isLive: true,
     description:
         'What changes in product design, cost and privacy when inference '
         'moves from the cloud to the phone.',

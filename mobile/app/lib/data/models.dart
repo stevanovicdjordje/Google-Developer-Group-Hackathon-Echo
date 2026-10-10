@@ -56,6 +56,7 @@ class Session {
     this.description = '',
     this.track = '',
     this.isBreak = false,
+    this.isLive = false,
   });
 
   final String id;
@@ -69,6 +70,9 @@ class Session {
   final String description;
   final String track;
   final bool isBreak;
+
+  /// The talk is on right now (Echo is on for it).
+  final bool isLive;
 }
 
 class TranscriptLine {
