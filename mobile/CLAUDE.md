@@ -7,3 +7,5 @@ Loaded by Claude Code when it works with files in `mobile/`, or at launch if you
 @AGENTS.md
 
 Keep [`STATUS.md`](STATUS.md) current. It is how other teammates' agents learn about this module.
+
+**Orchestrator sessions** (the human's kickoff prompt says "mobile orchestrator") follow [`docs/WORKFLOW.md`](docs/WORKFLOW.md). **Workers** dispatched by it start with [`docs/APP_GUIDE.md`](docs/APP_GUIDE.md).

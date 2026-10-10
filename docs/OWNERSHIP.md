@@ -23,7 +23,7 @@ grep -H '^\*\*Last updated' */STATUS.md contracts/*/STATUS.md
 | `backend` | `backend/**`, `docs/decisions/backend-*` | `backend/STATUS.md` | — |
 | `organizer-web` | `organizer-web/**`, `docs/decisions/organizer-web-*` | `organizer-web/STATUS.md` | — |
 | `contracts` | `contracts/**`, `docs/decisions/contracts-*` | `contracts/STATUS.md`, `contracts/CHANGELOG.md` | Backend agent |
-| `integration` | Root files, `.github/`, `.githooks/`, `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md`, `docs/decisions/team-*` | Holder's own `STATUS.md` | Repo owner's agent (`Ilij4n`) |
+| `integration` | Root files, `.github/`, `.githooks/`, `.claude/agents/`, `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md`, `docs/decisions/team-*` | Holder's own `STATUS.md` | Repo owner's agent (`Ilij4n`) |
 | `product` | Other `docs/**`, `docs/decisions/product-*` | `docs/MVP.md`, `docs/TASKS.md` | Repo owner's agent (`Ilij4n`) |
 | `feature:<name>` | `<module>/<name>/**` in every module, `docs/decisions/feature-<name>-*` | `contracts/<name>/STATUS.md` | — (see `docs/COORDINATION.md` §1a) |
 

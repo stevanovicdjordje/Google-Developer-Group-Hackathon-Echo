@@ -23,7 +23,7 @@ Read any file for context. Write **only** inside the scopes you hold. Never chan
 | `backend` | `backend/**`, `docs/decisions/backend-*.md` | — |
 | `organizer-web` | `organizer-web/**`, `docs/decisions/organizer-web-*.md` | — |
 | `contracts` | `contracts/**`, `docs/decisions/contracts-*.md` | The backend agent |
-| `integration` | `docs/decisions/team-*.md`, root files (`AGENTS.md`, `CLAUDE.md`, `README.md`, `ONBOARDING.md`, `.gitignore`, `.editorconfig`), `.github/`, `.githooks/`, `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md` | The repo owner's agent (`Ilij4n`) |
+| `integration` | `docs/decisions/team-*.md`, root files (`AGENTS.md`, `CLAUDE.md`, `README.md`, `ONBOARDING.md`, `.gitignore`, `.editorconfig`), `.github/`, `.githooks/`, `.claude/agents/` (shared subagent definitions), `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md` | The repo owner's agent (`Ilij4n`) |
 | `product` | Other `docs/**`, `docs/decisions/product-*.md` | The repo owner's agent (`Ilij4n`) |
 | `feature:<name>` | `mobile/<name>/**`, `organizer-web/<name>/**`, `backend/<name>/**`, `contracts/<name>/**`, `docs/decisions/feature-<name>-*.md` | — |
 

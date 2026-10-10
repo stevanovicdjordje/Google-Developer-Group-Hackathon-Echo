@@ -59,7 +59,7 @@ Your human doesn't know this protocol and shouldn't have to. **Never explain the
 | `docs/decisions/<prefix>-<topic>.md` | Holder of the prefix's workstream | One decision each: `open` → `proposed` → `accepted` / `rejected` / `superseded` |
 | `contracts/openapi.yaml`, `contracts/examples/**`, other `contracts/*.md`, `contracts/CHANGELOG.md` | Contracts holder | Interfaces between modules: HTTP API, fixtures, and later QR/deep-link format and real-time events |
 | `docs/MVP.md`, `docs/PRODUCT.md`, `docs/DATA_PRIVACY.md`, `docs/USER_RESEARCH.md`, `docs/TASKS.md`, `docs/ARCHITECTURE.md` | Product holder | Scope, priorities, privacy, research |
-| Root files (`AGENTS.md`, `CLAUDE.md`, `README.md`, `ONBOARDING.md`, `.gitignore`, `.editorconfig`), `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md`, `.githooks/`, `.github/` | Integration holder | Rules and process |
+| Root files (`AGENTS.md`, `CLAUDE.md`, `README.md`, `ONBOARDING.md`, `.gitignore`, `.editorconfig`), `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md`, `.githooks/`, `.github/`, `.claude/agents/` (shared subagent definitions; name them `<scope>-*.md`) | Integration holder | Rules and process |
 
 One writer per file means parallel pushes don't conflict, and every fact has one authoritative place.
 

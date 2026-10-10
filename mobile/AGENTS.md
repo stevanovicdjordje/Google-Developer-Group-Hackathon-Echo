@@ -33,4 +33,5 @@ First line of every session: `My write scope is mobile/** + docs/decisions/mobil
 6. **One theme.** Colors, fonts and spacing come from `mobile/app/lib/core/theme.dart` via `Theme.of(context)`. Don't hardcode colors or text styles in screens, so the design pass is a theme change (exception: the white background behind QR codes).
 7. **Data behind interfaces.** Screens read data only through the repositories in `mobile/app/lib/data/`. Demo data stays in `demo_data.dart`; swapping to a real endpoint is a provider change (`mobile/docs/api-needs.md`).
 8. **Feature folders** (`mobile/maps/`, …) belong to their feature holders. Don't edit them; send a request.
-9. Stage with `git add -- mobile/ docs/decisions/mobile-*.md`.
+9. **Workflow:** mobile work runs through an orchestrator session plus worker subagents (`mobile/docs/WORKFLOW.md`, agents in `.claude/agents/mobile-*.md`). The task board is `mobile/docs/BOARD.md`.
+10. Stage with `git add -- mobile/ docs/decisions/mobile-*.md`.

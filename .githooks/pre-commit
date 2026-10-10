@@ -47,7 +47,7 @@ allowed() {
       case "$1" in contracts/*|docs/decisions/contracts-*) return 0 ;; esac ;;
     integration)
       case "$1" in
-        docs/decisions/team-*|.github/*|.githooks/*) return 0 ;;
+        docs/decisions/team-*|.github/*|.githooks/*|.claude/agents/*) return 0 ;;
         AGENTS.md|CLAUDE.md|README.md|ONBOARDING.md|.gitignore|.editorconfig) return 0 ;;
         docs/COORDINATION.md|docs/OWNERSHIP.md|docs/INTEGRATION.md|docs/DECISIONS.md) return 0 ;;
       esac ;;

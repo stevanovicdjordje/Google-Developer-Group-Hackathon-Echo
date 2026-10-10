@@ -109,3 +109,6 @@ tmp/
 
 # --- Local AI agent state ---
 .claude/settings.local.json
+
+# --- Claude Code worktrees for parallel agents ---
+.claude/worktrees/
