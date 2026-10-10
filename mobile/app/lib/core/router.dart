@@ -1,3 +1,4 @@
+import 'package:eho_maps/eho_maps.dart' show mapsRoutes;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,13 +20,17 @@ import '../features/start/start_screen.dart';
 /// - `/e/{eventId}/stand/{standId}` a stand on the map
 ///
 /// The venue map (`eho_maps`) is shown inside the Map tab via
-/// [MapViewerScreen]; its own `mapsRoutes()` are not mounted.
+/// [MapViewerScreen]. Of its own `mapsRoutes()` only the organizer map
+/// editor (`/o`, `/o/e/{eventId}`) is mounted; its `/e/:eventId` would clash.
 GoRouter buildRouter() => GoRouter(
   routes: [
     GoRoute(path: '/', builder: (c, s) => const StartScreen()),
     GoRoute(path: '/dev', builder: (c, s) => const DevStatusScreen()),
     GoRoute(path: '/events', builder: (c, s) => const MyEventsScreen()),
     GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
+
+    // Venue map editor (feature:maps)
+    ...mapsRoutes().where((r) => r is GoRoute && r.path == '/o'),
 
     // Organizer
     GoRoute(
