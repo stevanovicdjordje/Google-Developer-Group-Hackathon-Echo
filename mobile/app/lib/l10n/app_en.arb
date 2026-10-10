@@ -308,5 +308,14 @@
   },
   "backendUnavailable": "The server is not reachable right now. Check your connection and try again.",
   "openEventLabel": "Event ID",
-  "openEvent": "Open map"
+  "openEvent": "Open map",
+  "echoThinking": "Echo is thinking…",
+  "echoRetry": "Try again",
+  "echoErrorAiBusy": "Echo couldn't answer right now.",
+  "echoErrorRateLimited": "Lots of requests right now. Wait a moment and try again.",
+  "echoErrorOffline": "Echo can't be reached. Check your connection.",
+  "echoErrorNoTranscript": "This talk has no live transcript yet.",
+  "echoErrorFailed": "Something went wrong.",
+  "echoWaitingForTalk": "Waiting for the talk to start…",
+  "echoTranscriptUnavailable": "The live transcript isn't available right now."
 }

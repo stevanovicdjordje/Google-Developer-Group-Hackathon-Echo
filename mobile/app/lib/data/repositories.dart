@@ -8,9 +8,13 @@ library;
 
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers.dart';
 import 'demo_data.dart' as demo;
+import 'echo_api_repository.dart';
 import 'models.dart';
 
 // ---------------------------------------------------------------- interfaces
@@ -46,8 +50,57 @@ abstract interface class EchoRepository {
     String text,
   );
 
+  /// Add ([up]) or take back the current user's vote; returns the question
+  /// as it is now. [API-7]
+  Future<SpeakerQuestion> vote(
+    String eventId,
+    String sessionId,
+    SpeakerQuestion question, {
+    required bool up,
+  });
+
   /// Full post-talk summary (premium). [API-8]
   Future<String> fullSummary(String eventId, String sessionId);
+
+  /// Translations of the transcript lines from [fromIndex] on (a line's index
+  /// is its position in [transcript]). Call again from `nextIndex` when new
+  /// lines arrive. [translation]
+  Future<TranscriptTranslation> translate(
+    String eventId,
+    String sessionId, {
+    required String language,
+    int fromIndex = 0,
+  });
+}
+
+/// Translated lines by index, and the first index not translated yet.
+typedef TranscriptTranslation = ({Map<int, String> lines, int nextIndex});
+
+enum EchoErrorKind {
+  /// The AI failed or was too slow; safe to retry.
+  aiBusy,
+
+  /// Too many requests; retry after [EchoException.retryAfter].
+  rateLimited,
+
+  /// The service can't be reached.
+  offline,
+
+  /// The session has no transcript (yet).
+  noTranscript,
+  failed,
+}
+
+/// Failure of an [EchoRepository] call, for the screen to explain.
+class EchoException implements Exception {
+  const EchoException(this.kind, [this.message = '', this.retryAfter]);
+
+  final EchoErrorKind kind;
+  final String message;
+  final Duration? retryAfter;
+
+  @override
+  String toString() => 'EchoException(${kind.name}): $message';
 }
 
 abstract interface class FindRepository {
@@ -159,6 +212,25 @@ class DemoEchoRepository implements EchoRepository {
       text: text,
       votes: 1,
       mine: true,
+      voted: true,
+    );
+  }
+
+  @override
+  Future<SpeakerQuestion> vote(
+    String eventId,
+    String sessionId,
+    SpeakerQuestion question, {
+    required bool up,
+  }) async {
+    await _think(200);
+    final change = up == question.voted ? 0 : (up ? 1 : -1);
+    return SpeakerQuestion(
+      id: question.id,
+      text: question.text,
+      votes: (question.votes + change).clamp(0, 1 << 30),
+      mine: question.mine,
+      voted: up,
     );
   }
 
@@ -166,6 +238,23 @@ class DemoEchoRepository implements EchoRepository {
   Future<String> fullSummary(String eventId, String sessionId) async {
     await _think(1600);
     return demo.keynoteSummary;
+  }
+
+  @override
+  Future<TranscriptTranslation> translate(
+    String eventId,
+    String sessionId, {
+    required String language,
+    int fromIndex = 0,
+  }) async {
+    await _think(300);
+    final lines = demo.keynoteTranscript;
+    return (
+      lines: {
+        for (var i = fromIndex; i < lines.length; i++) i: lines[i].translated,
+      },
+      nextIndex: lines.length,
+    );
   }
 }
 
@@ -282,9 +371,34 @@ String linkBase() {
 final eventRepositoryProvider = Provider<EventRepository>(
   (ref) => DemoEventRepository(),
 );
-final echoRepositoryProvider = Provider<EchoRepository>(
-  (ref) => DemoEchoRepository(),
-);
+
+/// Echo API when enabled (`USE_ECHO_API`, default on), Firebase is up and
+/// the service answers `/healthz`; demo data otherwise (and in tests).
+final echoRepositoryProvider = Provider<EchoRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  if (!config.useEchoApi || !_firebaseReady()) return DemoEchoRepository();
+  final token = anonymousIdToken(ref.watch(firebaseAuthProvider));
+  return FallbackEchoRepository(
+    primary: EchoApiRepository(
+      baseUrl: config.echoApiBaseUrl,
+      tokenProvider: token,
+      transcriptSource: FirestoreEchoTranscriptSource(
+        FirebaseFirestore.instance,
+        token,
+      ),
+    ),
+    fallback: DemoEchoRepository(),
+  );
+});
+
+bool _firebaseReady() {
+  try {
+    return Firebase.apps.isNotEmpty;
+  } catch (_) {
+    return false;
+  }
+}
+
 final findRepositoryProvider = Provider<FindRepository>(
   (ref) => DemoFindRepository(),
 );

@@ -515,4 +515,34 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String get openEvent => 'Otvori plan';
+
+  @override
+  String get echoThinking => 'Echo razmišlja…';
+
+  @override
+  String get echoRetry => 'Pokušaj ponovo';
+
+  @override
+  String get echoErrorAiBusy => 'Echo trenutno ne može da odgovori.';
+
+  @override
+  String get echoErrorRateLimited =>
+      'Trenutno ima mnogo zahteva. Sačekaj malo i pokušaj ponovo.';
+
+  @override
+  String get echoErrorOffline => 'Echo nije dostupan. Proveri vezu.';
+
+  @override
+  String get echoErrorNoTranscript =>
+      'Ovo predavanje još nema transkript uživo.';
+
+  @override
+  String get echoErrorFailed => 'Nešto nije u redu.';
+
+  @override
+  String get echoWaitingForTalk => 'Čekamo da predavanje počne…';
+
+  @override
+  String get echoTranscriptUnavailable =>
+      'Transkript uživo trenutno nije dostupan.';
 }

@@ -19,6 +19,8 @@ Auth for all of them: `Authorization: Bearer <Firebase ID token>` (`team-auth`).
 
 ## Endpoints
 
+> **Wired (M-18):** API-4 … API-8 and translation use `contracts/echo` 0.1.0 (`backend/echo`, port 8082) through `EchoApiRepository` (`mobile/app/lib/data/echo_api_repository.dart`). The suggested shapes below for those rows are superseded by that contract. The app falls back to demo data when the Echo service or Firebase isn't available.
+
 | ID | Screen | Interface method | Suggested endpoint | Request → response |
 | --- | --- | --- | --- | --- |
 | API-1 | Join (`/e/{eventId}`) | `EventRepository.getEvent` | `GET /v1/events/{eventId}/public` | → `{id, name, dates, venue}` (published events only) |
@@ -40,7 +42,7 @@ Auth for all of them: `Authorization: Bearer <Firebase ID token>` (`team-auth`).
 ## AI notes
 
 - Models are chosen per feature (`docs/MVP.md`): Gemma (Gemini API) for translation, others where they work better. Keep each model behind a backend adapter.
-- Translation (Echo 🌐 button): today the demo transcript ships with a precomputed Serbian translation. A real version would be `POST …/translate {texts[], target}` or a `translated` field on each transcript line.
+- Translation (Echo 🌐 button): **wired** to `POST …/sessions/{s}/translate {language, fromIndex}` (`contracts/echo`). The demo transcript's precomputed Serbian text is only used on demo data.
 - Every AI response is untrusted input: validate shapes before returning (`AGENTS.md` rule 12).
 
 ## How to hook an endpoint into the app
