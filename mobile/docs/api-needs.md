@@ -19,7 +19,8 @@ Auth for all of them: `Authorization: Bearer <Firebase ID token>` (`team-auth`).
 
 ## Endpoints
 
-> **Wired (M-18):** API-4 … API-8 and translation use `contracts/echo` 0.1.0 (`backend/echo`, port 8082) through `EchoApiRepository` (`mobile/app/lib/data/echo_api_repository.dart`). The suggested shapes below for those rows are superseded by that contract. The app falls back to demo data when the Echo service or Firebase isn't available.
+> **Wired (M-18):** API-4 … API-8 and translation use `contracts/echo` 0.3.0 (`backend/echo`, port 8082) through `EchoApiRepository` (`mobile/app/lib/data/echo_api_repository.dart`). The suggested shapes below for those rows are superseded by that contract. The app falls back to demo data when the Echo service or Firebase isn't available.
+> **0.3.0 (M-21, mobile#9):** the summary page renders the structured `summary` (takeaway, key points, trade-offs with `atSeconds` links back into the transcript; falls back to splitting `text` when absent), the Q&A sheet shows `mergedCount` and handles `200 merged: true` from `submitQuestion`, and catch-up / ask / summary send `language=sr` while Echo's translate toggle is on.
 
 | ID | Screen | Interface method | Suggested endpoint | Request → response |
 | --- | --- | --- | --- | --- |

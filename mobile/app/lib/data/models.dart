@@ -104,6 +104,7 @@ class SpeakerQuestion {
     required this.votes,
     this.mine = false,
     this.voted = false,
+    this.mergedCount = 0,
   });
 
   final String id;
@@ -113,6 +114,9 @@ class SpeakerQuestion {
 
   /// The current user has voted for it.
   bool voted;
+
+  /// How many similar questions the AI merged into this one.
+  final int mergedCount;
 }
 
 class Person {

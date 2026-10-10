@@ -3,13 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../data/echo_models.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
 import 'echo_errors.dart';
 
-/// One row of the "Trade-offs and fixes" table.
-typedef SummaryTradeoff = ({String issue, String detail});
+/// One row of the "Trade-offs and fixes" table; [atSeconds] links back to
+/// the transcript when known.
+typedef SummaryTradeoff = ({String issue, String detail, int? atSeconds});
 
 /// The full summary split into the parts the design shows.
 class ParsedSummary {
@@ -26,6 +28,22 @@ class ParsedSummary {
 
   /// Plain paragraphs that are neither the takeaway nor a heading.
   final List<String> paragraphs;
+
+  /// The structured summary (Echo 0.3.0): each trade-off row reads
+  /// "issue → fix" (design) and keeps its transcript time.
+  factory ParsedSummary.fromTalkSummary(TalkSummary s) => ParsedSummary(
+    takeaway: s.takeaway,
+    keyPoints: s.keyPoints,
+    tradeoffs: [
+      for (final t in s.tradeoffs)
+        (
+          issue: t.topic,
+          detail: [t.issue, t.fix].where((x) => x.isNotEmpty).join(' → '),
+          atSeconds: t.atSeconds,
+        ),
+    ],
+    paragraphs: const [],
+  );
 }
 
 final _bullet = RegExp(r'^\s*[•\-\*–]\s+');
@@ -36,9 +54,8 @@ final _takeawayLabel = RegExp(
 
 /// Splits the plain-text summary (`•` bullet lines, optional section
 /// headings like "Key points" / "Trade-offs and fixes" / "Takeaway").
-///
-/// TODO(mobile#9): use the structured fields (`takeaway`, `keyPoints[]`,
-/// `tradeoffs[]` with `atSeconds`) once feature:echo returns them.
+/// Fallback for when the response has no structured `summary` (servers
+/// before Echo 0.3.0, or a summary that didn't parse).
 ParsedSummary parseEchoSummary(String text, {String? title}) {
   final lines = [
     for (final l in text.split('\n'))
@@ -81,9 +98,10 @@ ParsedSummary parseEchoSummary(String text, {String? title}) {
         tradeoffs.add((
           issue: item.substring(0, colon).trim(),
           detail: item.substring(colon + 1).trim(),
+          atSeconds: null,
         ));
       } else {
-        tradeoffs.add((issue: item, detail: ''));
+        tradeoffs.add((issue: item, detail: '', atSeconds: null));
       }
     } else if (section.contains('takeaway')) {
       takeaway = takeaway == null ? item : '$takeaway $item';
@@ -124,6 +142,11 @@ int? _minutes(String start, String end) {
   return a == null || b == null || b <= a ? null : b - a;
 }
 
+/// "mm:ss" like the transcript's time column.
+String _clock(int seconds) =>
+    '${(seconds ~/ 60).toString().padLeft(2, '0')}:'
+    '${(seconds % 60).toString().padLeft(2, '0')}';
+
 /// Premium talk summary (after unlock): takeaway, key points, trade-offs.
 class EchoSummaryScreen extends ConsumerStatefulWidget {
   const EchoSummaryScreen({
@@ -131,22 +154,41 @@ class EchoSummaryScreen extends ConsumerStatefulWidget {
     required this.eventId,
     required this.sessionId,
     this.session,
+    this.language = 'en',
+    this.lineAt,
   });
 
   final String eventId;
   final String sessionId;
   final Session? session;
 
+  /// Language the summary is first requested in (`sr` when Echo's translate
+  /// is on); the header's translate button switches between it and English.
+  final String language;
+
+  /// Index of the loaded transcript line at [atSeconds], or null when that
+  /// line isn't there. A trade-off time with a line is a link that pops this
+  /// page with the line index (the Echo screen then scrolls to it); without
+  /// one it shows the time only.
+  final int? Function(int atSeconds)? lineAt;
+
   @override
   ConsumerState<EchoSummaryScreen> createState() => _EchoSummaryScreenState();
 }
 
 class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
-  late Future<String> _summary = _load();
+  late String _language = widget.language;
+  late Future<EchoSummary> _summary = _load();
 
-  Future<String> _load() => ref
+  Future<EchoSummary> _load() => ref
       .read(echoRepositoryProvider)
-      .fullSummary(widget.eventId, widget.sessionId);
+      .fullSummary(widget.eventId, widget.sessionId, language: _language);
+
+  /// Serbian <-> English (Serbian is the app's translate target, as on Echo).
+  void _toggleLanguage() => setState(() {
+    _language = _language == 'sr' ? 'en' : 'sr';
+    _summary = _load();
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +198,7 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
     return Scaffold(
       backgroundColor: scheme.surface,
       body: SafeArea(
-        child: FutureBuilder<String>(
+        child: FutureBuilder<EchoSummary>(
           future: _summary,
           builder: (context, snap) => Column(
             children: [
@@ -171,14 +213,22 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
                     const Spacer(),
-                    // The summary API has no language parameter, so the
-                    // design's translate button is left out for now.
-                    if (snap.hasData)
+                    _RoundButton(
+                      icon: Icons.translate,
+                      tooltip: _language == 'sr'
+                          ? l10n.echoShowOriginal
+                          : l10n.echoTranslate,
+                      selected: _language == 'sr',
+                      onPressed: _toggleLanguage,
+                    ),
+                    if (snap.hasData) ...[
+                      const SizedBox(width: 8),
                       _RoundButton(
                         icon: Icons.copy_rounded,
                         tooltip: l10n.echoCopySummary,
-                        onPressed: () => _copy(snap.data!),
+                        onPressed: () => _copy(snap.data!.text),
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -197,13 +247,13 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
     messenger.showSnackBar(SnackBar(content: Text(done)));
   }
 
-  Widget _body(BuildContext context, AsyncSnapshot<String> snap) {
+  Widget _body(BuildContext context, AsyncSnapshot<EchoSummary> snap) {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final scheme = theme.colorScheme;
     final eho = context.eho;
     final l10n = AppLocalizations.of(context);
-    if (snap.hasError) {
+    if (snap.hasError && snap.connectionState == ConnectionState.done) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -225,7 +275,7 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
         ),
       );
     }
-    if (!snap.hasData) {
+    if (!snap.hasData || snap.connectionState != ConnectionState.done) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -238,8 +288,11 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
       );
     }
     final s = widget.session;
-    final text = snap.data!;
-    final parsed = parseEchoSummary(text, title: s?.title);
+    final text = snap.data!.text;
+    final structured = snap.data!.summary;
+    final parsed = structured != null
+        ? ParsedSummary.fromTalkSummary(structured)
+        : parseEchoSummary(text, title: s?.title);
     final talkMinutes = s == null ? null : _minutes(s.start, s.end);
     final words = text.split(RegExp(r'\s+')).length;
     final meta = [
@@ -338,8 +391,6 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
               ),
             ),
         ],
-        // TODO(mobile#9): end each row with the timestamp link back into the
-        // transcript once the API returns `tradeoffs[].atSeconds`.
         if (parsed.tradeoffs.isNotEmpty) ...[
           const SizedBox(height: 18),
           Text(l10n.echoTradeoffs, style: t.titleMedium),
@@ -362,14 +413,14 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(row.issue, style: t.titleSmall),
-                        if (row.detail.isNotEmpty) ...[
+                        if (row.detail.isNotEmpty || row.atSeconds != null) ...[
                           const SizedBox(height: 3),
-                          Text(
+                          _TradeoffDetail(
                             row.detail,
-                            style: t.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              height: 1.45,
-                            ),
+                            atSeconds: row.atSeconds,
+                            line: row.atSeconds == null
+                                ? null
+                                : widget.lineAt?.call(row.atSeconds!),
                           ),
                         ],
                       ],
@@ -381,6 +432,66 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Trade-off detail ending with its transcript time: a link back to the
+/// transcript when [line] is known, plain text otherwise.
+class _TradeoffDetail extends StatelessWidget {
+  const _TradeoffDetail(this.detail, {this.atSeconds, this.line});
+
+  final String detail;
+  final int? atSeconds;
+  final int? line;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final style = theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+      height: 1.45,
+    );
+    final at = atSeconds;
+    if (at == null) return Text(detail, style: style);
+    final time = _clock(at);
+    final prefix = detail.isEmpty
+        ? ''
+        : detail.endsWith('.')
+        ? '$detail '
+        : '$detail. ';
+    final l = line;
+    if (l == null) return Text('$prefix$time', style: style);
+    return Text.rich(
+      TextSpan(
+        style: style,
+        children: [
+          TextSpan(text: prefix),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: Semantics(
+              link: true,
+              label: AppLocalizations.of(context).echoJumpToTime(time),
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: () => Navigator.of(context).pop(l),
+                borderRadius: BorderRadius.circular(4),
+                child: Text(
+                  time,
+                  style: style?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: scheme.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -417,20 +528,27 @@ class _RoundButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
+    this.selected = false,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
 
+  /// Filled primary (the translate button while Serbian is shown).
+  final bool selected;
+
   @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
-    onPressed: onPressed,
-    style: IconButton.styleFrom(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-      foregroundColor: Theme.of(context).colorScheme.onSurface,
-    ),
-    icon: Icon(icon),
-  );
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        backgroundColor: selected ? scheme.primary : scheme.surfaceContainer,
+        foregroundColor: selected ? scheme.onPrimary : scheme.onSurface,
+      ),
+      icon: Icon(icon),
+    );
+  }
 }

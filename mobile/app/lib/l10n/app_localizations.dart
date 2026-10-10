@@ -668,6 +668,24 @@ abstract class AppLocalizations {
   /// **'Question sent to the speaker'**
   String get echoQuestionSent;
 
+  /// No description provided for @echoQuestionMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged with a similar question · your vote counts'**
+  String get echoQuestionMerged;
+
+  /// No description provided for @echoMergedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 similar question merged} other{{count} similar questions merged}}'**
+  String echoMergedCount(int count);
+
+  /// No description provided for @echoJumpToTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {time} in the transcript'**
+  String echoJumpToTime(String time);
+
   /// No description provided for @echoShowOriginal.
   ///
   /// In en, this message translates to:

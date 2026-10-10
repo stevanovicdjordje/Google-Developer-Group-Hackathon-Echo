@@ -4,6 +4,7 @@
 /// so "Show on map" can find them.
 library;
 
+import 'echo_models.dart';
 import 'models.dart';
 
 const demoEventName = 'DevSummit Belgrade 2026';
@@ -146,6 +147,54 @@ Trade-offs and fixes
 Takeaway
 Start hybrid, measure, and move work to the device over time.''';
 
+/// The structured summary (`TalkSummary`, Echo 0.3.0); trade-off times are
+/// the transcript lines above where each problem is stated.
+const keynoteTalkSummary = TalkSummary(
+  takeaway: 'Start hybrid, measure, and move work to the device over time.',
+  keyPoints: [
+    'Running small models locally flips the cost model: marginal cost per user drops close to zero.',
+    'Privacy is the second win: data never leaves the device, which can unblock health and finance products.',
+  ],
+  tradeoffs: [
+    EchoTradeoff(topic: 'Battery', issue: '12% hit for continuous transcription', fix: 'process audio in batches', atSeconds: 44),
+    EchoTradeoff(topic: 'Model size', issue: 'You can\'t ship forty gigabytes', fix: 'quantization to ~1–2 GB with small quality loss', atSeconds: 55),
+    EchoTradeoff(topic: 'Hard questions', issue: 'The small model can\'t answer everything', fix: 'hybrid router: easy requests local, hard ones in the cloud; 80% stay on device', atSeconds: 66),
+  ],
+);
+
+/// Serbian versions (Echo with translate on asks for `language=sr`).
+const keynoteCatchUpSr =
+    'Mara tvrdi da pokretanje modela na telefonu spušta trošak po korisniku '
+    'skoro na nulu i čuva privatnost podataka. Kompromisi do sada: baterija '
+    '(rešena grupisanjem) i veličina modela (rešena kvantizacijom).';
+
+const keynoteSummaryTextSr = '''On-device AI: when the model lives in your pocket — Mara Ilić
+
+Ključne tačke
+• Mali modeli koji rade lokalno okreću model troškova: granični trošak po korisniku pada skoro na nulu.
+• Privatnost je druga dobit: podaci nikada ne napuštaju uređaj, što može da odblokira zdravstvene i finansijske proizvode.
+
+Kompromisi i rešenja
+• Baterija: neprekidna transkripcija trošila je 12% baterije. Rešenje: obrada zvuka u delovima.
+• Veličina: veliki modeli ne mogu da se isporuče. Rešenje: kvantizacija na ~1–2 GB uz mali gubitak kvaliteta.
+• Teška pitanja: „hibridni ruter" — laki zahtevi lokalno, teški u oblaku. U njihovoj aplikaciji 80% ostaje na uređaju.
+
+Zaključak
+Počnite hibridno, merite, i vremenom prebacujte posao na uređaj.''';
+
+const keynoteTalkSummarySr = TalkSummary(
+  takeaway: 'Počnite hibridno, merite, i vremenom prebacujte posao na uređaj.',
+  keyPoints: [
+    'Mali modeli koji rade lokalno okreću model troškova: granični trošak po korisniku pada skoro na nulu.',
+    'Privatnost je druga dobit: podaci nikada ne napuštaju uređaj, što može da odblokira zdravstvene i finansijske proizvode.',
+  ],
+  tradeoffs: [
+    EchoTradeoff(topic: 'Baterija', issue: 'pad od 12% za neprekidnu transkripciju', fix: 'obrada zvuka u delovima', atSeconds: 44),
+    EchoTradeoff(topic: 'Veličina modela', issue: 'ne možete isporučiti četrdeset gigabajta', fix: 'kvantizacija na ~1–2 GB uz mali gubitak kvaliteta', atSeconds: 55),
+    EchoTradeoff(topic: 'Teška pitanja', issue: 'mali model ne može da odgovori na sve', fix: 'hibridni ruter: laki zahtevi lokalno, teški u oblaku; 80% ostaje na uređaju', atSeconds: 66),
+  ],
+);
+
 /// Canned "Ask the talk" answers for the demo, matched by keyword.
 const keynoteAnswers = <String, String>{
   'battery':
@@ -164,11 +213,43 @@ const keynoteDefaultAnswer =
     'Based on the talk so far: Mara\'s main point is that on-device models cut cost and protect privacy, '
     'with battery and model size as the main trade-offs, handled by batching and quantization.';
 
+/// Serbian word stems that select the same canned answer (by English key).
+const keynoteAnswerKeywordsSr = <String, String>{
+  'battery': 'bater',
+  'size': 'veličin',
+  'router': 'ruter',
+  'cost': 'troš',
+  'privacy': 'privatn',
+};
+
+/// [keynoteAnswers] in Serbian, by the same keys.
+const keynoteAnswersSr = <String, String>{
+  'battery':
+      'Mara je rekla da je neprekidna transkripcija trošila oko 12% baterije. Rešenje je bilo grupisanje: zvuk se obrađuje u delovima umesto svakog okvira posebno. Mara to pominje na 00:50.',
+  'size':
+      'Rekla je da ogromni modeli ne mogu da se isporuče; kvantizacija ih spušta na oko 1–2 GB uz mali gubitak kvaliteta.',
+  'router':
+      '„Hibridni ruter" šalje laka pitanja modelu na uređaju, a teška u oblak. U njihovoj aplikaciji oko 80% zahteva ostaje na uređaju.',
+  'cost':
+      'Kada model radi lokalno, granični trošak po korisniku pada skoro na nulu, jer nema odlaska u oblak za svaki zahtev.',
+  'privacy':
+      'Kada model radi na uređaju, podaci nikada ne napuštaju telefon, što po Marinim rečima može da odblokira zdravstvene ili finansijske aplikacije.',
+};
+
+const keynoteDefaultAnswerSr =
+    'Na osnovu dosadašnjeg predavanja: Marina glavna poenta je da modeli na uređaju smanjuju trošak i čuvaju privatnost, '
+    'a glavni kompromisi su baterija i veličina modela, rešeni grupisanjem i kvantizacijom.';
+
+/// (id, text, votes, mergedCount)
 const keynoteQuestions = [
-  ('q1', 'Which model did you use for the hybrid router?', 14),
-  ('q2', 'How do you update on-device models without app releases?', 9),
-  ('q3', 'Does quantization hurt Serbian language quality?', 6),
+  ('q1', 'Which model did you use for the hybrid router?', 14, 3),
+  ('q2', 'How do you update on-device models without app releases?', 9, 0),
+  ('q3', 'Does quantization hurt Serbian language quality?', 6, 0),
 ];
+
+/// A demo question mentioning this is merged into the first one, like the
+/// server's AI grouping (Echo 0.3.0).
+const keynoteMergeKeyword = 'router';
 
 const interestOptions = [
   'AI / ML',

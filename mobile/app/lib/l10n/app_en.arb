@@ -247,6 +247,23 @@
     }
   },
   "echoQuestionSent": "Question sent to the speaker",
+  "echoQuestionMerged": "Merged with a similar question · your vote counts",
+  "echoMergedCount": "{count, plural, =1{1 similar question merged} other{{count} similar questions merged}}",
+  "@echoMergedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "echoJumpToTime": "Show {time} in the transcript",
+  "@echoJumpToTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "echoShowOriginal": "Show original",
   "echoTranslate": "Translate to Serbian",
   "echoJumpToLive": "Jump to live",

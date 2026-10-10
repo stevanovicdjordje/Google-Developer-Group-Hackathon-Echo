@@ -1,4 +1,4 @@
-/// Echo backed by the Echo service (`contracts/echo` 0.1.0, `backend/echo`).
+/// Echo backed by the Echo service (`contracts/echo` 0.3.0, `backend/echo`).
 ///
 /// The transcript comes from a Firestore listener (`contracts/echo/realtime.md`),
 /// everything else from the HTTP API. All server and model output is treated
@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 import '../core/api/api_client.dart' show TokenProvider;
+import 'echo_models.dart';
 import 'models.dart';
 import 'repositories.dart';
 
@@ -92,7 +93,6 @@ class EchoApiRepository implements EchoRepository {
     http.Client? httpClient,
     this.timeout = const Duration(seconds: 10),
     this.aiTimeout = const Duration(seconds: 30),
-    this.language = 'en',
   }) : _http = httpClient ?? http.Client();
 
   final String baseUrl;
@@ -103,8 +103,6 @@ class EchoApiRepository implements EchoRepository {
   /// The server gives the model 20 s (+1 retry on 5xx) before `502`.
   final Duration aiTimeout;
 
-  /// Language of catch-up, answers and summary (the app UI is English).
-  final String language;
   final http.Client _http;
 
   static const _maxAiText = 4000;
@@ -191,7 +189,11 @@ class EchoApiRepository implements EchoRepository {
   // ------------------------------------------------------------ AI
 
   @override
-  Future<String> catchUp(String eventId, String sessionId) async => _aiText(
+  Future<String> catchUp(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  }) async => _aiText(
     await _send(
       'GET',
       _path(eventId, sessionId, 'catch-up'),
@@ -201,7 +203,12 @@ class EchoApiRepository implements EchoRepository {
   );
 
   @override
-  Future<String> ask(String eventId, String sessionId, String question) async {
+  Future<String> ask(
+    String eventId,
+    String sessionId,
+    String question, {
+    String language = 'en',
+  }) async {
     final q = question.trim();
     return _aiText(
       await _send(
@@ -216,15 +223,25 @@ class EchoApiRepository implements EchoRepository {
     );
   }
 
+  /// `text` always; `summary` (0.3.0) only when it parses, otherwise the
+  /// screen falls back to splitting `text`.
   @override
-  Future<String> fullSummary(String eventId, String sessionId) async => _aiText(
-    await _send(
+  Future<EchoSummary> fullSummary(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  }) async {
+    final json = await _send(
       'GET',
       _path(eventId, sessionId, 'summary'),
       query: {'language': language},
       timeout: aiTimeout,
-    ),
-  );
+    );
+    return EchoSummary(
+      text: _aiText(json),
+      summary: TalkSummary.tryParse((json as Map<String, Object?>)['summary']),
+    );
+  }
 
   @override
   Future<TranscriptTranslation> translate(
@@ -271,8 +288,10 @@ class EchoApiRepository implements EchoRepository {
     ];
   }
 
+  /// `201` = posted as new; `200` with `merged: true` = merged into a
+  /// similar existing question, which is what comes back (0.3.0).
   @override
-  Future<SpeakerQuestion> submitQuestion(
+  Future<QuestionSubmission> submitQuestion(
     String eventId,
     String sessionId,
     String text,
@@ -285,7 +304,8 @@ class EchoApiRepository implements EchoRepository {
         'text': t.length > _maxQuestion ? t.substring(0, _maxQuestion) : t,
       },
     );
-    return _question(json) ?? (throw _badResponse);
+    final q = _question(json) ?? (throw _badResponse);
+    return QuestionSubmission(q, merged: (json as Map)['merged'] == true);
   }
 
   @override
@@ -315,6 +335,10 @@ class EchoApiRepository implements EchoRepository {
       votes: votes < 0 ? 0 : votes.toInt(),
       mine: q['mine'] == true,
       voted: q['voted'] == true,
+      mergedCount: switch (q['mergedCount']) {
+        final num n when n > 0 && n.isFinite => n.toInt(),
+        _ => 0,
+      },
     );
   }
 
@@ -423,12 +447,20 @@ class FallbackEchoRepository implements EchoRepository {
           .asyncExpand((r) => r.transcript(eventId, sessionId));
 
   @override
-  Future<String> catchUp(String eventId, String sessionId) async =>
-      (await _target).catchUp(eventId, sessionId);
+  Future<String> catchUp(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  }) async => (await _target).catchUp(eventId, sessionId, language: language);
 
   @override
-  Future<String> ask(String eventId, String sessionId, String question) async =>
-      (await _target).ask(eventId, sessionId, question);
+  Future<String> ask(
+    String eventId,
+    String sessionId,
+    String question, {
+    String language = 'en',
+  }) async =>
+      (await _target).ask(eventId, sessionId, question, language: language);
 
   @override
   Future<List<SpeakerQuestion>> questions(
@@ -437,7 +469,7 @@ class FallbackEchoRepository implements EchoRepository {
   ) async => (await _target).questions(eventId, sessionId);
 
   @override
-  Future<SpeakerQuestion> submitQuestion(
+  Future<QuestionSubmission> submitQuestion(
     String eventId,
     String sessionId,
     String text,
@@ -452,8 +484,12 @@ class FallbackEchoRepository implements EchoRepository {
   }) async => (await _target).vote(eventId, sessionId, question, up: up);
 
   @override
-  Future<String> fullSummary(String eventId, String sessionId) async =>
-      (await _target).fullSummary(eventId, sessionId);
+  Future<EchoSummary> fullSummary(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  }) async =>
+      (await _target).fullSummary(eventId, sessionId, language: language);
 
   @override
   Future<TranscriptTranslation> translate(

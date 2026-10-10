@@ -1,9 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../core/ui/ui.dart';
 import '../../data/app_state.dart';
+import '../../data/echo_models.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
@@ -44,11 +47,13 @@ class _Answer extends _Entry {
   Object? error;
 }
 
-/// Target of the translate toggle ("Translate to Serbian").
-///
-/// Catch-up and Ask answers stay English while translate is on:
-/// `EchoRepository.catchUp`/`ask` take no language yet (see mobile#9).
+/// Target of the translate toggle ("Translate to Serbian"). While it is on,
+/// catch-up, Ask answers and the full summary are requested in it too.
 const _translateTo = 'sr';
+
+/// A summary timestamp jumps to the transcript line within this many
+/// seconds of it (the server always points at a real line's start).
+const _jumpTolerance = 10;
 
 const _errorText = echoErrorText;
 
@@ -62,6 +67,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
   String? _catchUp;
   Object? _catchUpError;
   bool _catchUpLoading = false;
+  int _catchUpRequest = 0; // only the newest request's result is shown
   Object? _transcriptError;
   bool _translate = false;
   final _translations = <int, String>{};
@@ -81,7 +87,13 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
   bool _atBottom = true;
   int _autoScrolls = 0; // in-flight programmatic scrolls
 
+  /// On the selected line's row, to scroll it into view.
+  final _selectedKey = GlobalKey();
+
   EchoRepository get _repo => ref.read(echoRepositoryProvider);
+
+  /// Language of AI text (catch-up, answers, summary).
+  String get _language => _translate ? _translateTo : 'en';
 
   @override
   void initState() {
@@ -121,19 +133,27 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
     _loadQuestions();
   }
 
-  Future<void> _loadCatchUp() async {
-    if (_catchUpLoading) return;
+  /// Loads the catch-up in the current language; [force] starts over even
+  /// while a request is running (after the language changed).
+  Future<void> _loadCatchUp({bool force = false}) async {
+    if (_catchUpLoading && !force) return;
+    final id = ++_catchUpRequest;
     setState(() {
       _catchUpLoading = true;
       _catchUpError = null;
     });
+    bool current() => mounted && id == _catchUpRequest;
     try {
-      final s = await _repo.catchUp(widget.eventId, widget.sessionId);
-      if (mounted) setState(() => _catchUp = s);
+      final s = await _repo.catchUp(
+        widget.eventId,
+        widget.sessionId,
+        language: _language,
+      );
+      if (current()) setState(() => _catchUp = s);
     } catch (e) {
-      if (mounted) setState(() => _catchUpError = e);
+      if (current()) setState(() => _catchUpError = e);
     } finally {
-      if (mounted) setState(() => _catchUpLoading = false);
+      if (current()) setState(() => _catchUpLoading = false);
     }
   }
 
@@ -163,6 +183,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
         votes: q.votes + (up ? 1 : (q.votes > 0 ? -1 : 0)),
         mine: q.mine,
         voted: up,
+        mergedCount: q.mergedCount,
       ),
     );
     try {
@@ -210,8 +231,12 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
   }
 
   void _toggleTranslate() {
-    setState(() => _translate = !_translate);
+    setState(() {
+      _translate = !_translate;
+      _catchUp = null; // it was in the other language
+    });
     _translateMore();
+    if (!_ended) _loadCatchUp(force: true);
   }
 
   void _showError(Object e) {
@@ -273,13 +298,19 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
     if (text.isEmpty) return;
     _input.clear();
     if (_mode == _Mode.speaker && preset == null) {
-      if (!await _submitQuestion(text)) {
+      final sent = await _submitQuestion(text);
+      if (sent == null) {
         if (_input.text.isEmpty) _input.text = text; // don't lose it
         return;
       }
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).echoQuestionSent)),
+        SnackBar(
+          content: Text(
+            sent.merged ? l10n.echoQuestionMerged : l10n.echoQuestionSent,
+          ),
+        ),
       );
       return;
     }
@@ -299,6 +330,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
         widget.eventId,
         widget.sessionId,
         a.question,
+        language: _language,
       );
       if (!mounted) return;
       setState(() => a.answer = answer);
@@ -309,19 +341,30 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
     _toBottom();
   }
 
-  /// Sends a question to the speaker; true when it was accepted.
-  Future<bool> _submitQuestion(String text) async {
+  /// Sends a question to the speaker; null when it failed. A question the
+  /// server merged into a similar one comes back as that one (now yours,
+  /// with your vote): it replaces the old entry and moves to the top.
+  Future<QuestionSubmission?> _submitQuestion(String text) async {
     try {
-      final q = await _repo.submitQuestion(
+      final sent = await _repo.submitQuestion(
         widget.eventId,
         widget.sessionId,
         text,
       );
-      if (mounted) setState(() => _questions.value = [q, ..._questions.value]);
-      return true;
+      final q = sent.question;
+      if (mounted) {
+        setState(
+          () => _questions.value = [
+            q,
+            for (final x in _questions.value)
+              if (x.id != q.id) x,
+          ],
+        );
+      }
+      return sent;
     } catch (e) {
       _showError(e);
-      return false;
+      return null;
     }
   }
 
@@ -350,15 +393,74 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
       if (!ok || !mounted) return;
     }
     final session = _session;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    final line = await Navigator.of(context).push<int>(
+      MaterialPageRoute<int>(
         builder: (_) => EchoSummaryScreen(
           eventId: widget.eventId,
           sessionId: widget.sessionId,
           session: session,
+          language: _language,
+          lineAt: _lineAt,
         ),
       ),
     );
+    if (line != null && mounted) _jumpToLine(line);
+  }
+
+  /// Index of the loaded line closest to [atSeconds], or null when none is
+  /// within [_jumpTolerance] (not revealed yet, or no transcript).
+  int? _lineAt(int atSeconds) {
+    int? best;
+    var bestDiff = _jumpTolerance + 1;
+    for (final e in _entries) {
+      if (e is! _Line) continue;
+      final diff = (e.line.atSeconds - atSeconds).abs();
+      if (diff < bestDiff) {
+        best = e.index;
+        bestDiff = diff;
+      }
+    }
+    return best;
+  }
+
+  /// Scrolls the transcript to line [index] and highlights it (the same
+  /// highlight as tapping it, with "Ask about this").
+  void _jumpToLine(int index) {
+    final pos = _entries.indexWhere((e) => e is _Line && e.index == index);
+    if (pos < 0) return;
+    setState(() {
+      _selected = index;
+      _atBottom = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !_scroll.hasClients) return;
+      _autoScrolls++;
+      try {
+        // Rows have different heights and only visible ones are built:
+        // jump to an estimate until the row exists, then fine-tune.
+        for (var i = 0; i < 3 && _selectedKey.currentContext == null; i++) {
+          final max = _scroll.position.maxScrollExtent;
+          final total = math.max(1, _entries.length - 1);
+          _scroll.jumpTo((max * pos / total).clamp(0.0, max));
+          await WidgetsBinding.instance.endOfFrame;
+          if (!mounted) return;
+        }
+        final row = _selectedKey.currentContext;
+        if (row != null && row.mounted) {
+          await Scrollable.ensureVisible(
+            row,
+            alignment: 0.3,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      } finally {
+        _autoScrolls--;
+      }
+      if (mounted && _scroll.hasClients) {
+        setState(() => _atBottom = _scroll.position.extentAfter < 48);
+      }
+    });
   }
 
   Session? get _session =>
@@ -424,6 +526,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
                         if (i == _entries.length) return const _EndedMarker();
                         return switch (_entries[i]) {
                           _Line(:final line, :final index) => _TranscriptRow(
+                            key: _selected == index ? _selectedKey : null,
                             line: line,
                             translated: _translate
                                 ? _translations[index] ??
@@ -774,6 +877,7 @@ class _SummaryCard extends StatelessWidget {
 
 class _TranscriptRow extends StatelessWidget {
   const _TranscriptRow({
+    super.key,
     required this.line,
     required this.translated,
     required this.recent,

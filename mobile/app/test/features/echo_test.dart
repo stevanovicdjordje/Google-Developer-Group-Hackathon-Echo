@@ -37,11 +37,49 @@ class _FlakyEcho extends _FakeEcho {
   int asks = 0;
 
   @override
-  Future<String> ask(String eventId, String sessionId, String question) async {
+  Future<String> ask(
+    String eventId,
+    String sessionId,
+    String question, {
+    String language = 'en',
+  }) async {
     if (asks++ == 0) {
       throw const EchoException(EchoErrorKind.aiBusy, 'ai_unavailable');
     }
     return 'Grounded answer';
+  }
+}
+
+/// Records the language of every AI request.
+class _LanguageEcho extends _FakeEcho {
+  final languages = <String>[];
+
+  /// Still live (never ends), so the catch-up card is shown.
+  @override
+  Stream<List<TranscriptLine>> transcript(String eventId, String sessionId) =>
+      Stream<List<TranscriptLine>>.multi((c) {
+        super.transcript(eventId, sessionId).first.then(c.add);
+      });
+
+  @override
+  Future<String> catchUp(
+    String eventId,
+    String sessionId, {
+    String language = 'en',
+  }) async {
+    languages.add('catchUp:$language');
+    return language == 'sr' ? 'Sažetak na srpskom' : 'English catch-up';
+  }
+
+  @override
+  Future<String> ask(
+    String eventId,
+    String sessionId,
+    String question, {
+    String language = 'en',
+  }) async {
+    languages.add('ask:$language');
+    return language == 'sr' ? 'Odgovor na srpskom' : 'English answer';
   }
 }
 
@@ -147,5 +185,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Prevedena linija 39'), findsOneWidget);
     expect(find.text('Spoken line number 39'), findsNothing);
+  });
+
+  testWidgets('translate on: catch-up and Ask are requested in Serbian', (
+    tester,
+  ) async {
+    final repo = _LanguageEcho();
+    await _pumpEcho(tester, repo);
+    expect(repo.languages, ['catchUp:en']);
+
+    await tester.tap(find.byTooltip('Translate to Serbian'));
+    await tester.pumpAndSettle();
+    expect(repo.languages, ['catchUp:en', 'catchUp:sr']);
+    await tester.tap(find.text('Catch up'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sažetak na srpskom'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Kako su rešili bateriju?');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+    expect(repo.languages.last, 'ask:sr');
+    expect(find.text('Odgovor na srpskom'), findsOneWidget);
   });
 }
