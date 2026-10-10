@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:echo` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 01:40 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo
+**Last updated:** 2026-10-11 02:30 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo
 
 ## Current state
 
@@ -25,7 +25,9 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 | Limits | `429 rate_limited` + `Retry-After` after 30 uncached AI calls or 10 questions per user per minute |
 | Env (server) | `GEMINI_API_KEY` (empty = offline assistant, answers quote the transcript, `model: "offline"`), `GEMMA_MODEL`; see `backend/echo/.env.example` |
 | Demo talk | Session `s1`, "On-device AI: when the model lives in your pocket", Mara Ilić, Glavna sala: 68 lines, 6:52 (≈3:26 at the default 2× replay). Lines 0–15 and their times match the app's demo data and the design (00:44 battery 12%, 00:50 batching). Ask answers end with when it was said ("Mara mentions it at 00:50."). |
-| Contract | [`openapi.yaml`](openapi.yaml) 0.2.0, [`realtime.md`](realtime.md), [`CHANGELOG.md`](CHANGELOG.md) |
+| Structured summary (0.3.0) | `getSummary` → `summary {takeaway, keyPoints[], tradeoffs[{topic, issue, fix, atSeconds}]}` for `EchoSummary`; `atSeconds` is always the start of a real transcript line (00:44 battery, 00:55 model size, 01:06 hard questions on the demo talk). 5–8 s uncached. |
+| Question grouping (0.3.0) | `submitQuestion` answers `200` + `merged: true` when Gemma finds the same question already asked (any wording or language, e.g. "Koji model koristite za hibridni ruter?" → "Which model did you use for the hybrid router?"); `mergedCount` on every question drives "N similar questions merged". Adds ~1 s to submit; if the AI fails the question is posted as new. |
+| Contract | [`openapi.yaml`](openapi.yaml) 0.3.0, [`realtime.md`](realtime.md), [`CHANGELOG.md`](CHANGELOG.md) |
 
 ### `EchoRepository` → API (for the mobile agent)
 
@@ -45,13 +47,14 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 | Operation | Server (`backend/echo`) | App |
 | --- | --- | --- |
 | `echoHealthz` | implemented | — |
-| `askTalk`, `getCatchUp`, `getSummary`, `translateTranscript` | implemented (handler tests, e2e on emulators with the offline assistant **and with real Gemma**) | not wired (demo data) |
-| `listQuestions`, `submitQuestion`, `voteQuestion`, `unvoteQuestion` | implemented (handler tests, Firestore emulator test, e2e) | not wired (demo data) |
+| `askTalk`, `getCatchUp`, `getSummary` (incl. `summary`), `translateTranscript` | implemented (handler tests, e2e on emulators with the offline assistant **and with real Gemma**) | in progress (M-18); structured summary: M-10d |
+| `listQuestions`, `submitQuestion` (incl. merging), `voteQuestion`, `unvoteQuestion` | implemented (handler tests, Firestore emulator test, e2e with real Gemma) | in progress (M-18) |
 | Transcript in Firestore (`realtime.md`) | written by `cmd/replay`; rules verified on the emulator (attendee read ok, write 403) | not wired (demo data) |
 
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 02:30 · ACTION · for: mobile · `mobile#9` done, Echo contract 0.3.0 (additive): structured `summary` on `getSummary` and question grouping (`mergedCount`, `submitQuestion` → `200` + `merged: true`). Treat `200` from `submitQuestion` as success. Serbian answers confirmed. See `CHANGELOG.md` and the two rows above.
 - 2026-10-11 01:40 · INFO · for: mobile · Echo contract 0.2.0 (additive): the session doc in Firestore has optional `title` and `speaker`. The demo keynote `s1` is now 6:52 / 68 lines; the first 16 lines are unchanged, so the design's "Ask about this" example (00:44 / 00:50) works, and Ask now ends with "Mara mentions it at 00:50." No change needed in the app.
 - 2026-10-11 01:20 · INFO · for: all · Echo runs on real Gemma now (`gemma-4-26b-a4b-it`, thinking off): Ask ~1 s, Summary ~3–4 s. No API change. Note for anyone else calling Gemma 4 on the Gemini API: send `generationConfig.thinkingConfig.thinkingLevel: "minimal"` and drop parts with `thought: true`, or answers take 10+ s and can come back as reasoning text.
 - 2026-10-11 00:44 · ACTION · for: mobile · Echo API 0.1.0 is implemented in `backend/echo` (port 8082) and the transcript replays into Firestore. The table above maps each `EchoRepository` method to it. See request `echo#1`.
@@ -68,7 +71,7 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
-| mobile#9 | mobile | (1) Structured summary for `EchoSummary`: additive `summary {takeaway, keyPoints[], tradeoffs[{topic, issue, fix, atSeconds}]}` on `getSummary`, `text` stays. (2) Question grouping: a near-duplicate question is merged into the existing one (`mergedCount`). (3) Confirmed: Ask, Catch up and Summary with `language=sr` answer in Serbian Latin (tested on real Gemma, incl. "Mara pominje ovo u 04:38."). In progress, contract 0.3.0. | accepted | 2026-10-11 |
+| mobile#9 | mobile | (1) Structured summary: `summary {takeaway, keyPoints[], tradeoffs[{topic, issue, fix, atSeconds}]}` on `getSummary`, `text` stays. (2) Question grouping: a same-meaning question is merged into the existing one (`mergedCount`, `merged`). (3) Confirmed: Ask, Catch up and Summary with `language=sr` answer in Serbian Latin. Contract 0.3.0, verified on real Gemma. | done | 2026-10-11 |
 | mobile#5 (API-4…API-8, translation) | mobile | Contract `contracts/echo` 0.1.0 + service `backend/echo`. Differences from the sketch are listed in `CHANGELOG.md`. | done | 2026-10-11 |
 
 ## Acks (our responses to other modules' breaking proposals)

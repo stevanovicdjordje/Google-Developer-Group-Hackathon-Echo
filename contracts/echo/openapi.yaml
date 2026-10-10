@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Eho Echo API
-  version: 0.2.0
+  version: 0.3.0
   summary: Talk companion (transcript AI, translation, audience Q&A).
   description: |
     Contract between the app's Echo screens (`mobile/app/lib/features/echo`,
@@ -110,8 +110,13 @@ paths:
     get:
       operationId: getSummary
       tags: [ai]
-      summary: Full structured summary of the talk (premium, API-8).
+      summary: Full summary of the talk (premium, API-8).
       description: |
+        Since 0.3.0 the response also has `summary` (`TalkSummary`): takeaway,
+        key points and "problem → fix" rows that link back to the transcript
+        time (`EchoSummary` design, `mobile#9`). `text` stays, rendered from
+        the same content. `summary` is absent before the talk has started.
+
         The paywall is mocked in the app (`docs/MVP.md`); the server does not
         check payment. Works on the transcript so far, so it is complete once
         the replay has ended (`EchoSession.status` = `ended`).
@@ -186,6 +191,13 @@ paths:
       operationId: submitQuestion
       tags: [questions]
       summary: Ask the speaker a question. The author's vote is counted.
+      description: |
+        Since 0.3.0 the AI checks whether the question asks the same thing as
+        an existing one (any wording or language). If so it is merged into
+        that question instead of being posted: the response is `200` with the
+        existing question, `merged: true`, the caller counted as an asker
+        (`mine`) and a voter. Grouping is best effort; if the AI is unavailable
+        the question is posted as new (`201`).
       requestBody:
         required: true
         content:
@@ -193,6 +205,12 @@ paths:
             schema: { $ref: "#/components/schemas/QuestionInput" }
             example: { $ref: "examples/submit-question.request.json" }
       responses:
+        "200":
+          description: Merged into an existing, similar question (`merged` = true).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Question" }
+              example: { $ref: "examples/submit-question-merged.response.json" }
         "201":
           description: Created
           content:
@@ -341,6 +359,34 @@ components:
           type: integer
           minimum: 0
           description: Number of transcript lines the text is based on.
+        summary:
+          $ref: "#/components/schemas/TalkSummary"
+          description: Only on `getSummary` (since 0.3.0).
+    TalkSummary:
+      type: object
+      required: [takeaway, keyPoints, tradeoffs]
+      properties:
+        takeaway: { type: string, minLength: 1, maxLength: 300, description: "The speaker's main message or advice." }
+        keyPoints:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items: { type: string, minLength: 1, maxLength: 300 }
+        tradeoffs:
+          type: array
+          maxItems: 5
+          description: Problems the speaker named, each with its fix.
+          items:
+            type: object
+            required: [topic, issue, fix, atSeconds]
+            properties:
+              topic: { type: string, minLength: 1, maxLength: 40, examples: [Battery] }
+              issue: { type: string, minLength: 1, maxLength: 300 }
+              fix: { type: string, minLength: 1, maxLength: 300 }
+              atSeconds:
+                type: integer
+                minimum: 0
+                description: Start time of the transcript line where the problem is stated (always a real line).
     TranslateRequest:
       type: object
       additionalProperties: false
@@ -374,15 +420,22 @@ components:
         text: { type: string, minLength: 3, maxLength: 300 }
     Question:
       type: object
-      required: [id, text, votes, mine, voted, createdAt]
+      required: [id, text, votes, mine, voted, mergedCount, createdAt]
       properties:
         id: { type: string }
         text: { type: string }
         votes: { type: integer, minimum: 0 }
         mine:
           type: boolean
-          description: The caller asked it. Authors are never revealed to others.
+          description: The caller asked it, or asked a similar question merged into it. Askers are never revealed to others.
         voted: { type: boolean, description: The caller has voted for it. }
+        mergedCount:
+          type: integer
+          minimum: 0
+          description: How many similar questions were merged into this one (since 0.3.0). The design shows "3 similar questions merged".
+        merged:
+          type: boolean
+          description: Only in the `submitQuestion` response, true when the caller's question was merged into this one.
         createdAt: { type: string, format: date-time }
     EchoSession:
       description: Firestore document `events/{eventId}/published/echo/sessions/{sessionId}` (`realtime.md`). Timestamps are Firestore timestamps.

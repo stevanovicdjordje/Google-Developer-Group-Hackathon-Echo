@@ -2,6 +2,18 @@
 
 Echo feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## 0.3.0 — 2026-10-11
+- **Impact:** additive
+- **Affected:** backend/echo (implements), mobile (consumes)
+- **Requested by:** `mobile#9` (design v2: `EchoSummary.dc.html`, `EchoQA.dc.html`)
+- **Changes:**
+  - ADDED `summary` (`TalkSummary`: `takeaway`, `keyPoints[]`, `tradeoffs[{topic, issue, fix, atSeconds}]`) on the
+    `getSummary` response; `text` unchanged in meaning
+  - ADDED `mergedCount` on `Question`; `submitQuestion` may answer `200` with `merged: true` when the AI merged the
+    new question into a similar existing one
+- **Consumer action:** render the structured summary and "N similar questions merged"; treat `200` from
+  `submitQuestion` as success (the returned question is the merged one).
+
 ## 0.2.0 — 2026-10-11
 - **Impact:** additive
 - **Affected:** backend/echo (writes), mobile (may read)

@@ -21,6 +21,7 @@ EXAMPLES = {
     "translate.response.json": "#/components/schemas/Translation",
     "questions.response.json": "#/paths/~1v1~1events~1{eventId}~1sessions~1{sessionId}~1questions/get/responses/200/content/application~1json/schema",
     "submit-question.request.json": "#/components/schemas/QuestionInput",
+    "submit-question-merged.response.json": "#/components/schemas/Question",
     "validation-error.response.json": "#/components/schemas/Error",
     "transcript-line.firestore.json": "#/components/schemas/TranscriptLine",
 }

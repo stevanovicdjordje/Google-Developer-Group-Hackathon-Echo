@@ -1,6 +1,22 @@
 {
   "questions": [
-    { "id": "q_3fZx81", "text": "Which quantization scheme did you use?", "votes": 7, "mine": false, "voted": true, "createdAt": "2026-10-11T10:21:04Z" },
-    { "id": "q_9KpL02", "text": "Does the hybrid router run on iOS too?", "votes": 2, "mine": true, "voted": true, "createdAt": "2026-10-11T10:23:40Z" }
+    {
+      "id": "q_3fZx81",
+      "text": "Which quantization scheme did you use?",
+      "votes": 7,
+      "mine": false,
+      "voted": true,
+      "createdAt": "2026-10-11T10:21:04Z",
+      "mergedCount": 3
+    },
+    {
+      "id": "q_9KpL02",
+      "text": "Does the hybrid router run on iOS too?",
+      "votes": 2,
+      "mine": true,
+      "voted": true,
+      "createdAt": "2026-10-11T10:23:40Z",
+      "mergedCount": 0
+    }
   ]
 }
