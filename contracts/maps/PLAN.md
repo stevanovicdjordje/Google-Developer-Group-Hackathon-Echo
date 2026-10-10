@@ -20,7 +20,7 @@ Status: ✅ done · 🔄 in progress · ⏳ not started
 | 2 | Backend CRUD + auth: OpenAPI spec, ID-token middleware, CRUD for event/floor/feature/graph, validation, publish, seed script (~3 rooms, ~15 stands, POIs, graph, 3 QR markers) | `go test ./...` passes, incl. handler tests with a fake store | ✅ |
 | 3 | Attendee map viewer: realtime read of the published seed event, zoom/pan, tap → details, search | Works on the seed event | ✅ |
 | 4 | Organizer editor: plan upload, drawing via API, publish | A published change is visible on another device in < 2 s | ✅ |
-| 5 | Routing: Go package (A*, snapping, multi-floor) + endpoint + cache; Flutter draws the route from a QR marker to a stand | Tests and benchmark pass (< 100 ms for a few thousand nodes) | ⏳ |
+| 5 | Routing: Go package (A*, snapping, multi-floor) + endpoint + cache; Flutter draws the route from a QR marker to a stand | Tests and benchmark pass (< 100 ms for a few thousand nodes) | 🔄 |
 | 6 | Location: georeferencing (3 points, affine), GPS dot with accuracy, QR/manual fallback, tracking, re-routing, "Stigli ste" | Go and Dart transform tests pass on the same vectors (`contracts/maps/testdata/`) | ⏳ |
 | 7 | Stats: batched events, daily aggregation, rate limit, organizer screen | | ⏳ |
 | 8 | Polish + deploy: security-rule tests, QR print page, Cloud Run + Firebase Hosting, docs | | ⏳ |
@@ -39,23 +39,25 @@ Before reporting a phase as done: `go vet ./...`, `go test ./...`, `flutter anal
 | Firebase rules + emulator config | `backend/maps/firebase/` |
 | Indoor-GPS problem and solution (for the pitch) | `contracts/maps/implementation-notes.md` |
 
-## Where we stopped (2026-10-10 23:48)
+## Where we stopped (2026-10-11 00:04)
 
-Phases 1–4 are done.
+Phases 1–4 are done (viewer `/e/{id}`, editor `/o`, `/o/e/{id}`; details in git history and `STATUS.md`).
 
-**Phase 4 (organizer editor)** is in `mobile/maps/lib/src/editor/`, routes `/o` (organizer sign-in + "My events" + new event)
-and `/o/e/{eventId}` (editor). Tools: select, room (2 taps = rect, 3+ = polygon), stand (2 corners), place/POI, QR marker,
-walkway (tap to add nodes, tap a node to connect; saved as one `PUT graph` 400 ms after the last tap). Add/rename/delete a floor
-(the plan image goes to Storage, then `createFloor`). Properties panel per type, move, delete, "Nearest node" as route entrance
-(new features get the nearest node automatically). Publish shows localized errors/warnings; tapping one selects that feature.
-Verified in headless Chrome against the emulators: whole flow from a new event to publish, and an open attendee viewer showed a
-moved stand **0.6 s** after "Objavi". `flutter analyze` clean; `flutter test` 33/33 (mobile/maps), 4/4 (mobile/app).
-
-Known limits: no undo; moving a feature is "Move" + tap (no drag); node connectors between floors (lift/stairs) and georef are
-not editable in the UI yet (phases 5/6).
-
-**Next:** phase 5 (routing). Product note: the demo storyline has "Agenda → picks a talk → Map shows the stage", so the
-agenda feature will need a link to a room on the map; `/e/{id}/stand/{featureId}` already opens any feature (rooms too).
+**Phase 5 (routing): server side done, app side next.**
+- Done: `backend/maps/internal/routing/` (graph over all floors, lifts/stairs via `Node.connector`, A* by walking time,
+  snapping of points onto walkways, straight runs merged, LRU cache per published version), endpoint `POST /v1/events/{id}/route`
+  (`internal/httpapi/route.go`), contract 0.2.0 (`getRoute`, fixtures). Tests: A* equals Dijkstra on random grids,
+  0.5 ms per route on 5000 nodes (target < 100 ms), handler tests incl. cache refresh after a new publish. Verified against the
+  emulators on the demo event (Ulaz (QR) → Glavna sala: 52 m, 43 s, 2.8 ms per request).
+- **Next (app, `mobile/maps`):**
+  1. `MapsApi.getRoute` + `Route` model (Dart) and a provider; the viewer needs `mapsApiBaseUrlProvider` (already exported).
+  2. Viewer: "Prikaži put" button in the feature details sheet. Start = the `?at=` QR marker if present, else a picker
+     (QR markers + entrances, or "tap on the map").
+  3. Draw the route (polyline per floor, start/end dots), a summary card (distance, minutes, "procena" when estimated, close),
+     and for multi-floor routes a banner "Idite liftom/stepenicama na sprat X" that switches the floor.
+  4. Show the "Vi ste ovde" dot for `?at=`; widget tests with a fake API; check in headless Chrome.
+  5. Update `contracts/maps/KAKO-RADI.md` §9 (routing) — @Vertiglo asked not to commit that file again; leave it for them.
+- Then phase 5 is ✅; phase 6 (georeferencing + GPS dot) follows.
 
 How to run: `cd backend/maps && make dev`, `make seed`, `cd mobile/app && flutter build web`, serve `build/web` with SPA fallback
 on :5000, open `/e/<eventId>` (attendee) or `/o` (organizer, emulator login `organizer@eho.test` / `eho-demo-123`).
