@@ -4,6 +4,7 @@ library;
 
 export 'l10n/maps_localizations.dart';
 export 'src/data/published_map_repository.dart';
+export 'src/editor/editor_providers.dart' show mapsApiBaseUrlProvider;
 export 'src/model/map_models.dart';
 export 'src/routes.dart';
 export 'src/viewer/map_viewer_screen.dart';

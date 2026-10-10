@@ -301,6 +301,486 @@ abstract class MapsLocalizations {
   /// In sr, this message translates to:
   /// **'Sprat: {floor}'**
   String onFloor(String floor);
+
+  /// No description provided for @organizerTitle.
+  ///
+  /// In sr, this message translates to:
+  /// **'Moji događaji'**
+  String get organizerTitle;
+
+  /// No description provided for @signInTitle.
+  ///
+  /// In sr, this message translates to:
+  /// **'Prijava organizatora'**
+  String get signInTitle;
+
+  /// No description provided for @email.
+  ///
+  /// In sr, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In sr, this message translates to:
+  /// **'Lozinka'**
+  String get password;
+
+  /// No description provided for @signIn.
+  ///
+  /// In sr, this message translates to:
+  /// **'Prijavi se'**
+  String get signIn;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In sr, this message translates to:
+  /// **'Napravi nalog'**
+  String get createAccount;
+
+  /// No description provided for @signOut.
+  ///
+  /// In sr, this message translates to:
+  /// **'Odjavi se'**
+  String get signOut;
+
+  /// No description provided for @signInFailed.
+  ///
+  /// In sr, this message translates to:
+  /// **'Prijava nije uspela: {error}'**
+  String signInFailed(String error);
+
+  /// No description provided for @newEvent.
+  ///
+  /// In sr, this message translates to:
+  /// **'Novi događaj'**
+  String get newEvent;
+
+  /// No description provided for @eventName.
+  ///
+  /// In sr, this message translates to:
+  /// **'Naziv događaja'**
+  String get eventName;
+
+  /// No description provided for @eventDates.
+  ///
+  /// In sr, this message translates to:
+  /// **'Datumi: {start} – {end}'**
+  String eventDates(String start, String end);
+
+  /// No description provided for @pickDates.
+  ///
+  /// In sr, this message translates to:
+  /// **'Izaberi datume'**
+  String get pickDates;
+
+  /// No description provided for @create.
+  ///
+  /// In sr, this message translates to:
+  /// **'Napravi'**
+  String get create;
+
+  /// No description provided for @cancel.
+  ///
+  /// In sr, this message translates to:
+  /// **'Otkaži'**
+  String get cancel;
+
+  /// No description provided for @save.
+  ///
+  /// In sr, this message translates to:
+  /// **'Sačuvaj'**
+  String get save;
+
+  /// No description provided for @delete.
+  ///
+  /// In sr, this message translates to:
+  /// **'Obriši'**
+  String get delete;
+
+  /// No description provided for @noEvents.
+  ///
+  /// In sr, this message translates to:
+  /// **'Još nemate nijedan događaj.'**
+  String get noEvents;
+
+  /// No description provided for @publishedVersion.
+  ///
+  /// In sr, this message translates to:
+  /// **'Objavljeno, verzija {version}'**
+  String publishedVersion(int version);
+
+  /// No description provided for @notPublished.
+  ///
+  /// In sr, this message translates to:
+  /// **'Nije objavljeno'**
+  String get notPublished;
+
+  /// No description provided for @toolSelect.
+  ///
+  /// In sr, this message translates to:
+  /// **'Izaberi'**
+  String get toolSelect;
+
+  /// No description provided for @toolRoom.
+  ///
+  /// In sr, this message translates to:
+  /// **'Sala'**
+  String get toolRoom;
+
+  /// No description provided for @toolStand.
+  ///
+  /// In sr, this message translates to:
+  /// **'Štand'**
+  String get toolStand;
+
+  /// No description provided for @toolPoi.
+  ///
+  /// In sr, this message translates to:
+  /// **'Mesto'**
+  String get toolPoi;
+
+  /// No description provided for @toolMarker.
+  ///
+  /// In sr, this message translates to:
+  /// **'QR marker'**
+  String get toolMarker;
+
+  /// No description provided for @toolWalkway.
+  ///
+  /// In sr, this message translates to:
+  /// **'Staza'**
+  String get toolWalkway;
+
+  /// No description provided for @hintSelect.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirnite objekat ili čvor staze da ga izmenite.'**
+  String get hintSelect;
+
+  /// No description provided for @hintRoom.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirujte uglove sale. 2 tačke = pravougaonik, 3 ili više = mnogougao.'**
+  String get hintRoom;
+
+  /// No description provided for @hintStand.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirnite dva suprotna ugla štanda.'**
+  String get hintStand;
+
+  /// No description provided for @hintPoi.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirnite mesto: ulaz, toalet, info pult, hrana…'**
+  String get hintPoi;
+
+  /// No description provided for @hintMarker.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirnite gde stoji QR kod „Vi ste ovde“.'**
+  String get hintMarker;
+
+  /// No description provided for @hintWalkway.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirujte duž hodnika. Dodir na postojeći čvor ga povezuje.'**
+  String get hintWalkway;
+
+  /// No description provided for @hintMove.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirnite novo mesto za „{name}“.'**
+  String hintMove(String name);
+
+  /// No description provided for @finishShape.
+  ///
+  /// In sr, this message translates to:
+  /// **'Završi'**
+  String get finishShape;
+
+  /// No description provided for @undoPoint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Poništi tačku'**
+  String get undoPoint;
+
+  /// No description provided for @endWalkway.
+  ///
+  /// In sr, this message translates to:
+  /// **'Prekini stazu'**
+  String get endWalkway;
+
+  /// No description provided for @addFloor.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodaj sprat'**
+  String get addFloor;
+
+  /// No description provided for @floorName.
+  ///
+  /// In sr, this message translates to:
+  /// **'Naziv sprata'**
+  String get floorName;
+
+  /// No description provided for @floorOrder.
+  ///
+  /// In sr, this message translates to:
+  /// **'Redosled (0 = prizemlje)'**
+  String get floorOrder;
+
+  /// No description provided for @pickImage.
+  ///
+  /// In sr, this message translates to:
+  /// **'Izaberi sliku plana (PNG/JPEG)'**
+  String get pickImage;
+
+  /// No description provided for @imageTooLarge.
+  ///
+  /// In sr, this message translates to:
+  /// **'Slika je veća od 10 MB.'**
+  String get imageTooLarge;
+
+  /// No description provided for @renameFloor.
+  ///
+  /// In sr, this message translates to:
+  /// **'Preimenuj sprat'**
+  String get renameFloor;
+
+  /// No description provided for @deleteFloor.
+  ///
+  /// In sr, this message translates to:
+  /// **'Obriši sprat'**
+  String get deleteFloor;
+
+  /// No description provided for @deleteFloorConfirm.
+  ///
+  /// In sr, this message translates to:
+  /// **'Obrisati sprat „{name}“ sa svim objektima i stazama?'**
+  String deleteFloorConfirm(String name);
+
+  /// No description provided for @noFloorsYet.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodajte prvi sprat: otpremite sliku plana.'**
+  String get noFloorsYet;
+
+  /// No description provided for @publish.
+  ///
+  /// In sr, this message translates to:
+  /// **'Objavi'**
+  String get publish;
+
+  /// No description provided for @publishedOk.
+  ///
+  /// In sr, this message translates to:
+  /// **'Objavljeno, verzija {version}. Posetioci odmah vide izmene.'**
+  String publishedOk(int version);
+
+  /// No description provided for @publishBlocked.
+  ///
+  /// In sr, this message translates to:
+  /// **'Objavljivanje nije moguće. Ispravite:'**
+  String get publishBlocked;
+
+  /// No description provided for @publishWarnings.
+  ///
+  /// In sr, this message translates to:
+  /// **'Upozorenja (ne sprečavaju objavljivanje):'**
+  String get publishWarnings;
+
+  /// No description provided for @attendeeLink.
+  ///
+  /// In sr, this message translates to:
+  /// **'Link za posetioce'**
+  String get attendeeLink;
+
+  /// No description provided for @savingGraph.
+  ///
+  /// In sr, this message translates to:
+  /// **'Čuvam stazu…'**
+  String get savingGraph;
+
+  /// No description provided for @graphSaveFailed.
+  ///
+  /// In sr, this message translates to:
+  /// **'Staza nije sačuvana: {error}'**
+  String graphSaveFailed(String error);
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In sr, this message translates to:
+  /// **'Čuvanje nije uspelo: {error}'**
+  String saveFailed(String error);
+
+  /// No description provided for @name.
+  ///
+  /// In sr, this message translates to:
+  /// **'Naziv'**
+  String get name;
+
+  /// No description provided for @description.
+  ///
+  /// In sr, this message translates to:
+  /// **'Opis'**
+  String get description;
+
+  /// No description provided for @capacityField.
+  ///
+  /// In sr, this message translates to:
+  /// **'Kapacitet'**
+  String get capacityField;
+
+  /// No description provided for @sponsorTier.
+  ///
+  /// In sr, this message translates to:
+  /// **'Sponzorstvo'**
+  String get sponsorTier;
+
+  /// No description provided for @sponsorNone.
+  ///
+  /// In sr, this message translates to:
+  /// **'Bez sponzorstva'**
+  String get sponsorNone;
+
+  /// No description provided for @poiKind.
+  ///
+  /// In sr, this message translates to:
+  /// **'Vrsta mesta'**
+  String get poiKind;
+
+  /// No description provided for @entrance.
+  ///
+  /// In sr, this message translates to:
+  /// **'Ulaz za rutu'**
+  String get entrance;
+
+  /// No description provided for @entranceNone.
+  ///
+  /// In sr, this message translates to:
+  /// **'Nije povezan sa stazom'**
+  String get entranceNone;
+
+  /// No description provided for @entranceSet.
+  ///
+  /// In sr, this message translates to:
+  /// **'Čvor {node}'**
+  String entranceSet(String node);
+
+  /// No description provided for @entranceNearest.
+  ///
+  /// In sr, this message translates to:
+  /// **'Najbliži čvor'**
+  String get entranceNearest;
+
+  /// No description provided for @move.
+  ///
+  /// In sr, this message translates to:
+  /// **'Premesti'**
+  String get move;
+
+  /// No description provided for @newFeature.
+  ///
+  /// In sr, this message translates to:
+  /// **'Novo: {kind}'**
+  String newFeature(String kind);
+
+  /// No description provided for @editFeature.
+  ///
+  /// In sr, this message translates to:
+  /// **'Izmena: {name}'**
+  String editFeature(String name);
+
+  /// No description provided for @nameRequired.
+  ///
+  /// In sr, this message translates to:
+  /// **'Unesite naziv'**
+  String get nameRequired;
+
+  /// No description provided for @invalidUrl.
+  ///
+  /// In sr, this message translates to:
+  /// **'Unesite http(s) adresu'**
+  String get invalidUrl;
+
+  /// No description provided for @deleteConfirm.
+  ///
+  /// In sr, this message translates to:
+  /// **'Obrisati „{name}“?'**
+  String deleteConfirm(String name);
+
+  /// No description provided for @walkwayNode.
+  ///
+  /// In sr, this message translates to:
+  /// **'Čvor staze'**
+  String get walkwayNode;
+
+  /// No description provided for @nodeEdges.
+  ///
+  /// In sr, this message translates to:
+  /// **'Veza: {count}'**
+  String nodeEdges(int count);
+
+  /// No description provided for @typeMarker.
+  ///
+  /// In sr, this message translates to:
+  /// **'QR marker'**
+  String get typeMarker;
+
+  /// No description provided for @openViewer.
+  ///
+  /// In sr, this message translates to:
+  /// **'Pogledaj kao posetilac'**
+  String get openViewer;
+
+  /// No description provided for @copied.
+  ///
+  /// In sr, this message translates to:
+  /// **'Kopirano'**
+  String get copied;
+
+  /// No description provided for @reload.
+  ///
+  /// In sr, this message translates to:
+  /// **'Osveži'**
+  String get reload;
+
+  /// No description provided for @issueNoFloors.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodajte bar jedan sprat pre objavljivanja.'**
+  String get issueNoFloors;
+
+  /// No description provided for @issueInvalidGraph.
+  ///
+  /// In sr, this message translates to:
+  /// **'Staza na spratu „{floor}“ nije ispravna: {detail}'**
+  String issueInvalidGraph(String floor, String detail);
+
+  /// No description provided for @issueInvalidFeature.
+  ///
+  /// In sr, this message translates to:
+  /// **'„{name}“ nije ispravan: {detail}'**
+  String issueInvalidFeature(String name, String detail);
+
+  /// No description provided for @issueNoEntrance.
+  ///
+  /// In sr, this message translates to:
+  /// **'„{name}“ nije povezan sa stazom, pa ruta do njega nije moguća.'**
+  String issueNoEntrance(String name);
+
+  /// No description provided for @issueUnknownEntrance.
+  ///
+  /// In sr, this message translates to:
+  /// **'„{name}“ kao ulaz koristi obrisan čvor staze. Izaberite ga i kliknite „Najbliži čvor“.'**
+  String issueUnknownEntrance(String name);
+
+  /// No description provided for @issueUnreachable.
+  ///
+  /// In sr, this message translates to:
+  /// **'„{name}“ je na delu staze koji nije povezan sa ostatkom.'**
+  String issueUnreachable(String name);
 }
 
 class _MapsLocalizationsDelegate

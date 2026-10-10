@@ -8,7 +8,13 @@
   "close": "Zatvori",
   "searchHint": "Pretraži štandove, sale, kompanije…",
   "searchNoResults": "Nema rezultata za „{query}“",
-  "@searchNoResults": { "placeholders": { "query": { "type": "String" } } },
+  "@searchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "clearSearch": "Obriši pretragu",
   "filterAll": "Sve",
   "filterRooms": "Sale",
@@ -28,7 +34,13 @@
   "sponsorSilver": "Srebrni sponzor",
   "sponsorBronze": "Bronzani sponzor",
   "capacity": "Kapacitet: {count}",
-  "@capacity": { "placeholders": { "count": { "type": "int" } } },
+  "@capacity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "company": "Kompanija",
   "category": "Kategorija",
   "website": "Sajt",
@@ -36,5 +48,226 @@
   "legend": "Legenda",
   "fitPlan": "Prikaži ceo plan",
   "onFloor": "Sprat: {floor}",
-  "@onFloor": { "placeholders": { "floor": { "type": "String" } } }
+  "@onFloor": {
+    "placeholders": {
+      "floor": {
+        "type": "String"
+      }
+    }
+  },
+  "organizerTitle": "Moji događaji",
+  "signInTitle": "Prijava organizatora",
+  "email": "Email",
+  "password": "Lozinka",
+  "signIn": "Prijavi se",
+  "createAccount": "Napravi nalog",
+  "signOut": "Odjavi se",
+  "signInFailed": "Prijava nije uspela: {error}",
+  "@signInFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "newEvent": "Novi događaj",
+  "eventName": "Naziv događaja",
+  "eventDates": "Datumi: {start} – {end}",
+  "@eventDates": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "pickDates": "Izaberi datume",
+  "create": "Napravi",
+  "cancel": "Otkaži",
+  "save": "Sačuvaj",
+  "delete": "Obriši",
+  "noEvents": "Još nemate nijedan događaj.",
+  "publishedVersion": "Objavljeno, verzija {version}",
+  "@publishedVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "notPublished": "Nije objavljeno",
+  "toolSelect": "Izaberi",
+  "toolRoom": "Sala",
+  "toolStand": "Štand",
+  "toolPoi": "Mesto",
+  "toolMarker": "QR marker",
+  "toolWalkway": "Staza",
+  "hintSelect": "Dodirnite objekat ili čvor staze da ga izmenite.",
+  "hintRoom": "Dodirujte uglove sale. 2 tačke = pravougaonik, 3 ili više = mnogougao.",
+  "hintStand": "Dodirnite dva suprotna ugla štanda.",
+  "hintPoi": "Dodirnite mesto: ulaz, toalet, info pult, hrana…",
+  "hintMarker": "Dodirnite gde stoji QR kod „Vi ste ovde“.",
+  "hintWalkway": "Dodirujte duž hodnika. Dodir na postojeći čvor ga povezuje.",
+  "hintMove": "Dodirnite novo mesto za „{name}“.",
+  "@hintMove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "finishShape": "Završi",
+  "undoPoint": "Poništi tačku",
+  "endWalkway": "Prekini stazu",
+  "addFloor": "Dodaj sprat",
+  "floorName": "Naziv sprata",
+  "floorOrder": "Redosled (0 = prizemlje)",
+  "pickImage": "Izaberi sliku plana (PNG/JPEG)",
+  "imageTooLarge": "Slika je veća od 10 MB.",
+  "renameFloor": "Preimenuj sprat",
+  "deleteFloor": "Obriši sprat",
+  "deleteFloorConfirm": "Obrisati sprat „{name}“ sa svim objektima i stazama?",
+  "@deleteFloorConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noFloorsYet": "Dodajte prvi sprat: otpremite sliku plana.",
+  "publish": "Objavi",
+  "publishedOk": "Objavljeno, verzija {version}. Posetioci odmah vide izmene.",
+  "@publishedOk": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "publishBlocked": "Objavljivanje nije moguće. Ispravite:",
+  "publishWarnings": "Upozorenja (ne sprečavaju objavljivanje):",
+  "attendeeLink": "Link za posetioce",
+  "savingGraph": "Čuvam stazu…",
+  "graphSaveFailed": "Staza nije sačuvana: {error}",
+  "@graphSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "saveFailed": "Čuvanje nije uspelo: {error}",
+  "@saveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "name": "Naziv",
+  "description": "Opis",
+  "capacityField": "Kapacitet",
+  "sponsorTier": "Sponzorstvo",
+  "sponsorNone": "Bez sponzorstva",
+  "poiKind": "Vrsta mesta",
+  "entrance": "Ulaz za rutu",
+  "entranceNone": "Nije povezan sa stazom",
+  "entranceSet": "Čvor {node}",
+  "@entranceSet": {
+    "placeholders": {
+      "node": {
+        "type": "String"
+      }
+    }
+  },
+  "entranceNearest": "Najbliži čvor",
+  "move": "Premesti",
+  "newFeature": "Novo: {kind}",
+  "@newFeature": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "editFeature": "Izmena: {name}",
+  "@editFeature": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nameRequired": "Unesite naziv",
+  "invalidUrl": "Unesite http(s) adresu",
+  "deleteConfirm": "Obrisati „{name}“?",
+  "@deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "walkwayNode": "Čvor staze",
+  "nodeEdges": "Veza: {count}",
+  "@nodeEdges": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "typeMarker": "QR marker",
+  "openViewer": "Pogledaj kao posetilac",
+  "copied": "Kopirano",
+  "reload": "Osveži",
+  "issueNoFloors": "Dodajte bar jedan sprat pre objavljivanja.",
+  "issueInvalidGraph": "Staza na spratu „{floor}“ nije ispravna: {detail}",
+  "@issueInvalidGraph": {
+    "placeholders": {
+      "floor": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "issueInvalidFeature": "„{name}“ nije ispravan: {detail}",
+  "@issueInvalidFeature": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "issueNoEntrance": "„{name}“ nije povezan sa stazom, pa ruta do njega nije moguća.",
+  "@issueNoEntrance": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "issueUnknownEntrance": "„{name}“ kao ulaz koristi obrisan čvor staze. Izaberite ga i kliknite „Najbliži čvor“.",
+  "@issueUnknownEntrance": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "issueUnreachable": "„{name}“ je na delu staze koji nije povezan sa ostatkom.",
+  "@issueUnreachable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

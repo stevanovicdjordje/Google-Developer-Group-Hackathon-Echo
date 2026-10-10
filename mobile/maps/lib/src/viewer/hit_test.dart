@@ -44,16 +44,18 @@ double _area(List<PlanPoint> pts) {
 
 /// Finds the feature under a tap at [p] (plan pixels). Points (stands, POIs)
 /// are hit within [tolerance] plan pixels. When several match, the smallest
-/// wins, so a stand inside a hall is selectable. QR markers are ignored.
+/// wins, so a stand inside a hall is selectable. QR markers are ignored
+/// unless [includeMarkers] (the editor).
 Feature? featureAt(
   Iterable<Feature> features,
   PlanPoint p, {
   required double tolerance,
+  bool includeMarkers = false,
 }) {
   Feature? best;
   var bestScore = double.infinity;
   for (final f in features) {
-    if (f.type == FeatureType.marker) continue;
+    if (f.type == FeatureType.marker && !includeMarkers) continue;
     final g = f.geometry;
     double? score;
     if (g.kind == GeometryKind.point) {
