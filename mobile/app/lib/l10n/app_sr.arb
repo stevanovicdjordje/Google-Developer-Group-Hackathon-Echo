@@ -7,12 +7,32 @@
   "statusOk": "Radi",
   "statusChecking": "Proveravam…",
   "statusError": "Greška: {message}",
-  "@statusError": { "placeholders": { "message": { "type": "String" } } },
+  "@statusError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "signedInAnonymously": "Anonimni korisnik {uid}",
-  "@signedInAnonymously": { "placeholders": { "uid": { "type": "String" } } },
+  "@signedInAnonymously": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "notSignedIn": "Niste prijavljeni",
   "retry": "Pokušaj ponovo",
   "eventTitle": "Događaj {eventId}",
-  "@eventTitle": { "placeholders": { "eventId": { "type": "String" } } },
-  "backendUnavailable": "Server trenutno nije dostupan. Proverite internet vezu i pokušajte ponovo."
+  "@eventTitle": {
+    "placeholders": {
+      "eventId": {
+        "type": "String"
+      }
+    }
+  },
+  "backendUnavailable": "Server trenutno nije dostupan. Proverite internet vezu i pokušajte ponovo.",
+  "openEventLabel": "ID događaja",
+  "openEvent": "Otvori plan"
 }

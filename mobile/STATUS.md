@@ -8,7 +8,7 @@
 
 ## Current state
 
-Stack decided (Flutter). @Vertiglo builds only the **venue map** (`mobile/maps/`, Flutter package `eho_maps`: attendee viewer, organizer editor, stats), mounted by the app in `mobile/app/`. Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Phase 2 done on the server side; `mobile/maps` has the map data models. Now: phase 3 (attendee map viewer). Phases: [`../contracts/maps/PLAN.md`](../contracts/maps/PLAN.md).
+Stack decided (Flutter). @Vertiglo builds only the **venue map** (`mobile/maps/`, Flutter package `eho_maps`: attendee viewer, organizer editor, stats), mounted by the app in `mobile/app/`. Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Phase 2 done on the server side; `mobile/maps` has the map data models. Phase 3 (attendee map viewer) mostly done, one open sign-in bug, see `contracts/maps/PLAN.md` → "Where we stopped". Phases: [`../contracts/maps/PLAN.md`](../contracts/maps/PLAN.md).
 
 ## Stack
 

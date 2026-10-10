@@ -169,6 +169,18 @@ abstract class AppLocalizations {
   /// In sr, this message translates to:
   /// **'Server trenutno nije dostupan. Proverite internet vezu i pokušajte ponovo.'**
   String get backendUnavailable;
+
+  /// No description provided for @openEventLabel.
+  ///
+  /// In sr, this message translates to:
+  /// **'ID događaja'**
+  String get openEventLabel;
+
+  /// No description provided for @openEvent.
+  ///
+  /// In sr, this message translates to:
+  /// **'Otvori plan'**
+  String get openEvent;
 }
 
 class _AppLocalizationsDelegate

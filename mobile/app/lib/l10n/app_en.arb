@@ -11,5 +11,7 @@
   "notSignedIn": "Not signed in",
   "retry": "Try again",
   "eventTitle": "Event {eventId}",
-  "backendUnavailable": "The server is not reachable right now. Check your connection and try again."
+  "backendUnavailable": "The server is not reachable right now. Check your connection and try again.",
+  "openEventLabel": "Event ID",
+  "openEvent": "Open map"
 }

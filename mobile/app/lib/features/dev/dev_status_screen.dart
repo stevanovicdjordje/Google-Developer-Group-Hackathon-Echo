@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -43,7 +44,9 @@ class DevStatusScreen extends ConsumerWidget {
             failed: signIn.hasError,
           ),
           const SizedBox(height: 24),
-          FilledButton.icon(
+          const _OpenEvent(),
+          const SizedBox(height: 24),
+          OutlinedButton.icon(
             onPressed: () {
               ref.invalidate(backendHealthProvider);
               ref.invalidate(ensureSignedInProvider);
@@ -84,6 +87,50 @@ class _StatusTile extends StatelessWidget {
         title: Text(label),
         subtitle: Text(value),
       ),
+    );
+  }
+}
+
+/// Opens an event's map by ID (for local testing; attendees use links/QR).
+class _OpenEvent extends StatefulWidget {
+  const _OpenEvent();
+
+  @override
+  State<_OpenEvent> createState() => _OpenEventState();
+}
+
+class _OpenEventState extends State<_OpenEvent> {
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _open() {
+    final id = _ctrl.text.trim();
+    if (id.isNotEmpty) context.go('/e/$id');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _ctrl,
+            decoration: InputDecoration(
+              labelText: l10n.openEventLabel,
+              border: const OutlineInputBorder(),
+            ),
+            onSubmitted: (_) => _open(),
+          ),
+        ),
+        const SizedBox(width: 12),
+        FilledButton(onPressed: _open, child: Text(l10n.openEvent)),
+      ],
     );
   }
 }

@@ -51,4 +51,10 @@ class AppLocalizationsSr extends AppLocalizations {
   @override
   String get backendUnavailable =>
       'Server trenutno nije dostupan. Proverite internet vezu i pokušajte ponovo.';
+
+  @override
+  String get openEventLabel => 'ID događaja';
+
+  @override
+  String get openEvent => 'Otvori plan';
 }

@@ -51,4 +51,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backendUnavailable =>
       'The server is not reachable right now. Check your connection and try again.';
+
+  @override
+  String get openEventLabel => 'Event ID';
+
+  @override
+  String get openEvent => 'Open map';
 }

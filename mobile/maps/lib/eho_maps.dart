@@ -1,5 +1,12 @@
-/// Eho venue map feature. Owned by the venue map feature (see
-/// `mobile/maps/README.md`); the app in `mobile/app` only mounts it.
+/// Eho venue map feature (`mobile/maps`). The app in `mobile/app` mounts
+/// [mapsRoutes] and adds [MapsLocalizations.delegate].
 library;
 
+export 'l10n/maps_localizations.dart';
+export 'src/data/published_map_repository.dart';
 export 'src/model/map_models.dart';
+export 'src/routes.dart';
+export 'src/viewer/map_viewer_screen.dart';
+export 'src/viewer/providers.dart';
+export 'src/viewer/search.dart'
+    show normalizeSearch, FeatureSearch, SearchFilter;
