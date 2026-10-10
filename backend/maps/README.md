@@ -1,6 +1,6 @@
 # backend/maps — venue map API
 
-Go service for the Eho **venue map** feature: events, floors, rooms/stands/POIs, walkway graph, publish, routing (later), map stats (later).
+Go service for the Eho **venue map** feature: events, floors, rooms/stands/POIs, walkway graph, publish, routing, map stats.
 Plan and phases: [`../../contracts/maps/PLAN.md`](../../contracts/maps/PLAN.md). Contract: [`../../contracts/maps/openapi.yaml`](../../contracts/maps/openapi.yaml).
 
 Independent Go module (`github.com/Ilij4n/eho/backend/maps`), its own Dockerfile and Cloud Run service. Other backend features don't depend on it.
@@ -26,7 +26,9 @@ Configuration is env-only; see `.env.example`. In production the server uses App
 ```
 cmd/api/            entry point (config, slog, graceful shutdown)
 internal/config/    env configuration
-internal/httpapi/   router, handlers, middleware (CORS, logging, recover; auth and rate limit follow)
+internal/httpapi/   router, handlers, middleware (CORS, logging, recover, ID-token auth)
+internal/routing/   walking routes (A*, snapping, lifts/stairs), graph cache
+internal/stats/     attendee stats: per-day counters, 10 s buffered flush, per-user rate limit
 firebase/           firebase.json, Firestore + Storage security rules, emulator config
 scripts/dev.sh      one-command local run
 scripts/seed        demo event (phase 2)
