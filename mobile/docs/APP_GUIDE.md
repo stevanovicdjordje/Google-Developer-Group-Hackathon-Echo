@@ -57,7 +57,7 @@ Use `context.go` for tab/top-level navigation and `context.push` for drill-down 
 - Screens read data **only** through providers in `data/repositories.dart` (`eventRepositoryProvider`, `echoRepositoryProvider`, `findRepositoryProvider`, `organizerRepositoryProvider`) and the Notifiers in `data/app_state.dart`.
 - Each interface method is tagged with an `[API-n]` ID from `mobile/docs/api-needs.md`. To wire a real endpoint: add an HTTP implementation using `ApiClient`, switch the provider, and leave the screens alone.
 - Venue map data comes from `eho_maps` (`publishedEventProvider(eventId)` gives `PublishedEvent` with `map.features`). Stage names in demo data equal room names on the seeded map; the app links them **by name**.
-- State is in memory: a web reload resets it.
+- Attendee state (profile, joined events, contacts, meeting spot, unlocked summaries) is persisted via `data/local_store.dart` (shared_preferences, key prefix `eho.`), loaded before `runApp`. Without the `sharedPreferencesProvider` override (e.g. in tests) state stays in memory. The organizer draft is never persisted.
 
 ## UI rules
 

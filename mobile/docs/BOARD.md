@@ -27,9 +27,6 @@ Nothing ready: batch 1 (M-1…M-7) dispatched in parallel.
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
 | M-1 | dev | 2026-10-11 00:40 | worktree | Hide Firebase emulator bar on web |
-| M-2 | dev | 2026-10-11 00:40 | worktree | Persist client state (shared_preferences) |
-| M-3 | dev | 2026-10-11 00:40 | worktree | Organizer session edit sheet |
-| M-4 | dev | 2026-10-11 00:40 | worktree | Organizer flow widget test |
 | M-5 | opus | 2026-10-11 00:40 | worktree | Keep tab state across tab switches |
 | M-6 | dev | 2026-10-11 00:40 | worktree | Echo polish (ask chip, scroll pause) |
 | M-7 | dev | 2026-10-11 00:40 | worktree | maps#1 (b)+(c): maps base URL + Profile → /o |
@@ -38,4 +35,7 @@ Nothing ready: batch 1 (M-1…M-7) dispatched in parallel.
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-4 | Organizer flow widget test (review → publish → link/QR; extract via repo) | `cad9c08` |
+| M-3 | Organizer review: edit-session sheet | `66f4999` |
+| M-2 | Persist client state across reloads (shared_preferences, `data/local_store.dart`) | `75419f4` |
 | M-0 | Full app skeleton on demo data (all flows from `docs/MVP.md`) | `b72ca57` |
