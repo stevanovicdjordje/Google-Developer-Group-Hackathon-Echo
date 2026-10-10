@@ -189,10 +189,7 @@
   "echoCatchUp": "Catch up",
   "echoCatchUpSubtitle": "What was said so far",
   "echoSummarizing": "Summarizing…",
-  "echoUnlockTitle": "Unlock talk summaries",
-  "echoUnlockBody": "Get an AI summary of every talk at this event: key points, trade-offs and takeaways.",
   "echoNotNow": "Not now",
-  "echoUnlockPrice": "Unlock · €2.99",
   "echoAskAboutThis": "Ask about this",
   "echoTalkEnded": "Talk ended",
   "echoAskAi": "Ask AI",
@@ -317,5 +314,138 @@
   "echoErrorNoTranscript": "This talk has no live transcript yet.",
   "echoErrorFailed": "Something went wrong.",
   "echoWaitingForTalk": "Waiting for the talk to start…",
-  "echoTranscriptUnavailable": "The live transcript isn't available right now."
+  "echoTranscriptUnavailable": "The live transcript isn't available right now.",
+  "echoLiveAt": "Live · {stage}",
+  "@echoLiveAt": {
+    "description": "Echo header overline while the talk is live (upper-cased in the UI).",
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "echoEndedAt": "Ended · {stage}",
+  "@echoEndedAt": {
+    "description": "Echo header overline after the talk ended (upper-cased in the UI).",
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "echoTranslatedBanner": "Translated live from English · tap SR for the original",
+  "@echoTranslatedBanner": {
+    "description": "Banner under the Echo header while translate is on."
+  },
+  "echoAskHintTranslated": "Pitajte bilo šta o predavanju…",
+  "@echoAskHintTranslated": {
+    "description": "Ask input placeholder while translate (to Serbian) is on. Intentionally Serbian in every locale."
+  },
+  "echoLangOriginal": "EN",
+  "@echoLangOriginal": {
+    "description": "Translate pill label: transcript in the original language."
+  },
+  "echoLangTranslated": "SR",
+  "@echoLangTranslated": {
+    "description": "Translate pill label: transcript translated to Serbian."
+  },
+  "echoSend": "Send",
+  "echoQuestionsFor": "Questions for {name}",
+  "@echoQuestionsFor": {
+    "description": "Q&A sheet title; name is the speaker's first name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "echoQuestionsMeta": "{count, plural, =0{No questions yet} =1{1 question} other{{count} questions}} · shown to the speaker at the end",
+  "@echoQuestionsMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "echoSortTop": "Top",
+  "@echoSortTop": {
+    "description": "Q&A sort chip: most votes first."
+  },
+  "echoSortNewest": "Newest",
+  "@echoSortNewest": {
+    "description": "Q&A sort chip."
+  },
+  "echoSortMine": "Mine",
+  "@echoSortMine": {
+    "description": "Q&A sort chip: only my questions."
+  },
+  "echoNoQuestions": "No questions yet. Ask the first one.",
+  "echoNoMyQuestions": "You haven't asked anything yet.",
+  "echoAskNameHint": "Ask {name} a question…",
+  "@echoAskNameHint": {
+    "description": "Ask-speaker input in the Q&A sheet.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "echoUpvote": "Upvote",
+  "echoSendQuestion": "Send question",
+  "echoPaywallTitle": "Missed something? Get the whole talk in 2 minutes.",
+  "echoPaywallBody": "An AI summary with key points, trade-offs and takeaways, built from the full transcript.",
+  "echoPaywallThisTalk": "This talk",
+  "echoPaywallEveryTalk": "Every talk at {event}",
+  "@echoPaywallEveryTalk": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      }
+    }
+  },
+  "echoPaywallEveryTalkSubtitle": "{count, plural, =1{1 talk} other{{count} talks}}, all stages",
+  "@echoPaywallEveryTalkSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "echoPriceTalk": "€2.99",
+  "@echoPriceTalk": {
+    "description": "Mock price for one talk summary (paywall is mocked; real price TBD)."
+  },
+  "echoPriceEvent": "€9.99",
+  "@echoPriceEvent": {
+    "description": "Mock price for every talk at the event (paywall is mocked; real price TBD)."
+  },
+  "echoUnlockSummary": "Unlock summary",
+  "echoSummaryBadge": "AI summary · Premium",
+  "@echoSummaryBadge": {
+    "description": "Badge on the summary screen (upper-cased in the UI)."
+  },
+  "echoTakeaway": "Takeaway",
+  "@echoTakeaway": {
+    "description": "Overline of the dark takeaway card (upper-cased in the UI)."
+  },
+  "echoKeyPoints": "Key points",
+  "echoTradeoffs": "Trade-offs and fixes",
+  "echoTalkMinutes": "{minutes} min talk",
+  "@echoTalkMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "echoReadMinutes": "{minutes} min read",
+  "@echoReadMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "echoCopySummary": "Copy summary",
+  "echoSummaryCopied": "Summary copied"
 }

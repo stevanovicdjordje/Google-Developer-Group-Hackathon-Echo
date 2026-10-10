@@ -316,17 +316,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get echoSummarizing => 'Summarizing…';
 
   @override
-  String get echoUnlockTitle => 'Unlock talk summaries';
-
-  @override
-  String get echoUnlockBody =>
-      'Get an AI summary of every talk at this event: key points, trade-offs and takeaways.';
-
-  @override
   String get echoNotNow => 'Not now';
-
-  @override
-  String get echoUnlockPrice => 'Unlock · €2.99';
 
   @override
   String get echoAskAboutThis => 'Ask about this';
@@ -537,4 +527,137 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get echoTranscriptUnavailable =>
       'The live transcript isn\'t available right now.';
+
+  @override
+  String echoLiveAt(String stage) {
+    return 'Live · $stage';
+  }
+
+  @override
+  String echoEndedAt(String stage) {
+    return 'Ended · $stage';
+  }
+
+  @override
+  String get echoTranslatedBanner =>
+      'Translated live from English · tap SR for the original';
+
+  @override
+  String get echoAskHintTranslated => 'Pitajte bilo šta o predavanju…';
+
+  @override
+  String get echoLangOriginal => 'EN';
+
+  @override
+  String get echoLangTranslated => 'SR';
+
+  @override
+  String get echoSend => 'Send';
+
+  @override
+  String echoQuestionsFor(String name) {
+    return 'Questions for $name';
+  }
+
+  @override
+  String echoQuestionsMeta(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count questions',
+      one: '1 question',
+      zero: 'No questions yet',
+    );
+    return '$_temp0 · shown to the speaker at the end';
+  }
+
+  @override
+  String get echoSortTop => 'Top';
+
+  @override
+  String get echoSortNewest => 'Newest';
+
+  @override
+  String get echoSortMine => 'Mine';
+
+  @override
+  String get echoNoQuestions => 'No questions yet. Ask the first one.';
+
+  @override
+  String get echoNoMyQuestions => 'You haven\'t asked anything yet.';
+
+  @override
+  String echoAskNameHint(String name) {
+    return 'Ask $name a question…';
+  }
+
+  @override
+  String get echoUpvote => 'Upvote';
+
+  @override
+  String get echoSendQuestion => 'Send question';
+
+  @override
+  String get echoPaywallTitle =>
+      'Missed something? Get the whole talk in 2 minutes.';
+
+  @override
+  String get echoPaywallBody =>
+      'An AI summary with key points, trade-offs and takeaways, built from the full transcript.';
+
+  @override
+  String get echoPaywallThisTalk => 'This talk';
+
+  @override
+  String echoPaywallEveryTalk(String event) {
+    return 'Every talk at $event';
+  }
+
+  @override
+  String echoPaywallEveryTalkSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count talks',
+      one: '1 talk',
+    );
+    return '$_temp0, all stages';
+  }
+
+  @override
+  String get echoPriceTalk => '€2.99';
+
+  @override
+  String get echoPriceEvent => '€9.99';
+
+  @override
+  String get echoUnlockSummary => 'Unlock summary';
+
+  @override
+  String get echoSummaryBadge => 'AI summary · Premium';
+
+  @override
+  String get echoTakeaway => 'Takeaway';
+
+  @override
+  String get echoKeyPoints => 'Key points';
+
+  @override
+  String get echoTradeoffs => 'Trade-offs and fixes';
+
+  @override
+  String echoTalkMinutes(int minutes) {
+    return '$minutes min talk';
+  }
+
+  @override
+  String echoReadMinutes(int minutes) {
+    return '$minutes min read';
+  }
+
+  @override
+  String get echoCopySummary => 'Copy summary';
+
+  @override
+  String get echoSummaryCopied => 'Summary copied';
 }

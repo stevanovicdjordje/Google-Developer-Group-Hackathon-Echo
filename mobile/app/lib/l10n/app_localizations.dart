@@ -626,29 +626,11 @@ abstract class AppLocalizations {
   /// **'Summarizing…'**
   String get echoSummarizing;
 
-  /// No description provided for @echoUnlockTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlock talk summaries'**
-  String get echoUnlockTitle;
-
-  /// No description provided for @echoUnlockBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Get an AI summary of every talk at this event: key points, trade-offs and takeaways.'**
-  String get echoUnlockBody;
-
   /// No description provided for @echoNotNow.
   ///
   /// In en, this message translates to:
   /// **'Not now'**
   String get echoNotNow;
-
-  /// No description provided for @echoUnlockPrice.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlock · €2.99'**
-  String get echoUnlockPrice;
 
   /// No description provided for @echoAskAboutThis.
   ///
@@ -979,6 +961,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The live transcript isn\'t available right now.'**
   String get echoTranscriptUnavailable;
+
+  /// Echo header overline while the talk is live (upper-cased in the UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Live · {stage}'**
+  String echoLiveAt(String stage);
+
+  /// Echo header overline after the talk ended (upper-cased in the UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Ended · {stage}'**
+  String echoEndedAt(String stage);
+
+  /// Banner under the Echo header while translate is on.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated live from English · tap SR for the original'**
+  String get echoTranslatedBanner;
+
+  /// Ask input placeholder while translate (to Serbian) is on. Intentionally Serbian in every locale.
+  ///
+  /// In en, this message translates to:
+  /// **'Pitajte bilo šta o predavanju…'**
+  String get echoAskHintTranslated;
+
+  /// Translate pill label: transcript in the original language.
+  ///
+  /// In en, this message translates to:
+  /// **'EN'**
+  String get echoLangOriginal;
+
+  /// Translate pill label: transcript translated to Serbian.
+  ///
+  /// In en, this message translates to:
+  /// **'SR'**
+  String get echoLangTranslated;
+
+  /// No description provided for @echoSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get echoSend;
+
+  /// Q&A sheet title; name is the speaker's first name.
+  ///
+  /// In en, this message translates to:
+  /// **'Questions for {name}'**
+  String echoQuestionsFor(String name);
+
+  /// No description provided for @echoQuestionsMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No questions yet} =1{1 question} other{{count} questions}} · shown to the speaker at the end'**
+  String echoQuestionsMeta(int count);
+
+  /// Q&A sort chip: most votes first.
+  ///
+  /// In en, this message translates to:
+  /// **'Top'**
+  String get echoSortTop;
+
+  /// Q&A sort chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get echoSortNewest;
+
+  /// Q&A sort chip: only my questions.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine'**
+  String get echoSortMine;
+
+  /// No description provided for @echoNoQuestions.
+  ///
+  /// In en, this message translates to:
+  /// **'No questions yet. Ask the first one.'**
+  String get echoNoQuestions;
+
+  /// No description provided for @echoNoMyQuestions.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t asked anything yet.'**
+  String get echoNoMyQuestions;
+
+  /// Ask-speaker input in the Q&A sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask {name} a question…'**
+  String echoAskNameHint(String name);
+
+  /// No description provided for @echoUpvote.
+  ///
+  /// In en, this message translates to:
+  /// **'Upvote'**
+  String get echoUpvote;
+
+  /// No description provided for @echoSendQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Send question'**
+  String get echoSendQuestion;
+
+  /// No description provided for @echoPaywallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed something? Get the whole talk in 2 minutes.'**
+  String get echoPaywallTitle;
+
+  /// No description provided for @echoPaywallBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An AI summary with key points, trade-offs and takeaways, built from the full transcript.'**
+  String get echoPaywallBody;
+
+  /// No description provided for @echoPaywallThisTalk.
+  ///
+  /// In en, this message translates to:
+  /// **'This talk'**
+  String get echoPaywallThisTalk;
+
+  /// No description provided for @echoPaywallEveryTalk.
+  ///
+  /// In en, this message translates to:
+  /// **'Every talk at {event}'**
+  String echoPaywallEveryTalk(String event);
+
+  /// No description provided for @echoPaywallEveryTalkSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 talk} other{{count} talks}}, all stages'**
+  String echoPaywallEveryTalkSubtitle(int count);
+
+  /// Mock price for one talk summary (paywall is mocked; real price TBD).
+  ///
+  /// In en, this message translates to:
+  /// **'€2.99'**
+  String get echoPriceTalk;
+
+  /// Mock price for every talk at the event (paywall is mocked; real price TBD).
+  ///
+  /// In en, this message translates to:
+  /// **'€9.99'**
+  String get echoPriceEvent;
+
+  /// No description provided for @echoUnlockSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock summary'**
+  String get echoUnlockSummary;
+
+  /// Badge on the summary screen (upper-cased in the UI).
+  ///
+  /// In en, this message translates to:
+  /// **'AI summary · Premium'**
+  String get echoSummaryBadge;
+
+  /// Overline of the dark takeaway card (upper-cased in the UI).
+  ///
+  /// In en, this message translates to:
+  /// **'Takeaway'**
+  String get echoTakeaway;
+
+  /// No description provided for @echoKeyPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Key points'**
+  String get echoKeyPoints;
+
+  /// No description provided for @echoTradeoffs.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade-offs and fixes'**
+  String get echoTradeoffs;
+
+  /// No description provided for @echoTalkMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min talk'**
+  String echoTalkMinutes(int minutes);
+
+  /// No description provided for @echoReadMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min read'**
+  String echoReadMinutes(int minutes);
+
+  /// No description provided for @echoCopySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy summary'**
+  String get echoCopySummary;
+
+  /// No description provided for @echoSummaryCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary copied'**
+  String get echoSummaryCopied;
 }
 
 class _AppLocalizationsDelegate

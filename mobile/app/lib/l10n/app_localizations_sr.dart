@@ -321,17 +321,7 @@ class AppLocalizationsSr extends AppLocalizations {
   String get echoSummarizing => 'Pravim rezime…';
 
   @override
-  String get echoUnlockTitle => 'Otključaj rezimee predavanja';
-
-  @override
-  String get echoUnlockBody =>
-      'Dobij AI rezime svakog predavanja na ovom događaju: ključne tačke, kompromise i zaključke.';
-
-  @override
   String get echoNotNow => 'Ne sada';
-
-  @override
-  String get echoUnlockPrice => 'Otključaj · 2,99 €';
 
   @override
   String get echoAskAboutThis => 'Pitaj o ovome';
@@ -545,4 +535,139 @@ class AppLocalizationsSr extends AppLocalizations {
   @override
   String get echoTranscriptUnavailable =>
       'Transkript uživo trenutno nije dostupan.';
+
+  @override
+  String echoLiveAt(String stage) {
+    return 'Uživo · $stage';
+  }
+
+  @override
+  String echoEndedAt(String stage) {
+    return 'Završeno · $stage';
+  }
+
+  @override
+  String get echoTranslatedBanner =>
+      'Prevedeno uživo sa engleskog · dodirni SR za original';
+
+  @override
+  String get echoAskHintTranslated => 'Pitajte bilo šta o predavanju…';
+
+  @override
+  String get echoLangOriginal => 'EN';
+
+  @override
+  String get echoLangTranslated => 'SR';
+
+  @override
+  String get echoSend => 'Pošalji';
+
+  @override
+  String echoQuestionsFor(String name) {
+    return 'Pitanja za: $name';
+  }
+
+  @override
+  String echoQuestionsMeta(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pitanja',
+      few: '$count pitanja',
+      one: '1 pitanje',
+      zero: 'Još nema pitanja',
+    );
+    return '$_temp0 · predavač ih vidi na kraju';
+  }
+
+  @override
+  String get echoSortTop => 'Najbolja';
+
+  @override
+  String get echoSortNewest => 'Najnovija';
+
+  @override
+  String get echoSortMine => 'Moja';
+
+  @override
+  String get echoNoQuestions => 'Još nema pitanja. Postavi prvo.';
+
+  @override
+  String get echoNoMyQuestions => 'Još nisi ništa pitao.';
+
+  @override
+  String echoAskNameHint(String name) {
+    return 'Pitaj: $name…';
+  }
+
+  @override
+  String get echoUpvote => 'Glasaj';
+
+  @override
+  String get echoSendQuestion => 'Pošalji pitanje';
+
+  @override
+  String get echoPaywallTitle =>
+      'Nešto ti je promaklo? Celo predavanje za 2 minuta.';
+
+  @override
+  String get echoPaywallBody =>
+      'AI rezime sa ključnim tačkama, kompromisima i zaključcima, iz celog transkripta.';
+
+  @override
+  String get echoPaywallThisTalk => 'Ovo predavanje';
+
+  @override
+  String echoPaywallEveryTalk(String event) {
+    return 'Sva predavanja: $event';
+  }
+
+  @override
+  String echoPaywallEveryTalkSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count predavanja',
+      few: '$count predavanja',
+      one: '1 predavanje',
+    );
+    return '$_temp0, sve sale';
+  }
+
+  @override
+  String get echoPriceTalk => '€2.99';
+
+  @override
+  String get echoPriceEvent => '€9.99';
+
+  @override
+  String get echoUnlockSummary => 'Otključaj rezime';
+
+  @override
+  String get echoSummaryBadge => 'AI rezime · Premium';
+
+  @override
+  String get echoTakeaway => 'Zaključak';
+
+  @override
+  String get echoKeyPoints => 'Ključne tačke';
+
+  @override
+  String get echoTradeoffs => 'Kompromisi i rešenja';
+
+  @override
+  String echoTalkMinutes(int minutes) {
+    return '$minutes min predavanje';
+  }
+
+  @override
+  String echoReadMinutes(int minutes) {
+    return '$minutes min čitanja';
+  }
+
+  @override
+  String get echoCopySummary => 'Kopiraj rezime';
+
+  @override
+  String get echoSummaryCopied => 'Rezime je kopiran';
 }
