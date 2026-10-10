@@ -69,13 +69,14 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 | mobile#4 | integration | Adopt **feature scopes**: register for a feature (`feature:<name>`) instead of whole modules. Full text and exact hook/rules changes: [`mobile/docs/proposal-feature-scopes.md`](docs/proposal-feature-scopes.md). | open | 2026-10-10 |
 | mobile#3 | integration | Record `team-event-join`: plain HTTPS link to the Flutter web app, `https://<host>/e/{eventId}`; optional `?at={markerId}` (QR "you are here" marker), `/e/{eventId}/stand/{standId}` for a stand. Same paths work as app deep links. | open | 2026-10-10 |
 
-| mobile#6 | feature:maps | (1) Accept the routing change above (Map tab embeds `MapViewerScreen`). (2) Optional, for the meeting-spot step: a way to highlight a place by feature name or ID with a custom label (today the app opens `/map/stand/{id}`). (3) Keep using `Theme.of(context)` for colors so the redesign applies to the map too. | open | 2026-10-11 |
+| mobile#6 | feature:maps | (1) Accept the routing change above (Map tab embeds `MapViewerScreen`). (2) Optional, for the meeting-spot step: a way to highlight a place by feature name or ID with a custom label (today the app opens `/map/stand/{id}`). (3) Keep using `Theme.of(context)` for colors so the redesign applies to the map too. | closed | 2026-10-11 |
 | mobile#5 | backend, contracts | Backend endpoints for the non-map demo flow: `mobile/docs/api-needs.md` (API-1…API-15, priorities included). | open | 2026-10-11 |
 
 ## Inbound requests (others need something from us)
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| maps#2 | feature:maps | Location permissions (while in use only) for the GPS dot: board M-15, in progress. | accepted | 2026-10-11 |
 | maps#1 | feature:maps | (a) already in `pubspec.lock`. (b) `main.dart` overrides `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl`. (c) Profile → "For organizers" → "Edit venue map" opens `/o`; the app router mounts the `/o` routes of `mapsRoutes()` (not its `/e/:eventId`). | done | 2026-10-11 |
 | mobile#4 | @Vertiglo (maps) | Feature scopes adopted: `AGENTS.md`, `docs/COORDINATION.md` §1a, `ONBOARDING.md`, `docs/OWNERSHIP.md`, `.githooks/pre-commit` | done | 2026-10-10 |
 | mobile#3 | @Vertiglo (maps) | `docs/decisions/team-event-join.md` accepted | done | 2026-10-10 |
