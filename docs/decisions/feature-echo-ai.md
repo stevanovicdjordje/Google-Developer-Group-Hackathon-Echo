@@ -21,11 +21,14 @@ covers Echo.
 
 ## Decision
 
-**Gemma via the Gemini API for all four Echo features**, default model `gemma-3-27b-it` (`GEMMA_MODEL` env var, so a
-newer Gemma can be swapped in without code changes). One adapter (`backend/echo/internal/assist`, `Model` interface)
+**Gemma via the Gemini API for all four Echo features**, default model `gemma-4-26b-a4b-it` with thinking off
+(`GEMMA_MODEL`, `GEMMA_THINKING=minimal`, so another Gemma can be swapped in without code changes). One adapter (`backend/echo/internal/assist`, `Model` interface)
 so the model or provider can change later. It makes Echo the clearest "meaningful use of Gemma" in the demo, needs no
 hosting, and the transcript is short enough for Gemma's context.
 
+- Measured 2026-10-11 on the demo keynote: `gemma-4-26b-a4b-it` with thinking `minimal` answers in 1–4 s; with its
+  default thinking it takes 7–13 s and can spend the whole token budget thinking. `gemma-4-31b-it` took 40–85 s and
+  returned HTTP 500 with thinking off, so it is not used. (`gemma-3-*` is not offered to our key.)
 - Gemma on the Gemini API has no system instruction and no JSON mode: instructions go in the user turn,
   translations are requested as a JSON array and validated, with a per-line fallback.
 - Model output is untrusted (`AGENTS.md` rule 12): cleaned to plain text, length-capped, shape-checked; transcript

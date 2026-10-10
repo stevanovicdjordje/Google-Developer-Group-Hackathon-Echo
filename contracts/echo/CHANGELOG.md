@@ -2,6 +2,10 @@
 
 Echo feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## 0.1.0 (fixtures) — 2026-10-11
+- **Impact:** fixture-only
+- **Changes:** `model` in the examples is now `gemma-4-26b-a4b-it`, the model the service actually uses.
+
 ## 0.1.0 — 2026-10-11
 - **Impact:** additive (new feature contract)
 - **Affected:** backend/echo (implements), mobile (consumes through `EchoRepository`)
