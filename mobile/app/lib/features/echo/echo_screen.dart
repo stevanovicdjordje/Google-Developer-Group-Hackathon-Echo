@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme.dart';
+import '../../core/ui/ui.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
 import '../agenda/agenda_screens.dart';
+import 'echo_errors.dart';
+import 'echo_paywall.dart';
+import 'echo_qa_sheet.dart';
+import 'echo_summary_screen.dart';
 
 /// Echo: one screen per talk. Live transcript in the middle; a "catch up"
 /// summary on top (becomes the premium full summary when the talk ends);
@@ -39,17 +45,12 @@ class _Answer extends _Entry {
 }
 
 /// Target of the translate toggle ("Translate to Serbian").
+///
+/// Catch-up and Ask answers stay English while translate is on:
+/// `EchoRepository.catchUp`/`ask` take no language yet (see mobile#9).
 const _translateTo = 'sr';
 
-/// User-facing text for a failed Echo call.
-String _errorText(AppLocalizations l10n, Object error) =>
-    switch (error is EchoException ? error.kind : EchoErrorKind.failed) {
-      EchoErrorKind.aiBusy => l10n.echoErrorAiBusy,
-      EchoErrorKind.rateLimited => l10n.echoErrorRateLimited,
-      EchoErrorKind.offline => l10n.echoErrorOffline,
-      EchoErrorKind.noTranscript => l10n.echoErrorNoTranscript,
-      EchoErrorKind.failed => l10n.echoErrorFailed,
-    };
+const _errorText = echoErrorText;
 
 class _EchoScreenState extends ConsumerState<EchoScreen> {
   final _input = TextEditingController();
@@ -70,6 +71,11 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
   _Mode _mode = _Mode.ai;
   int _lineCount = 0;
 
+  /// Line index tapped/long-pressed: highlighted with "Ask about this".
+  int? _selected;
+  bool _paywallShown = false; // auto-opened once when the talk ends
+  int _updates = 0; // transcript snapshots received
+
   /// Auto-scroll follows new lines only while the user is at the bottom.
   /// Scrolling up pauses it and shows "Jump to live".
   bool _atBottom = true;
@@ -85,6 +91,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
         .listen(
           (lines) {
             if (!mounted) return;
+            _updates++;
             setState(() {
               _transcriptError = null;
               if (lines.length < _lineCount) {
@@ -105,7 +112,9 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
             if (mounted) setState(() => _transcriptError = e);
           },
           onDone: () {
-            if (mounted) setState(() => _ended = true);
+            if (!mounted) return;
+            setState(() => _ended = true);
+            _offerSummary();
           },
         );
     _loadCatchUp();
@@ -248,7 +257,10 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
   }
 
   void _askAbout(TranscriptLine line) {
-    setState(() => _mode = _Mode.ai);
+    setState(() {
+      _mode = _Mode.ai;
+      _selected = null;
+    });
     _input.text = AppLocalizations.of(context).echoAskAboutPrefill(line.text);
     _input.selection = TextSelection.collapsed(offset: _input.text.length);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -261,16 +273,11 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
     if (text.isEmpty) return;
     _input.clear();
     if (_mode == _Mode.speaker && preset == null) {
-      final SpeakerQuestion q;
-      try {
-        q = await _repo.submitQuestion(widget.eventId, widget.sessionId, text);
-      } catch (e) {
+      if (!await _submitQuestion(text)) {
         if (_input.text.isEmpty) _input.text = text; // don't lose it
-        _showError(e);
         return;
       }
       if (!mounted) return;
-      setState(() => _questions.value = [q, ..._questions.value]);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).echoQuestionSent)),
       );
@@ -302,322 +309,464 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
     _toBottom();
   }
 
+  /// Sends a question to the speaker; true when it was accepted.
+  Future<bool> _submitQuestion(String text) async {
+    try {
+      final q = await _repo.submitQuestion(
+        widget.eventId,
+        widget.sessionId,
+        text,
+      );
+      if (mounted) setState(() => _questions.value = [q, ..._questions.value]);
+      return true;
+    } catch (e) {
+      _showError(e);
+      return false;
+    }
+  }
+
+  /// When the talk ends while the user follows it: open the paywall once
+  /// (unless already unlocked). Not when Echo is opened after the talk
+  /// (the whole transcript arrives in one snapshot).
+  void _offerSummary() {
+    if (_paywallShown || _unlocked || _updates < 2) return;
+    _paywallShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _openSummary();
+    });
+  }
+
+  bool get _unlocked =>
+      ref.read(unlockedSummariesProvider).contains(widget.sessionId);
+
+  /// Paywall first if needed, then the summary page.
+  Future<void> _openSummary() async {
+    if (!_unlocked) {
+      final ok = await showEchoPaywall(
+        context,
+        eventId: widget.eventId,
+        sessionId: widget.sessionId,
+      );
+      if (!ok || !mounted) return;
+    }
+    final session = _session;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => EchoSummaryScreen(
+          eventId: widget.eventId,
+          sessionId: widget.sessionId,
+          session: session,
+        ),
+      ),
+    );
+  }
+
+  Session? get _session =>
+      (ref.read(agendaProvider(widget.eventId)).value ?? const <Session>[])
+          .where((s) => s.id == widget.sessionId)
+          .firstOrNull;
+
+  void _showQuestions() {
+    _loadQuestions(); // pick up others' questions and votes
+    final name = _session?.speakers.firstOrNull?.name.split(' ').first;
+    showEchoQuestions(
+      context,
+      questions: _questions,
+      speakerName: name,
+      onVote: _vote,
+      onAsk: _submitQuestion,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sessions = ref.watch(agendaProvider(widget.eventId)).value ?? [];
     final session = sessions.where((s) => s.id == widget.sessionId).firstOrNull;
+    final unlocked = ref
+        .watch(unlockedSummariesProvider)
+        .contains(widget.sessionId);
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          session?.title ?? l10n.echoTitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
-          IconButton(
-            tooltip: _translate ? l10n.echoShowOriginal : l10n.echoTranslate,
-            icon: Icon(
-              Icons.translate,
-              color: _translate ? scheme.primary : null,
+      backgroundColor: scheme.surface,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _Header(
+              session: session,
+              live: _lineCount > 0 && !_ended,
+              ended: _ended,
+              translate: _translate,
+              onTranslate: _toggleTranslate,
             ),
-            onPressed: _toggleTranslate,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _SummaryStrip(
-            sessionId: widget.sessionId,
-            eventId: widget.eventId,
-            catchUp: _catchUp,
-            catchUpError: _catchUpLoading || _catchUpError == null
-                ? null
-                : _errorText(l10n, _catchUpError!),
-            onCatchUp: _loadCatchUp,
-            ended: _ended,
-          ),
-          Expanded(
-            child: Stack(
-              children: [
-                NotificationListener<ScrollNotification>(
-                  onNotification: _onScroll,
-                  child: ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    itemCount: _entries.length + (_ended ? 1 : 0),
-                    itemBuilder: (context, i) {
-                      if (i == _entries.length) return const _EndedMarker();
-                      return switch (_entries[i]) {
-                        _Line(:final line, :final index) => _TranscriptRow(
-                          line: line,
-                          translated: _translate
-                              ? _translations[index] ??
-                                    (line.translated.isNotEmpty
-                                        ? line.translated
-                                        : null)
-                              : null,
-                          onAsk: () => _askAbout(line),
-                        ),
-                        final _Answer a => _AnswerCard(
-                          a.question,
-                          a.answer,
-                          error: a.error == null
-                              ? null
-                              : _errorText(l10n, a.error!),
-                          onRetry: () => _runAsk(a),
-                        ),
-                      };
-                    },
+            if (_translate) const _TranslatedBanner(),
+            if (_ended)
+              _SummaryCard(unlocked: unlocked, onTap: _openSummary)
+            else
+              _CatchUpCard(
+                catchUp: _catchUp,
+                error: _catchUpLoading || _catchUpError == null
+                    ? null
+                    : _errorText(l10n, _catchUpError!),
+                onLoad: _loadCatchUp,
+              ),
+            Expanded(
+              child: Stack(
+                children: [
+                  NotificationListener<ScrollNotification>(
+                    onNotification: _onScroll,
+                    child: ListView.builder(
+                      controller: _scroll,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      itemCount: _entries.length + (_ended ? 1 : 0),
+                      itemBuilder: (context, i) {
+                        if (i == _entries.length) return const _EndedMarker();
+                        return switch (_entries[i]) {
+                          _Line(:final line, :final index) => _TranscriptRow(
+                            line: line,
+                            translated: _translate
+                                ? _translations[index] ??
+                                      (line.translated.isNotEmpty
+                                          ? line.translated
+                                          : null)
+                                : null,
+                            // The newest lines are in full ink, older ones
+                            // fade to secondary (design).
+                            recent: index >= _lineCount - 3,
+                            live: !_ended && index == _lineCount - 1,
+                            selected: _selected == index,
+                            onSelect: () => setState(
+                              () =>
+                                  _selected = _selected == index ? null : index,
+                            ),
+                            onAsk: () => _askAbout(line),
+                          ),
+                          final _Answer a => _AnswerCard(
+                            a.question,
+                            a.answer,
+                            error: a.error == null
+                                ? null
+                                : _errorText(l10n, a.error!),
+                            onRetry: () => _runAsk(a),
+                          ),
+                        };
+                      },
+                    ),
                   ),
-                ),
-                if (_entries.isEmpty && !_ended)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        _transcriptError == null
-                            ? l10n.echoWaitingForTalk
-                            : l10n.echoTranscriptUnavailable,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                  if (_entries.isEmpty && !_ended)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          _transcriptError == null
+                              ? l10n.echoWaitingForTalk
+                              : l10n.echoTranscriptUnavailable,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
                       ),
                     ),
-                  ),
-                if (!_atBottom)
-                  Positioned(
-                    right: 16,
-                    bottom: 12,
-                    child: FilledButton.tonalIcon(
-                      icon: const Icon(Icons.arrow_downward, size: 18),
-                      label: Text(l10n.echoJumpToLive),
-                      onPressed: () => _toBottom(force: true),
+                  if (!_atBottom)
+                    Positioned(
+                      right: 16,
+                      bottom: 12,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: context.eho.ink,
+                          foregroundColor: context.eho.onInk,
+                          minimumSize: const Size(0, 40),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          textStyle: Theme.of(context).textTheme.labelLarge,
+                          shape: const StadiumBorder(),
+                        ),
+                        icon: const Icon(Icons.arrow_downward, size: 18),
+                        label: Text(l10n.echoJumpToLive),
+                        onPressed: () => _toBottom(force: true),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-          _Composer(
-            controller: _input,
-            focusNode: _inputFocus,
-            mode: _mode,
-            questionCount: _questions.value.length,
-            onMode: (m) => setState(() => _mode = m),
-            onSend: _send,
-            onOpenQuestions: () => _showQuestions(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showQuestions(BuildContext context) {
-    _loadQuestions(); // pick up others' questions and votes
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) => ValueListenableBuilder<List<SpeakerQuestion>>(
-        valueListenable: _questions,
-        builder: (context, questions, _) {
-          final sorted = [...questions]
-            ..sort((a, b) => b.votes.compareTo(a.votes));
-          return DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.6,
-            builder: (context, scroll) => ListView(
-              controller: scroll,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Text(
-                    AppLocalizations.of(context).echoQuestionsTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                for (final q in sorted)
-                  ListTile(
-                    title: Text(q.text),
-                    subtitle: q.mine
-                        ? Text(AppLocalizations.of(context).echoYourQuestion)
-                        : null,
-                    trailing: q.voted
-                        ? FilledButton.tonalIcon(
-                            icon: const Icon(Icons.arrow_upward),
-                            label: Text('${q.votes}'),
-                            onPressed: () => _vote(q),
-                          )
-                        : TextButton.icon(
-                            icon: const Icon(Icons.arrow_upward),
-                            label: Text('${q.votes}'),
-                            onPressed: () => _vote(q),
-                          ),
-                  ),
-              ],
+            _Composer(
+              controller: _input,
+              focusNode: _inputFocus,
+              mode: _mode,
+              translate: _translate,
+              questionCount: _questions.value.length,
+              onMode: (m) => setState(() => _mode = m),
+              onSend: _send,
+              onOpenQuestions: _showQuestions,
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
 }
 
-class _SummaryStrip extends ConsumerWidget {
-  const _SummaryStrip({
-    required this.eventId,
-    required this.sessionId,
-    required this.catchUp,
-    required this.catchUpError,
-    required this.onCatchUp,
+/// Back button, "LIVE · stage" + title, and the EN/SR translate pill.
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.session,
+    required this.live,
     required this.ended,
+    required this.translate,
+    required this.onTranslate,
   });
 
-  final String eventId;
-  final String sessionId;
-  final String? catchUp;
-  final String? catchUpError;
-
-  /// (Re)loads the catch-up: on expand, so it covers the talk so far.
-  final VoidCallback onCatchUp;
+  final Session? session;
+  final bool live;
   final bool ended;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context);
-    if (ended) {
-      final unlocked = ref.watch(unlockedSummariesProvider).contains(sessionId);
-      return Material(
-        color: scheme.tertiaryContainer,
-        child: ListTile(
-          leading: Icon(unlocked ? Icons.summarize : Icons.lock_outline),
-          title: Text(l10n.echoFullSummary),
-          subtitle: Text(
-            unlocked ? l10n.echoUnlocked : l10n.echoPremiumSubtitle,
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => _openSummary(context, ref, unlocked),
-        ),
-      );
-    }
-    return Material(
-      color: scheme.surfaceContainerHigh,
-      child: ExpansionTile(
-        leading: const Icon(Icons.bolt),
-        title: Text(l10n.echoCatchUp),
-        subtitle: Text(l10n.echoCatchUpSubtitle),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        onExpansionChanged: (open) {
-          if (open) onCatchUp();
-        },
-        children: [
-          if (catchUpError != null) ...[
-            Text(catchUpError!),
-            TextButton(onPressed: onCatchUp, child: Text(l10n.echoRetry)),
-          ] else
-            Text(catchUp ?? l10n.echoSummarizing),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _openSummary(
-    BuildContext context,
-    WidgetRef ref,
-    bool unlocked,
-  ) async {
-    if (!unlocked) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (context) {
-          final l10n = AppLocalizations.of(context);
-          return AlertDialog(
-            icon: const Icon(Icons.workspace_premium),
-            title: Text(l10n.echoUnlockTitle),
-            content: Text(l10n.echoUnlockBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(l10n.echoNotNow),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(l10n.echoUnlockPrice),
-              ),
-            ],
-          );
-        },
-      );
-      if (ok != true) return;
-      ref.read(unlockedSummariesProvider.notifier).unlock(sessionId);
-    }
-    if (!context.mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.8,
-        builder: (context, scroll) => _SummarySheet(
-          eventId: eventId,
-          sessionId: sessionId,
-          scroll: scroll,
-        ),
-      ),
-    );
-  }
-}
-
-/// Full summary with a loading state and "Try again" on failure.
-class _SummarySheet extends ConsumerStatefulWidget {
-  const _SummarySheet({
-    required this.eventId,
-    required this.sessionId,
-    required this.scroll,
-  });
-
-  final String eventId;
-  final String sessionId;
-  final ScrollController scroll;
-
-  @override
-  ConsumerState<_SummarySheet> createState() => _SummarySheetState();
-}
-
-class _SummarySheetState extends ConsumerState<_SummarySheet> {
-  late Future<String> _summary = _load();
-
-  Future<String> _load() => ref
-      .read(echoRepositoryProvider)
-      .fullSummary(widget.eventId, widget.sessionId);
+  final bool translate;
+  final VoidCallback onTranslate;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
-    return FutureBuilder<String>(
-      future: _summary,
-      builder: (context, snap) => ListView(
-        controller: widget.scroll,
-        padding: const EdgeInsets.all(24),
-        children: [
-          if (snap.hasError) ...[
-            Text(_errorText(l10n, snap.error!), textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Center(
-              child: TextButton(
-                onPressed: () => setState(() => _summary = _load()),
-                child: Text(l10n.echoRetry),
+    final stage = session?.stage ?? '';
+    final muted = t.labelSmall?.copyWith(color: scheme.onSurfaceVariant);
+    final Widget? overline = stage.isEmpty
+        ? null
+        : live
+        ? LiveBadge(l10n.echoLiveAt(stage))
+        : Text(
+            (ended ? l10n.echoEndedAt(stage) : stage).toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: muted,
+          );
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+        child: Row(
+          children: [
+            if (Navigator.of(context).canPop()) ...[
+              IconButton(
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                style: IconButton.styleFrom(
+                  backgroundColor: scheme.surfaceContainer,
+                  foregroundColor: scheme.onSurface,
+                ),
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.chevron_left),
+              ),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ?overline,
+                  const SizedBox(height: 2),
+                  Text(
+                    session?.title ?? l10n.echoTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.titleSmall?.copyWith(fontSize: 16),
+                  ),
+                ],
               ),
             ),
-          ] else if (!snap.hasData) ...[
-            const Center(child: CircularProgressIndicator()),
-            const SizedBox(height: 12),
-            Text(l10n.echoThinking, textAlign: TextAlign.center),
-          ] else
-            Text(snap.data!, style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(width: 10),
+            Tooltip(
+              message: translate ? l10n.echoShowOriginal : l10n.echoTranslate,
+              child: Material(
+                color: translate ? scheme.primary : scheme.surface,
+                shape: StadiumBorder(
+                  side: translate
+                      ? BorderSide.none
+                      : BorderSide(color: scheme.outline),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onTranslate,
+                  child: Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.translate,
+                          size: 18,
+                          color: translate
+                              ? scheme.onPrimary
+                              : scheme.onSurface,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          translate
+                              ? l10n.echoLangTranslated
+                              : l10n.echoLangOriginal,
+                          style: t.labelLarge?.copyWith(
+                            color: translate
+                                ? scheme.onPrimary
+                                : scheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TranslatedBanner extends StatelessWidget {
+  const _TranslatedBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final eho = context.eho;
+    return Container(
+      width: double.infinity,
+      color: theme.colorScheme.primaryContainer,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Icon(Icons.translate, size: 16, color: eho.primaryPressed),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context).echoTranslatedBanner,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: eho.primaryPressed,
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// Blue "Catch up" card; expanding it (re)loads the summary so far.
+class _CatchUpCard extends StatefulWidget {
+  const _CatchUpCard({
+    required this.catchUp,
+    required this.error,
+    required this.onLoad,
+  });
+
+  final String? catchUp;
+  final String? error;
+  final VoidCallback onLoad;
+
+  @override
+  State<_CatchUpCard> createState() => _CatchUpCardState();
+}
+
+class _CatchUpCardState extends State<_CatchUpCard> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    final eho = context.eho;
+    final l10n = AppLocalizations.of(context);
+    final body = t.bodySmall?.copyWith(color: eho.bodyOnTint, height: 1.45);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: EhoCard(
+        color: theme.colorScheme.primaryContainer,
+        radius: 16,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        onTap: () {
+          setState(() => _open = !_open);
+          if (_open) widget.onLoad();
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.bolt, size: 18, color: eho.primaryPressed),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.echoCatchUp,
+                    style: t.labelLarge?.copyWith(color: eho.primaryPressed),
+                  ),
+                ),
+                Icon(
+                  _open ? Icons.expand_less : Icons.expand_more,
+                  size: 20,
+                  color: eho.primaryPressed,
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            if (!_open)
+              Text(l10n.echoCatchUpSubtitle, style: body)
+            else if (widget.error != null) ...[
+              Text(widget.error!, style: body),
+              TextButton(onPressed: widget.onLoad, child: Text(l10n.echoRetry)),
+            ] else
+              Text(widget.catchUp ?? l10n.echoSummarizing, style: body),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// After the talk: entry to the premium full summary.
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.unlocked, required this.onTap});
+
+  final bool unlocked;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final eho = context.eho;
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: EhoCard(
+        color: eho.liveContainer,
+        radius: 16,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        onTap: onTap,
+        child: Row(
+          children: [
+            Icon(
+              unlocked ? Icons.auto_awesome : Icons.lock_outline,
+              size: 20,
+              color: eho.onLiveContainer,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.echoFullSummary, style: t.titleSmall),
+                  Text(
+                    unlocked ? l10n.echoUnlocked : l10n.echoPremiumSubtitle,
+                    style: t.bodySmall?.copyWith(color: eho.bodyOnTint),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: eho.onLiveContainer),
+          ],
+        ),
       ),
     );
   }
@@ -627,6 +776,10 @@ class _TranscriptRow extends StatelessWidget {
   const _TranscriptRow({
     required this.line,
     required this.translated,
+    required this.recent,
+    required this.live,
+    required this.selected,
+    required this.onSelect,
     required this.onAsk,
   });
 
@@ -634,52 +787,120 @@ class _TranscriptRow extends StatelessWidget {
 
   /// Shown instead of the original when set (translate on and translated).
   final String? translated;
+  final bool recent;
+
+  /// The line being spoken now: ends with the live cursor.
+  final bool live;
+  final bool selected;
+  final VoidCallback onSelect;
   final VoidCallback onAsk;
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    final scheme = theme.colorScheme;
+    final eho = context.eho;
     final m = (line.atSeconds ~/ 60).toString().padLeft(2, '0');
     final s = (line.atSeconds % 60).toString().padLeft(2, '0');
+    final style = t.bodyLarge?.copyWith(
+      color: recent || selected ? scheme.onSurface : scheme.onSurfaceVariant,
+    );
+    final text = translated ?? line.text;
     return InkWell(
-      onLongPress: () async {
-        // Anchor a small "Ask about this" menu to the pressed row.
-        final box = context.findRenderObject() as RenderBox;
-        final overlay =
-            Overlay.of(context).context.findRenderObject() as RenderBox;
-        final rect = Rect.fromPoints(
-          box.localToGlobal(Offset.zero, ancestor: overlay),
-          box.localToGlobal(
-            box.size.bottomRight(Offset.zero),
-            ancestor: overlay,
-          ),
-        );
-        final ask = await showMenu<bool>(
-          context: context,
-          position: RelativeRect.fromRect(
-            Rect.fromLTWH(rect.left + 48, rect.bottom - 8, 0, 0),
-            Offset.zero & overlay.size,
-          ),
-          items: [
-            PopupMenuItem(
-              value: true,
-              child: ListTile(
-                leading: const Icon(Icons.auto_awesome),
-                title: Text(AppLocalizations.of(context).echoAskAboutThis),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ],
-        );
-        if (ask == true) onAsk();
-      },
+      onTap: onSelect,
+      onLongPress: onSelect,
+      borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 7),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: 48, child: Text('$m:$s', style: t.labelSmall)),
-            Expanded(child: Text(translated ?? line.text, style: t.bodyLarge)),
+            SizedBox(
+              width: 38,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text(
+                  '$m:$s',
+                  style: t.labelMedium?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: selected
+                        ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2)
+                        : EdgeInsets.zero,
+                    decoration: selected
+                        ? BoxDecoration(
+                            color: eho.liveContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          )
+                        : null,
+                    child: live
+                        ? Text.rich(
+                            TextSpan(
+                              text: text,
+                              children: [
+                                WidgetSpan(
+                                  alignment: PlaceholderAlignment.middle,
+                                  child: Container(
+                                    width: 2,
+                                    height: 18,
+                                    margin: const EdgeInsets.only(left: 4),
+                                    color: eho.live,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            style: style,
+                          )
+                        : Text(text, style: style),
+                  ),
+                  if (selected) ...[
+                    const SizedBox(height: 8),
+                    Material(
+                      color: eho.ink,
+                      shape: const StadiumBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: onAsk,
+                        child: Container(
+                          height: 34,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_awesome,
+                                size: 14,
+                                color: eho.onInk,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                AppLocalizations.of(context).echoAskAboutThis,
+                                style: t.labelMedium?.copyWith(
+                                  color: eho.onInk,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -702,41 +923,38 @@ class _AnswerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final t = Theme.of(context).textTheme;
-    return Card(
-      color: scheme.primaryContainer,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.auto_awesome, size: 18),
-                const SizedBox(width: 6),
-                Expanded(child: Text(question, style: t.titleSmall)),
-              ],
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 7),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AiHint(question),
+          const SizedBox(height: 8),
+          if (error != null) ...[
+            Text(error!, style: t.bodyMedium),
+            TextButton(
+              onPressed: onRetry,
+              child: Text(AppLocalizations.of(context).echoRetry),
             ),
-            const SizedBox(height: 8),
-            if (error != null) ...[
-              Text(error!, style: t.bodyMedium),
-              TextButton(
-                onPressed: onRetry,
-                child: Text(AppLocalizations.of(context).echoRetry),
+          ] else if (answer == null) ...[
+            const LinearProgressIndicator(),
+            const SizedBox(height: 6),
+            Text(
+              AppLocalizations.of(context).echoThinking,
+              style: t.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-            ] else if (answer == null) ...[
-              const LinearProgressIndicator(),
-              const SizedBox(height: 6),
-              Text(
-                AppLocalizations.of(context).echoThinking,
-                style: t.bodySmall,
-              ),
-            ] else
-              Text(answer!, style: t.bodyMedium),
-          ],
-        ),
+            ),
+          ] else
+            Text(answer!, style: t.bodyMedium),
+        ],
       ),
     );
   }
@@ -755,7 +973,9 @@ class _EndedMarker extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
             AppLocalizations.of(context).echoTalkEnded,
-            style: Theme.of(context).textTheme.labelMedium,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         const Expanded(child: Divider()),
@@ -764,11 +984,72 @@ class _EndedMarker extends StatelessWidget {
   );
 }
 
+/// Ask AI / Ask speaker track (selected segment white with primary text).
+class _ModeToggle extends StatelessWidget {
+  const _ModeToggle({required this.mode, required this.onMode});
+
+  final _Mode mode;
+  final ValueChanged<_Mode> onMode;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    Widget segment(_Mode m, String label) {
+      final on = mode == m;
+      return Expanded(
+        child: Semantics(
+          button: true,
+          selected: on,
+          child: Material(
+            color: on ? scheme.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(11),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => onMode(m),
+              child: SizedBox(
+                height: 38,
+                child: Center(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: on ? scheme.primary : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          segment(_Mode.ai, l10n.echoAskAi),
+          const SizedBox(width: 4),
+          segment(_Mode.speaker, l10n.echoAskSpeaker),
+        ],
+      ),
+    );
+  }
+}
+
 class _Composer extends StatelessWidget {
   const _Composer({
     required this.controller,
     required this.focusNode,
     required this.mode,
+    required this.translate,
     required this.questionCount,
     required this.onMode,
     required this.onSend,
@@ -778,6 +1059,7 @@ class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final _Mode mode;
+  final bool translate;
   final int questionCount;
   final ValueChanged<_Mode> onMode;
   final Future<void> Function([String?]) onSend;
@@ -785,60 +1067,79 @@ class _Composer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final eho = context.eho;
     final l10n = AppLocalizations.of(context);
-    return Material(
-      elevation: 3,
+    final speaker = mode == _Mode.speaker;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border(top: BorderSide(color: scheme.outlineVariant)),
+      ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
                   Expanded(
-                    child: SegmentedButton<_Mode>(
-                      showSelectedIcon: false,
-                      segments: [
-                        ButtonSegment(
-                          value: _Mode.ai,
-                          label: Text(l10n.echoAskAi),
-                        ),
-                        ButtonSegment(
-                          value: _Mode.speaker,
-                          label: Text(l10n.echoAskSpeaker),
-                        ),
-                      ],
-                      selected: {mode},
-                      onSelectionChanged: (s) => onMode(s.first),
-                    ),
+                    child: _ModeToggle(mode: mode, onMode: onMode),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton.filledTonal(
+                  const SizedBox(width: 10),
+                  IconButton(
                     tooltip: l10n.echoQuestionsTitle,
                     onPressed: onOpenQuestions,
+                    style: IconButton.styleFrom(
+                      backgroundColor: scheme.surfaceContainer,
+                      foregroundColor: scheme.onSurface,
+                      fixedSize: const Size(46, 46),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
                     icon: Badge.count(
                       count: questionCount,
+                      isLabelVisible: questionCount > 0,
+                      backgroundColor: eho.live,
+                      textColor: eho.onLive,
                       child: const Icon(Icons.forum_outlined),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               TextField(
                 controller: controller,
                 focusNode: focusNode,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onSend(),
                 decoration: InputDecoration(
-                  hintText: mode == _Mode.ai
-                      ? l10n.echoAskHint
-                      : l10n.echoSpeakerHint,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: () => onSend(),
+                  hintText: speaker
+                      ? l10n.echoSpeakerHint
+                      : translate
+                      ? l10n.echoAskHintTranslated
+                      : l10n.echoAskHint,
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: IconButton(
+                      tooltip: l10n.echoSend,
+                      onPressed: () => onSend(),
+                      style: IconButton.styleFrom(
+                        backgroundColor: speaker ? eho.live : scheme.primary,
+                        foregroundColor: speaker
+                            ? eho.onLive
+                            : scheme.onPrimary,
+                        minimumSize: const Size(40, 40),
+                        fixedSize: const Size(40, 40),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.arrow_forward, size: 18),
+                    ),
                   ),
                 ),
               ),
