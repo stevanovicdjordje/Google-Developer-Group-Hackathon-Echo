@@ -135,6 +135,8 @@ func newEvent(t *testing.T, publishedVersion int) string {
 		"events/" + id + "/published/map/floors/f1": {"name": str("P")},
 		"events/" + id + "/draft/map/floors/f1":     {"name": str("P")},
 		"events/" + id + "/stats/2026-10-11":        {"searches": num(3)},
+		// Echo (feature:echo) replays transcripts under published/ and relies on these rules.
+		"events/" + id + "/published/echo/sessions/s1/lines/00000": {"text": str("Dobro veče")},
 	}
 	for p, f := range docs {
 		adminPut(t, p, f)
@@ -165,6 +167,9 @@ func TestFirestoreRules(t *testing.T) {
 		{"attendee: stats", "events/" + pub + "/stats/2026-10-11", attendeeUID, false},
 		{"attendee: unpublished event", "events/" + draft, attendeeUID, false},
 		{"attendee: unpublished map", "events/" + draft + "/published/map", attendeeUID, false},
+		{"attendee: Echo transcript line", "events/" + pub + "/published/echo/sessions/s1/lines/00000", attendeeUID, true},
+		{"attendee: Echo line of unpublished event", "events/" + draft + "/published/echo/sessions/s1/lines/00000", attendeeUID, false},
+		{"signed out: Echo transcript line", "events/" + pub + "/published/echo/sessions/s1/lines/00000", "", false},
 		{"owner: unpublished event", "events/" + draft, ownerUID, true},
 		{"owner: draft", "events/" + draft + "/draft/map/floors/f1", ownerUID, true},
 		{"owner: stats", "events/" + pub + "/stats/2026-10-11", ownerUID, true},

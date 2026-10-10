@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "public": ".hosting",
+    "ignore": ["**/.*"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "headers": [
+      {
+        "source": "**/*.@(js|wasm|png|jpg|svg|ttf|otf|woff2|json)",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
+      },
+      {
+        "source": "/@(index.html|flutter_service_worker.js|flutter_bootstrap.js|version.json)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
+  }
+}
