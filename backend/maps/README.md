@@ -1,7 +1,7 @@
 # backend/maps — venue map API
 
 Go service for the Eho **venue map** feature: events, floors, rooms/stands/POIs, walkway graph, publish, routing (later), map stats (later).
-Plan and phases: [`../../mobile/docs/map-plan.md`](../../mobile/docs/map-plan.md). Contract: [`../../contracts/features/maps/openapi.yaml`](../../contracts/features/maps/openapi.yaml).
+Plan and phases: [`../../contracts/maps/PLAN.md`](../../contracts/maps/PLAN.md). Contract: [`../../contracts/maps/openapi.yaml`](../../contracts/maps/openapi.yaml).
 
 Independent Go module (`github.com/Ilij4n/eho/backend/maps`), its own Dockerfile and Cloud Run service. Other backend features don't depend on it.
 

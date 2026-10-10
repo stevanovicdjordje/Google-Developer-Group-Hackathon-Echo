@@ -14,7 +14,7 @@ import (
 	"github.com/Ilij4n/eho/backend/maps/internal/venue"
 )
 
-// Firestore layout (clients may read published/**, see contracts/features/maps/realtime.md):
+// Firestore layout (clients may read published/**, see contracts/maps/realtime.md):
 //
 //	events/{eventId}                                  venue.Event
 //	events/{eventId}/draft/map                        {updatedAt}

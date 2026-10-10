@@ -1,4 +1,4 @@
-.PHONY: dev run test vet lint docker emulators
+.PHONY: dev run test vet docker emulators seed
 
 dev:            ## emulators + API (one command)
 	./scripts/dev.sh
@@ -17,3 +17,6 @@ vet:
 
 docker:
 	docker build -t eho-api .
+
+seed:           ## publish the demo event (needs `make dev` running)
+	go run ./cmd/seed
