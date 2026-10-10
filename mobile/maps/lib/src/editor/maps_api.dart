@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../location/georef.dart';
 import '../model/map_models.dart';
 import '../model/route_models.dart';
 
@@ -181,6 +182,24 @@ class MapsApi {
   ) async => Floor.fromJson(
     await _obj('PATCH', '/v1/events/$eventId/floors/$floorId', patch),
   );
+
+  /// Georeferences the floor with exactly 3 control points.
+  Future<(Floor, GeorefQuality)> putGeoref(
+    String eventId,
+    String floorId,
+    List<ControlPoint> controlPoints,
+  ) async {
+    final j = await _obj('PUT', '/v1/events/$eventId/floors/$floorId/georef', {
+      'controlPoints': [for (final c in controlPoints) c.toJson()],
+    });
+    return (
+      Floor.fromJson(Map<String, dynamic>.from(j['floor'] as Map)),
+      GeorefQuality.fromJson(Map<String, dynamic>.from(j['quality'] as Map)),
+    );
+  }
+
+  Future<void> deleteGeoref(String eventId, String floorId) =>
+      _send('DELETE', '/v1/events/$eventId/floors/$floorId/georef');
 
   Future<void> deleteFloor(String eventId, String floorId) =>
       _send('DELETE', '/v1/events/$eventId/floors/$floorId');

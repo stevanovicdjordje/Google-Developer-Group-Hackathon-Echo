@@ -497,4 +497,56 @@ class MapsLocalizationsEn extends MapsLocalizations {
   String arrived(String name) {
     return 'You\'ve arrived: $name';
   }
+
+  @override
+  String get georefMenu => 'Set up GPS (georeferencing)';
+
+  @override
+  String get georefMenuSet => 'GPS is set up: edit';
+
+  @override
+  String georefTitle(String floor) {
+    return 'GPS for floor \"$floor\"';
+  }
+
+  @override
+  String get georefIntro =>
+      'Pick 3 spots you can find both on the plan and on Google Maps (building corners, entrances), as far apart as possible. For each: tap the plan, then paste the coordinates (in Google Maps: right-click the spot → click the coordinates).';
+
+  @override
+  String georefPoint(int n) {
+    return 'Point $n';
+  }
+
+  @override
+  String get georefTapPlan => 'Tap the plan';
+
+  @override
+  String get georefCoordsHint => 'e.g. 44.81234, 20.46123';
+
+  @override
+  String get georefCoordsInvalid => 'Enter \"latitude, longitude\"';
+
+  @override
+  String georefScale(String cm, String meters) {
+    return 'Scale: $cm cm per pixel · possible error ±$meters m';
+  }
+
+  @override
+  String get georefDegenerate =>
+      'The points are on one line or too close. Pick spots further apart.';
+
+  @override
+  String get georefBadPoint =>
+      'The possible error is large: a point is probably misplaced.';
+
+  @override
+  String get georefRemove => 'Remove GPS';
+
+  @override
+  String get georefSaved =>
+      'GPS is set up. Attendees get it after you publish.';
+
+  @override
+  String get georefRemoved => 'GPS removed.';
 }

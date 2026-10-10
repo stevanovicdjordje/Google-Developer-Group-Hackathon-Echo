@@ -141,3 +141,20 @@ class Georef {
     );
   }
 }
+
+/// Parses "lat, lng" as copied from Google Maps ("44.81234, 20.46123"; also
+/// with a space only or with ° signs). Null if it isn't a valid coordinate.
+LatLngDeg? parseLatLng(String text) {
+  final parts = text
+      .replaceAll('°', ' ')
+      .trim()
+      .split(RegExp(r'[,;\s]+'))
+      .where((s) => s.isNotEmpty)
+      .toList();
+  if (parts.length != 2) return null;
+  final lat = double.tryParse(parts[0]);
+  final lng = double.tryParse(parts[1]);
+  if (lat == null || lng == null) return null;
+  if (lat.abs() > 90 || lng.abs() > 180) return null;
+  return LatLngDeg(lat, lng);
+}

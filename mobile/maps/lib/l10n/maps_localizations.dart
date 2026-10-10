@@ -949,6 +949,90 @@ abstract class MapsLocalizations {
   /// In sr, this message translates to:
   /// **'Stigli ste: {name}'**
   String arrived(String name);
+
+  /// No description provided for @georefMenu.
+  ///
+  /// In sr, this message translates to:
+  /// **'Podesi GPS (georeferenciranje)'**
+  String get georefMenu;
+
+  /// No description provided for @georefMenuSet.
+  ///
+  /// In sr, this message translates to:
+  /// **'GPS je podešen: izmeni'**
+  String get georefMenuSet;
+
+  /// No description provided for @georefTitle.
+  ///
+  /// In sr, this message translates to:
+  /// **'GPS za sprat „{floor}“'**
+  String georefTitle(String floor);
+
+  /// No description provided for @georefIntro.
+  ///
+  /// In sr, this message translates to:
+  /// **'Izaberite 3 mesta koja lako nađete i na planu i na Google mapama (uglovi zgrade, ulazi), što dalje jedno od drugog. Za svako: dodirnite plan, pa nalepite koordinate (u Google mapama: desni klik na mesto → kliknite na koordinate).'**
+  String get georefIntro;
+
+  /// No description provided for @georefPoint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Tačka {n}'**
+  String georefPoint(int n);
+
+  /// No description provided for @georefTapPlan.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirnite plan'**
+  String get georefTapPlan;
+
+  /// No description provided for @georefCoordsHint.
+  ///
+  /// In sr, this message translates to:
+  /// **'npr. 44.81234, 20.46123'**
+  String get georefCoordsHint;
+
+  /// No description provided for @georefCoordsInvalid.
+  ///
+  /// In sr, this message translates to:
+  /// **'Unesite „širina, dužina“'**
+  String get georefCoordsInvalid;
+
+  /// No description provided for @georefScale.
+  ///
+  /// In sr, this message translates to:
+  /// **'Razmera: {cm} cm po pikselu · moguća greška ±{meters} m'**
+  String georefScale(String cm, String meters);
+
+  /// No description provided for @georefDegenerate.
+  ///
+  /// In sr, this message translates to:
+  /// **'Tačke su na jednoj liniji ili preblizu. Izaberite mesta dalje jedno od drugog.'**
+  String get georefDegenerate;
+
+  /// No description provided for @georefBadPoint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Moguća greška je velika: neka tačka je verovatno pogrešno postavljena.'**
+  String get georefBadPoint;
+
+  /// No description provided for @georefRemove.
+  ///
+  /// In sr, this message translates to:
+  /// **'Ukloni GPS'**
+  String get georefRemove;
+
+  /// No description provided for @georefSaved.
+  ///
+  /// In sr, this message translates to:
+  /// **'GPS je podešen. Posetioci ga dobijaju posle objave.'**
+  String get georefSaved;
+
+  /// No description provided for @georefRemoved.
+  ///
+  /// In sr, this message translates to:
+  /// **'GPS je uklonjen.'**
+  String get georefRemoved;
 }
 
 class _MapsLocalizationsDelegate

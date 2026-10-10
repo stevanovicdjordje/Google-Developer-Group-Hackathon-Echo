@@ -141,5 +141,19 @@
   "gpsDenied": "Location isn't allowed. Scan a QR code or pick your spot on the map.",
   "gpsServiceOff": "Location is turned off on this device.",
   "gpsFailed": "Location isn't available right now.",
-  "arrived": "You've arrived: {name}"
+  "arrived": "You've arrived: {name}",
+  "georefMenu": "Set up GPS (georeferencing)",
+  "georefMenuSet": "GPS is set up: edit",
+  "georefTitle": "GPS for floor \"{floor}\"",
+  "georefIntro": "Pick 3 spots you can find both on the plan and on Google Maps (building corners, entrances), as far apart as possible. For each: tap the plan, then paste the coordinates (in Google Maps: right-click the spot → click the coordinates).",
+  "georefPoint": "Point {n}",
+  "georefTapPlan": "Tap the plan",
+  "georefCoordsHint": "e.g. 44.81234, 20.46123",
+  "georefCoordsInvalid": "Enter \"latitude, longitude\"",
+  "georefScale": "Scale: {cm} cm per pixel · possible error ±{meters} m",
+  "georefDegenerate": "The points are on one line or too close. Pick spots further apart.",
+  "georefBadPoint": "The possible error is large: a point is probably misplaced.",
+  "georefRemove": "Remove GPS",
+  "georefSaved": "GPS is set up. Attendees get it after you publish.",
+  "georefRemoved": "GPS removed."
 }

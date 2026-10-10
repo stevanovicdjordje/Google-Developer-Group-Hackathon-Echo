@@ -114,6 +114,24 @@ class FakeMapsServer {
       }
       return json({'publishedVersion': 1, 'warnings': <Object>[]});
     }
+    if (r.method == 'PUT' && path == '/v1/events/e/floors/f1/georef') {
+      final floor = Map<String, dynamic>.from(
+        (draft['floors'] as List).first as Map,
+      );
+      final cps = (jsonDecode(r.body) as Map)['controlPoints'];
+      return json({
+        'floor': {
+          ...floor,
+          'georef': {'controlPoints': cps, 'metersPerPixel': 0.05},
+        },
+        'quality': {
+          'metersPerPixel': 0.05,
+          'scaleMismatchPercent': 0.1,
+          'skewDegrees': 0.1,
+          'estimatedErrorMeters': 0.2,
+        },
+      });
+    }
     return json({'code': 'not_found', 'message': 'no route'}, 404);
   }
 }
@@ -202,6 +220,65 @@ void main() {
     final g = jsonDecode(puts.last.body) as Map<String, dynamic>;
     expect((g['nodes'] as List).length, 4);
     expect((g['edges'] as List).length, 2);
+  });
+
+  testWidgets('georeferencing: 3 taps + pasted coordinates are saved', (
+    tester,
+  ) async {
+    final server = FakeMapsServer();
+    await tester.pumpWidget(app(server));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Sprat'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Podesi GPS (georeferenciranje)'));
+    await tester.pumpAndSettle();
+    expect(find.text('GPS za sprat „Prizemlje“'), findsOneWidget);
+    expect(find.text('Dodirnite plan'), findsNWidgets(3));
+
+    final c = tester.getCenter(find.byType(FlutterMap));
+    await tapMap(tester, c + const Offset(-150, -60));
+    await tapMap(tester, c + const Offset(150, -60));
+    await tapMap(tester, c + const Offset(0, 80));
+    expect(find.text('Dodirnite plan'), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('cp-coords-0')),
+      '44.80000, 20.40000',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('cp-coords-1')),
+      'nije koordinata',
+    );
+    await tester.pump();
+    expect(find.text('Unesite „širina, dužina“'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('cp-coords-1')),
+      '44.80000 20.40100',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('cp-coords-2')),
+      '44.79950°, 20.40050°',
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Razmera:'), findsOneWidget);
+
+    await tester.tap(find.text('Sačuvaj'));
+    await tester.pumpAndSettle();
+    final put = server.requests.lastWhere(
+      (r) => r.method == 'PUT' && r.url.path.endsWith('/georef'),
+    );
+    final cps = (jsonDecode(put.body) as Map)['controlPoints'] as List;
+    expect(cps, hasLength(3));
+    expect((cps[2] as Map)['latLng'], {'lat': 44.7995, 'lng': 20.4005});
+    expect(
+      find.text('GPS je podešen. Posetioci ga dobijaju posle objave.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byTooltip('Sprat'));
+    await tester.pumpAndSettle();
+    expect(find.text('GPS je podešen: izmeni'), findsOneWidget);
   });
 
   testWidgets('a blocked publish lists the issue in Serbian', (tester) async {

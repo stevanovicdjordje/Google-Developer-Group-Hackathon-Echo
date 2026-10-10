@@ -12,6 +12,7 @@ import 'editor_canvas.dart';
 import 'editor_ops.dart';
 import 'editor_providers.dart';
 import 'feature_form.dart';
+import 'georef_screen.dart';
 import 'maps_api.dart';
 import 'organizer_screens.dart';
 
@@ -366,6 +367,13 @@ class _EditorState extends ConsumerState<_Editor> {
     await _run(() => _ctrl.updateFloor(floor.id, name: name.trim()));
   }
 
+  void _georef(Floor floor) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (_) => GeorefScreen(eventId: widget.eventId, floor: floor),
+    ),
+  );
+
   Future<void> _deleteFloor(Floor floor) async {
     final l10n = MapsLocalizations.of(context);
     if (!await _confirm(context, l10n.deleteFloorConfirm(floor.name))) return;
@@ -628,6 +636,7 @@ class _EditorState extends ConsumerState<_Editor> {
             onAddFloor: _addFloor,
             onRenameFloor: _renameFloor,
             onDeleteFloor: _deleteFloor,
+            onGeoref: _georef,
           ),
           const Divider(height: 1),
           Expanded(
@@ -682,6 +691,7 @@ class _Toolbar extends StatelessWidget {
     required this.onAddFloor,
     required this.onRenameFloor,
     required this.onDeleteFloor,
+    required this.onGeoref,
   });
 
   final List<Floor> floors;
@@ -692,6 +702,7 @@ class _Toolbar extends StatelessWidget {
   final VoidCallback onAddFloor;
   final ValueChanged<Floor> onRenameFloor;
   final ValueChanged<Floor> onDeleteFloor;
+  final ValueChanged<Floor> onGeoref;
 
   @override
   Widget build(BuildContext context) {
@@ -724,11 +735,20 @@ class _Toolbar extends StatelessWidget {
               onSelected: (v) => switch (v) {
                 'add' => onAddFloor(),
                 'rename' => onRenameFloor(floor!),
+                'georef' => onGeoref(floor!),
                 _ => onDeleteFloor(floor!),
               },
               itemBuilder: (_) => [
                 PopupMenuItem(value: 'add', child: Text(l10n.addFloor)),
                 PopupMenuItem(value: 'rename', child: Text(l10n.renameFloor)),
+                PopupMenuItem(
+                  value: 'georef',
+                  child: Text(
+                    floor!.georef == null
+                        ? l10n.georefMenu
+                        : l10n.georefMenuSet,
+                  ),
+                ),
                 PopupMenuItem(value: 'delete', child: Text(l10n.deleteFloor)),
               ],
             ),

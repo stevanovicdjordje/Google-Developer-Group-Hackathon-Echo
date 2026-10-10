@@ -497,4 +497,56 @@ class MapsLocalizationsSr extends MapsLocalizations {
   String arrived(String name) {
     return 'Stigli ste: $name';
   }
+
+  @override
+  String get georefMenu => 'Podesi GPS (georeferenciranje)';
+
+  @override
+  String get georefMenuSet => 'GPS je podešen: izmeni';
+
+  @override
+  String georefTitle(String floor) {
+    return 'GPS za sprat „$floor“';
+  }
+
+  @override
+  String get georefIntro =>
+      'Izaberite 3 mesta koja lako nađete i na planu i na Google mapama (uglovi zgrade, ulazi), što dalje jedno od drugog. Za svako: dodirnite plan, pa nalepite koordinate (u Google mapama: desni klik na mesto → kliknite na koordinate).';
+
+  @override
+  String georefPoint(int n) {
+    return 'Tačka $n';
+  }
+
+  @override
+  String get georefTapPlan => 'Dodirnite plan';
+
+  @override
+  String get georefCoordsHint => 'npr. 44.81234, 20.46123';
+
+  @override
+  String get georefCoordsInvalid => 'Unesite „širina, dužina“';
+
+  @override
+  String georefScale(String cm, String meters) {
+    return 'Razmera: $cm cm po pikselu · moguća greška ±$meters m';
+  }
+
+  @override
+  String get georefDegenerate =>
+      'Tačke su na jednoj liniji ili preblizu. Izaberite mesta dalje jedno od drugog.';
+
+  @override
+  String get georefBadPoint =>
+      'Moguća greška je velika: neka tačka je verovatno pogrešno postavljena.';
+
+  @override
+  String get georefRemove => 'Ukloni GPS';
+
+  @override
+  String get georefSaved =>
+      'GPS je podešen. Posetioci ga dobijaju posle objave.';
+
+  @override
+  String get georefRemoved => 'GPS je uklonjen.';
 }

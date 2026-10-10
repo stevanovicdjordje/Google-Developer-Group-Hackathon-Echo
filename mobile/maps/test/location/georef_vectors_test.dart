@@ -63,6 +63,18 @@ void main() {
     });
   }
 
+  test('parses coordinates as copied from Google Maps', () {
+    LatLngDeg? p(String s) => parseLatLng(s);
+    expect(p('44.81234, 20.46123')!.lng, 20.46123);
+    expect(p(' 44.81234 20.46123 ')!.lat, 44.81234);
+    expect(p('44.8°, 20.4°')!.lat, 44.8);
+    expect(p('-33.86;151.2')!.lng, 151.2);
+    expect(p('44.8'), isNull);
+    expect(p('abc, 20'), isNull);
+    expect(p('91, 20'), isNull);
+    expect(p('44, 181'), isNull);
+  });
+
   test('a floor without georef has no transform', () {
     const floor = Floor(
       id: 'f',

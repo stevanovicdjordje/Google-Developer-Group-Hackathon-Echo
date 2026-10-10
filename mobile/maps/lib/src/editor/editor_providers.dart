@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../location/georef.dart';
 import '../model/map_models.dart';
 import 'editor_ops.dart';
 import 'maps_api.dart';
@@ -193,6 +194,44 @@ class EditorController extends AsyncNotifier<EditorState> {
             for (final f in _s.draft.floors) f.id == floorId ? floor : f,
           ],
         ),
+      ),
+    );
+  }
+
+  void _replaceFloor(Floor floor) => _set(
+    _s.copyWith(
+      draft: _withMap(
+        _s.draft,
+        floors: [for (final f in _s.draft.floors) f.id == floor.id ? floor : f],
+      ),
+    ),
+  );
+
+  /// Saves the floor's 3 GPS control points; returns the server's quality.
+  Future<GeorefQuality> putGeoref(
+    String floorId,
+    List<ControlPoint> controlPoints,
+  ) async {
+    final (floor, quality) = await _api.putGeoref(
+      eventId,
+      floorId,
+      controlPoints,
+    );
+    _replaceFloor(floor);
+    return quality;
+  }
+
+  Future<void> deleteGeoref(String floorId) async {
+    await _api.deleteGeoref(eventId, floorId);
+    final f = _s.draft.floors.firstWhere((x) => x.id == floorId);
+    _replaceFloor(
+      Floor(
+        id: f.id,
+        name: f.name,
+        order: f.order,
+        imagePath: f.imagePath,
+        width: f.width,
+        height: f.height,
       ),
     );
   }

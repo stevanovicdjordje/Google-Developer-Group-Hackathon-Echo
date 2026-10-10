@@ -120,6 +120,59 @@ void main() {
     );
   });
 
+  test(
+    'putGeoref sends 3 control points and returns floor + quality',
+    () async {
+      late http.Request seen;
+      const cps = [
+        ControlPoint(px: PlanPoint(0, 0), latLng: LatLngDeg(44.8, 20.4)),
+        ControlPoint(px: PlanPoint(100, 0), latLng: LatLngDeg(44.8, 20.401)),
+        ControlPoint(px: PlanPoint(0, 100), latLng: LatLngDeg(44.799, 20.4)),
+      ];
+      final (floor, q) = await api((req) async {
+        seen = req;
+        return http.Response(
+          jsonEncode({
+            'floor': {
+              'id': 'f1',
+              'name': 'P',
+              'order': 0,
+              'imagePath': 'p.png',
+              'width': 1000,
+              'height': 600,
+              'georef': {
+                'controlPoints': [for (final c in cps) c.toJson()],
+                'metersPerPixel': 0.07,
+              },
+            },
+            'quality': {
+              'metersPerPixel': 0.07,
+              'scaleMismatchPercent': 1.5,
+              'skewDegrees': 0.3,
+              'estimatedErrorMeters': 0.9,
+            },
+          }),
+          200,
+        );
+      }).putGeoref('e1', 'f1', cps);
+      expect(seen.method, 'PUT');
+      expect(seen.url.path, '/v1/events/e1/floors/f1/georef');
+      expect((jsonDecode(seen.body) as Map)['controlPoints'], hasLength(3));
+      expect(floor.georef!.metersPerPixel, 0.07);
+      expect(q.estimatedErrorMeters, 0.9);
+    },
+  );
+
+  test('deleteGeoref', () async {
+    late http.Request seen;
+    await api((req) async {
+      seen = req;
+      return http.Response('', 204);
+    }).deleteGeoref('e1', 'f1');
+    expect(seen.method, 'DELETE');
+    expect(seen.url.path, '/v1/events/e1/floors/f1/georef');
+  });
+
   test('network failures map to code "network"', () async {
     final call = api((_) async => throw http.ClientException('refused'))
         .listMyEvents();
