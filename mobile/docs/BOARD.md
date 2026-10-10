@@ -10,8 +10,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
+| M-17 | Demo event rename (`product-demo-event`): "DevSummit Belgrade 2026" → "DevFest Belgrade 2026" (short "DevFest") in `demo_data.dart` + tests; default `DEMO_EVENT_ID` `devsummit` → `devfest` with `devsummit` still working | S | dev | `data/demo_data.dart`, `core/config.dart`, tests, docs | After M-20 + M-21 (both edit demo_data/tests). Seed/replay names: mobile#10, mobile#11. |
 | M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
-| M-17 | Demo-event name: join screen/agenda say "DevSummit Belgrade 2026" while the map event is "Eho Demo Expo" | S | — | — | Cosmetic. Decide with the design pass / demo script; maybe ask feature:maps to seed the same name. |
 
 ## Blocked
 
@@ -26,12 +26,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | --- | --- | --- | --- | --- |
 | M-20 | dev | 2026-10-11 01:46 | worktree | Design polish: missing strings → ARB, `Session.isLive`, Messages "Show on map" highlights the spot |
 | M-21 | opus | 2026-10-11 01:46 | worktree | Echo contract 0.3.0 (mobile#9): structured summary + trade-offs table with timestamp links, "N similar questions merged", merged submit; Catch up/Ask in Serbian when translate is on |
-| V-2 | verifier | 2026-10-11 01:46 | — | Screenshot review of every redesigned screen vs. `mobile/docs/design/` |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| V-2 | Redesign screenshot review: all screens match/minor gaps; hex literals 0; follow-ups → M-20 additions, mobile#10 (map chrome, `/o`) | verification |
 | M-10d | Design: Echo + v2 (translated banner/pill, Q&A sheet with sort + votes, paywall sheet, summary page via Navigator.push) | `0a1a027` |
 | M-10b | Design: Start (echo mark), Join (ink header, perks), Onboarding (progress bar, chips, consent toggles), My events (dark card, past cards, FAB) | `b32d2d6` |
 | M-10g | Design: Organizer upload (drop zone, file rows, progress with real counts), review (count tiles, flagged rows for empty stage), published (ink + QR card) | `d9b71b7` |
