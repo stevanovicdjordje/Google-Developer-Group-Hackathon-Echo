@@ -1,10 +1,10 @@
 # OpenAPI as the shared contract
 
 - **ID:** `team-openapi-contract`
-- **Status:** proposed
-- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · handle TBD
+- **Status:** accepted
+- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · @Ilij4n
 - **Affects:** all
-- **Created:** 2026-10-10 · **Decided:** —
+- **Created:** 2026-10-10 · **Decided:** 2026-10-11
 
 ## Context
 
@@ -19,7 +19,7 @@ Clients and the backend are built in parallel by different people and agents.
 
 ## Decision
 
-Proposed: option 1.
+OpenAPI per contract folder (`contracts/openapi.yaml`, `contracts/maps/`, `contracts/echo/`) with fixtures and CHANGELOG. Real-time data via Firestore listeners (`contracts-realtime-transport`).
 
 ## Consequences / follow-ups
 

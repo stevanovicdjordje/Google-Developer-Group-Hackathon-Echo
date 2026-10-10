@@ -1,10 +1,10 @@
 # Gemma is the core AI model
 
 - **ID:** `team-gemma-core`
-- **Status:** proposed
-- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · handle TBD
+- **Status:** accepted
+- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · @Ilij4n
 - **Affects:** all
-- **Created:** 2026-10-10 · **Decided:** —
+- **Created:** 2026-10-10 · **Decided:** 2026-10-11
 
 ## Context
 
@@ -17,7 +17,7 @@ The challenge requires meaningful use of Gemma.
 
 ## Decision
 
-Proposed: option 1. Which model and where it runs: `backend-gemma-hosting.md`.
+Gemma is used for real for translation (Echo, via the Gemini API). Other features may use other models; each feature records which model it uses in its STATUS/decision (`docs/MVP.md`).
 
 ## Consequences / follow-ups
 

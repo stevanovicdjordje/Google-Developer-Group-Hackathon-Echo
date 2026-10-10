@@ -4,10 +4,10 @@
 
 | Handle | Repo access |
 | --- | --- |
-| `Ilij4n` | Admin (repo owner) |
-| `stevanovicdjordje` | Write (accepted) |
-| `Vertiglo` | Write (accepted) |
-| TBD (4th member) | Not invited yet |
+| `Ilij4n` | Admin (repo owner) · holds `mobile`, `integration`, `product` |
+| `stevanovicdjordje` | Write (accepted) · no scope registered yet |
+| `Vertiglo` | Write (accepted) · holds `feature:maps` |
+| `MilosBG03` | Write (accepted) · holds `feature:echo` |
 
 ## Who holds which workstream
 

@@ -42,6 +42,18 @@
 | Messages screen | **Mock** | Static screen with a hardcoded conversation, shown on camera only | — |
 | Profile tab + My events | **Build** | Second "past" event is seeded | — |
 
+## Who builds what (2026-10-11)
+
+| Area | Holder | Status |
+| --- | --- | --- |
+| App UI (all screens, design pass) | `mobile` · @Ilij4n | in progress |
+| Venue map: viewer, editor, routing, GPS (`mobile/maps`, `backend/maps`) | `feature:maps` · @Vertiglo | in progress |
+| Echo: transcript, translation, Q&A, Ask, summary (`backend/echo`, `contracts/echo`) | `feature:echo` · @MilosBG03 | in progress, wired into the app |
+| **Events backend:** join, agenda, My events, organizer AI extraction + publish (API-1, 2, 3, 12, 13, 14) | **nobody yet** | the app runs these on demo data |
+| **People backend:** Find recommendations + prompt search, contact requests, meeting spot (API-9, 10, 11, 15) | **nobody yet** | the app runs these on demo data |
+
+Unowned rows: what the app needs is in `mobile/docs/api-needs.md`. Suggested scopes: `feature:events` and `feature:people` (`docs/COORDINATION.md` §1a).
+
 ## Not in the demo
 
 Real payments, real messaging, live speech-to-text, live location of other people, multi-organizer accounts.

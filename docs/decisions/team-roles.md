@@ -1,10 +1,10 @@
 # Two primary roles: attendee and organizer
 
 - **ID:** `team-roles`
-- **Status:** proposed
-- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · handle TBD
+- **Status:** accepted
+- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · @Ilij4n
 - **Affects:** all
-- **Created:** 2026-10-10 · **Decided:** —
+- **Created:** 2026-10-10 · **Decided:** 2026-10-11
 
 ## Context
 
@@ -17,7 +17,7 @@ The challenge mentions attendees, speakers and organizers.
 
 ## Decision
 
-Proposed: option 1.
+Two app roles: attendee and organizer (same Flutter app; organizer screens under `/organizer`, map editor `/o`). Speakers are not a role yet.
 
 ## Consequences / follow-ups
 

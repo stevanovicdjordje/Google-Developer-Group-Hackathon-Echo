@@ -1,10 +1,10 @@
 # Private GitHub repository
 
 - **ID:** `team-private-repo`
-- **Status:** proposed
-- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · handle TBD
+- **Status:** accepted
+- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · @Ilij4n
 - **Affects:** all
-- **Created:** 2026-10-10 · **Decided:** —
+- **Created:** 2026-10-10 · **Decided:** 2026-10-11
 
 ## Context
 
@@ -17,7 +17,7 @@ Early-stage hackathon work; may contain draft research or event data.
 
 ## Decision
 
-Proposed: option 1. The repo is currently private.
+Private; collaborators invited manually by @Ilij4n. In effect since 2026-10-10.
 
 ## Consequences / follow-ups
 

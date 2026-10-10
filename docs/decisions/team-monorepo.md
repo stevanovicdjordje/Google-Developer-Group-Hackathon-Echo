@@ -1,10 +1,10 @@
 # Single monorepo with independent modules
 
 - **ID:** `team-monorepo`
-- **Status:** proposed
-- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · handle TBD
+- **Status:** accepted
+- **Writer:** Integration holder (fallback: repo owner's agent), recording what the humans agreed · @Ilij4n
 - **Affects:** all
-- **Created:** 2026-10-10 · **Decided:** —
+- **Created:** 2026-10-10 · **Decided:** 2026-10-11
 
 ## Context
 
@@ -18,7 +18,7 @@
 
 ## Decision
 
-Proposed: option 1. This is how the repo is set up today.
+One repo, plain folders, independent builds, as set up and used by every teammate since 2026-10-10. Recorded by @Ilij4n (integration).
 
 ## Consequences / follow-ups
 
