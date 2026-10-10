@@ -1,6 +1,6 @@
 # Eho — Tasks (initial)
 
-> Every task is **TODO** with owner **TBD** unless stated otherwise. These tasks build toward **one** demo slice (see `MVP.md`). They do **not** commit us to building every candidate feature.
+> Every task is **TODO** with owner **TBD** unless stated otherwise. Build only what `MVP.md` marks **Build** for the demo video. Everything else is design only.
 
 ## Definition: "Ready for integration"
 
@@ -16,7 +16,7 @@ A feature is ready for integration when **all** of these hold:
 | # | Task | Owner | Status |
 | --- | --- | --- | --- |
 | 0.1 | Create monorepo scaffold, docs, private GitHub repo | Bootstrap agent | Done (scaffold only) |
-| 0.2 | Invite collaborators on GitHub; teammates accept | Repo owner | In progress (2 invites sent 2026-10-10, pending acceptance) |
+| 0.2 | Invite collaborators on GitHub; teammates accept | Repo owner | 2 of 3 done (4th member not invited yet) |
 | 0.3 | Fill in `OWNERSHIP.md` handles; add `CODEOWNERS` | TBD | TODO |
 | 0.4 | Each teammate: onboarding (`ONBOARDING.md`): scope guard, agent kickoff | Everyone | TODO |
 
@@ -24,7 +24,7 @@ A feature is ready for integration when **all** of these hold:
 
 | # | Task | Owner | Status |
 | --- | --- | --- | --- |
-| 1.1 | Choose the hero flow / demo slice (`MVP.md`) | TBD | TODO |
+| 1.1 | Choose the hero flow / demo slice (`MVP.md`) | Team | Done 2026-10-10 (`product-hero-flow` accepted) |
 | 1.2 | Choose stacks per module; record in `docs/decisions/` | TBD | TODO |
 | 1.3 | Decide Gemma model + where it runs | TBD | TODO |
 | 1.4 | Run first user interviews (`USER_RESEARCH.md`) | TBD | TODO |

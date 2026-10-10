@@ -8,7 +8,7 @@
 
 > **New teammate? Start with [`ONBOARDING.md`](ONBOARDING.md)**: a 2-minute setup. Your AI agent handles the rest.
 
-Product scope, priorities and stack are **not locked**. See [`docs/PRODUCT.md`](docs/PRODUCT.md) and [`docs/MVP.md`](docs/MVP.md) for what is proposed and what is still open.
+**The feature set and the demo plan are agreed:** [`docs/PRODUCT.md`](docs/PRODUCT.md) (what the app does) and [`docs/MVP.md`](docs/MVP.md) (what we build for the demo video, and what stays design only).
 
 ## Hackathon context
 
@@ -83,12 +83,10 @@ See **[`ONBOARDING.md`](ONBOARDING.md)**. In short: clone, start your AI agent (
 
 One file per decision in [`docs/decisions/`](docs/decisions/) (how it works: [`docs/DECISIONS.md`](docs/DECISIONS.md)). Currently open, among others:
 
-- Hero flow / demo slice — which single Gemma-powered use case we demo end-to-end.
 - Mobile stack (Kotlin/Compose Multiplatform, Android-only, Flutter, web/PWA).
 - Backend language/framework (TypeScript/Node.js is a candidate).
 - Organizer web framework.
 - Gemma model variant and where it runs (local, self-hosted GPU, Google-hosted endpoint).
-- Speech-to-text provider, and whether live captions are in scope at all.
 - Persistence / auth (Firebase or alternatives).
 - Which organizer file formats are imported, and how they are validated.
 - Owners for each workstream (agents register their humans automatically in `*/STATUS.md`).

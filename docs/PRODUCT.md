@@ -1,6 +1,6 @@
-# Eho — Product (draft)
+# Eho — Product
 
-> **Status: Draft.** This document describes the team's current *intent*. Nothing here is implemented, and nothing here has been validated with real users yet. Every product area is marked **Proposed** and **Unvalidated** until the team decides otherwise. Keep "we want it to" separate from "it does".
+> **Status:** the feature set below was **agreed by the team** on 2026-10-10. It has **not been validated with real users** yet (see `USER_RESEARCH.md`). What is actually built is tracked in each module's `STATUS.md`, not here. Keep "we want it to" separate from "it does".
 
 ## Challenge
 
@@ -44,63 +44,59 @@ From the organizers' grading PDF. Four areas with five questions each:
 
 Implications for us: we need real user research (`USER_RESEARCH.md`), a **working** demo, one clearly explained technical problem and its fix, defined users vs. buyers, and a story about how Eho could work beyond the local market.
 
-## Vision (working, non-binding)
+## Vision (agreed by the team, 2026-10-10)
 
-Eho is a multi-event platform used by **attendees** and **organizers**. It gives everyone at an event a contextual AI layer, powered by Gemma, over that event's content: the agenda, venue, talks and people.
+Eho is a multi-event app for **attendees** and **organizers**. An organizer drops in their messy event files, and AI (Gemma) turns them into an event with a join link. Attendees join through that link and get an AI layer over the event: the agenda, the venue, the talks and the people worth meeting.
 
-### What counts as an "event"
-
-Primarily **conferences** (multi-track, talks, rooms, speakers). Meetups, fairs and other events are possible later. Whether Eho generalizes to them is an open question.
+Primarily **conferences** (talks, stages, speakers). Other event types may come later.
 
 ## Users
 
-### Roles
+1. **Attendee:** joins events via a link/QR, follows the agenda and map, uses Echo during talks, finds people to meet.
+2. **Organizer:** uploads event files, reviews what the AI extracted, publishes, and shares the join link.
 
-1. **Attendee / visitor:** joins an event, uses the agenda and map, follows transcripts/captions, asks questions, and optionally networks.
-2. **Organizer:** creates and configures an event, uploads information and files, assigns rooms, sessions and speakers, and may manage captions, questions and insights.
-
-Speakers are a stakeholder in the challenge, but they are not a separate app role yet (open question).
+Speakers are a stakeholder but not a separate role yet.
 
 ### Personas — `hypothetical`
 
 > These personas are **hypothetical** assumptions written for planning. They are **not** based on interviews. Replace or adjust them once `USER_RESEARCH.md` has real findings.
 
-- **Hypothetical attendee: "first-time conference visitor."** Wants to find relevant talks quickly, doesn't know the venue, may not follow every talk in its language, and is hesitant to approach strangers.
+- **Hypothetical attendee: "first-time conference visitor."** Wants to find relevant talks quickly, doesn't know the venue, may not follow every talk, and is hesitant to approach strangers.
 - **Hypothetical attendee: "professional networker."** Comes to meet specific kinds of people and wants to find them without trawling a badge list.
-- **Hypothetical organizer: "small team running a community conference."** Has the agenda in spreadsheets/PDFs, little time to build an app, and wants to know which sessions resonated and what people asked.
+- **Hypothetical organizer: "small team running a community conference."** Has the agenda in spreadsheets/PDFs, little time to build an app, and wants to know what people asked.
 
-### Users vs. buyers (open question)
+## The app (agreed feature set)
 
-The working assumption is that attendees are the *users* and organizers (or event companies) are the *buyers*. This has not been validated. See Business below.
+### Attendee app: tabs
 
-## User journeys (proposed)
+| Tab | What it does |
+| --- | --- |
+| **Agenda** | Sessions per stage and time, speakers, session details. From a session you open its Echo screen. |
+| **Map** | The venue plan: stages, rooms, stands, search, details (Vertiglo's venue map). Later maybe also where you've agreed to meet a match, never anyone's live position. |
+| **Find** | People to meet. Two ways: **recommendations** (the AI ranks opted-in attendees by your interests), and a **prompt search** ("someone who has shipped on-device ML"), where the AI returns attendees who fit. Each result says *why* it matched and has a **Contact** button. |
+| **Profile** | Your interests and what you're looking for (used by Find), your visibility/consent switches, and **My events**. |
 
-1. **Organizer creates an event and imports files.** Signs in → creates an event → uploads agenda / speaker list / venue map / slides → reviews what was parsed → publishes → gets a join QR/link.
-2. **Attendee joins and orients.** Scans QR / opens link → light onboarding (language, interests, optional goal) → sees the agenda and the venue map.
-3. **Attendee follows a talk and asks.** Opens a session → follows the transcript/captions → asks a question to the speaker (Q&A) or "asks the talk" (an AI answer grounded in the transcript/slides).
-4. **Attendee networks (opt-in).** Chooses to be visible → searches in natural language ("someone working on on-device ML") → sees matching opted-in people.
-5. **Organizer sees interactions.** Dashboard of sessions, incoming/clustered questions and per-room content; possibly post-event insights.
+### Cross-cutting features
 
-## Product areas
+| Feature | What it does |
+| --- | --- |
+| **Echo** (per session) | Live transcript of the talk, **Q&A** (submit questions to the speaker), and **Ask**: ask the AI about the talk and get an answer grounded in the transcript. |
+| **Talk summary** (paid) | After a talk, an AI summary of what was said. Planned as a **premium feature** (the monetization hook). For the demo the paywall can be a mock "unlock" button. |
+| **Join via link / QR** | Opens the event. The link is a normal web address, so it works in the browser when the app isn't installed. |
+| **Attendee onboarding** | First time: name, interests, what you're looking for, and consent (be visible in Find, allow contact). |
+| **My events** | All events you joined via links. Switch between them, leave one. |
+| **Contact a match** | A simple way to reach someone you matched with (contact request, or a minimal chat). Both sides must have opted in. |
+| **Organizer web** | Upload unstructured files (PDF, docs, spreadsheets, images of the agenda) → the AI extracts sessions, speakers, stages → the organizer reviews/edits → publish → gets the **signup link + QR**. |
 
-| Area | Status | Notes / open questions |
-| --- | --- | --- |
-| Join via QR / link | Proposed · Unvalidated | Anonymous join vs. account? Event codes? |
-| Organizer onboarding + file import | Proposed · Unvalidated | Which formats? How much parsing does Gemma do vs. manual review? Distinct from attendee onboarding. |
-| Attendee onboarding | Proposed · Unvalidated | Interests, language, goal, optional networking profile; minimize data collected. |
-| Agenda | Proposed · Unvalidated | Sessions, times, rooms, speakers, details. |
-| Venue map | Proposed · Unvalidated | MVP candidate: static SVG/image with clickable rooms. No real-time indoor positioning. |
-| Transcription / captions | Proposed · Unvalidated | STT + optional translation + Gemma context. High risk: latency, Serbian quality, audio input. |
-| Live Q&A / "ask the talk" | Proposed · Unvalidated | Semantic clustering of questions, and/or answers grounded in the transcript. |
-| Networking | Proposed · Unvalidated | Natural-language people search; explicit opt-in; cold-start problem; no location tracking. |
-| Organizer dashboard | Proposed · Unvalidated | Sessions, questions, per-room content, possible metrics/reports. |
+### Status of each feature in the demo
 
-**Not all of these are MVP.** See `MVP.md` for the proposed demo slice and the selection criteria.
+See [`MVP.md`](MVP.md): every feature is either **built for the video** (really runs, possibly on hardcoded demo data) or **design only**.
 
 ## Business (to be researched)
 
 Nothing below is researched yet. These are questions to answer before the pitch:
 
+- **Working assumption (not validated):** organizers pay to run an event on Eho; attendees can pay for **talk summaries** (premium). Both need checking with real users.
 - Who pays: organizers, venues, sponsors, attendees? Per-event, per-attendee, or subscription?
 - Who are the competitors (event apps, conference platforms, captioning tools), and how does Eho differ?
 - What does running it cost (Gemma inference, STT minutes, hosting), per event and per attendee?
@@ -111,6 +107,6 @@ Nothing below is researched yet. These are questions to answer before the pitch:
 - **Scope** is the biggest risk with ~24h and 4 people.
 - **STT and live translation**: latency, terminology quality, Serbian/multilingual support, audio capture, streaming.
 - **Gemma hosting** is not guaranteed: GPU availability, Cloud Run GPU / vLLM setup, cost, quotas.
-- **Networking cold start** and privacy expectations.
+- **Networking cold start** and privacy expectations: Find only works if enough people opt in.
 - **Uploaded content and transcripts** may contain personal or confidential data. See `DATA_PRIVACY.md`.
 - **Honesty:** we must not invent research, statistics, partners or feature status in docs or the pitch.
