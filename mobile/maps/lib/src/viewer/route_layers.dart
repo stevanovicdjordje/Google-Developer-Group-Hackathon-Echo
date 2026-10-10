@@ -43,6 +43,54 @@ class GpsAccuracyLayer extends StatelessWidget {
   }
 }
 
+/// A pin with the app's own label on a place (e.g. "Sastanak: Ana"). Uses
+/// the theme's primary color, so an app redesign applies.
+Widget placeLabelMarker(
+  BuildContext context,
+  PlanPoint at,
+  PlanProjection proj,
+  String label,
+) {
+  final scheme = Theme.of(context).colorScheme;
+  return MarkerLayer(
+    markers: [
+      Marker(
+        key: const ValueKey('place-label'),
+        point: proj.toLatLng(at),
+        width: 180,
+        height: 96,
+        // The pin's tip sits on the point; the label is above the pin.
+        alignment: Alignment.topCenter,
+        child: IgnorePointer(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: scheme.onPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(Icons.location_on, size: 40, color: scheme.primary),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
 /// The route's lines on [floorId] (drawn under the labels).
 Widget routeLines(
   BuildContext context,

@@ -28,6 +28,8 @@ class MapViewerScreen extends ConsumerWidget {
     required this.eventId,
     this.initialFeatureId,
     this.markerId,
+    this.highlightFeatureId,
+    this.highlightLabel,
   });
 
   final String eventId;
@@ -37,6 +39,11 @@ class MapViewerScreen extends ConsumerWidget {
 
   /// "You are here" QR marker the attendee scanned (`?at=`).
   final String? markerId;
+
+  /// A place to point out with its own label (e.g. an agreed meeting spot):
+  /// the map opens on it and shows [highlightLabel] there.
+  final String? highlightFeatureId;
+  final String? highlightLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,8 +55,10 @@ class MapViewerScreen extends ConsumerWidget {
       data: (e) => _Viewer(
         event: e,
         markerId: markerId,
-        initialFeatureId: initialFeatureId ?? markerId,
+        initialFeatureId: initialFeatureId ?? highlightFeatureId ?? markerId,
         openSheet: initialFeatureId != null,
+        highlightFeatureId: highlightFeatureId,
+        highlightLabel: highlightLabel,
       ),
       loading: () => _Message(
         title: l10n.mapLoading,
@@ -116,12 +125,16 @@ class _Viewer extends ConsumerStatefulWidget {
     this.markerId,
     this.initialFeatureId,
     this.openSheet = false,
+    this.highlightFeatureId,
+    this.highlightLabel,
   });
 
   final PublishedEvent event;
   final String? markerId;
   final String? initialFeatureId;
   final bool openSheet;
+  final String? highlightFeatureId;
+  final String? highlightLabel;
 
   @override
   ConsumerState<_Viewer> createState() => _ViewerState();
@@ -209,6 +222,15 @@ class _ViewerState extends ConsumerState<_Viewer> {
         WidgetsBinding.instance.addPostFrameCallback((_) => _select(initial));
       }
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // An offstage tab (TickerMode off) must not keep reading the position.
+    // Read it every time so this runs again when the tab is hidden.
+    final onScreen = TickerMode.valuesOf(context).enabled;
+    if (_gpsOn && !onScreen) _stopGps();
   }
 
   @override
@@ -639,6 +661,11 @@ class _ViewerState extends ConsumerState<_Viewer> {
         (_searchFocus.hasFocus || _searchCtrl.text.isNotEmpty);
     final here = _here;
     final fix = _planFix;
+    final highlight = widget.highlightLabel == null
+        ? null
+        : _map.features
+              .where((f) => f.id == widget.highlightFeatureId)
+              .firstOrNull;
     final gpsHint = floor == null ? null : _gpsHint(floor);
     final banner = routing && route != null && floor != null
         ? _floorBanner(route, floor)
@@ -692,6 +719,13 @@ class _ViewerState extends ConsumerState<_Viewer> {
                           here.at,
                           PlanProjection(floor.width, floor.height),
                           l10n.youAreHere,
+                        ),
+                      if (highlight != null && highlight.floorId == floor.id)
+                        placeLabelMarker(
+                          context,
+                          highlight.geometry.center,
+                          PlanProjection(floor.width, floor.height),
+                          widget.highlightLabel!,
                         ),
                       if (routing && route != null)
                         routeMarkers(

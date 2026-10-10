@@ -87,7 +87,14 @@ class Harness {
   final location = FakeLocation();
   final requests = <Map<String, dynamic>>[];
 
-  Widget app({String? featureId}) => ProviderScope(
+  /// Off = the app's Map tab is offstage.
+  final tickers = ValueNotifier(true);
+
+  Widget app({
+    String? featureId,
+    String? highlightId,
+    String? highlightLabel,
+  }) => ProviderScope(
     overrides: [
       mapsSignedInProvider.overrideWith((ref) async => 'test-uid'),
       publishedMapRepositoryProvider.overrideWithValue(repo),
@@ -112,12 +119,32 @@ class Harness {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: MapViewerScreen(eventId: 'e', initialFeatureId: featureId),
+      home: ValueListenableBuilder(
+        valueListenable: tickers,
+        builder: (_, on, child) => TickerMode(enabled: on, child: child!),
+        child: MapViewerScreen(
+          eventId: 'e',
+          initialFeatureId: featureId,
+          highlightFeatureId: highlightId,
+          highlightLabel: highlightLabel,
+        ),
+      ),
     ),
   );
 
-  Future<void> start(WidgetTester tester, {String? featureId}) async {
-    await tester.pumpWidget(app(featureId: featureId));
+  Future<void> start(
+    WidgetTester tester, {
+    String? featureId,
+    String? highlightId,
+    String? highlightLabel,
+  }) async {
+    await tester.pumpWidget(
+      app(
+        featureId: featureId,
+        highlightId: highlightId,
+        highlightLabel: highlightLabel,
+      ),
+    );
     await tester.pump();
     repo.controller.add(PublishedEvent(id: 'e', name: 'Expo', map: georefMap));
     await tester.pumpAndSettle();
@@ -282,6 +309,33 @@ void main() {
     await h.gps(tester, fixAt(320, 600));
     expect(find.text('Vi ste ovde'), findsOneWidget);
     expect(h.location.watching, 1); // still the same subscription
+  });
+
+  testWidgets('GPS stops when the map goes offstage (another app tab)', (
+    tester,
+  ) async {
+    final h = Harness();
+    await h.start(tester);
+    await tester.tap(find.byTooltip('Moja lokacija'));
+    await tester.pumpAndSettle();
+    await h.gps(tester, fixAt(300, 600));
+    expect(find.text('Vi ste ovde'), findsOneWidget);
+    expect(h.location.controller.hasListener, isTrue);
+
+    h.tickers.value = false;
+    await tester.pumpAndSettle();
+    expect(h.location.controller.hasListener, isFalse);
+
+    h.tickers.value = true;
+    await tester.pumpAndSettle();
+    expect(find.text('Vi ste ovde'), findsNothing); // off until tapped again
+  });
+
+  testWidgets('a highlighted place shows the app\'s label', (tester) async {
+    final h = Harness();
+    await h.start(tester, highlightId: 's2', highlightLabel: 'Sastanak: Ana');
+    expect(find.text('Sastanak: Ana'), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing); // no details sheet
   });
 
   testWidgets('denied permission explains the fallback', (tester) async {
