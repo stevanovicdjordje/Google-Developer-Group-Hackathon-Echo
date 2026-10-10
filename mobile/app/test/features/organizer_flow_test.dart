@@ -49,7 +49,9 @@ void main() {
     // Review shows the extracted event and its sessions.
     expect(find.text('Review your event'), findsOneWidget);
     expect(find.text(demo.demoEventName), findsOneWidget);
-    expect(find.text('${demo.stages.length} stages'), findsOneWidget);
+    // Count tiles: the number is big, the unit sits under it.
+    expect(find.text('${demo.stages.length}'), findsWidgets);
+    expect(find.text('stages'), findsOneWidget);
     expect(find.text(firstSession.title), findsOneWidget);
 
     // Publish (the demo repository "thinks" for a second first). The button

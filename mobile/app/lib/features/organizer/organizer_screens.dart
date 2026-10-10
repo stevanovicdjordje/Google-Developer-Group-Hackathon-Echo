@@ -1,3 +1,5 @@
+import 'dart:ui' show PathMetric;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,10 +7,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../core/theme.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
+
+/// Top row of the organizer screens: 44 px round back button + a caption.
+class _TopBar extends StatelessWidget {
+  const _TopBar({
+    required this.caption,
+    required this.onBack,
+    this.onInk = false,
+  });
+
+  final Widget caption;
+  final VoidCallback onBack;
+
+  /// Draws the button for the dark (published) screen.
+  final bool onInk;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final eho = context.eho;
+    return Row(
+      children: [
+        IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          style: IconButton.styleFrom(
+            backgroundColor: onInk ? eho.inkOverlay : scheme.surface,
+            foregroundColor: onInk ? eho.onInk : scheme.onSurface,
+          ),
+          icon: const Icon(Icons.chevron_left, size: 28),
+          onPressed: onBack,
+        ),
+        const SizedBox(width: 12),
+        caption,
+      ],
+    );
+  }
+}
 
 /// `/organizer`: upload unstructured files; the AI builds the event.
 class OrganizerUploadScreen extends ConsumerStatefulWidget {
@@ -22,6 +61,9 @@ class OrganizerUploadScreen extends ConsumerStatefulWidget {
 class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
   final _files = <UploadedFile>[];
   bool _working = false;
+
+  /// Set once the extraction finished; drives the "found N stages…" line.
+  EventDraft? _found;
 
   Future<void> _pick() async {
     final picked = await FilePicker.pickFiles();
@@ -39,46 +81,247 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
     final draft = await ref.read(organizerRepositoryProvider).extract(_files);
     if (!mounted) return;
     ref.read(organizerDraftProvider.notifier).set(draft);
+    // Show what was found for a beat, then move on to the review.
+    setState(() => _found = draft);
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
     setState(() => _working = false);
     context.go('/organizer/review');
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
+    final found = _found;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.orgNewEvent)),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text(l10n.orgUploadTitle, style: t.headlineSmall),
-          const SizedBox(height: 8),
-          Text(l10n.orgUploadBody, style: t.bodyLarge),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.upload_file),
-            label: Text(l10n.orgChooseFiles),
-            onPressed: _working ? null : _pick,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _TopBar(
+                onBack: () =>
+                    context.canPop() ? context.pop() : context.go('/'),
+                caption: Text(
+                  l10n.orgNewEvent,
+                  style: t.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.only(top: 18),
+                  children: [
+                    Text(l10n.orgUploadTitle, style: t.displaySmall),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.orgUploadBody,
+                      style: t.bodyLarge?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    _DropZone(
+                      label: l10n.orgChooseFiles,
+                      onTap: _working ? null : _pick,
+                    ),
+                    if (_files.isNotEmpty) ...[
+                      const SizedBox(height: 18),
+                      Card(
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          children: [
+                            for (var i = 0; i < _files.length; i++) ...[
+                              if (i > 0) const Divider(height: 1),
+                              _FileRow(file: _files[i]),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (_working) ...[
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    minHeight: 6,
+                    value: found == null ? null : 1,
+                    color: scheme.primary,
+                    backgroundColor: scheme.outlineVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  found == null
+                      ? l10n.orgReading
+                      : '${l10n.orgStagesCount(found.stages.length)}, '
+                            '${l10n.orgSessionsCount(found.sessions.length)}, '
+                            '${l10n.orgSpeakersCount(found.speakers.length)}',
+                  style: t.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ],
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                icon: const Icon(Icons.auto_awesome),
+                label: Text(l10n.orgBuild),
+                onPressed: _files.isEmpty || _working ? null : _extract,
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          for (final f in _files)
-            ListTile(
-              leading: const Icon(Icons.description_outlined),
-              title: Text(f.name),
-              subtitle: Text(l10n.orgFileSizeKb((f.sizeBytes / 1024).ceil())),
+        ),
+      ),
+    );
+  }
+}
+
+/// The big dashed "Choose files" target.
+class _DropZone extends StatelessWidget {
+  const _DropZone({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return CustomPaint(
+      foregroundPainter: _DashedBorderPainter(
+        color: scheme.onSurfaceVariant.withValues(alpha: 0.5),
+        radius: 20,
+      ),
+      child: Material(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            height: 132,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.upload_outlined, size: 28, color: scheme.primary),
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontSize: 16, color: scheme.onSurface),
+                ),
+              ],
             ),
-          const SizedBox(height: 24),
-          if (_working) ...[
-            const LinearProgressIndicator(),
-            const SizedBox(height: 12),
-            Text(l10n.orgReading, style: t.bodyMedium),
-          ] else
-            FilledButton.icon(
-              icon: const Icon(Icons.auto_awesome),
-              label: Text(l10n.orgBuild),
-              onPressed: _files.isEmpty ? null : _extract,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Offset.zero & size,
+          Radius.circular(radius),
+        ).deflate(1),
+      );
+    for (final PathMetric m in path.computeMetrics()) {
+      for (var d = 0.0; d < m.length; d += 12) {
+        canvas.drawPath(m.extractPath(d, d + 7), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter old) =>
+      old.color != color || old.radius != radius;
+}
+
+/// One picked file: type badge, name, size.
+class _FileRow extends StatelessWidget {
+  const _FileRow({required this.file});
+
+  final UploadedFile file;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final eho = context.eho;
+    final l10n = AppLocalizations.of(context);
+    final dot = file.name.lastIndexOf('.');
+    final ext = dot < 0 ? '' : file.name.substring(dot + 1).toLowerCase();
+    final (bg, fg) = switch (ext) {
+      'pdf' => (eho.liveContainer, eho.onLiveContainer),
+      'xls' ||
+      'xlsx' ||
+      'csv' => (scheme.primaryContainer, scheme.onPrimaryContainer),
+      _ => (eho.background, scheme.onSurfaceVariant),
+    };
+    final badge = (ext.length > 4 ? ext.substring(0, 4) : ext).toUpperCase();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(10),
             ),
+            child: badge.isEmpty
+                ? Icon(Icons.description_outlined, size: 18, color: fg)
+                : Text(
+                    badge,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: fg,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  file.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.orgFileSizeKb((file.sizeBytes / 1024).ceil()),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -147,48 +390,189 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
       );
     }
     final t = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.orgReviewTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text(draft.name, style: t.headlineSmall),
-          Text('${draft.dates} · ${draft.venue}', style: t.bodyLarge),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Chip(label: Text(l10n.orgStagesCount(draft.stages.length))),
-              Chip(label: Text(l10n.orgSessionsCount(draft.sessions.length))),
-              Chip(label: Text(l10n.orgSpeakersCount(draft.speakers.length))),
+              _TopBar(
+                onBack: () => context.go('/organizer'),
+                caption: Text(
+                  l10n.orgReviewTitle,
+                  style: t.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                draft.name,
+                style: t.headlineLarge?.copyWith(fontSize: 30, height: 1.05),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${draft.dates} · ${draft.venue}',
+                style: t.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _CountTile(
+                    count: draft.stages.length,
+                    label: l10n.orgStagesCount(draft.stages.length),
+                  ),
+                  const SizedBox(width: 8),
+                  _CountTile(
+                    count: draft.sessions.length,
+                    label: l10n.orgSessionsCount(draft.sessions.length),
+                  ),
+                  const SizedBox(width: 8),
+                  _CountTile(
+                    count: draft.speakers.length,
+                    label: l10n.orgSpeakersCount(draft.speakers.length),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: ListView.separated(
+                    padding: EdgeInsets.zero,
+                    itemCount: draft.sessions.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (_, i) {
+                      final s = draft.sessions[i];
+                      return _SessionRow(
+                        session: s,
+                        onEdit: () => _edit(draft, s),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _publishing ? null : () => _publish(draft),
+                child: _publishing
+                    ? SizedBox.square(
+                        dimension: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: scheme.onSurface.withValues(alpha: 0.38),
+                        ),
+                      )
+                    : Text(l10n.orgPublish),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(l10n.orgSessions, style: t.titleMedium),
-          for (final s in draft.sessions)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(s.title),
-              subtitle: Text(
-                '${s.start}–${s.end} · ${s.stage} · '
-                '${s.speakers.map((p) => p.name).join(', ')}',
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: l10n.orgEditSession,
-                onPressed: () => _edit(draft, s),
+        ),
+      ),
+    );
+  }
+}
+
+/// White tile with a big number and its unit ("3" / "stages").
+class _CountTile extends StatelessWidget {
+  const _CountTile({required this.count, required this.label});
+
+  final int count;
+
+  /// The localized plural including the number ("3 stages").
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // The plural strings start with the number; the tile shows it big instead.
+    final prefix = '$count';
+    final unit = label.startsWith(prefix)
+        ? label.substring(prefix.length).trim()
+        : label;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(prefix, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 2),
+            Text(
+              unit,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            icon: _publishing
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.publish),
-            label: Text(l10n.orgPublish),
-            onPressed: _publishing ? null : () => _publish(draft),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One session in the review list. A session the AI could not place on a
+/// stage is flagged (tinted row, live-colored hint and edit button).
+class _SessionRow extends StatelessWidget {
+  const _SessionRow({required this.session, required this.onEdit});
+
+  final Session session;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final eho = context.eho;
+    final l10n = AppLocalizations.of(context);
+    final s = session;
+    final flagged = s.stage.trim().isEmpty;
+    final speakers = s.speakers.map((p) => p.name).join(', ');
+    // TODO(l10n): "Check: room missing in the PDF" needs a string; until then
+    // the stage label marks the gap.
+    final meta = flagged
+        ? '${s.start}–${s.end} · ${l10n.orgStageLabel}: –'
+        : '${s.start}–${s.end} · ${s.stage}'
+              '${speakers.isEmpty ? '' : ' · $speakers'}';
+    return Container(
+      color: flagged ? eho.liveContainer.withValues(alpha: 0.4) : null,
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(s.title, style: theme.textTheme.titleSmall),
+                const SizedBox(height: 3),
+                Text(
+                  meta,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: flagged
+                        ? eho.onLiveContainer
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            tooltip: l10n.orgEditSession,
+            style: IconButton.styleFrom(
+              fixedSize: const Size.square(40),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              backgroundColor: flagged ? eho.liveContainer : eho.background,
+              foregroundColor: flagged ? eho.onLiveContainer : scheme.onSurface,
+            ),
+            onPressed: onEdit,
           ),
         ],
       ),
@@ -302,7 +686,6 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
             controller: _title,
             decoration: InputDecoration(
               labelText: l10n.orgTitleLabel,
-              border: const OutlineInputBorder(),
               errorText: _titleError,
             ),
             onChanged: (_) => setState(() => _titleError = null),
@@ -340,10 +723,7 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _stage,
-            decoration: InputDecoration(
-              labelText: l10n.orgStageLabel,
-              border: const OutlineInputBorder(),
-            ),
+            decoration: InputDecoration(labelText: l10n.orgStageLabel),
             items: [
               for (final s in stages)
                 DropdownMenuItem(value: s, child: Text(s)),
@@ -382,47 +762,145 @@ class OrganizerPublishedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
+    final eho = context.eho;
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.orgPublished)),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text(l10n.orgIsLive(name), style: t.headlineSmall),
-          const SizedBox(height: 8),
-          Text(l10n.orgShareBody, style: t.bodyLarge),
-          const SizedBox(height: 24),
-          Center(
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(12),
-              child: QrImageView(data: url, size: 220),
+      backgroundColor: eho.ink,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, box) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: box.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _TopBar(
+                          onInk: true,
+                          onBack: () => context.go('/organizer/review'),
+                          caption: Row(
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  color: eho.live,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                l10n.orgPublished.toUpperCase(),
+                                style: t.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.6,
+                                  color: eho.onInkLive,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          l10n.orgIsLive(name),
+                          style: t.displaySmall?.copyWith(
+                            color: eho.onInk,
+                            height: 1.05,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.orgShareBody,
+                          style: t.bodyLarge?.copyWith(
+                            fontSize: 16,
+                            color: eho.onInkMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              // The QR needs a light ground to scan.
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            padding: const EdgeInsets.all(20),
+                            child: QrImageView(
+                              data: url,
+                              size: 220,
+                              padding: EdgeInsets.zero,
+                              eyeStyle: QrEyeStyle(
+                                eyeShape: QrEyeShape.square,
+                                color: eho.ink,
+                              ),
+                              dataModuleStyle: QrDataModuleStyle(
+                                dataModuleShape: QrDataModuleShape.square,
+                                color: eho.ink,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                          decoration: BoxDecoration(
+                            color: eho.inkOverlay,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: SelectableText(
+                                  url,
+                                  style: t.bodyMedium?.copyWith(
+                                    color: eho.onInkPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              FilledButton.icon(
+                                icon: const Icon(Icons.copy, size: 16),
+                                label: Text(l10n.orgCopyLink),
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size(0, 40),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                  ),
+                                  backgroundColor: eho.onInk,
+                                  foregroundColor: eho.ink,
+                                  textStyle: t.labelLarge,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Clipboard.setData(ClipboardData(text: url));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(l10n.orgLinkCopied)),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: () => context.go(Uri.parse(url).path),
+                      child: Text(l10n.orgOpenAsAttendee),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          SelectableText(
-            url,
-            textAlign: TextAlign.center,
-            style: t.titleMedium?.copyWith(color: scheme.primary),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.copy),
-            label: Text(l10n.orgCopyLink),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: url));
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(l10n.orgLinkCopied)));
-            },
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            icon: const Icon(Icons.open_in_new),
-            label: Text(l10n.orgOpenAsAttendee),
-            onPressed: () => context.go(Uri.parse(url).path),
-          ),
-        ],
+        ),
       ),
     );
   }
