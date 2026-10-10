@@ -8,7 +8,7 @@
 
 ## Current state
 
-Stack decided (Flutter). @Vertiglo builds only the **venue map** (`lib/features/maps/`: attendee viewer, organizer editor, stats) in `mobile/app/`. Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Now: phase 2 (backend API). Phases: [`docs/map-plan.md`](docs/map-plan.md).
+Stack decided (Flutter). @Vertiglo builds only the **venue map** (`mobile/maps/`, Flutter package `eho_maps`: attendee viewer, organizer editor, stats), mounted by the app in `mobile/app/`. Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Phase 2 done on the server side; `mobile/maps` has the map data models. Now: phase 3 (attendee map viewer). Phases: [`../contracts/maps/PLAN.md`](../contracts/maps/PLAN.md).
 
 ## Stack
 
@@ -33,7 +33,8 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
-- 2026-10-10 21:58 · ACTION · for: all · @Vertiglo works **only on the venue map**. Holds mobile/backend/contracts temporarily so the map can be built; anyone who takes one of these modules for their own work: register, and @Vertiglo releases it and keeps only the map paths (`mobile/app/lib/features/maps/`, `backend/maps/`, `contracts/features/maps/`). Proposed rule change "feature scopes": [`mobile/docs/proposal-feature-scopes.md`](../mobile/docs/proposal-feature-scopes.md).
+- 2026-10-10 21:47 · INFO · for: all · New Flutter package `mobile/maps` (`eho_maps`) holds all venue-map client code; `mobile/app` depends on it via `path: ../maps`. Map plan moved to `contracts/maps/PLAN.md`.
+- 2026-10-10 21:40 · ACTION · for: all · @Vertiglo works **only on the venue map**. Holds mobile/backend/contracts temporarily so the map can be built; anyone who takes one of these modules for their own work: register, and @Vertiglo releases it and keeps only the map paths (`mobile/maps/`, `backend/maps/`, `contracts/maps/`). Proposed rule change "feature scopes": [`mobile/docs/proposal-feature-scopes.md`](../mobile/docs/proposal-feature-scopes.md).
 - 2026-10-10 21:25 · INFO · for: all · Flutter app skeleton in `mobile/app/` runs on web against the local API and Firebase emulators. Run: `mobile/scripts/dev_all.sh`.
 - 2026-10-10 21:12 · INFO · for: all · @Vertiglo holds mobile, organizer-web, backend and contracts. Building the venue map (floor plan, stands/rooms, routing, GPS + QR "you are here", organizer stats). Stack: Flutter app in `mobile/app/` (also the organizer UI), Go backend on Cloud Run, Firestore. See decisions mobile-stack, organizer-web-framework, backend-framework, backend-persistence, contracts-realtime-transport.
 - 2026-10-10 · INFO · for: all · STATUS file created. Nothing implemented yet.

@@ -12,24 +12,23 @@ Scopes are per module (`mobile`, `backend`, …). A feature such as the venue ma
 
 A teammate registers for **what they actually work on**: a module (as today) **or a feature**, `feature:<name>` (lowercase, e.g. `feature:maps`).
 
-A feature holder may write these paths, and only these, in every module:
+A feature owns the folder `<name>/` inside every module, and only that:
 
-| Area | Feature paths |
-| --- | --- |
-| Feature home (STATUS, plan, notes) | `features/<name>/**` |
-| Flutter app | `mobile/app/lib/features/<name>/**`, `mobile/app/test/features/<name>/**`, `mobile/app/assets/<name>/**` |
-| Organizer web | `organizer-web/features/<name>/**` |
-| Backend | `backend/<name>/**` (an independent service/module) |
-| Contract | `contracts/features/<name>/**` (the feature's OpenAPI file, fixtures, realtime/deep-link docs, CHANGELOG) |
-| Decisions | `docs/decisions/feature-<name>-*.md` |
+| Area | Feature paths | Example (`maps`) |
+| --- | --- | --- |
+| App | `mobile/<name>/**` (a Flutter/Dart package the app shell depends on) | `mobile/maps/` |
+| Organizer web | `organizer-web/<name>/**` | — |
+| Backend | `backend/<name>/**` (an independent service/module) | `backend/maps/` |
+| Contract + feature home | `contracts/<name>/**`: the feature's `openapi.yaml`, fixtures, realtime/deep-link docs, `CHANGELOG.md`, **`STATUS.md`** and `PLAN.md` | `contracts/maps/` |
+| Decisions | `docs/decisions/feature-<name>-*.md` | — |
 
 Rules:
 
-1. **Registration:** the agent sets `**Owner:** @<handle> · **Scopes held:** feature:<name>` in `features/<name>/STATUS.md` (same format as module STATUS files) and runs `git config eho.scope feature:<name>` (comma-combinable with module scopes).
-2. **Module shells stay with the module holder:** files outside the feature paths (`pubspec.yaml`, `main.dart`, the app router, the root `contracts/openapi.yaml`, Firebase rules, CI) belong to the module. The feature holder asks via a request in `features/<name>/STATUS.md`.
-3. **Unheld module → don't block:** if the module has no registered holder, the feature holder may make the **minimal additive** change it needs in that module's shell (a dependency, a route, a rules block), and must announce it as `ACTION` so the future module holder sees it.
-4. **Features never edit each other's paths.** Shared code between features is a request to the module holder.
-5. Everything else (sync, announcements, requests, contracts procedure) works as for modules; feature contract changes follow `contracts/AGENTS.md` with the feature holder acting as the contracts holder **for `contracts/features/<name>/` only**.
+1. **Registration:** the agent creates `contracts/<name>/STATUS.md` (same format as module STATUS files) with `**Owner:** @<handle> · **Scopes held:** feature:<name>`, and runs `git config eho.scope feature:<name>` (comma-combinable with module scopes).
+2. **Module shells stay with the module holder:** everything outside the feature folders (`mobile/app/` incl. `pubspec.yaml`, router, `main.dart`; the root `contracts/openapi.yaml`; shared backend code; CI) belongs to the module. The feature holder asks via a request in its feature STATUS.
+3. **Unheld module → don't block:** if a module has no registered holder, the feature holder may make the **minimal additive** change it needs in that module's shell (add the package dependency, mount a route), and announces it as `ACTION` so the future module holder sees it.
+4. **Features never edit each other's folders.** Code shared between features is a request to the module holder.
+5. Everything else (sync, announcements, requests) works as for modules. Feature contract changes follow `contracts/AGENTS.md`, with the feature holder acting as contracts holder **for `contracts/<name>/` only**.
 
 ## Exact changes for the integration holder
 
@@ -51,36 +50,35 @@ done
     feature:*)
       f=${2#feature:}
       case "$1" in
-        features/"$f"/*|backend/"$f"/*|contracts/features/"$f"/*|organizer-web/features/"$f"/*) return 0 ;;
-        mobile/app/lib/features/"$f"/*|mobile/app/test/features/"$f"/*|mobile/app/assets/"$f"/*) return 0 ;;
+        mobile/"$f"/*|organizer-web/"$f"/*|backend/"$f"/*|contracts/"$f"/*) return 0 ;;
         docs/decisions/feature-"$f"-*) return 0 ;;
       esac ;;
 ```
 
-(Rule 3's shell edits in an unheld module are made with that module's scope added temporarily to `eho.scope` and announced; the agent records it in the feature STATUS.)
+Feature names must not collide with existing module subfolders (`app`, `docs`, `examples`).
 
 ### `AGENTS.md` → scope table, add a row
 
-`| feature:<name> | features/<name>/**, mobile/app/{lib,test}/features/<name>/**, mobile/app/assets/<name>/**, organizer-web/features/<name>/**, backend/<name>/**, contracts/features/<name>/**, docs/decisions/feature-<name>-*.md | — |`
+`| feature:<name> | mobile/<name>/**, organizer-web/<name>/**, backend/<name>/**, contracts/<name>/**, docs/decisions/feature-<name>-*.md | — |`
 
 and under it: "Register for what you work on: a module, or a feature (`feature:<name>`), see `docs/COORDINATION.md` §1a."
 
 ### `docs/COORDINATION.md`
 
 - New §1a "Feature scopes" with the rules above.
-- §2 step 2: "Work out your scopes: the module **or feature** your human named …"; step 3: "register in your primary module's or feature's `STATUS.md`"; step 5: deny rules for a feature holder deny every area except the feature paths.
-- §3 sync: also read `features/*/STATUS.md`.
+- §2 step 2: "Work out your scopes: the module **or feature** your human named …"; step 3: "register in your module's `STATUS.md` or your feature's `contracts/<name>/STATUS.md`"; step 5: a feature holder denies `Edit` everywhere except its feature folders.
+- §3 sync: also read `contracts/*/STATUS.md`.
 
 ### `ONBOARDING.md` kickoff prompt
 
-`I'm working on: <mobile | backend | organizer-web | product | feature:<name>>.` with an example: "`feature:maps` — only the venue map, in the app, the server and the contract."
+`I'm working on: <mobile | backend | organizer-web | product | feature:<name>>.` Example: "`feature:maps`: only the venue map, in the app, the server and the contract."
 
 ### `docs/OWNERSHIP.md`
 
-Add the `feature:<name>` row to the workstream table, and `grep -H '^\*\*Last updated' */STATUS.md features/*/STATUS.md` as the way to see holders.
+Add the `feature:<name>` row, and `grep -H '^\*\*Last updated' */STATUS.md contracts/*/STATUS.md` as the way to see holders.
 
 ## Migration for the venue map once accepted
 
-- Move `mobile/docs/map-plan.md` → `features/maps/plan.md`, create `features/maps/STATUS.md`.
-- Flutter map code is already in `mobile/app/lib/features/maps/`, backend in `backend/maps/`, contract in `contracts/features/maps/`.
-- @Vertiglo releases the `mobile`, `backend` and `contracts` module scopes (Owner → TBD) and keeps only `feature:maps`.
+- Already in place: `mobile/maps/` (Flutter package `eho_maps`), `backend/maps/` (Go service), `contracts/maps/` (contract + `PLAN.md`).
+- Create `contracts/maps/STATUS.md`; @Vertiglo releases the `mobile`, `backend` and `contracts` module scopes (Owner → TBD) and keeps only `feature:maps`.
+- The app shell `mobile/app/` (created by @Vertiglo to run the map) goes to whoever registers `mobile`.
