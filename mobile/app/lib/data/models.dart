@@ -19,6 +19,22 @@ class EventSummary {
   final String dates;
   final String venue;
   final bool isPast;
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'name': name,
+    'dates': dates,
+    'venue': venue,
+    'isPast': isPast,
+  };
+
+  factory EventSummary.fromJson(Map<String, dynamic> j) => EventSummary(
+    id: j['id'] as String,
+    name: j['name'] as String,
+    dates: j['dates'] as String,
+    venue: j['venue'] as String,
+    isPast: j['isPast'] as bool? ?? false,
+  );
 }
 
 class Speaker {
@@ -158,6 +174,28 @@ class Profile {
     shareMeetingSpot: shareMeetingSpot ?? this.shareMeetingSpot,
     onboarded: onboarded ?? this.onboarded,
   );
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'headline': headline,
+    'interests': interests,
+    'lookingFor': lookingFor,
+    'visibleInFind': visibleInFind,
+    'allowContact': allowContact,
+    'shareMeetingSpot': shareMeetingSpot,
+    'onboarded': onboarded,
+  };
+
+  factory Profile.fromJson(Map<String, dynamic> j) => Profile(
+    name: j['name'] as String? ?? '',
+    headline: j['headline'] as String? ?? '',
+    interests: (j['interests'] as List?)?.cast<String>().toList() ?? const [],
+    lookingFor: j['lookingFor'] as String? ?? '',
+    visibleInFind: j['visibleInFind'] as bool? ?? false,
+    allowContact: j['allowContact'] as bool? ?? false,
+    shareMeetingSpot: j['shareMeetingSpot'] as bool? ?? false,
+    onboarded: j['onboarded'] as bool? ?? false,
+  );
 }
 
 enum ContactState { none, requested, accepted }
@@ -169,6 +207,13 @@ class MeetingSpot {
 
   /// Name of a room/stand/POI on the venue map.
   final String place;
+
+  Map<String, Object?> toJson() => {'personName': personName, 'place': place};
+
+  factory MeetingSpot.fromJson(Map<String, dynamic> j) => MeetingSpot(
+    personName: j['personName'] as String,
+    place: j['place'] as String,
+  );
 }
 
 class UploadedFile {
