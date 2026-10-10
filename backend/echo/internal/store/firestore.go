@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
@@ -185,13 +186,32 @@ func (s *FirestoreStore) CreateQuestion(ctx context.Context, eventID, sessionID 
 	if q.VoterUIDs == nil {
 		q.VoterUIDs = []string{}
 	}
+	if q.AskerUIDs == nil {
+		q.AskerUIDs = []string{q.AuthorUID}
+	}
 	if _, err := s.private(eventID, sessionID).Collection(colQuestions).Doc(q.ID).Create(ctx, q); err != nil {
 		return fmt.Errorf("create question: %w", err)
 	}
 	return nil
 }
 
+func (s *FirestoreStore) MergeInto(ctx context.Context, eventID, sessionID, questionID, uid string) (Question, error) {
+	return s.updateQuestion(ctx, eventID, sessionID, questionID, func(q *Question) []firestore.Update {
+		q.AskerUIDs = setVoter(slices.Clone(q.Askers()), uid, true)
+		q.VoterUIDs = setVoter(q.VoterUIDs, uid, true)
+		return []firestore.Update{{Path: "askerUids", Value: q.AskerUIDs}, {Path: "voterUids", Value: q.VoterUIDs}}
+	})
+}
+
 func (s *FirestoreStore) SetVote(ctx context.Context, eventID, sessionID, questionID, uid string, on bool) (Question, error) {
+	return s.updateQuestion(ctx, eventID, sessionID, questionID, func(q *Question) []firestore.Update {
+		q.VoterUIDs = setVoter(q.VoterUIDs, uid, on)
+		return []firestore.Update{{Path: "voterUids", Value: q.VoterUIDs}}
+	})
+}
+
+func (s *FirestoreStore) updateQuestion(ctx context.Context, eventID, sessionID, questionID string,
+	change func(*Question) []firestore.Update) (Question, error) {
 	ref := s.private(eventID, sessionID).Collection(colQuestions).Doc(questionID)
 	var q Question
 	err := s.c.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
@@ -206,14 +226,13 @@ func (s *FirestoreStore) SetVote(ctx context.Context, eventID, sessionID, questi
 			return err
 		}
 		q.ID = questionID
-		q.VoterUIDs = setVoter(q.VoterUIDs, uid, on)
-		return tx.Update(ref, []firestore.Update{{Path: "voterUids", Value: q.VoterUIDs}})
+		return tx.Update(ref, change(&q))
 	})
 	if errors.Is(err, ErrNotFound) {
 		return Question{}, ErrNotFound
 	}
 	if err != nil {
-		return Question{}, fmt.Errorf("vote: %w", err)
+		return Question{}, fmt.Errorf("update question: %w", err)
 	}
 	return q, nil
 }

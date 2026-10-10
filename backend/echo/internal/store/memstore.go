@@ -91,6 +91,7 @@ func (m *MemStore) ListQuestions(_ context.Context, eventID, sessionID string) (
 	out := make([]Question, 0, len(m.questions[sk(eventID, sessionID)]))
 	for _, q := range m.questions[sk(eventID, sessionID)] {
 		q.VoterUIDs = slices.Clone(q.VoterUIDs)
+		q.AskerUIDs = slices.Clone(q.AskerUIDs)
 		out = append(out, q)
 	}
 	return out, nil
@@ -122,6 +123,23 @@ func (m *MemStore) SetVote(_ context.Context, eventID, sessionID, questionID, ui
 		qs[i].VoterUIDs = setVoter(qs[i].VoterUIDs, uid, on)
 		q := qs[i]
 		q.VoterUIDs = slices.Clone(q.VoterUIDs)
+		return q, nil
+	}
+	return Question{}, ErrNotFound
+}
+
+func (m *MemStore) MergeInto(_ context.Context, eventID, sessionID, questionID, uid string) (Question, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	qs := m.questions[sk(eventID, sessionID)]
+	for i := range qs {
+		if qs[i].ID != questionID {
+			continue
+		}
+		qs[i].AskerUIDs = setVoter(slices.Clone(qs[i].Askers()), uid, true)
+		qs[i].VoterUIDs = setVoter(qs[i].VoterUIDs, uid, true)
+		q := qs[i]
+		q.AskerUIDs, q.VoterUIDs = slices.Clone(q.AskerUIDs), slices.Clone(q.VoterUIDs)
 		return q, nil
 	}
 	return Question{}, ErrNotFound

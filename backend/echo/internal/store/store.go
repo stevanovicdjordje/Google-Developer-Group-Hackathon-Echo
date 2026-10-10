@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"errors"
+	"slices"
 	"strings"
 	"time"
 )
@@ -49,28 +50,38 @@ type Transcript struct {
 	Lines    []Line
 }
 
-// Question is an audience question. AuthorUID and VoterUIDs never leave the
-// service.
+// Question is an audience question. AuthorUID, AskerUIDs and VoterUIDs never
+// leave the service.
 type Question struct {
-	ID        string    `firestore:"-"`
-	Text      string    `firestore:"text"`
-	AuthorUID string    `firestore:"authorUid"`
+	ID        string `firestore:"-"`
+	Text      string `firestore:"text"`
+	AuthorUID string `firestore:"authorUid"`
+	// AskerUIDs are everyone who asked it: the author plus the askers of
+	// similar questions merged into it.
+	AskerUIDs []string  `firestore:"askerUids"`
 	VoterUIDs []string  `firestore:"voterUids"`
 	CreatedAt time.Time `firestore:"createdAt"`
 }
+
+// Askers returns AskerUIDs, or just the author for questions stored before merging existed.
+func (q Question) Askers() []string {
+	if len(q.AskerUIDs) == 0 && q.AuthorUID != "" {
+		return []string{q.AuthorUID}
+	}
+	return q.AskerUIDs
+}
+
+// MergedCount is how many similar questions were merged into this one.
+func (q Question) MergedCount() int { return max(0, len(q.Askers())-1) }
+
+// AskedBy reports whether uid asked it (or a question merged into it).
+func (q Question) AskedBy(uid string) bool { return slices.Contains(q.Askers(), uid) }
 
 // Votes is the number of votes.
 func (q Question) Votes() int { return len(q.VoterUIDs) }
 
 // VotedBy reports whether uid has voted.
-func (q Question) VotedBy(uid string) bool {
-	for _, v := range q.VoterUIDs {
-		if v == uid {
-			return true
-		}
-	}
-	return false
-}
+func (q Question) VotedBy(uid string) bool { return slices.Contains(q.VoterUIDs, uid) }
 
 // Store is the persistence boundary.
 type Store interface {
@@ -80,6 +91,8 @@ type Store interface {
 
 	ListQuestions(ctx context.Context, eventID, sessionID string) ([]Question, error)
 	CreateQuestion(ctx context.Context, eventID, sessionID string, q *Question) error
+	// MergeInto records uid as another asker of the question (and a voter).
+	MergeInto(ctx context.Context, eventID, sessionID, questionID, uid string) (Question, error)
 	// SetVote adds or removes uid's vote and returns the updated question.
 	SetVote(ctx context.Context, eventID, sessionID, questionID, uid string, on bool) (Question, error)
 
@@ -96,6 +109,8 @@ type Cached struct {
 	Text  string `firestore:"text"`
 	Model string `firestore:"model"`
 	Lines int    `firestore:"basedOnLines"`
+	// Structured is the JSON of a structured result (the talk summary), if any.
+	Structured string `firestore:"structured,omitempty"`
 }
 
 // Replayer writes the transcript (cmd/replay).

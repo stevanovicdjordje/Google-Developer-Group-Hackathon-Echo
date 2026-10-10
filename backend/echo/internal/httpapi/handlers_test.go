@@ -32,6 +32,7 @@ type countingAI struct {
 	calls      atomic.Int32
 	translated atomic.Int32
 	fail       bool
+	failDedupe bool
 }
 
 func (c *countingAI) Model() string { return "fake-gemma" }
@@ -44,9 +45,16 @@ func (c *countingAI) Ask(ctx context.Context, t store.Transcript, q, lang string
 	return c.Offline.Ask(ctx, t, q, lang)
 }
 
-func (c *countingAI) Summary(ctx context.Context, t store.Transcript, lang string) (string, error) {
+func (c *countingAI) Summary(ctx context.Context, t store.Transcript, lang string) (assist.Summary, error) {
 	c.calls.Add(1)
 	return c.Offline.Summary(ctx, t, lang)
+}
+
+func (c *countingAI) SameQuestion(ctx context.Context, existing []assist.QuestionRef, q string) (string, error) {
+	if c.failDedupe {
+		return "", assist.ErrModel
+	}
+	return c.Offline.SameQuestion(ctx, existing, q)
 }
 
 func (c *countingAI) Translate(ctx context.Context, texts []string, lang string) ([]string, error) {
@@ -236,6 +244,39 @@ func TestTranslateIncremental(t *testing.T) {
 	}
 }
 
+func TestSimilarQuestionsAreMerged(t *testing.T) {
+	f := newFixture(t, keynote...)
+	f.h = NewHandler(Options{
+		Logger: slog.New(slog.NewTextHandler(io.Discard, nil)), Store: f.st, Verifier: fakeVerifier{}, Assistant: f.ai,
+	})
+	code, first := f.do("POST", sessPath+"/questions", "a1", `{"text":"Which model did you use for the hybrid router?"}`)
+	if code != 201 || first["mergedCount"] != float64(0) {
+		t.Fatalf("first: %d %v", code, first)
+	}
+	code, merged := f.do("POST", sessPath+"/questions", "a2", `{"text":"Which model do you use for your hybrid router?"}`)
+	if code != 200 || merged["merged"] != true || merged["id"] != first["id"] || merged["mergedCount"] != float64(1) ||
+		merged["votes"] != float64(2) || merged["mine"] != true || merged["voted"] != true {
+		t.Fatalf("merge: %d %v", code, merged)
+	}
+	code, other := f.do("POST", sessPath+"/questions", "a3", `{"text":"Does quantization hurt Serbian quality?"}`)
+	if code != 201 || other["id"] == first["id"] {
+		t.Fatalf("different question merged: %d %v", code, other)
+	}
+	_, list := f.do("GET", sessPath+"/questions", "a3", "")
+	if qs := list["questions"].([]any); len(qs) != 2 || qs[0].(map[string]any)["mergedCount"] != float64(1) {
+		t.Fatalf("list %v", list)
+	}
+}
+
+func TestGroupingFailureStillPostsTheQuestion(t *testing.T) {
+	f := newFixture(t, keynote...)
+	f.ai.failDedupe = true
+	f.do("POST", sessPath+"/questions", "a1", `{"text":"Which model did you use?"}`)
+	if code, _ := f.do("POST", sessPath+"/questions", "a2", `{"text":"Which model did you use?"}`); code != 201 {
+		t.Fatalf("got %d, want a new question", code)
+	}
+}
+
 func TestQuestionsFlow(t *testing.T) {
 	f := newFixture(t, keynote...)
 	code, q1 := f.do("POST", sessPath+"/questions", "a1", `{"text":"Which quantization did you use?"}`)
@@ -311,5 +352,28 @@ func TestTranslateLongBacklogInParallelChunks(t *testing.T) {
 	}
 	if c, n := f.ai.calls.Load(), f.ai.translated.Load(); c != 5 || n != 50 {
 		t.Fatalf("calls=%d lines=%d, want 5 chunks of 10", c, n)
+	}
+}
+
+func TestSummaryIsStructured(t *testing.T) {
+	f := newFixture(t, keynote...)
+	code, body := f.do("GET", sessPath+"/summary", "a1", "")
+	if code != 200 {
+		t.Fatalf("got %d %v", code, body)
+	}
+	sum, ok := body["summary"].(map[string]any)
+	if !ok || sum["takeaway"] == "" || len(sum["keyPoints"].([]any)) == 0 || sum["tradeoffs"] == nil {
+		t.Fatalf("summary %v", body)
+	}
+	if body["text"] == "" {
+		t.Fatal("text must stay for older clients")
+	}
+	_, again := f.do("GET", sessPath+"/summary", "a2", "")
+	if again["summary"] == nil || f.ai.calls.Load() != 1 {
+		t.Fatalf("cached summary lost its structure or model called again: %v calls=%d", again, f.ai.calls.Load())
+	}
+	_, catchUp := f.do("GET", sessPath+"/catch-up", "a1", "")
+	if _, has := catchUp["summary"]; has {
+		t.Fatal("catch-up must not carry a summary object")
 	}
 }

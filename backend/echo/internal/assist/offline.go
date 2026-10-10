@@ -83,20 +83,6 @@ func (Offline) CatchUp(_ context.Context, t store.Transcript, _ string) (string,
 	return "So far: " + strings.Join(parts, " … "), nil
 }
 
-// Summary implements Assistant: up to six evenly spaced lines as bullets.
-func (Offline) Summary(_ context.Context, t store.Transcript, _ string) (string, error) {
-	lines := t.Lines
-	if len(lines) == 0 {
-		return "The talk hasn't started yet.", nil
-	}
-	n := min(6, len(lines))
-	out := make([]string, n)
-	for k := range n {
-		out[k] = "• " + lines[k*len(lines)/n].Text
-	}
-	return strings.Join(out, "\n"), nil
-}
-
 // Translate implements Assistant: the source text, tagged with the language.
 func (Offline) Translate(_ context.Context, texts []string, language string) ([]string, error) {
 	out := make([]string, len(texts))

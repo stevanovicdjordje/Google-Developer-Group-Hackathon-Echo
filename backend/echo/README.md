@@ -49,7 +49,8 @@ To use Gemma: copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 | Timeout | 20 s per model call, HTTP 5xx retried twice after 0.3 s and 1 s (`AI_TIMEOUT_SECONDS`) → `502 ai_unavailable` |
 | Caching | Per session, language and number of revealed lines (Ask also per question). The first caller pays the latency, everyone after gets the cached answer. |
 | Rate limits | 30 AI cache misses and 10 questions per user per minute → `429 rate_limited` + `Retry-After` |
-| Output | Plain text, `•` bullets in the summary, at most 4000 characters |
+| Output | Plain text, at most 4000 characters. The summary also comes structured (takeaway, key points, problem → fix rows with a transcript time), parsed from Gemma's JSON and validated; one retry on a bad shape |
+| Question grouping | On submit, Gemma compares the question with the 30 most-voted ones (~1 s, 6 s cap); same meaning → merged. Any failure → posted as new |
 
 ## Tests
 

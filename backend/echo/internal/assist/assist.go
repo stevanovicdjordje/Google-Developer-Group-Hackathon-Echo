@@ -19,7 +19,7 @@ import (
 
 // PromptVersion is part of every cache key: bump it when a prompt changes so
 // cached answers from the old prompt are not served.
-const PromptVersion = "p3"
+const PromptVersion = "p6"
 
 // MaxTextRunes caps every generated text (contract: AiText.text).
 const MaxTextRunes = 4000
@@ -29,8 +29,9 @@ type Assistant interface {
 	Model() string
 	Ask(ctx context.Context, t store.Transcript, question, language string) (string, error)
 	CatchUp(ctx context.Context, t store.Transcript, language string) (string, error)
-	Summary(ctx context.Context, t store.Transcript, language string) (string, error)
+	Summary(ctx context.Context, t store.Transcript, language string) (Summary, error)
 	Translate(ctx context.Context, texts []string, language string) ([]string, error)
+	SameQuestion(ctx context.Context, existing []QuestionRef, question string) (string, error)
 }
 
 // Languages maps the contract's Language codes to the name used in prompts.
@@ -107,20 +108,6 @@ func (a LLM) CatchUp(ctx context.Context, t store.Transcript, language string) (
 		"Tell them what they missed: the topic and the main points so far.\n" + guard + "\n" +
 		"Write in " + Languages[language] + ", at most 3 sentences.\n\n" + formatTranscript(t)
 	out, err := a.M.Generate(ctx, prompt, 300)
-	if err != nil {
-		return "", err
-	}
-	return CleanText(out)
-}
-
-// Summary implements Assistant.
-func (a LLM) Summary(ctx context.Context, t store.Transcript, language string) (string, error) {
-	prompt := "You are Echo. Write the summary of a conference talk for an attendee to keep.\n" + guard + "\n" +
-		"Write in " + Languages[language] + ". Output 4 to 8 lines. Each line starts with \"• \", " +
-		"then a short topic, a colon, and the point, including concrete numbers the speaker gave. " +
-		"End with one line starting with \"• \" that gives the speaker's main advice, if there was one.\n\n" +
-		formatTranscript(t)
-	out, err := a.M.Generate(ctx, prompt, 700)
 	if err != nil {
 		return "", err
 	}

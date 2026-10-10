@@ -24,12 +24,14 @@ import (
 )
 
 const (
-	maxBodyBytes       = 16 << 10
-	maxTranslateLines  = 50
-	translateChunk     = 10
-	translateParallel  = 4
-	defaultLanguage    = "en"
-	notStartedResponse = "The talk hasn't started yet."
+	maxBodyBytes        = 16 << 10
+	maxTranslateLines   = 50
+	translateChunk      = 10
+	translateParallel   = 4
+	maxCompareQuestions = 30
+	dedupeTimeout       = 6 * time.Second
+	defaultLanguage     = "en"
+	notStartedResponse  = "The talk hasn't started yet."
 )
 
 var sessionIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
@@ -40,18 +42,21 @@ type fieldError struct {
 }
 
 type aiText struct {
-	Text         string `json:"text"`
-	Model        string `json:"model"`
-	BasedOnLines int    `json:"basedOnLines"`
+	Text         string          `json:"text"`
+	Model        string          `json:"model"`
+	BasedOnLines int             `json:"basedOnLines"`
+	Summary      json.RawMessage `json:"summary,omitempty"`
 }
 
 type questionJSON struct {
-	ID        string    `json:"id"`
-	Text      string    `json:"text"`
-	Votes     int       `json:"votes"`
-	Mine      bool      `json:"mine"`
-	Voted     bool      `json:"voted"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID          string    `json:"id"`
+	Text        string    `json:"text"`
+	Votes       int       `json:"votes"`
+	Mine        bool      `json:"mine"`
+	Voted       bool      `json:"voted"`
+	MergedCount int       `json:"mergedCount"`
+	Merged      bool      `json:"merged,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 func decode(w http.ResponseWriter, r *http.Request, dst any) bool {
@@ -133,10 +138,11 @@ func languageParam(w http.ResponseWriter, field, lang string) (string, bool) {
 // cachedAI returns the cached result for key or generates it once, even when
 // many attendees ask at the same moment. Only cache misses count against the
 // caller's AI budget. The offline assistant is cheap and never cached.
-func (s *server) cachedAI(ctx context.Context, uid, eventID, sessionID, key string, n int, gen func(context.Context) (string, error)) (store.Cached, error) {
+func (s *server) cachedAI(ctx context.Context, uid, eventID, sessionID, key string, n int, gen func(context.Context) (store.Cached, error)) (store.Cached, error) {
 	if s.ai.Model() == assist.OfflineModel {
-		text, err := gen(ctx)
-		return store.Cached{Text: text, Model: assist.OfflineModel, Lines: n}, err
+		c, err := gen(ctx)
+		c.Model, c.Lines = assist.OfflineModel, n
+		return c, err
 	}
 	key = s.ai.Model() + "_" + assist.PromptVersion + "_" + key
 	if c, ok, err := s.store.GetCached(ctx, eventID, sessionID, key); err != nil {
@@ -148,11 +154,11 @@ func (s *server) cachedAI(ctx context.Context, uid, eventID, sessionID, key stri
 		return store.Cached{}, errRateLimited{retry}
 	}
 	v, err, _ := s.inflight.Do(eventID+"/"+sessionID+"/"+key, func() (any, error) {
-		text, err := gen(context.WithoutCancel(ctx))
+		c, err := gen(context.WithoutCancel(ctx))
 		if err != nil {
 			return nil, err
 		}
-		c := store.Cached{Text: text, Model: s.ai.Model(), Lines: n}
+		c.Model, c.Lines = s.ai.Model(), n
 		if err := s.store.PutCached(context.WithoutCancel(ctx), eventID, sessionID, key, c); err != nil {
 			s.log.WarnContext(ctx, "cache write failed", "err", err)
 		}
@@ -174,7 +180,11 @@ func (s *server) writeAI(w http.ResponseWriter, r *http.Request, c store.Cached,
 		s.respondErr(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, aiText{Text: c.Text, Model: c.Model, BasedOnLines: c.Lines})
+	out := aiText{Text: c.Text, Model: c.Model, BasedOnLines: c.Lines}
+	if c.Structured != "" {
+		out.Summary = json.RawMessage(c.Structured)
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (s *server) notStarted(w http.ResponseWriter) {
@@ -208,22 +218,36 @@ func (s *server) ask(w http.ResponseWriter, r *http.Request, p auth.Principal) {
 	}
 	sum := sha256.Sum256([]byte(strings.ToLower(q)))
 	key := fmt.Sprintf("ask_%s_%d_%s", lang, len(t.Lines), hex.EncodeToString(sum[:8]))
-	c, err := s.cachedAI(r.Context(), p.UID, eventID, sessionID, key, len(t.Lines), func(ctx context.Context) (string, error) {
-		return s.ai.Ask(ctx, t, q, lang)
+	c, err := s.cachedAI(r.Context(), p.UID, eventID, sessionID, key, len(t.Lines), func(ctx context.Context) (store.Cached, error) {
+		text, err := s.ai.Ask(ctx, t, q, lang)
+		return store.Cached{Text: text}, err
 	})
 	s.writeAI(w, r, c, err)
 }
 
 func (s *server) catchUp(w http.ResponseWriter, r *http.Request, p auth.Principal) {
-	s.summarize(w, r, p, "catchup", s.ai.CatchUp)
+	s.summarize(w, r, p, "catchup", func(ctx context.Context, t store.Transcript, lang string) (store.Cached, error) {
+		text, err := s.ai.CatchUp(ctx, t, lang)
+		return store.Cached{Text: text}, err
+	})
 }
 
 func (s *server) summary(w http.ResponseWriter, r *http.Request, p auth.Principal) {
-	s.summarize(w, r, p, "summary", s.ai.Summary)
+	s.summarize(w, r, p, "summary", func(ctx context.Context, t store.Transcript, lang string) (store.Cached, error) {
+		sum, err := s.ai.Summary(ctx, t, lang)
+		if err != nil {
+			return store.Cached{}, err
+		}
+		raw, err := json.Marshal(sum)
+		if err != nil {
+			return store.Cached{}, err
+		}
+		return store.Cached{Text: sum.Text(), Structured: string(raw)}, nil
+	})
 }
 
 func (s *server) summarize(w http.ResponseWriter, r *http.Request, p auth.Principal, kind string,
-	gen func(context.Context, store.Transcript, string) (string, error)) {
+	gen func(context.Context, store.Transcript, string) (store.Cached, error)) {
 	eventID, sessionID, t, ok := s.session(w, r, p)
 	if !ok {
 		return
@@ -237,7 +261,7 @@ func (s *server) summarize(w http.ResponseWriter, r *http.Request, p auth.Princi
 		return
 	}
 	key := fmt.Sprintf("%s_%s_%d", kind, lang, len(t.Lines))
-	c, err := s.cachedAI(r.Context(), p.UID, eventID, sessionID, key, len(t.Lines), func(ctx context.Context) (string, error) {
+	c, err := s.cachedAI(r.Context(), p.UID, eventID, sessionID, key, len(t.Lines), func(ctx context.Context) (store.Cached, error) {
 		return gen(ctx, t, lang)
 	})
 	s.writeAI(w, r, c, err)
@@ -384,7 +408,8 @@ func (s *server) translateChunk(ctx context.Context, lang string, chunk []store.
 
 func toJSON(q store.Question, uid string) questionJSON {
 	return questionJSON{
-		ID: q.ID, Text: q.Text, Votes: q.Votes(), Mine: q.AuthorUID == uid, Voted: q.VotedBy(uid), CreatedAt: q.CreatedAt,
+		ID: q.ID, Text: q.Text, Votes: q.Votes(), Mine: q.AskedBy(uid), Voted: q.VotedBy(uid),
+		MergedCount: q.MergedCount(), CreatedAt: q.CreatedAt,
 	}
 }
 
@@ -431,12 +456,48 @@ func (s *server) submitQuestion(w http.ResponseWriter, r *http.Request, p auth.P
 		s.rateLimited(w, retry)
 		return
 	}
-	q := store.Question{Text: text, AuthorUID: p.UID, VoterUIDs: []string{p.UID}}
+	if dup := s.similarQuestion(r.Context(), eventID, sessionID, text); dup != "" {
+		q, err := s.store.MergeInto(r.Context(), eventID, sessionID, dup, p.UID)
+		if err == nil {
+			out := toJSON(q, p.UID)
+			out.Merged = true
+			writeJSON(w, http.StatusOK, out)
+			return
+		}
+		if !errors.Is(err, store.ErrNotFound) {
+			s.respondErr(w, r, err)
+			return
+		}
+	}
+	q := store.Question{Text: text, AuthorUID: p.UID, AskerUIDs: []string{p.UID}, VoterUIDs: []string{p.UID}}
 	if err := s.store.CreateQuestion(r.Context(), eventID, sessionID, &q); err != nil {
 		s.respondErr(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusCreated, toJSON(q, p.UID))
+}
+
+// similarQuestion asks the AI whether text duplicates one of the most-voted
+// existing questions. Grouping is best effort: on any failure the question is
+// simply posted as new.
+func (s *server) similarQuestion(ctx context.Context, eventID, sessionID, text string) string {
+	qs, err := s.store.ListQuestions(ctx, eventID, sessionID)
+	if err != nil || len(qs) == 0 {
+		return ""
+	}
+	slices.SortStableFunc(qs, func(a, b store.Question) int { return b.Votes() - a.Votes() })
+	refs := make([]assist.QuestionRef, 0, min(len(qs), maxCompareQuestions))
+	for _, q := range qs[:min(len(qs), maxCompareQuestions)] {
+		refs = append(refs, assist.QuestionRef{ID: q.ID, Text: q.Text})
+	}
+	ctx, cancel := context.WithTimeout(ctx, dedupeTimeout)
+	defer cancel()
+	id, err := s.ai.SameQuestion(ctx, refs, text)
+	if err != nil {
+		s.log.WarnContext(ctx, "question grouping skipped", "err", err)
+		return ""
+	}
+	return id
 }
 
 func (s *server) vote(on bool) func(http.ResponseWriter, *http.Request, auth.Principal) {

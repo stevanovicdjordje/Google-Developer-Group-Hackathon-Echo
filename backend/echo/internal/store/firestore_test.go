@@ -75,7 +75,13 @@ func TestFirestoreStore(t *testing.T) {
 	if _, err := s.SetVote(ctx, ev, "s1", "nope", "a1", true); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("unknown question: %v", err)
 	}
-	if qs, err := s.ListQuestions(ctx, ev, "s1"); err != nil || len(qs) != 1 || qs[0].ID != q.ID {
+	if got, err := s.MergeInto(ctx, ev, "s1", q.ID, "a3"); err != nil || got.MergedCount() != 1 || !got.AskedBy("a3") || !got.VotedBy("a3") {
+		t.Fatalf("merge %+v %v", got, err)
+	}
+	if got, _ := s.MergeInto(ctx, ev, "s1", q.ID, "a3"); got.MergedCount() != 1 {
+		t.Fatal("merge is not idempotent")
+	}
+	if qs, err := s.ListQuestions(ctx, ev, "s1"); err != nil || len(qs) != 1 || qs[0].ID != q.ID || qs[0].MergedCount() != 1 {
 		t.Fatalf("list %+v %v", qs, err)
 	}
 

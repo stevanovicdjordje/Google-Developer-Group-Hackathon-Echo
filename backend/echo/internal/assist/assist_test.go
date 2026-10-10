@@ -99,8 +99,8 @@ func TestOffline(t *testing.T) {
 	if a, _ := (Offline{}).Ask(ctx, store.Transcript{Lines: lines}, "Kubernetes?", "en"); a != notCovered {
 		t.Fatalf("not covered: %q", a)
 	}
-	if s, _ := (Offline{}).Summary(ctx, store.Transcript{Lines: lines}, "en"); strings.Count(s, "• ") != 3 {
-		t.Fatalf("summary: %q", s)
+	if s, err := (Offline{}).Summary(ctx, store.Transcript{Lines: lines}, "en"); err != nil || len(s.KeyPoints) != 3 || len(s.Tradeoffs) == 0 {
+		t.Fatalf("summary: %+v %v", s, err)
 	}
 }
 
@@ -151,5 +151,53 @@ func TestTranslateRejectsLatinForCyrillic(t *testing.T) {
 	m = &scripted{replies: []string{`["Hvala."]`, "Hvala."}}
 	if _, err := (LLM{M: m}).Translate(context.Background(), []string{"Thanks."}, "sr-Cyrl"); !errors.Is(err, ErrModel) {
 		t.Fatalf("latin twice: %v", err)
+	}
+}
+
+func TestParseSummary(t *testing.T) {
+	lines := []store.Line{{AtSeconds: 0}, {AtSeconds: 44}, {AtSeconds: 50}, {AtSeconds: 60}}
+	out := "```json\n" + `{"takeaway":"  Start **hybrid**, measure. ","keyPoints":["Cost near zero.","", "Privacy."],` +
+		`"tradeoffs":[{"topic":"Battery","issue":"12% hit.","fix":"batching","at":"[00:47]","atSeconds":999},` +
+		`{"topic":"Size","issue":"","fix":"x","atSeconds":1},{"topic":"Late","issue":"a","fix":"b","atSeconds":999}]}` + "\n```"
+	s, err := ParseSummary(out, lines)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Takeaway != "Start hybrid, measure." || s.Tradeoffs[0].Fix != "Batching" || len(s.KeyPoints) != 2 || len(s.Tradeoffs) != 2 {
+		t.Fatalf("got %+v", s)
+	}
+	if s.Tradeoffs[0].AtSeconds != 44 || s.Tradeoffs[1].AtSeconds != 60 {
+		t.Fatalf("times not snapped to lines: %+v", s.Tradeoffs)
+	}
+	if !strings.Contains(s.Text(), "• Battery: 12% hit → Batching (00:44)") {
+		t.Fatalf("text: %q", s.Text())
+	}
+	for _, bad := range []string{`no json`, `{"takeaway":"","keyPoints":["a"]}`, `{"takeaway":"a","keyPoints":[]}`, `{"takeaway":1}`} {
+		if _, err := ParseSummary(bad, lines); !errors.Is(err, ErrModel) {
+			t.Errorf("%s: want ErrModel, got %v", bad, err)
+		}
+	}
+}
+
+func TestSummaryRetriesBadJSONOnce(t *testing.T) {
+	m := &scripted{replies: []string{"Here is a summary: it was good.", `{"takeaway":"T","keyPoints":["K"],"tradeoffs":[]}`}}
+	s, err := LLM{M: m}.Summary(context.Background(), store.Transcript{Lines: []store.Line{{Text: "x"}}}, "sr")
+	if err != nil || s.Takeaway != "T" || len(m.prompts) != 2 || !strings.Contains(m.prompts[0], "Latin script") {
+		t.Fatalf("got %+v %v after %d calls", s, err, len(m.prompts))
+	}
+}
+
+func TestSameQuestion(t *testing.T) {
+	existing := []QuestionRef{{"q_aaa", "Which model did you use for the hybrid router?"}, {"q_bbb", "Does it work on iOS?"}}
+	for reply, want := range map[string]string{"q_bbb": "q_bbb", " [q_bbb]\n": "q_bbb", "NONE": "", "q_zzz": "", "Q_AAA": "q_aaa"} {
+		m := &scripted{replies: []string{reply}}
+		got, err := LLM{M: m}.SameQuestion(context.Background(), existing, "iPhone support?")
+		if err != nil || got != want {
+			t.Errorf("reply %q: got %q %v, want %q", reply, got, err, want)
+		}
+	}
+	m := &scripted{}
+	if got, _ := (LLM{M: m}).SameQuestion(context.Background(), nil, "x"); got != "" || len(m.prompts) != 0 {
+		t.Fatal("no existing questions must not call the model")
 	}
 }
