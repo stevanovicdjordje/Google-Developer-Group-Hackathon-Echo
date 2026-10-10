@@ -1,0 +1,643 @@
+openapi: 3.1.0
+info:
+  title: Eho venue map API
+  version: 0.1.0
+  summary: Venue map feature (floors, rooms, stands, POIs, walkway graph, publish).
+  description: |
+    Contract between the Flutter app (`mobile/maps/`) and the
+    map service (`backend/maps/`). Writes go only through this API; attendees
+    read published map data directly from Firestore (see `realtime.md`).
+
+    Implemented by `backend/maps` (phase 2). Routing and stats operations are
+    added in later versions (see `CHANGELOG.md`).
+
+    **Errors** always use the `Error` schema. **Coordinates** are floor-plan
+    image pixels (x right, y down).
+servers:
+  - url: http://localhost:8080
+    description: Local (`backend/maps`, `make dev`)
+security:
+  - firebaseIdToken: []
+tags:
+  - name: events
+  - name: floors
+  - name: features
+paths:
+  /healthz:
+    get:
+      operationId: mapsHealthz
+      summary: Liveness check.
+      security: []
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, const: ok }
+  /v1/events:
+    get:
+      operationId: listMyEvents
+      tags: [events]
+      summary: Events owned by the caller.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [events]
+                properties:
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/Event" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create an event (organizer account, not anonymous).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventInput" }
+            example: { $ref: "examples/create-event.request.json" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Event" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /v1/events/{eventId}:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: The owner sees any of their events; other signed-in users only published ones (without ownerUid).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Event" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateEvent
+      tags: [events]
+      summary: Partial update; omitted fields keep their value. Owner only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EventPatch" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Event" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      operationId: deleteEvent
+      tags: [events]
+      summary: Delete the event with its draft, published map and stats. Owner only.
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/events/{eventId}/draft:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    get:
+      operationId: getDraftMap
+      tags: [events]
+      summary: The whole draft map (editor). Owner only.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Map" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/events/{eventId}/publish:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    post:
+      operationId: publishEvent
+      tags: [events]
+      summary: Atomically copy the draft to the published map and increment publishedVersion. Owner only.
+      responses:
+        "200":
+          description: Published. Warnings don't block publishing.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [publishedVersion, warnings]
+                properties:
+                  publishedVersion: { type: integer, minimum: 1 }
+                  warnings:
+                    type: array
+                    items: { $ref: "#/components/schemas/Issue" }
+              example: { $ref: "examples/publish.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: "Blocked: `code` = `publish_blocked`, `details` = {errors: Issue[], warnings: Issue[]}."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /v1/events/{eventId}/floors:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    post:
+      operationId: createFloor
+      tags: [floors]
+      summary: Register an uploaded floor plan. The server checks the image exists and reads its size.
+      description: |
+        Upload the PNG/JPEG (≤ 10 MB) to Firebase Storage at
+        `events/{eventId}/floors/{fileName}` first (Storage rules: owner only),
+        then call this with that path.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FloorInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Floor" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /v1/events/{eventId}/floors/{floorId}:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/floorId"
+    patch:
+      operationId: updateFloor
+      tags: [floors]
+      summary: Partial update. Changing imagePath re-reads the size and clears georef.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FloorPatch" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Floor" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      operationId: deleteFloor
+      tags: [floors]
+      summary: Delete the floor with its graph and features (draft).
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/events/{eventId}/floors/{floorId}/georef:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/floorId"
+    put:
+      operationId: putFloorGeoref
+      tags: [floors]
+      summary: Georeference the plan with exactly 3 control points (pixel ↔ lat/lng).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [controlPoints]
+              additionalProperties: false
+              properties:
+                controlPoints:
+                  type: array
+                  minItems: 3
+                  maxItems: 3
+                  items: { $ref: "#/components/schemas/ControlPoint" }
+      responses:
+        "200":
+          description: Saved. `quality` estimates how consistent the 3 points are.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [floor, quality]
+                properties:
+                  floor: { $ref: "#/components/schemas/Floor" }
+                  quality: { $ref: "#/components/schemas/GeorefQuality" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      operationId: deleteFloorGeoref
+      summary: Remove the floor's georeferencing.
+      tags: [floors]
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/events/{eventId}/floors/{floorId}/graph:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/floorId"
+    put:
+      operationId: putFloorGraph
+      tags: [floors]
+      summary: Replace the floor's walkway graph (≤ 5000 nodes, ≤ 10000 edges).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                nodes:
+                  type: array
+                  items: { $ref: "#/components/schemas/Node" }
+                edges:
+                  type: array
+                  items: { $ref: "#/components/schemas/Edge" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Graph" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/TooLarge" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /v1/events/{eventId}/features:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    post:
+      operationId: createFeature
+      summary: Add a room, stand, POI or QR marker to the draft.
+      tags: [features]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FeatureInput" }
+            example: { $ref: "examples/create-stand.request.json" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Feature" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /v1/events/{eventId}/features/{featureId}:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - name: featureId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      operationId: updateFeature
+      tags: [features]
+      summary: Partial update; omitted fields keep their value, "" clears a text field.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FeaturePatch" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Feature" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      operationId: deleteFeature
+      summary: Remove a feature from the draft.
+      tags: [features]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+components:
+  securitySchemes:
+    firebaseIdToken:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+      description: |
+        Firebase Auth ID token. Organizers sign in with email/password, attendees
+        anonymously. Organizer operations check that the caller owns the event.
+  parameters:
+    eventId:
+      name: eventId
+      in: path
+      required: true
+      schema: { type: string }
+    floorId:
+      name: floorId
+      in: path
+      required: true
+      schema: { type: string }
+  responses:
+    BadRequest:
+      description: "Malformed JSON or unknown field (`code` = `invalid_json`)."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthenticated:
+      description: "Missing or invalid ID token (`code` = `unauthenticated`)."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: "Not the owner (`forbidden`) or anonymous caller creating an event (`organizer_account_required`)."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: "`code` = `not_found`."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    TooLarge:
+      description: "Body over 2 MiB (`code` = `body_too_large`)."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationFailed:
+      description: "`code` = `validation_failed`, `details` = FieldError[]."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { $ref: "examples/validation-error.response.json" }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          description: "validation_failed → FieldError[]; publish_blocked → {errors: Issue[], warnings: Issue[]}; invalid_json → parser message (string); otherwise absent."
+          oneOf:
+            - type: string
+            - type: array
+              items: { $ref: "#/components/schemas/FieldError" }
+            - type: object
+              properties:
+                errors: { type: array, items: { $ref: "#/components/schemas/Issue" } }
+                warnings: { type: array, items: { $ref: "#/components/schemas/Issue" } }
+    FieldError:
+      type: object
+      required: [field, message]
+      description: Element of `Error.details` when `code` = `validation_failed`.
+      properties:
+        field: { type: string, examples: ["geometry.coords[0]"] }
+        message: { type: string }
+    Issue:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [no_floors, invalid_graph, invalid_feature, unknown_entrance, no_entrance, unreachable]
+        message: { type: string }
+        floorId: { type: string }
+        featureId: { type: string }
+    Date:
+      type: string
+      format: date
+      pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+    EventInput:
+      type: object
+      required: [name, startDate, endDate]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        startDate: { $ref: "#/components/schemas/Date" }
+        endDate: { $ref: "#/components/schemas/Date" }
+        address: { type: string, maxLength: 2000 }
+    EventPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        startDate: { $ref: "#/components/schemas/Date" }
+        endDate: { $ref: "#/components/schemas/Date" }
+        address: { type: string, maxLength: 2000 }
+    Event:
+      type: object
+      required: [id, name, startDate, endDate, address, ownerUid, publishedVersion, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        startDate: { $ref: "#/components/schemas/Date" }
+        endDate: { $ref: "#/components/schemas/Date" }
+        address: { type: string }
+        ownerUid: { type: string, description: Empty for callers who don't own the event. }
+        publishedVersion: { type: integer, minimum: 0, description: 0 = never published. }
+        publishedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Point:
+      type: object
+      required: [x, y]
+      properties:
+        x: { type: number }
+        y: { type: number }
+    LatLng:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+    ControlPoint:
+      type: object
+      required: [px, latLng]
+      properties:
+        px: { $ref: "#/components/schemas/Point" }
+        latLng: { $ref: "#/components/schemas/LatLng" }
+    Georeference:
+      type: object
+      required: [controlPoints, metersPerPixel]
+      properties:
+        controlPoints:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { $ref: "#/components/schemas/ControlPoint" }
+        metersPerPixel: { type: number }
+    GeorefQuality:
+      type: object
+      required: [metersPerPixel, scaleMismatchPercent, skewDegrees, estimatedErrorMeters]
+      properties:
+        metersPerPixel: { type: number }
+        scaleMismatchPercent: { type: number, description: Difference between x and y scale. }
+        skewDegrees: { type: number, description: Deviation of the mapped axes from perpendicular. }
+        estimatedErrorMeters: { type: number, description: Rough worst-case position error over the plan. Large → a control point is probably misplaced. }
+    FloorInput:
+      type: object
+      required: [name, imagePath]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        order: { type: integer, default: 0, description: Sort order; 0 = ground floor. }
+        imagePath: { type: string, examples: ["events/abc/floors/ground.png"] }
+    FloorPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        order: { type: integer }
+        imagePath: { type: string }
+    Floor:
+      type: object
+      required: [id, name, order, imagePath, width, height, georef]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        order: { type: integer }
+        imagePath: { type: string }
+        width: { type: integer, description: Image width in pixels. }
+        height: { type: integer, description: Image height in pixels. }
+        georef:
+          oneOf:
+            - $ref: "#/components/schemas/Georeference"
+            - type: "null"
+    Geometry:
+      type: object
+      required: [kind, coords]
+      properties:
+        kind:
+          type: string
+          enum: [point, rect, polygon]
+          description: "point: 1 coord · rect: 2 opposite corners · polygon: ≥3 coords, implicitly closed, no self-intersection"
+        coords:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { $ref: "#/components/schemas/Point" }
+    FeatureType:
+      type: string
+      enum: [room, stand, poi, marker]
+      description: "room: polygon|rect · stand: point|rect · poi: point · marker ('you are here' QR): point"
+    FeatureFields:
+      type: object
+      properties:
+        type: { $ref: "#/components/schemas/FeatureType" }
+        floorId: { type: string }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, maxLength: 2000 }
+        geometry: { $ref: "#/components/schemas/Geometry" }
+        entranceNodeId: { type: string, description: Node of the floor's graph where routes to this feature end. }
+        capacity: { type: integer, minimum: 0, description: Rooms. }
+        company: { type: string, maxLength: 120, description: Stands. }
+        category: { type: string, maxLength: 120, description: Stands. }
+        link: { type: string, format: uri, description: "http(s) only." }
+        sponsorTier: { type: string, enum: [none, bronze, silver, gold] }
+        poiKind: { type: string, enum: [entrance, toilet, info, cloakroom, food, lift, stairs], description: Required for type poi. }
+    FeatureInput:
+      allOf:
+        - $ref: "#/components/schemas/FeatureFields"
+      required: [type, floorId, name, geometry]
+      unevaluatedProperties: false
+    FeaturePatch:
+      allOf:
+        - $ref: "#/components/schemas/FeatureFields"
+      unevaluatedProperties: false
+    Feature:
+      allOf:
+        - $ref: "#/components/schemas/FeatureFields"
+        - type: object
+          required: [id, type, floorId, name, geometry]
+          properties:
+            id: { type: string }
+    Node:
+      type: object
+      required: [id, x, y]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 64 }
+        x: { type: number }
+        y: { type: number }
+        connector:
+          type: string
+          description: Nodes with the same connector on different floors are linked (lift/stairs).
+        connectorKind: { type: string, enum: [lift, stairs] }
+    Edge:
+      type: object
+      required: [from, to]
+      description: Undirected walkable segment between two nodes of the same floor.
+      properties:
+        from: { type: string }
+        to: { type: string }
+    Graph:
+      type: object
+      required: [floorId, nodes, edges]
+      properties:
+        floorId: { type: string }
+        nodes:
+          type: array
+          items: { $ref: "#/components/schemas/Node" }
+        edges:
+          type: array
+          items: { $ref: "#/components/schemas/Edge" }
+    Map:
+      type: object
+      required: [floors, features, graphs]
+      properties:
+        floors:
+          type: array
+          items: { $ref: "#/components/schemas/Floor" }
+        features:
+          type: array
+          items: { $ref: "#/components/schemas/Feature" }
+        graphs:
+          type: array
+          items: { $ref: "#/components/schemas/Graph" }
