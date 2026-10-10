@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:echo` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 02:30 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo
+**Last updated:** 2026-10-11 02:30 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo, feature:find
 
 ## Current state
 
