@@ -25,7 +25,7 @@ mobile/
 │   │   │   ├── repositories.dart  # interfaces + Demo* implementations + providers
 │   │   │   └── app_state.dart     # Riverpod Notifiers: profile, joined events, contacts, meeting spot, unlocked summaries, organizer draft
 │   │   ├── features/<area>/       # screens, one folder per area
-│   │   └── l10n/                  # ARB (sr template, en) — only the old dev screen uses it so far
+│   │   └── l10n/                  # ARB (en template, sr) + generated app_localizations*.dart (committed)
 │   └── test/
 │       └── features/happy_path_test.dart  # walks the whole attendee flow
 ├── maps/                     # `eho_maps` package — owned by feature:maps (@Vertiglo). DO NOT EDIT.
@@ -64,7 +64,18 @@ Use `context.go` for tab/top-level navigation and `context.push` for drill-down 
 
 - Colors and text styles only via `Theme.of(context)` (`colorScheme`, `textTheme`). No hex colors in screens (exception: white behind the QR code).
 - Material 3 components. Phone-first: check 412 px width (no `RenderFlex overflowed`).
-- UI text is currently English and hardcoded. Don't add ARB keys unless the task says so.
+- UI text is English and comes from the ARB files (see Strings). No hardcoded user-visible strings in screens.
+
+## Strings
+
+The app UI is English by default (`locale: const Locale('en')` in `app.dart`, decision `product-ui-language`); Serbian is kept compiling as a second locale. To add a string:
+
+1. Add the key to `lib/l10n/app_en.arb` (the template). Placeholders and plurals need an `@key` entry, e.g. `"sessionShowOnMap": "Show {stage} on map"` with `"@sessionShowOnMap": {"placeholders": {"stage": {"type": "String"}}}`; counts use ICU plurals (`{count, plural, =1{1 stage} other{{count} stages}}`).
+2. Add the same key to `lib/l10n/app_sr.arb` (Serbian, Latin script; copy the English if unsure). Every key must exist in both files.
+3. Run `flutter gen-l10n` (or `flutter pub get`/`flutter analyze`, which regenerate) and commit the regenerated `lib/l10n/app_localizations*.dart`.
+4. Use it in the screen: `final l10n = AppLocalizations.of(context);` then `Text(l10n.sessionShowOnMap(s.stage))`.
+
+Not in ARB: demo data content (`demo_data.dart`), debug logs, URLs. The venue map (`eho_maps`) has its own `MapsLocalizations`; it follows the same app locale. Widget tests that build a bare `MaterialApp` must pass `localizationsDelegates: AppLocalizations.localizationsDelegates` and `supportedLocales: AppLocalizations.supportedLocales`.
 
 ## Verifying
 
@@ -78,5 +89,5 @@ flutter test                # all tests must pass
 ```
 
 - Widget tests: follow `test/features/happy_path_test.dart`. Use a phone-sized `tester.view`, `pumpAndSettle` for navigation, and an extra `pump` after stream/async updates (Echo uses timed streams; `pumpAndSettle` alone won't wait for them).
-- Look at screenshots with the Read tool. The Map tab shows "Server trenutno nije dostupan" unless the `backend/maps` emulators are running. That's expected locally.
+- Look at screenshots with the Read tool. The Map tab shows "The server is not reachable right now…" unless the `backend/maps` emulators are running. That's expected locally.
 - The Firebase Auth emulator banner is hidden on web by CSS + a MutationObserver in `web/index.html` (FlutterFire doesn't expose `disableWarnings`).

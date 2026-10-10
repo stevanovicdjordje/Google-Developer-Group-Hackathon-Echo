@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('shows backend and auth status in Serbian', (tester) async {
+  testWidgets('shows backend and auth status in English', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -24,8 +24,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Status sistema'), findsOneWidget);
-    expect(find.text('Radi'), findsOneWidget);
-    expect(find.text('Anonimni korisnik uid-123'), findsOneWidget);
+    expect(find.text('System status'), findsOneWidget);
+    expect(find.text('OK'), findsOneWidget);
+    expect(find.text('Anonymous user uid-123'), findsOneWidget);
   });
 }

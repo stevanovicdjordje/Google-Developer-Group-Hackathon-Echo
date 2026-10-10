@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
+import '../../l10n/app_localizations.dart';
 import '../agenda/agenda_screens.dart';
 
 /// Echo: one screen per talk. Live transcript in the middle; a "catch up"
@@ -117,7 +118,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
 
   void _askAbout(TranscriptLine line) {
     setState(() => _mode = _Mode.ai);
-    _input.text = 'What did the speaker mean by: "${line.text}"';
+    _input.text = AppLocalizations.of(context).echoAskAboutPrefill(line.text);
     _input.selection = TextSelection.collapsed(offset: _input.text.length);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _inputFocus.requestFocus();
@@ -137,7 +138,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
       if (!mounted) return;
       setState(() => _questions = [q, ..._questions]);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Question sent to the speaker')),
+        SnackBar(content: Text(AppLocalizations.of(context).echoQuestionSent)),
       );
       return;
     }
@@ -158,16 +159,17 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
     final sessions = ref.watch(agendaProvider(widget.eventId)).value ?? [];
     final session = sessions.where((s) => s.id == widget.sessionId).firstOrNull;
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          session?.title ?? 'Echo',
+          session?.title ?? l10n.echoTitle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
-            tooltip: _translate ? 'Show original' : 'Translate to Serbian',
+            tooltip: _translate ? l10n.echoShowOriginal : l10n.echoTranslate,
             icon: Icon(
               Icons.translate,
               color: _translate ? scheme.primary : null,
@@ -212,7 +214,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
                     bottom: 12,
                     child: FilledButton.tonalIcon(
                       icon: const Icon(Icons.arrow_downward, size: 18),
-                      label: const Text('Jump to live'),
+                      label: Text(l10n.echoJumpToLive),
                       onPressed: () => _toBottom(force: true),
                     ),
                   ),
@@ -251,14 +253,16 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Text(
-                    'Questions for the speaker',
+                    AppLocalizations.of(context).echoQuestionsTitle,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 for (final q in sorted)
                   ListTile(
                     title: Text(q.text),
-                    subtitle: q.mine ? const Text('Your question') : null,
+                    subtitle: q.mine
+                        ? Text(AppLocalizations.of(context).echoYourQuestion)
+                        : null,
                     trailing: TextButton.icon(
                       icon: const Icon(Icons.arrow_upward),
                       label: Text('${q.votes}'),
@@ -293,14 +297,17 @@ class _SummaryStrip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     if (ended) {
       final unlocked = ref.watch(unlockedSummariesProvider).contains(sessionId);
       return Material(
         color: scheme.tertiaryContainer,
         child: ListTile(
           leading: Icon(unlocked ? Icons.summarize : Icons.lock_outline),
-          title: const Text('Full talk summary'),
-          subtitle: Text(unlocked ? 'Unlocked' : 'Premium · AI summary of the whole talk'),
+          title: Text(l10n.echoFullSummary),
+          subtitle: Text(
+            unlocked ? l10n.echoUnlocked : l10n.echoPremiumSubtitle,
+          ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => _openSummary(context, ref, unlocked),
         ),
@@ -310,10 +317,10 @@ class _SummaryStrip extends ConsumerWidget {
       color: scheme.surfaceContainerHigh,
       child: ExpansionTile(
         leading: const Icon(Icons.bolt),
-        title: const Text('Catch up'),
-        subtitle: const Text('What was said so far'),
+        title: Text(l10n.echoCatchUp),
+        subtitle: Text(l10n.echoCatchUpSubtitle),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        children: [Text(catchUp ?? 'Summarizing…')],
+        children: [Text(catchUp ?? l10n.echoSummarizing)],
       ),
     );
   }
@@ -326,24 +333,24 @@ class _SummaryStrip extends ConsumerWidget {
     if (!unlocked) {
       final ok = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          icon: const Icon(Icons.workspace_premium),
-          title: const Text('Unlock talk summaries'),
-          content: const Text(
-            'Get an AI summary of every talk at this event: key points, '
-            'trade-offs and takeaways.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Not now'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Unlock · €2.99'),
-            ),
-          ],
-        ),
+        builder: (context) {
+          final l10n = AppLocalizations.of(context);
+          return AlertDialog(
+            icon: const Icon(Icons.workspace_premium),
+            title: Text(l10n.echoUnlockTitle),
+            content: Text(l10n.echoUnlockBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.echoNotNow),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(l10n.echoUnlockPrice),
+              ),
+            ],
+          );
+        },
       );
       if (ok != true) return;
       ref.read(unlockedSummariesProvider.notifier).unlock(sessionId);
@@ -409,12 +416,12 @@ class _TranscriptRow extends StatelessWidget {
             Rect.fromLTWH(rect.left + 48, rect.bottom - 8, 0, 0),
             Offset.zero & overlay.size,
           ),
-          items: const [
+          items: [
             PopupMenuItem(
               value: true,
               child: ListTile(
-                leading: Icon(Icons.auto_awesome),
-                title: Text('Ask about this'),
+                leading: const Icon(Icons.auto_awesome),
+                title: Text(AppLocalizations.of(context).echoAskAboutThis),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -489,7 +496,7 @@ class _EndedMarker extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
-            'Talk ended',
+            AppLocalizations.of(context).echoTalkEnded,
             style: Theme.of(context).textTheme.labelMedium,
           ),
         ),
@@ -519,62 +526,68 @@ class _Composer extends StatelessWidget {
   final VoidCallback onOpenQuestions;
 
   @override
-  Widget build(BuildContext context) => Material(
-    elevation: 3,
-    child: SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: SegmentedButton<_Mode>(
-                    showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(value: _Mode.ai, label: Text('Ask AI')),
-                      ButtonSegment(
-                        value: _Mode.speaker,
-                        label: Text('Ask speaker'),
-                      ),
-                    ],
-                    selected: {mode},
-                    onSelectionChanged: (s) => onMode(s.first),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Material(
+      elevation: 3,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: SegmentedButton<_Mode>(
+                      showSelectedIcon: false,
+                      segments: [
+                        ButtonSegment(
+                          value: _Mode.ai,
+                          label: Text(l10n.echoAskAi),
+                        ),
+                        ButtonSegment(
+                          value: _Mode.speaker,
+                          label: Text(l10n.echoAskSpeaker),
+                        ),
+                      ],
+                      selected: {mode},
+                      onSelectionChanged: (s) => onMode(s.first),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filledTonal(
-                  tooltip: 'Questions for the speaker',
-                  onPressed: onOpenQuestions,
-                  icon: Badge.count(
-                    count: questionCount,
-                    child: const Icon(Icons.forum_outlined),
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    tooltip: l10n.echoQuestionsTitle,
+                    onPressed: onOpenQuestions,
+                    icon: Badge.count(
+                      count: questionCount,
+                      child: const Icon(Icons.forum_outlined),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: controller,
-              focusNode: focusNode,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => onSend(),
-              decoration: InputDecoration(
-                hintText: mode == _Mode.ai
-                    ? 'Ask about this talk…'
-                    : 'Question for the speaker…',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: () => onSend(),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller,
+                focusNode: focusNode,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSend(),
+                decoration: InputDecoration(
+                  hintText: mode == _Mode.ai
+                      ? l10n.echoAskHint
+                      : l10n.echoSpeakerHint,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: () => onSend(),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

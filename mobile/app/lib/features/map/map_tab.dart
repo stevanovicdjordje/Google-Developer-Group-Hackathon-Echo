@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/app_state.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Map tab: the venue map from `feature:maps`, plus the agreed meeting spot.
 class MapTab extends ConsumerStatefulWidget {
@@ -31,6 +32,7 @@ class _MapTabState extends ConsumerState<MapTab> {
     final eventId = widget.eventId;
     final spot = ref.watch(meetingSpotProvider);
     final spotId = _spotFeatureId;
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         Expanded(
@@ -42,7 +44,7 @@ class _MapTabState extends ConsumerState<MapTab> {
             highlightFeatureId: spot == null ? null : spotId,
             highlightLabel: spot == null || spotId == null
                 ? null
-                : 'Meeting: ${spot.personName}',
+                : l10n.mapMeetingHighlight(spot.personName),
           ),
         ),
         if (spot != null)
@@ -52,11 +54,11 @@ class _MapTabState extends ConsumerState<MapTab> {
               top: false,
               child: ListTile(
                 leading: const Icon(Icons.handshake_outlined),
-                title: Text('Meeting ${spot.personName}'),
-                subtitle: Text('at ${spot.place}'),
+                title: Text(l10n.mapMeetingTitle(spot.personName)),
+                subtitle: Text(l10n.mapMeetingAt(spot.place)),
                 trailing: TextButton(
                   onPressed: () => _showSpot(spot.place),
-                  child: const Text('Show'),
+                  child: Text(l10n.mapShowSpot),
                 ),
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/repositories.dart';
+import '../../l10n/app_localizations.dart';
 
 /// `/`: entry point when the app is opened without a link.
 class StartScreen extends StatelessWidget {
@@ -10,6 +11,7 @@ class StartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -18,28 +20,25 @@ class StartScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Text('Eho', style: t.displayMedium),
+              Text(l10n.appTitle, style: t.displayMedium),
               const SizedBox(height: 8),
-              Text(
-                'Your AI companion for events: agenda, venue, talks and people.',
-                style: t.titleMedium,
-              ),
+              Text(l10n.startTagline, style: t.titleMedium),
               const Spacer(),
               FilledButton.icon(
                 icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Join with a link or code'),
+                label: Text(l10n.startJoinButton),
                 onPressed: () => _joinDialog(context),
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 icon: const Icon(Icons.event_note),
-                label: const Text('My events'),
+                label: Text(l10n.myEvents),
                 onPressed: () => context.go('/events'),
               ),
               const SizedBox(height: 12),
               TextButton.icon(
                 icon: const Icon(Icons.storefront),
-                label: const Text("I'm an organizer"),
+                label: Text(l10n.startOrganizerButton),
                 onPressed: () => context.go('/organizer'),
               ),
             ],
@@ -53,26 +52,27 @@ class StartScreen extends StatelessWidget {
     final controller = TextEditingController(text: demoEventId);
     final code = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Join an event'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Event link or code',
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.joinDialogTitle),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(labelText: l10n.joinDialogLabel),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Open'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text(l10n.open),
+            ),
+          ],
+        );
+      },
     );
     if (code == null || code.trim().isEmpty || !context.mounted) return;
     // Accept a full link (…/e/{id}) or a bare code.
