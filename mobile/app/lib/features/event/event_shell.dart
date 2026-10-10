@@ -60,31 +60,45 @@ class _EventShellState extends State<EventShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    // Design: 1 px divider on top of the bar, same line icon whether selected
+    // or not (the pill marks the active tab).
     return Scaffold(
       body: widget.child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: _select,
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.calendar_month_outlined),
-            selectedIcon: const Icon(Icons.calendar_month),
-            label: l10n.tabAgenda,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: theme.colorScheme.outlineVariant,
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.map_outlined),
-            selectedIcon: const Icon(Icons.map),
-            label: l10n.tabMap,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.people_outline),
-            selectedIcon: const Icon(Icons.people),
-            label: l10n.tabFind,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(Icons.person),
-            label: l10n.tabProfile,
+          Theme(
+            data: theme.copyWith(
+              navigationBarTheme: theme.navigationBarTheme.copyWith(height: 80),
+            ),
+            child: NavigationBar(
+              selectedIndex: _index,
+              onDestinationSelected: _select,
+              destinations: [
+                NavigationDestination(
+                  icon: const Icon(Icons.calendar_today_outlined),
+                  label: l10n.tabAgenda,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.map_outlined),
+                  label: l10n.tabMap,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.people_outline),
+                  label: l10n.tabFind,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.person_outline),
+                  label: l10n.tabProfile,
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:eho_maps/eho_maps.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme.dart';
 import '../../data/app_state.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -33,6 +34,9 @@ class _MapTabState extends ConsumerState<MapTab> {
     final spot = ref.watch(meetingSpotProvider);
     final spotId = _spotFeatureId;
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final eho = context.eho;
     return Column(
       children: [
         Expanded(
@@ -48,17 +52,65 @@ class _MapTabState extends ConsumerState<MapTab> {
           ),
         ),
         if (spot != null)
-          Material(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            child: SafeArea(
-              top: false,
-              child: ListTile(
-                leading: const Icon(Icons.handshake_outlined),
-                title: Text(l10n.mapMeetingTitle(spot.personName)),
-                subtitle: Text(l10n.mapMeetingAt(spot.place)),
-                trailing: TextButton(
-                  onPressed: () => _showSpot(spot.place),
-                  child: Text(l10n.mapShowSpot),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            child: Material(
+              color: scheme.surface,
+              elevation: 4,
+              shadowColor: scheme.onSurface.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: eho.liveContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.place_outlined,
+                        size: 20,
+                        color: eho.onLiveContainer,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.mapMeetingTitle(spot.personName),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.mapMeetingAt(spot.place),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: theme.textTheme.labelLarge,
+                      ),
+                      onPressed: () => _showSpot(spot.place),
+                      child: Text(l10n.mapShowSpot),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -69,7 +121,10 @@ class _MapTabState extends ConsumerState<MapTab> {
 
   void _showSpot(String place) {
     final event = ref.read(publishedEventProvider(widget.eventId)).value;
-    final id = event?.map.features.where((f) => f.name == place).firstOrNull?.id;
+    final id = event?.map.features
+        .where((f) => f.name == place)
+        .firstOrNull
+        ?.id;
     if (id != null) setState(() => _spotFeatureId = id);
   }
 }
