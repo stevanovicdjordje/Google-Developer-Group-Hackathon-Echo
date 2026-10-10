@@ -36,7 +36,7 @@ To use Gemma: copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 | --- | --- |
 | `cmd/api` | HTTP server |
 | `cmd/replay` | Transcript replay into Firestore |
-| `demo/keynote.json` | The demo keynote transcript (session `s1`, same text as the app's demo data) |
+| `demo/keynote.json` | The demo keynote (session `s1`, Mara Ilić, Glavna sala): 68 lines, 6:52. The first 16 lines and their times are the app's demo data and the design (00:44 battery, 00:50 batching). |
 | `internal/assist` | Prompts, Gemini/Gemma adapter, offline assistant, output validation |
 | `internal/httpapi` | Routes, auth, rate limits, caching |
 | `internal/store` | Firestore + in-memory store |
@@ -45,8 +45,8 @@ To use Gemma: copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 
 | Item | Value |
 | --- | --- |
-| Latency (measured, Gemma 4 26B A4B) | Ask ~1 s, Catch up ~3 s, Summary 3–4 s, translating one new line ~1 s (the first full 18-line backlog ~10 s) |
-| Timeout | 20 s per model call, one retry on HTTP 5xx (`AI_TIMEOUT_SECONDS`) → `502 ai_unavailable` |
+| Latency (measured, Gemma 4 26B A4B, 68-line keynote) | Ask 1–3 s, Catch up ~2 s, Summary 4–6 s, one new line translated ~1 s; a 50-line backlog (translation switched on mid-talk) 11–13 s |
+| Timeout | 20 s per model call, HTTP 5xx retried twice after 0.3 s and 1 s (`AI_TIMEOUT_SECONDS`) → `502 ai_unavailable` |
 | Caching | Per session, language and number of revealed lines (Ask also per question). The first caller pays the latency, everyone after gets the cached answer. |
 | Rate limits | 30 AI cache misses and 10 questions per user per minute → `429 rate_limited` + `Retry-After` |
 | Output | Plain text, `•` bullets in the summary, at most 4000 characters |

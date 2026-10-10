@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:echo` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 01:20 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo
+**Last updated:** 2026-10-11 01:40 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo
 
 ## Current state
 
@@ -21,10 +21,11 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 | Run locally | `cd backend/maps && make dev` + `make seed` (emulators, demo event), then `cd backend/echo && make dev` (API on `http://localhost:8082`) and `make replay` (plays the keynote into session `s1` of the demo event, 2× speed) |
 | Auth | Same as the map: `Authorization: Bearer <Firebase ID token>`, anonymous attendees are fine. The event must be published. |
 | Transcript | Firestore listener on `events/{eventId}/published/echo/sessions/{sessionId}/lines` ordered by `index`; session status in the parent doc. See [`realtime.md`](realtime.md). |
-| AI latency | Measured: Ask ~1 s, Catch up ~3 s, Summary 3–4 s, one new transcript line translated ~1 s. Model calls time out after 20 s (`502 ai_unavailable`, safe to retry). Answers are cached for everyone, so only the first caller waits. Show a loading state. |
+| AI latency | Measured on the 68-line keynote: Ask 1–3 s, Catch up ~2 s, Summary 4–6 s, one new line translated ~1 s, a 50-line backlog 11–13 s (when the user switches translation on mid-talk, translate from the current line rather than from 0). Model calls time out after 20 s (`502 ai_unavailable`, safe to retry). Answers are cached for everyone, so only the first caller waits. Show a loading state. |
 | Limits | `429 rate_limited` + `Retry-After` after 30 uncached AI calls or 10 questions per user per minute |
 | Env (server) | `GEMINI_API_KEY` (empty = offline assistant, answers quote the transcript, `model: "offline"`), `GEMMA_MODEL`; see `backend/echo/.env.example` |
-| Contract | [`openapi.yaml`](openapi.yaml) 0.1.0, [`realtime.md`](realtime.md), [`CHANGELOG.md`](CHANGELOG.md) |
+| Demo talk | Session `s1`, "On-device AI: when the model lives in your pocket", Mara Ilić, Glavna sala: 68 lines, 6:52 (≈3:26 at the default 2× replay). Lines 0–15 and their times match the app's demo data and the design (00:44 battery 12%, 00:50 batching). Ask answers end with when it was said ("Mara mentions it at 00:50."). |
+| Contract | [`openapi.yaml`](openapi.yaml) 0.2.0, [`realtime.md`](realtime.md), [`CHANGELOG.md`](CHANGELOG.md) |
 
 ### `EchoRepository` → API (for the mobile agent)
 
@@ -51,6 +52,7 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 01:40 · INFO · for: mobile · Echo contract 0.2.0 (additive): the session doc in Firestore has optional `title` and `speaker`. The demo keynote `s1` is now 6:52 / 68 lines; the first 16 lines are unchanged, so the design's "Ask about this" example (00:44 / 00:50) works, and Ask now ends with "Mara mentions it at 00:50." No change needed in the app.
 - 2026-10-11 01:20 · INFO · for: all · Echo runs on real Gemma now (`gemma-4-26b-a4b-it`, thinking off): Ask ~1 s, Summary ~3–4 s. No API change. Note for anyone else calling Gemma 4 on the Gemini API: send `generationConfig.thinkingConfig.thinkingLevel: "minimal"` and drop parts with `thought: true`, or answers take 10+ s and can come back as reasoning text.
 - 2026-10-11 00:44 · ACTION · for: mobile · Echo API 0.1.0 is implemented in `backend/echo` (port 8082) and the transcript replays into Firestore. The table above maps each `EchoRepository` method to it. See request `echo#1`.
 - 2026-10-11 00:44 · INFO · for: all · Echo uses Gemma via the Gemini API for Ask, Catch up, Summary and Translation (`feature-echo-ai`). It needs `GEMINI_API_KEY` on the Echo service only; without it the service still runs (offline assistant).
