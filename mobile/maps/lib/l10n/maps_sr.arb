@@ -428,5 +428,17 @@
   "statsRemoved": "(uklonjeno sa plana)",
   "statsEmpty": "Još nema podataka za ovaj period. Brojke stižu kad posetioci koriste mapu, uz kašnjenje do 10 sekundi.",
   "statsError": "Statistika trenutno nije dostupna.",
-  "statsPrivacy": "Samo zbirni brojevi po danu. Bez lokacija i bez podataka o osobama."
+  "statsPrivacy": "Samo zbirni brojevi po danu. Bez lokacija i bez podataka o osobama.",
+  "qrOpen": "QR oznake za štampu",
+  "qrTitle": "QR oznake",
+  "qrIntro": "Odštampajte i postavite svaku oznaku na mesto koje ste označili na planu. Posetilac skenira kod i odmah vidi gde je i put do štanda ili sale.",
+  "qrNotPublished": "Događaj još nije objavljen. Kodovi rade tek kad objavite mapu.",
+  "qrPublishFirst": "Nova ili pomerena oznaka radi tek posle objave.",
+  "qrNone": "Još nema QR oznaka. Dodajte ih alatom „QR marker“ na planu, pa objavite.",
+  "qrPrint": "Štampaj",
+  "qrScanHint": "Skenirajte kamerom telefona: plan objekta i put do štanda ili sale.",
+  "qrPopupBlocked": "Pregledač je blokirao novu karticu. Dozvolite iskačuće prozore za ovu stranicu.",
+  "qrCopy": "Kopiraj link",
+  "qrCopied": "Link je kopiran.",
+  "qrLoadFailed": "Oznake trenutno nije moguće učitati."
 }
