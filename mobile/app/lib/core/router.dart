@@ -53,7 +53,10 @@ GoRouter buildRouter() => GoRouter(
 
     // Event: bottom-nav tabs. Each tab is a branch with its own Navigator
     // kept alive in an IndexedStack, so switching tabs keeps scroll
-    // position, Find results, the map camera and pushed pages.
+    // position, Find results, the map camera and pushed pages. The branches
+    // are shared by all events, so each tab root is keyed by `eventId`: going
+    // to another event creates fresh screen state instead of showing the
+    // previous event's search, stage filter or map.
     StatefulShellRoute.indexedStack(
       builder: (c, s, shell) =>
           EventShell(eventId: _id(s), location: s.uri.toString(), child: shell),
@@ -63,7 +66,8 @@ GoRouter buildRouter() => GoRouter(
           routes: [
             GoRoute(
               path: '/e/:eventId/agenda',
-              builder: (c, s) => AgendaScreen(eventId: _id(s)),
+              builder: (c, s) =>
+                  AgendaScreen(key: ValueKey(_id(s)), eventId: _id(s)),
             ),
           ],
         ),
@@ -73,6 +77,7 @@ GoRouter buildRouter() => GoRouter(
             GoRoute(
               path: '/e/:eventId/map',
               builder: (c, s) => MapTab(
+                key: ValueKey(_id(s)),
                 eventId: _id(s),
                 markerId: s.uri.queryParameters['at'],
               ),
@@ -80,6 +85,7 @@ GoRouter buildRouter() => GoRouter(
                 GoRoute(
                   path: 'stand/:standId',
                   builder: (c, s) => MapTab(
+                    key: ValueKey(_id(s)),
                     eventId: _id(s),
                     featureId: s.pathParameters['standId'],
                   ),
@@ -93,11 +99,13 @@ GoRouter buildRouter() => GoRouter(
           routes: [
             GoRoute(
               path: '/e/:eventId/find',
-              builder: (c, s) => FindScreen(eventId: _id(s)),
+              builder: (c, s) =>
+                  FindScreen(key: ValueKey(_id(s)), eventId: _id(s)),
               routes: [
                 GoRoute(
                   path: 'person/:personId',
                   builder: (c, s) => PersonScreen(
+                    key: ValueKey(_id(s)),
                     eventId: _id(s),
                     personId: s.pathParameters['personId']!,
                     why: s.uri.queryParameters['why'],
