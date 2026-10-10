@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Starts the Firebase emulators and the Go API against them. Ctrl+C stops both.
-# Usage: backend/scripts/dev.sh
+# Usage: backend/maps/scripts/dev.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -10,7 +10,7 @@ export FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
 export STORAGE_EMULATOR_HOST=http://127.0.0.1:9199
 export LOG_LEVEL="${LOG_LEVEL:-debug}"
 
-command -v firebase >/dev/null || { echo "firebase CLI not found (see backend/README.md → Setup)" >&2; exit 1; }
+command -v firebase >/dev/null || { echo "firebase CLI not found (see backend/maps/README.md → Setup)" >&2; exit 1; }
 
 (cd firebase && firebase emulators:start --project "$FIREBASE_PROJECT_ID" --import=.emulator-data --export-on-exit=.emulator-data) &
 EMU_PID=$!

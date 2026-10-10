@@ -1,6 +1,6 @@
 # backend/ — Eho API and AI services
 
-> **Stack:** Go + `net/http`, Firestore, Cloud Storage, Firebase Auth, Cloud Run (see `docs/decisions/backend-framework.md`, `backend-persistence.md`). Currently implements the venue-map API (in progress).
+> **Stack:** Go (see `docs/decisions/backend-framework.md`). Features live in their own subfolders as independent Go services, e.g. [`maps/`](maps/) (venue map). Shared backend code, Gemma/STT adapters etc. are not started yet.
 
 ## Purpose
 
@@ -37,28 +37,4 @@ All AI calls go through this module. Keep each provider behind an adapter so the
 
 ## Setup
 
-Requirements: Go (any ≥ 1.21; `go.mod` pins toolchain 1.27.2, downloaded automatically), Java 21 and the Firebase CLI (`firebase`) for the emulators.
-
-```bash
-cd backend
-make dev        # Firebase emulators (Auth 9099, Firestore 8081, Storage 9199, UI 4000) + API on :8080
-make test       # go test ./...
-make vet
-curl localhost:8080/healthz
-```
-
-Emulators run as the demo project `demo-eho` (no real Firebase project or credentials needed). Emulator data is persisted in `firebase/.emulator-data/` (git-ignored).
-
-Configuration is env-only; see `.env.example`. In production the server uses Application Default Credentials on Cloud Run.
-
-### Layout
-
-```
-cmd/api/            entry point (config, slog, graceful shutdown)
-internal/config/    env configuration
-internal/httpapi/   router, handlers, middleware (CORS, logging, recover; auth and rate limit follow)
-firebase/           firebase.json, Firestore + Storage security rules, emulator config
-scripts/dev.sh      one-command local run
-```
-
-Logs never include request bodies or query strings (attendee positions must not be logged).
+Per feature service; see each subfolder's README (e.g. [`maps/README.md`](maps/README.md)).

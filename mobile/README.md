@@ -36,7 +36,7 @@ The attendee-facing client. It lets a visitor join an event and use Eho's attend
 
 ## Setup
 
-Requirements: Flutter stable (3.47+), Chrome; for the backend + emulators see `../backend/README.md`.
+Requirements: Flutter stable (3.47+), Chrome; for the backend + emulators see `../backend/maps/README.md`.
 
 ```bash
 mobile/scripts/dev_all.sh          # emulators + Go API + Flutter web in Chrome (http://localhost:5000)
@@ -49,4 +49,4 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080   # app o
 
 Build-time settings (`--dart-define`): `API_BASE_URL` (default `http://localhost:8080`), `USE_EMULATORS` (default `true`; a real Firebase project is not configured yet), `EMULATOR_HOST` (default `localhost`; use `10.0.2.2` on the Android emulator).
 
-Layout: `lib/core/` (router, theme, Firebase init, API client, config), `lib/features/<feature>/` (`auth`, `dev`, later `map_viewer`, `map_editor`, `location`, `stats`), `lib/l10n/` (Serbian Latin `app_sr.arb` is the template, English `app_en.arb`).
+Layout: `lib/core/` (router, theme, Firebase init, API client, config), `lib/features/<feature>/` (`auth`, `dev`; the venue map in `maps/`), `lib/l10n/` (Serbian Latin `app_sr.arb` is the template, English `app_en.arb`).

@@ -12,8 +12,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Ilij4n/eho/backend/internal/config"
-	"github.com/Ilij4n/eho/backend/internal/httpapi"
+	"cloud.google.com/go/storage"
+	firebase "firebase.google.com/go/v4"
+
+	"github.com/Ilij4n/eho/backend/maps/internal/auth"
+	"github.com/Ilij4n/eho/backend/maps/internal/config"
+	"github.com/Ilij4n/eho/backend/maps/internal/httpapi"
+	"github.com/Ilij4n/eho/backend/maps/internal/planimage"
+	"github.com/Ilij4n/eho/backend/maps/internal/store"
 )
 
 func main() {
@@ -34,9 +40,36 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	// Application Default Credentials in production; the emulator env vars
+	// (FIRESTORE_EMULATOR_HOST, FIREBASE_AUTH_EMULATOR_HOST, STORAGE_EMULATOR_HOST) locally.
+	app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: cfg.ProjectID, StorageBucket: cfg.StorageBucket})
+	if err != nil {
+		return fmt.Errorf("init firebase: %w", err)
+	}
+	authClient, err := app.Auth(ctx)
+	if err != nil {
+		return fmt.Errorf("init auth: %w", err)
+	}
+	fs, err := app.Firestore(ctx)
+	if err != nil {
+		return fmt.Errorf("init firestore: %w", err)
+	}
+	defer fs.Close()
+	gcs, err := storage.NewClient(ctx)
+	if err != nil {
+		return fmt.Errorf("init storage: %w", err)
+	}
+	defer gcs.Close()
+
 	srv := &http.Server{
-		Addr:              ":" + cfg.Port,
-		Handler:           httpapi.NewHandler(httpapi.Options{Logger: log, AllowedOrigins: cfg.AllowedOrigins}),
+		Addr: ":" + cfg.Port,
+		Handler: httpapi.NewHandler(httpapi.Options{
+			Logger:         log,
+			AllowedOrigins: cfg.AllowedOrigins,
+			Store:          store.NewFirestoreStore(fs),
+			Verifier:       auth.FirebaseVerifier{Client: authClient},
+			Images:         planimage.GCSInspector{Bucket: gcs.Bucket(cfg.StorageBucket)},
+		}),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,
