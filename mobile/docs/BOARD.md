@@ -10,13 +10,18 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
+| M-10b | Design: Start, Join, Onboarding, My events | M | dev | `features/start/`, `features/join/` | After M-10a. Design: `mobile/docs/design/{Main,Join,Onboarding,Events}.dc.html` |
+| M-10c | Design: Agenda + session detail | M | dev | `features/agenda/` | After M-10a. `Agenda.dc.html` |
+| M-10d | Design: Echo screen | M | dev | `features/echo/` | After M-10a **and M-18** (both touch Echo). `Echo.dc.html` |
+| M-10e | Design: Find, person, Messages + meeting spot | M | dev | `features/find/` | After M-10a. `Find.dc.html`, `Messages.dc.html` |
+| M-10f | Design: Profile + Map tab chrome + event shell nav | M | dev | `features/profile/`, `features/map/map_tab.dart`, `features/event/event_shell.dart` | After M-10a. `Profile.dc.html`, `Map.dc.html`, nav in `Agenda.dc.html` |
+| M-10g | Design: Organizer upload/review/published | M | dev | `features/organizer/` | After M-10a. `Org*.dc.html` |
 | M-17 | Demo-event name: join screen/agenda say "DevSummit Belgrade 2026" while the map event is "Eho Demo Expo" | S | — | — | Cosmetic. Decide with the design pass / demo script; maybe ask feature:maps to seed the same name. |
 
 ## Blocked
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
-| M-10 | Design pass: apply the Claude Design result to `core/theme.dart` + screens | Human runs `/design-login` and makes the design himself. **Don't ask him again.** Then this becomes an opus task. |
 | M-13 | Wire real endpoints API-1…API-15 as they land | Backend has no owner yet (`mobile#5`) |
 | M-14 | Android build on an emulator/device (`EMULATOR_HOST=10.0.2.2`) + Android App Links for `/e/{id}` | Hosting domain for assetlinks.json; Android SDK on the machine |
 
@@ -24,7 +29,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| — | | | | |
+| M-10a | opus | 2026-10-11 01:16 | worktree | Design foundation: `core/theme.dart` tokens + component themes, bundled fonts (`pubspec.yaml`, `assets/fonts/`), shared widgets in `core/ui/` |
+| M-18 | opus | 2026-10-11 01:16 | worktree | echo#1: wire `EchoRepository` to the Echo API (`backend/echo`, :8082) + Firestore transcript; demo repo stays the fallback |
 
 ## Done
 
