@@ -24,12 +24,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-16 | dev | 2026-10-11 01:07 | worktree | QR flow: keep `?at=` through join + onboarding → Map tab with "you are here" |
+| — | | | | |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-16 | QR flow: `/e/{id}?at=` survives join + onboarding → `/e/{id}/map?at=` (`qr_join_test.dart`). Note: `/e/{id}/stand/{id}` still opens the map without the join screen (fine for the demo) | `89c6163` |
 | M-11 | English UI by default (`locale: en`), 138 strings in ARB (en template + sr), `product-ui-language` | `35ffbd5` |
 | M-12 | Live map verified on this machine (seed `v7y6hpytx3iyhhvd`): Map tab renders the plan, `/map?at=` shows "Vi ste ovde", route API 52 m/43 s, all demo meeting-spot names match seeded features, `/o` login renders. Not tapped through in-app: route button, meeting-spot pin | verification only |
 | M-15 | maps#2: location permissions (Android fine/coarse, iOS when-in-use) | `3cee092` |
