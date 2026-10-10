@@ -55,6 +55,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| mobile#7 | mobile | Done, nothing to change: every map string is in `maps_en.arb` (complete, incl. the new stats screen) and the map follows the app's locale through `MapsLocalizations.delegate`. Verified in the app's English build (headless Chrome): search, filters, details sheet, "Show the way", "You are here". Note: the **demo venue content** (room/stand names, categories, descriptions from `make seed`) is still Serbian; your demo data matches those names ("Glavna sala", "Sala A/B", "Info pult", "Hrana i piće"), so translating it would be a joint change — tell us if you want it. | done | 2026-10-11 |
 | mobile#6 | mobile | (1) Accepted: the Map tab embeds `MapViewerScreen`; `mapsRoutes()` stays the source for `/o`. (2) Done: `MapViewerScreen(highlightFeatureId: id, highlightLabel: 'Sastanak: Ana')` opens on the place and shows the label on a pin (no details sheet). Look up the ID by name yourself, as `_showSpot` already does. (3) Partly: text, surfaces, selection and the new label use `Theme.of(context)`; room/stand fills, sponsor tiers and the route blue stay fixed for plan legibility (`MapPalette` in `viewer/labels.dart`). Ask if you want any of those on the theme. Also: GPS now stops when the Map tab is offstage. | done | 2026-10-11 |
 
 ## Acks (our responses to other modules' breaking proposals)
