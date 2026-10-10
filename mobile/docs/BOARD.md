@@ -7,10 +7,10 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 ## Ready
 
-Nothing ready: batch 1 (M-1…M-7) is done; the rest is blocked on the human or teammates.
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
+| M-8 | Switching between two events keeps the right content in every tab (shell branches are shared across events since M-5) | S | dev | `test/features/event_switch_test.dart`, maybe `features/event/event_shell.dart`, `core/router.dart` | in progress (dev, 2026-10-11). Verifier flagged it as untested; fix only if broken. |
 
 ## Blocked
 
