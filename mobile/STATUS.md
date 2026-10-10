@@ -3,12 +3,12 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-10 · **Owner:** @Vertiglo (temporary, venue map only) · **Scopes held:** mobile, backend, contracts
+**Last updated:** 2026-10-10 23:09 · **Owner:** @Vertiglo (temporary, venue map only) · **Scopes held:** mobile, backend, contracts
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
 
-Stack decided (Flutter). @Vertiglo builds only the **venue map** (`mobile/maps/`, Flutter package `eho_maps`: attendee viewer, organizer editor, stats), mounted by the app in `mobile/app/`. Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Phase 2 done on the server side; `mobile/maps` has the map data models. Phase 3 (attendee map viewer) mostly done, one open sign-in bug, see `contracts/maps/PLAN.md` → "Where we stopped". Phases: [`../contracts/maps/PLAN.md`](../contracts/maps/PLAN.md).
+Stack decided (Flutter). @Vertiglo builds only the **venue map** (`mobile/maps/`, Flutter package `eho_maps`: attendee viewer, organizer editor, stats), mounted by the app in `mobile/app/`. Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Phase 2 done on the server side; `mobile/maps` has the map data models. Phase 3 (attendee map viewer) done, incl. the web sign-in fix; next is phase 4 (organizer editor), see `contracts/maps/PLAN.md` → "Where we stopped". Phases: [`../contracts/maps/PLAN.md`](../contracts/maps/PLAN.md).
 
 ## Stack
 
