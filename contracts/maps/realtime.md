@@ -12,7 +12,7 @@ Decision: [`docs/decisions/contracts-realtime-transport.md`](../../docs/decision
 | `events/{eventId}/published/map/features/{featureId}` | same | `Feature` without `id` |
 | `events/{eventId}/published/map/graphs/{floorId}` | same | `{nodes: Node[], edges: Edge[]}` (doc ID = floor ID) |
 | `events/{eventId}/draft/map/**` | owner only | same shapes as published (the editor normally uses `GET /v1/events/{id}/draft`) |
-| `events/{eventId}/stats/{yyyy-mm-dd}` | owner only | defined in a later version |
+| `events/{eventId}/stats/{yyyy-mm-dd}` | owner only | One UTC day: `date`, counters `searches`, `searchesNoResults`, `featureViews`, `routes`, `qrScans`, and maps term/featureId → count: `searchTerms`, `noResultTerms`, `featureViewsBy`, `routeTargets`, `qrScansBy` (each at most 500 keys). No user IDs, no positions. Clients normally use `getStats` instead (it adds names and top lists). |
 
 Field names are identical to the JSON in `openapi.yaml`. Timestamps are Firestore timestamps.
 

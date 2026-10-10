@@ -19,6 +19,8 @@ EXAMPLES = {
     "validation-error.response.json": "#/components/schemas/Error",
     "route.request.json": "#/components/schemas/RouteRequest",
     "route.response.json": "#/components/schemas/Route",
+    "stats-events.request.json": "#/components/schemas/StatsBatch",
+    "stats.response.json": "#/components/schemas/EventStats",
     "publish.response.json": "#/paths/~1v1~1events~1{eventId}~1publish/post/responses/200/content/application~1json/schema",
 }
 

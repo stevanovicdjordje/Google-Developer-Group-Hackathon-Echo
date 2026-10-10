@@ -1,0 +1,9 @@
+{
+  "events": [
+    { "type": "qr_scan", "featureId": "zvewi4sb3dq3ya6r" },
+    { "type": "search", "query": "kafa", "resultCount": 0 },
+    { "type": "search", "query": "Čačak", "resultCount": 1 },
+    { "type": "feature_view", "featureId": "b7k2mq4xw9zt3hpn" },
+    { "type": "route", "featureId": "b7k2mq4xw9zt3hpn" }
+  ]
+}

@@ -2,6 +2,17 @@
 
 Venue map feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## 0.3.0 — 2026-10-11
+- **Impact:** additive
+- **Affected:** backend/maps (implements), mobile/maps (consumes: viewer reports, organizer stats screen)
+- **Requested by:** venue map plan, phase 7 (`PLAN.md`)
+- **Changes:**
+  - ADDED `recordStats` (`POST /v1/events/{eventId}/stats/events`): batched attendee events (`search`, `feature_view`, `route`, `qr_scan`), any signed-in user, rate limited per user (`429 rate_limited` + `Retry-After`); never positions, no user ID stored
+  - ADDED `getStats` (`GET /v1/events/{eventId}/stats?from&to`): owner-only per-day counts (UTC) and top lists (searches, searches without results, opened features, route targets, QR scans)
+  - ADDED schemas `StatsEvent`, `StatsBatch`, `StatsCounts`, `StatsDay`, `TermCount`, `FeatureCount`, `EventStats`; fixtures `stats-events.request.json`, `stats.response.json`
+  - `realtime.md`: shape of `events/{eventId}/stats/{yyyy-mm-dd}` (owner-readable)
+- **Consumer action:** none outside the map feature.
+
 ## Unreleased — 2026-10-11
 - **Impact:** fixture-only
 - **Affected:** backend/maps, mobile/maps (tests)

@@ -1,15 +1,15 @@
 openapi: 3.1.0
 info:
   title: Eho venue map API
-  version: 0.2.0
-  summary: Venue map feature (floors, rooms, stands, POIs, walkway graph, publish).
+  version: 0.3.0
+  summary: Venue map feature (floors, rooms, stands, POIs, walkway graph, publish, routing, stats).
   description: |
     Contract between the Flutter app (`mobile/maps/`) and the
     map service (`backend/maps/`). Writes go only through this API; attendees
     read published map data directly from Firestore (see `realtime.md`).
 
-    Implemented by `backend/maps` (phase 2). Routing and stats operations are
-    added in later versions (see `CHANGELOG.md`).
+    Implemented by `backend/maps`. Routing came in 0.2.0, stats in 0.3.0
+    (see `CHANGELOG.md`).
 
     **Errors** always use the `Error` schema. **Coordinates** are floor-plan
     image pixels (x right, y down).
@@ -23,6 +23,7 @@ tags:
   - name: floors
   - name: features
   - name: routing
+  - name: stats
 paths:
   /healthz:
     get:
@@ -402,6 +403,86 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+  /v1/events/{eventId}/stats/events:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    post:
+      operationId: recordStats
+      tags: [stats]
+      summary: Report what an attendee did on the published map (any signed-in user).
+      description: |
+        Clients batch events (send every ~10 s or when 20 are queued, and when
+        the map closes). The server counts them per event and day (UTC); it
+        stores no user ID, no time of day and never a position. Events about
+        a feature that isn't on the published map (any more) are dropped, not
+        rejected. Search queries are lowercased, whitespace-collapsed and cut
+        to 60 characters; queries under 2 characters are dropped.
+
+        Report a search once it is finished (the attendee opened a result or
+        stopped typing for ~1.5 s), not on every keystroke.
+
+        Rate limit per user: 120 events at once, then 120 per minute → `429`
+        `rate_limited` with `Retry-After` (seconds). Clients drop the batch.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StatsBatch" }
+            example: { $ref: "examples/stats-events.request.json" }
+      responses:
+        "202":
+          description: Counted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accepted, dropped]
+                properties:
+                  accepted: { type: integer, minimum: 0 }
+                  dropped: { type: integer, minimum: 0, description: "Unknown/wrong-kind features, too-short queries." }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429":
+          description: "`rate_limited`; `Retry-After` header says when to try again."
+          headers:
+            Retry-After:
+              schema: { type: integer, minimum: 1 }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /v1/events/{eventId}/stats:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Map usage stats of an event (owner only).
+      description: |
+        Counts per day (UTC) over `from`..`to` (every day of the range is
+        listed, zeros included) and top lists over the whole range. Feature
+        names come from the current published map; a feature removed since
+        has empty `name` and `type`. Defaults: the last 30 days up to today.
+        Counts reach the stats within ~10 s.
+      parameters:
+        - { name: from, in: query, schema: { $ref: "#/components/schemas/Date" } }
+        - { name: to, in: query, schema: { $ref: "#/components/schemas/Date" } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventStats" }
+              example: { $ref: "examples/stats.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: "`validation_failed`: a date isn't YYYY-MM-DD, `from` is after `to`, or the range is over 366 days."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 components:
   securitySchemes:
     firebaseIdToken:
@@ -719,3 +800,89 @@ components:
         distanceMeters: { type: number, minimum: 0, description: Walking distance (lifts/stairs count 0). }
         durationSeconds: { type: number, minimum: 0 }
         distanceEstimated: { type: boolean, description: "True if a walked floor has no georeference (0.05 m/px assumed)." }
+    StatsEvent:
+      type: object
+      required: [type]
+      additionalProperties: false
+      description: |
+        `search`: `query` + `resultCount` (no featureId). `feature_view` (a room,
+        stand or POI's details were opened), `route` (route requested; target)
+        and `qr_scan` (a QR marker link was opened; the marker): `featureId` only.
+      properties:
+        type: { type: string, enum: [search, feature_view, route, qr_scan] }
+        query: { type: string }
+        resultCount: { type: integer, minimum: 0 }
+        featureId: { type: string }
+    StatsBatch:
+      type: object
+      required: [events]
+      additionalProperties: false
+      properties:
+        events:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items: { $ref: "#/components/schemas/StatsEvent" }
+    StatsCounts:
+      type: object
+      required: [searches, searchesNoResults, featureViews, routes, qrScans]
+      properties:
+        searches: { type: integer }
+        searchesNoResults: { type: integer }
+        featureViews: { type: integer }
+        routes: { type: integer }
+        qrScans: { type: integer }
+    StatsDay:
+      allOf:
+        - $ref: "#/components/schemas/StatsCounts"
+        - type: object
+          required: [date]
+          properties:
+            date: { $ref: "#/components/schemas/Date" }
+    TermCount:
+      type: object
+      required: [query, count]
+      properties:
+        query: { type: string }
+        count: { type: integer }
+    FeatureCount:
+      type: object
+      required: [featureId, name, type, count]
+      properties:
+        featureId: { type: string }
+        name: { type: string, description: Empty if the feature is no longer on the published map. }
+        type: { type: string, description: "FeatureType, or empty (removed)." }
+        count: { type: integer }
+    EventStats:
+      type: object
+      required: [from, to, totals, days, topSearches, topNoResults, topFeatures, topRouteTargets, qrScans]
+      properties:
+        from: { $ref: "#/components/schemas/Date" }
+        to: { $ref: "#/components/schemas/Date" }
+        totals: { $ref: "#/components/schemas/StatsCounts" }
+        days:
+          type: array
+          description: Every day of the range, oldest first.
+          items: { $ref: "#/components/schemas/StatsDay" }
+        topSearches:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/TermCount" }
+        topNoResults:
+          type: array
+          maxItems: 20
+          description: Searches with no results — what attendees look for and don't find.
+          items: { $ref: "#/components/schemas/TermCount" }
+        topFeatures:
+          type: array
+          maxItems: 20
+          description: Most opened rooms, stands and POIs.
+          items: { $ref: "#/components/schemas/FeatureCount" }
+        topRouteTargets:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/FeatureCount" }
+        qrScans:
+          type: array
+          description: Every scanned QR marker.
+          items: { $ref: "#/components/schemas/FeatureCount" }
