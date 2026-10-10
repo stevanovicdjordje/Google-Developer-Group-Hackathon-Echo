@@ -8,7 +8,7 @@
 
 ## Current state
 
-Stack decided (Flutter). Building the **venue map** feature: attendee map viewer, organizer map editor and stats, in one Flutter app in `mobile/app/` Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Next: map viewer.
+Stack decided (Flutter). Building the **venue map** feature: attendee map viewer, organizer map editor and stats, in one Flutter app in `mobile/app/`. Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Now: phase 2 (backend API). Phases: [`docs/map-plan.md`](docs/map-plan.md).
 
 ## Stack
 
