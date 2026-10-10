@@ -22,7 +22,7 @@ Status: ✅ done · 🔄 in progress · ⏳ not started
 | 4 | Organizer editor: plan upload, drawing via API, publish | A published change is visible on another device in < 2 s | ✅ |
 | 5 | Routing: Go package (A*, snapping, multi-floor) + endpoint + cache; Flutter draws the route from a QR marker to a stand | Tests and benchmark pass (< 100 ms for a few thousand nodes) | ✅ |
 | 6 | Location: georeferencing (3 points, affine), GPS dot with accuracy, QR/manual fallback, tracking, re-routing, "Stigli ste" | Go and Dart transform tests pass on the same vectors (`contracts/maps/testdata/`) | ✅ |
-| 7 | Stats: batched events, daily aggregation, rate limit, organizer screen | | ⏳ |
+| 7 | Stats: batched events, daily aggregation, rate limit, organizer screen | Organizer sees attendee searches/views/routes/QR scans per day; no positions | ✅ |
 | 8 | Polish + deploy: security-rule tests, QR print page, Cloud Run + Firebase Hosting, docs | | ⏳ |
 
 Before reporting a phase as done: `go vet ./...`, `go test ./...`, `flutter analyze`, `flutter test`.
@@ -39,9 +39,28 @@ Before reporting a phase as done: `go vet ./...`, `go test ./...`, `flutter anal
 | Firebase rules + emulator config | `backend/maps/firebase/` |
 | Indoor-GPS problem and solution (for the pitch) | `contracts/maps/implementation-notes.md` |
 
-## Where we stopped (2026-10-11 00:45)
+## Where we stopped (2026-10-11 01:15)
 
-Phases 1–6 are done (viewer `/e/{id}`, editor `/o`, `/o/e/{id}`, routing, location; details in git history and `STATUS.md`).
+Phases 1–7 are done (viewer `/e/{id}`, editor `/o`, `/o/e/{id}`, routing, location, stats; details in git history and `STATUS.md`).
+
+**Phase 7 (stats) ✅.** Contract 0.3.0: `recordStats`, `getStats`.
+- Server (`backend/maps/internal/stats`, `httpapi/stats.go`): attendees send batches (≤ 50) of `search` (query + result count),
+  `feature_view`, `route` (target), `qr_scan` (marker). Features not on the published map (or markers as views) are dropped, queries
+  are lowercased and cut to 60 chars. Per-user token bucket (120 at once, 120/min) → `429` + `Retry-After`. Counts are buffered in
+  memory and added every 10 s (and on shutdown, and before an owner read) to one doc per event and UTC day
+  `events/{id}/stats/{yyyy-mm-dd}` in a transaction (map keys ≤ 500 each). No user IDs, no times of day, never positions.
+- `getStats` (owner): every day of the range + top lists (searches, searches without results, opened, route targets, QR scans) with
+  names from the current published map (removed features → empty name). Default range: last 30 days.
+- App: `stats/stats_reporter.dart` (batches every 10 s / 20 events / on close, failures dropped, QR once, same search not twice in a
+  row). The viewer reports QR on open with `?at=`, a search after 1.5 s without typing or when a result is opened, opened details,
+  route targets. Organizer: chart icon in the editor (published events) → `/o/e/{id}/stats` (`stats/stats_screen.dart`): range
+  (event dates / today / 7 / 30 days), tiles, activity per day, "Traže, a ne nalaze", top lists, privacy note.
+- Tests: `go test ./...` + `go vet` pass, incl. `TestFirestoreStats` against the emulator (keys with `.`, `/`, backticks);
+  `flutter test` 72/72, `flutter analyze` clean (`mobile/maps`, `mobile/app`). E2E on the emulators (API from this branch on :8090):
+  API script (record → 202 5/1 dropped, attendee read 403, organizer totals, 429 after 120 events, doc holds only counters) and
+  headless Chrome in the app (QR link → search without results → search + open Kvant → route; all arrived; organizer login →
+  editor → stats screen shows them). Test stats were deleted from the demo event afterwards.
+- A running `make dev` from before this phase has no stats endpoints: restart it.
 
 **Phase 6 (location) ✅.**
 - Shared vectors `contracts/maps/testdata/georef.json` (5 cases + 1 degenerate), generated and checked by
@@ -59,11 +78,12 @@ Phases 1–6 are done (viewer `/e/{id}`, editor `/o`, `/o/e/{id}`, routing, loca
   with an emulated position on the demo event (seed floor is georeferenced): dot + circle, route from GPS 46 m (same as the API),
   ~18 m off → re-routed (35 m), at the end → "Stigli ste: Glavna sala". The editor GPS screen is covered by widget tests (fake server),
   not run against the real API.
-- Native builds need location permission entries in `mobile/app` (request maps#2); web works as is.
+- Native builds: location permissions were added by mobile (maps#2 done, `3cee092`).
 - Open: `contracts/maps/KAKO-RADI.md` §9 (routing) and a new section on GPS are for @Vertiglo (asked not to commit that file again).
 - Testing tip: CDP clicks into Flutter web need a `mouseMoved` first; an emulated position is lost when the CDP session closes.
 
-**Next: phase 7** (stats: batched events, daily aggregation, rate limit, organizer screen; never positions).
+**Next: phase 8** (polish + deploy: security-rule tests, QR print page, Cloud Run + Firebase Hosting, docs). Deploying needs a
+real Firebase/GCP project and billing: ask @Vertiglo first.
 
 How to run: `cd backend/maps && make dev`, `make seed`, `cd mobile/app && flutter build web`, serve `build/web` with SPA fallback
 on :5000, open `/e/<eventId>` (attendee) or `/o` (organizer, emulator login `organizer@eho.test` / `eho-demo-123`).
