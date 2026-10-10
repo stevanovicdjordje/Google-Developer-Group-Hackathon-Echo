@@ -192,24 +192,34 @@ class _StatsBody extends StatelessWidget {
           children: [
             Text(range, style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _Tile(l10n.statsSearches, t.searches, Icons.search),
-                _Tile(
-                  l10n.statsNoResults,
-                  t.searchesNoResults,
-                  Icons.search_off,
-                ),
-                _Tile(
-                  l10n.statsFeatureViews,
-                  t.featureViews,
-                  Icons.touch_app_outlined,
-                ),
-                _Tile(l10n.statsRoutes, t.routes, Icons.directions_walk),
-                _Tile(l10n.statsQrScans, t.qrScans, Icons.qr_code_2),
-              ],
+            LayoutBuilder(
+              builder: (context, c) {
+                // Two per row on phones, all five in one row when wide.
+                final perRow = c.maxWidth < 600 ? 2 : 5;
+                final w = (c.maxWidth - 8 * (perRow - 1)) / perRow;
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final (label, value, icon) in [
+                      (l10n.statsSearches, t.searches, Icons.search),
+                      (
+                        l10n.statsNoResults,
+                        t.searchesNoResults,
+                        Icons.search_off,
+                      ),
+                      (
+                        l10n.statsFeatureViews,
+                        t.featureViews,
+                        Icons.touch_app_outlined,
+                      ),
+                      (l10n.statsRoutes, t.routes, Icons.directions_walk),
+                      (l10n.statsQrScans, t.qrScans, Icons.qr_code_2),
+                    ])
+                      SizedBox(width: w, child: _Tile(label, value, icon)),
+                  ],
+                );
+              },
             ),
             if (stats.isEmpty)
               Padding(
@@ -330,21 +340,23 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
-      width: 160,
-      child: Card(
-        margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(height: 6),
-              Text('$value', style: theme.textTheme.headlineMedium),
-              Text(label, style: theme.textTheme.bodySmall),
-            ],
-          ),
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(height: 6),
+            Text('$value', style: theme.textTheme.headlineMedium),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
