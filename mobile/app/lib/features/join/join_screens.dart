@@ -14,6 +14,15 @@ final eventSummaryProvider = FutureProvider.family<EventSummary, String>(
   (ref, id) => ref.watch(eventRepositoryProvider).getEvent(id),
 );
 
+/// The talk that is on right now at an event, if any (for the My events card).
+final _liveSessionProvider = FutureProvider.family<Session?, String>((
+  ref,
+  eventId,
+) async {
+  final sessions = await ref.watch(eventRepositoryProvider).agenda(eventId);
+  return sessions.where((s) => s.isLive).firstOrNull;
+});
+
 /// `/e/{eventId}` for someone who hasn't joined yet (the deep-link landing).
 /// [markerId] is the optional "you are here" QR marker (`?at=`); after joining
 /// the user lands on the map with it instead of the agenda.
@@ -129,7 +138,12 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                     Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          SectionLabel(
+                            l10n.joinWithEho,
+                            padding: const EdgeInsets.only(bottom: 4),
+                          ),
                           _Perk(Icons.calendar_today, l10n.joinPerkAgenda),
                           _Perk(Icons.map_outlined, l10n.joinPerkMap),
                           _Perk(
@@ -323,6 +337,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     padding: pad,
                     children: [
                       Text(l10n.onboardingWhoTitle, style: _title(t)),
+                      const SizedBox(height: 10),
+                      Text(
+                        l10n.onboardingWhoSubtitle,
+                        style: _subtitle(t, scheme),
+                      ),
                       const SizedBox(height: 24),
                       _Field(
                         label: l10n.onboardingName,
@@ -344,6 +363,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     padding: pad,
                     children: [
                       Text(l10n.onboardingInterestsTitle, style: _title(t)),
+                      const SizedBox(height: 10),
+                      Text(
+                        l10n.onboardingInterestsSubtitle,
+                        style: _subtitle(t, scheme),
+                      ),
                       const SizedBox(height: 22),
                       Wrap(
                         spacing: 10,
@@ -373,6 +397,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            size: 14,
+                            color: scheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              l10n.onboardingLookingForNote,
+                              style: t.labelMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   ListView(
@@ -382,10 +425,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       const SizedBox(height: 10),
                       Text(
                         l10n.onboardingPrivacyBody,
-                        style: t.bodyLarge?.copyWith(
-                          fontSize: 16,
-                          color: scheme.onSurfaceVariant,
-                        ),
+                        style: _subtitle(t, scheme),
                       ),
                       const SizedBox(height: 24),
                       EhoCard(
@@ -417,6 +457,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 18),
+                      Text(
+                        l10n.onboardingPrivacyNote,
+                        style: t.bodySmall?.copyWith(
+                          height: 1.45,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -440,6 +488,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   /// Step headline: Bricolage 34 (the design's big screen title).
   TextStyle? _title(TextTheme t) => t.displaySmall?.copyWith(height: 1.05);
+
+  /// Step subtitle under the headline.
+  TextStyle? _subtitle(TextTheme t, ColorScheme scheme) =>
+      t.bodyLarge?.copyWith(fontSize: 16, color: scheme.onSurfaceVariant);
 }
 
 /// Label above a field (design: 14/600, 8 px gap).
@@ -646,15 +698,17 @@ class _LeaveMenu extends ConsumerWidget {
 }
 
 /// Dark ink card for an event that is on now / upcoming.
-class _LiveEventCard extends StatelessWidget {
+class _LiveEventCard extends ConsumerWidget {
   const _LiveEventCard(this.event);
 
   final EventSummary event;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = Theme.of(context).textTheme;
     final eho = context.eho;
+    final l10n = AppLocalizations.of(context);
+    final live = ref.watch(_liveSessionProvider(event.id)).value;
     return EhoCard(
       color: eho.ink,
       radius: 22,
@@ -663,6 +717,13 @@ class _LiveEventCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (live != null) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: LiveBadge(l10n.agendaLiveNow, onDark: true),
+            ),
+            const SizedBox(height: 12),
+          ],
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -690,7 +751,11 @@ class _LiveEventCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  AppLocalizations.of(context).tabAgenda,
+                  live == null
+                      ? l10n.tabAgenda
+                      : l10n.myEventsNext(live.title, live.start, live.stage),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: t.bodyMedium?.copyWith(color: eho.onInk),
                 ),
               ),

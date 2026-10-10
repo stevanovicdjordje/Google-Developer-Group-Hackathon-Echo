@@ -1,6 +1,7 @@
 import 'package:eho_maps/eho_maps.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme.dart';
 import '../../data/app_state.dart';
@@ -32,7 +33,23 @@ class _MapTabState extends ConsumerState<MapTab> {
   Widget build(BuildContext context) {
     final eventId = widget.eventId;
     final spot = ref.watch(meetingSpotProvider);
-    final spotId = _spotFeatureId;
+    // `?spot=1` (Messages > "Show on map") highlights the meeting spot like the
+    // "Show" button does, without a router change.
+    final wantSpot =
+        GoRouterState.of(context).uri.queryParameters['spot'] == '1';
+    final autoId = wantSpot && spot != null
+        ? _featureIdOf(
+            spot.place,
+            ref.watch(publishedEventProvider(eventId)).value,
+          )
+        : null;
+    if (autoId != null && autoId != _spotFeatureId) {
+      // Remember it, so the highlight survives leaving and re-entering the tab.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _spotFeatureId = autoId);
+      });
+    }
+    final spotId = autoId ?? _spotFeatureId;
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -119,12 +136,15 @@ class _MapTabState extends ConsumerState<MapTab> {
     );
   }
 
+  /// The map feature whose name is [place], on the published event.
+  String? _featureIdOf(String place, PublishedEvent? event) =>
+      event?.map.features.where((f) => f.name == place).firstOrNull?.id;
+
   void _showSpot(String place) {
-    final event = ref.read(publishedEventProvider(widget.eventId)).value;
-    final id = event?.map.features
-        .where((f) => f.name == place)
-        .firstOrNull
-        ?.id;
+    final id = _featureIdOf(
+      place,
+      ref.read(publishedEventProvider(widget.eventId)).value,
+    );
     if (id != null) setState(() => _spotFeatureId = id);
   }
 }

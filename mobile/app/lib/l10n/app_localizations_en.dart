@@ -135,6 +135,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agendaAllStages => 'All stages';
 
   @override
+  String get agendaLiveEchoOn => 'Live now · Echo on';
+
+  @override
+  String get agendaLiveNow => 'Live now';
+
+  @override
+  String get agendaEchoOnTitle => 'Echo is on for this talk';
+
+  @override
+  String get agendaEchoOnBody =>
+      'Live transcript, translation, ask the AI about what was said, and send questions to the speaker.';
+
+  @override
   String get sessionOpenEcho => 'Open Echo: live transcript & AI';
 
   @override
@@ -154,13 +167,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinPerkAgenda => 'Agenda for every stage';
 
   @override
-  String get joinPerkMap => 'Venue map';
+  String get joinPerkMap => 'Venue map and directions';
 
   @override
   String get joinPerkEcho => 'Live transcripts and AI answers in every talk';
 
   @override
   String get joinPerkFind => 'Find the people worth meeting';
+
+  @override
+  String get joinWithEho => 'With Eho you get';
 
   @override
   String get joinJoining => 'Joining…';
@@ -172,6 +188,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingWhoTitle => 'Who are you?';
+
+  @override
+  String get onboardingWhoSubtitle =>
+      'This is how other attendees see you in Find. Only if you choose to be visible.';
 
   @override
   String get onboardingName => 'Name';
@@ -186,21 +206,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingInterestsTitle => 'What are you into?';
 
   @override
+  String get onboardingInterestsSubtitle =>
+      'We use this to recommend talks and people. Pick a few.';
+
+  @override
   String get onboardingLookingForLabel => 'Who do you want to meet?';
 
   @override
   String get onboardingLookingForHint => 'e.g. people who shipped on-device ML';
 
   @override
+  String get onboardingLookingForNote =>
+      'The AI reads this to find your matches.';
+
+  @override
   String get onboardingPrivacyTitle => 'You decide what others see';
 
   @override
   String get onboardingPrivacyBody =>
-      'You can change these any time in Profile.';
+      'Each switch is separate. You can change them any time in Profile.';
 
   @override
   String get showMeInFindSubtitle =>
-      'Others at this event can get you as a recommendation.';
+      'People at this event can get you as a recommendation.';
 
   @override
   String get allowContactRequestsSubtitle =>
@@ -209,6 +237,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get allowMeetingSpotsSubtitle =>
       'Agree on a place to meet. Never your live location.';
+
+  @override
+  String get onboardingPrivacyNote =>
+      'Your profile only ever goes to the AI to find matches, and only while \"Show me in Find\" is on.';
 
   @override
   String get myEventsUpcoming => 'Now & upcoming';
@@ -221,6 +253,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaveEvent => 'Leave event';
+
+  @override
+  String myEventsNext(String session, String time, String stage) {
+    return 'Next: $session · $time · $stage';
+  }
 
   @override
   String get findTitle => 'Find people';
@@ -240,6 +277,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get findRecommended => 'Recommended for you';
 
   @override
+  String get findFromInterests => 'from your interests';
+
+  @override
+  String get findTopMatch => 'Top match';
+
+  @override
+  String findResultsCaption(int count, String event) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people at $event fit',
+      one: '1 person at $event fits',
+    );
+    return '$_temp0 · only people who opted in';
+  }
+
+  @override
   String get findThinking => 'Finding your best matches…';
 
   @override
@@ -256,17 +310,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personRequestSent => 'Request sent · waiting…';
 
   @override
+  String personRequestSentTo(String name) {
+    return 'Request sent · waiting for $name';
+  }
+
+  @override
+  String personDetailsNote(String name) {
+    return 'Your details are shared only after $name accepts.';
+  }
+
+  @override
   String personAccepted(String name) {
     return '$name accepted · Message';
   }
 
   @override
   String messagesMeetAt(String place) {
-    return '📍 Let\'s meet at $place';
+    return 'Meet at $place';
   }
 
   @override
   String get messagesSuggestSpot => 'Suggest a meeting spot';
+
+  @override
+  String messagesMatchedOn(String topics) {
+    return 'Matched on $topics';
+  }
+
+  @override
+  String messagesAcceptedPill(String name) {
+    return '$name accepted your contact request';
+  }
+
+  @override
+  String get messagesShowOnMap => 'Show on map';
 
   @override
   String get messagesHint => 'Message';
@@ -359,6 +436,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reading your files and extracting stages, sessions and speakers…';
 
   @override
+  String orgFoundSoFar(String stages, String sessions, String speakers) {
+    return 'Found $stages, $sessions, $speakers so far…';
+  }
+
+  @override
   String get orgBuild => 'Build my event with AI';
 
   @override
@@ -399,6 +481,9 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get orgCheckRoomMissing => 'Check: room missing in the PDF';
 
   @override
   String get orgSessions => 'Sessions';

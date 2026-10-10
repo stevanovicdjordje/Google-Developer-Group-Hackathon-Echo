@@ -302,6 +302,30 @@ abstract class AppLocalizations {
   /// **'All stages'**
   String get agendaAllStages;
 
+  /// No description provided for @agendaLiveEchoOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Live now · Echo on'**
+  String get agendaLiveEchoOn;
+
+  /// No description provided for @agendaLiveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Live now'**
+  String get agendaLiveNow;
+
+  /// No description provided for @agendaEchoOnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo is on for this talk'**
+  String get agendaEchoOnTitle;
+
+  /// No description provided for @agendaEchoOnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Live transcript, translation, ask the AI about what was said, and send questions to the speaker.'**
+  String get agendaEchoOnBody;
+
   /// No description provided for @sessionOpenEcho.
   ///
   /// In en, this message translates to:
@@ -335,7 +359,7 @@ abstract class AppLocalizations {
   /// No description provided for @joinPerkMap.
   ///
   /// In en, this message translates to:
-  /// **'Venue map'**
+  /// **'Venue map and directions'**
   String get joinPerkMap;
 
   /// No description provided for @joinPerkEcho.
@@ -349,6 +373,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Find the people worth meeting'**
   String get joinPerkFind;
+
+  /// No description provided for @joinWithEho.
+  ///
+  /// In en, this message translates to:
+  /// **'With Eho you get'**
+  String get joinWithEho;
 
   /// No description provided for @joinJoining.
   ///
@@ -367,6 +397,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Who are you?'**
   String get onboardingWhoTitle;
+
+  /// No description provided for @onboardingWhoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is how other attendees see you in Find. Only if you choose to be visible.'**
+  String get onboardingWhoSubtitle;
 
   /// No description provided for @onboardingName.
   ///
@@ -392,6 +428,12 @@ abstract class AppLocalizations {
   /// **'What are you into?'**
   String get onboardingInterestsTitle;
 
+  /// No description provided for @onboardingInterestsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We use this to recommend talks and people. Pick a few.'**
+  String get onboardingInterestsSubtitle;
+
   /// No description provided for @onboardingLookingForLabel.
   ///
   /// In en, this message translates to:
@@ -404,6 +446,12 @@ abstract class AppLocalizations {
   /// **'e.g. people who shipped on-device ML'**
   String get onboardingLookingForHint;
 
+  /// No description provided for @onboardingLookingForNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI reads this to find your matches.'**
+  String get onboardingLookingForNote;
+
   /// No description provided for @onboardingPrivacyTitle.
   ///
   /// In en, this message translates to:
@@ -413,13 +461,13 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingPrivacyBody.
   ///
   /// In en, this message translates to:
-  /// **'You can change these any time in Profile.'**
+  /// **'Each switch is separate. You can change them any time in Profile.'**
   String get onboardingPrivacyBody;
 
   /// No description provided for @showMeInFindSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Others at this event can get you as a recommendation.'**
+  /// **'People at this event can get you as a recommendation.'**
   String get showMeInFindSubtitle;
 
   /// No description provided for @allowContactRequestsSubtitle.
@@ -433,6 +481,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Agree on a place to meet. Never your live location.'**
   String get allowMeetingSpotsSubtitle;
+
+  /// No description provided for @onboardingPrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile only ever goes to the AI to find matches, and only while \"Show me in Find\" is on.'**
+  String get onboardingPrivacyNote;
 
   /// No description provided for @myEventsUpcoming.
   ///
@@ -457,6 +511,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave event'**
   String get leaveEvent;
+
+  /// No description provided for @myEventsNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {session} · {time} · {stage}'**
+  String myEventsNext(String session, String time, String stage);
 
   /// No description provided for @findTitle.
   ///
@@ -488,6 +548,24 @@ abstract class AppLocalizations {
   /// **'Recommended for you'**
   String get findRecommended;
 
+  /// No description provided for @findFromInterests.
+  ///
+  /// In en, this message translates to:
+  /// **'from your interests'**
+  String get findFromInterests;
+
+  /// No description provided for @findTopMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Top match'**
+  String get findTopMatch;
+
+  /// No description provided for @findResultsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person at {event} fits} other{{count} people at {event} fit}} · only people who opted in'**
+  String findResultsCaption(int count, String event);
+
   /// No description provided for @findThinking.
   ///
   /// In en, this message translates to:
@@ -518,6 +596,18 @@ abstract class AppLocalizations {
   /// **'Request sent · waiting…'**
   String get personRequestSent;
 
+  /// No description provided for @personRequestSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent · waiting for {name}'**
+  String personRequestSentTo(String name);
+
+  /// No description provided for @personDetailsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are shared only after {name} accepts.'**
+  String personDetailsNote(String name);
+
   /// No description provided for @personAccepted.
   ///
   /// In en, this message translates to:
@@ -527,7 +617,7 @@ abstract class AppLocalizations {
   /// No description provided for @messagesMeetAt.
   ///
   /// In en, this message translates to:
-  /// **'📍 Let\'s meet at {place}'**
+  /// **'Meet at {place}'**
   String messagesMeetAt(String place);
 
   /// No description provided for @messagesSuggestSpot.
@@ -535,6 +625,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Suggest a meeting spot'**
   String get messagesSuggestSpot;
+
+  /// No description provided for @messagesMatchedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched on {topics}'**
+  String messagesMatchedOn(String topics);
+
+  /// No description provided for @messagesAcceptedPill.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your contact request'**
+  String messagesAcceptedPill(String name);
+
+  /// No description provided for @messagesShowOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on map'**
+  String get messagesShowOnMap;
 
   /// No description provided for @messagesHint.
   ///
@@ -704,6 +812,12 @@ abstract class AppLocalizations {
   /// **'Reading your files and extracting stages, sessions and speakers…'**
   String get orgReading;
 
+  /// No description provided for @orgFoundSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {stages}, {sessions}, {speakers} so far…'**
+  String orgFoundSoFar(String stages, String sessions, String speakers);
+
   /// No description provided for @orgBuild.
   ///
   /// In en, this message translates to:
@@ -739,6 +853,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 speaker} other{{count} speakers}}'**
   String orgSpeakersCount(int count);
+
+  /// No description provided for @orgCheckRoomMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Check: room missing in the PDF'**
+  String get orgCheckRoomMissing;
 
   /// No description provided for @orgSessions.
   ///

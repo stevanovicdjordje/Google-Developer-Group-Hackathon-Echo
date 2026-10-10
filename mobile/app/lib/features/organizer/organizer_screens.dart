@@ -160,9 +160,11 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
                 Text(
                   found == null
                       ? l10n.orgReading
-                      : '${l10n.orgStagesCount(found.stages.length)}, '
-                            '${l10n.orgSessionsCount(found.sessions.length)}, '
-                            '${l10n.orgSpeakersCount(found.speakers.length)}',
+                      : l10n.orgFoundSoFar(
+                          l10n.orgStagesCount(found.stages.length),
+                          l10n.orgSessionsCount(found.sessions.length),
+                          l10n.orgSpeakersCount(found.speakers.length),
+                        ),
                   style: t.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ],
@@ -532,10 +534,8 @@ class _SessionRow extends StatelessWidget {
     final s = session;
     final flagged = s.stage.trim().isEmpty;
     final speakers = s.speakers.map((p) => p.name).join(', ');
-    // TODO(l10n): "Check: room missing in the PDF" needs a string; until then
-    // the stage label marks the gap.
     final meta = flagged
-        ? '${s.start}–${s.end} · ${l10n.orgStageLabel}: –'
+        ? '${s.start}–${s.end} · ${l10n.orgCheckRoomMissing}'
         : '${s.start}–${s.end} · ${s.stage}'
               '${speakers.isEmpty ? '' : ' · $speakers'}';
     return Container(

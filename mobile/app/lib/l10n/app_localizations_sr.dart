@@ -137,6 +137,19 @@ class AppLocalizationsSr extends AppLocalizations {
   String get agendaAllStages => 'Sve bine';
 
   @override
+  String get agendaLiveEchoOn => 'Uživo · Eho uključen';
+
+  @override
+  String get agendaLiveNow => 'Uživo';
+
+  @override
+  String get agendaEchoOnTitle => 'Eho je uključen za ovo predavanje';
+
+  @override
+  String get agendaEchoOnBody =>
+      'Transkript uživo, prevod, pitaj AI o onome što je rečeno i pošalji pitanja predavaču.';
+
+  @override
   String get sessionOpenEcho => 'Otvori Eho: transkript uživo i AI';
 
   @override
@@ -156,7 +169,7 @@ class AppLocalizationsSr extends AppLocalizations {
   String get joinPerkAgenda => 'Program za svaku binu';
 
   @override
-  String get joinPerkMap => 'Mapa prostora';
+  String get joinPerkMap => 'Mapa prostora i uputstva za snalaženje';
 
   @override
   String get joinPerkEcho =>
@@ -164,6 +177,9 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String get joinPerkFind => 'Pronađi ljude koje vredi upoznati';
+
+  @override
+  String get joinWithEho => 'Uz Eho dobijaš';
 
   @override
   String get joinJoining => 'Pridružujem…';
@@ -175,6 +191,10 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String get onboardingWhoTitle => 'Ko si ti?';
+
+  @override
+  String get onboardingWhoSubtitle =>
+      'Ovako te drugi posetioci vide u Pronađi. Samo ako izabereš da budeš vidljiv/a.';
 
   @override
   String get onboardingName => 'Ime';
@@ -189,6 +209,10 @@ class AppLocalizationsSr extends AppLocalizations {
   String get onboardingInterestsTitle => 'Šta te zanima?';
 
   @override
+  String get onboardingInterestsSubtitle =>
+      'Na osnovu ovoga preporučujemo predavanja i ljude. Izaberi nekoliko.';
+
+  @override
   String get onboardingLookingForLabel => 'Koga želiš da upoznaš?';
 
   @override
@@ -196,11 +220,15 @@ class AppLocalizationsSr extends AppLocalizations {
       'npr. ljude koji su isporučili ML na uređaju';
 
   @override
+  String get onboardingLookingForNote =>
+      'AI ovo čita da bi pronašao tvoja poklapanja.';
+
+  @override
   String get onboardingPrivacyTitle => 'Ti biraš šta drugi vide';
 
   @override
   String get onboardingPrivacyBody =>
-      'Ovo možeš promeniti bilo kada u Profilu.';
+      'Svaki prekidač je zaseban. Možeš ih promeniti bilo kada u Profilu.';
 
   @override
   String get showMeInFindSubtitle =>
@@ -215,6 +243,10 @@ class AppLocalizationsSr extends AppLocalizations {
       'Dogovorite mesto sastanka. Nikad tvoja lokacija uživo.';
 
   @override
+  String get onboardingPrivacyNote =>
+      'Tvoj profil ide samo do AI-ja radi pronalaženja poklapanja, i samo dok je „Prikaži me u Pronađi” uključeno.';
+
+  @override
   String get myEventsUpcoming => 'Sada i uskoro';
 
   @override
@@ -226,6 +258,11 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String get leaveEvent => 'Napusti događaj';
+
+  @override
+  String myEventsNext(String session, String time, String stage) {
+    return 'Sledeće: $session · $time · $stage';
+  }
 
   @override
   String get findTitle => 'Pronađi ljude';
@@ -245,6 +282,24 @@ class AppLocalizationsSr extends AppLocalizations {
   String get findRecommended => 'Preporučeno za tebe';
 
   @override
+  String get findFromInterests => 'na osnovu tvojih interesovanja';
+
+  @override
+  String get findTopMatch => 'Najbolje poklapanje';
+
+  @override
+  String findResultsCaption(int count, String event) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count osoba na događaju $event odgovara',
+      few: '$count osobe na događaju $event odgovaraju',
+      one: '$count osoba na događaju $event odgovara',
+    );
+    return '$_temp0 · samo osobe koje su pristale';
+  }
+
+  @override
   String get findThinking => 'Tražim najbolja poklapanja…';
 
   @override
@@ -261,17 +316,40 @@ class AppLocalizationsSr extends AppLocalizations {
   String get personRequestSent => 'Zahtev poslat · čeka se…';
 
   @override
+  String personRequestSentTo(String name) {
+    return 'Zahtev poslat · čeka se $name';
+  }
+
+  @override
+  String personDetailsNote(String name) {
+    return 'Tvoji podaci se dele tek kada $name prihvati.';
+  }
+
+  @override
   String personAccepted(String name) {
     return '$name je prihvatio/la · Poruka';
   }
 
   @override
   String messagesMeetAt(String place) {
-    return '📍 Vidimo se kod: $place';
+    return 'Sastanak kod: $place';
   }
 
   @override
   String get messagesSuggestSpot => 'Predloži mesto sastanka';
+
+  @override
+  String messagesMatchedOn(String topics) {
+    return 'Poklapanje: $topics';
+  }
+
+  @override
+  String messagesAcceptedPill(String name) {
+    return '$name je prihvatio/la tvoj zahtev za kontakt';
+  }
+
+  @override
+  String get messagesShowOnMap => 'Prikaži na mapi';
 
   @override
   String get messagesHint => 'Poruka';
@@ -364,6 +442,11 @@ class AppLocalizationsSr extends AppLocalizations {
       'Čitam fajlove i izdvajam bine, predavanja i predavače…';
 
   @override
+  String orgFoundSoFar(String stages, String sessions, String speakers) {
+    return 'Do sada pronađeno: $stages, $sessions, $speakers…';
+  }
+
+  @override
   String get orgBuild => 'Napravi događaj uz AI';
 
   @override
@@ -407,6 +490,9 @@ class AppLocalizationsSr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get orgCheckRoomMissing => 'Proveri: sala nedostaje u PDF-u';
 
   @override
   String get orgSessions => 'Predavanja';

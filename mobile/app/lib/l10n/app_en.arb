@@ -79,6 +79,10 @@
   "profileCreateEvent": "Create event",
   "profileEditVenueMap": "Edit venue map",
   "agendaAllStages": "All stages",
+  "agendaLiveEchoOn": "Live now · Echo on",
+  "agendaLiveNow": "Live now",
+  "agendaEchoOnTitle": "Echo is on for this talk",
+  "agendaEchoOnBody": "Live transcript, translation, ask the AI about what was said, and send questions to the speaker.",
   "sessionOpenEcho": "Open Echo: live transcript & AI",
   "sessionShowOnMap": "Show {stage} on map",
   "@sessionShowOnMap": {
@@ -98,9 +102,10 @@
   },
   "joinInvited": "You're invited to",
   "joinPerkAgenda": "Agenda for every stage",
-  "joinPerkMap": "Venue map",
+  "joinPerkMap": "Venue map and directions",
   "joinPerkEcho": "Live transcripts and AI answers in every talk",
   "joinPerkFind": "Find the people worth meeting",
+  "joinWithEho": "With Eho you get",
   "joinJoining": "Joining…",
   "onboardingStep": "Step {step} of {total}",
   "@onboardingStep": {
@@ -114,21 +119,39 @@
     }
   },
   "onboardingWhoTitle": "Who are you?",
+  "onboardingWhoSubtitle": "This is how other attendees see you in Find. Only if you choose to be visible.",
   "onboardingName": "Name",
   "onboardingHeadline": "What you do",
   "onboardingHeadlineHint": "e.g. Android dev at Fintio",
   "onboardingInterestsTitle": "What are you into?",
+  "onboardingInterestsSubtitle": "We use this to recommend talks and people. Pick a few.",
   "onboardingLookingForLabel": "Who do you want to meet?",
   "onboardingLookingForHint": "e.g. people who shipped on-device ML",
+  "onboardingLookingForNote": "The AI reads this to find your matches.",
   "onboardingPrivacyTitle": "You decide what others see",
-  "onboardingPrivacyBody": "You can change these any time in Profile.",
-  "showMeInFindSubtitle": "Others at this event can get you as a recommendation.",
+  "onboardingPrivacyBody": "Each switch is separate. You can change them any time in Profile.",
+  "showMeInFindSubtitle": "People at this event can get you as a recommendation.",
   "allowContactRequestsSubtitle": "Your details are shared only if you accept.",
   "allowMeetingSpotsSubtitle": "Agree on a place to meet. Never your live location.",
+  "onboardingPrivacyNote": "Your profile only ever goes to the AI to find matches, and only while \"Show me in Find\" is on.",
   "myEventsUpcoming": "Now & upcoming",
   "myEventsPast": "Past",
   "myEventsEmpty": "Open an event link to join your first event.",
   "leaveEvent": "Leave event",
+  "myEventsNext": "Next: {session} · {time} · {stage}",
+  "@myEventsNext": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
   "findTitle": "Find people",
   "findSearchHint": "Describe who you want to meet…",
   "findResultsFor": "Results for \"{query}\"",
@@ -141,11 +164,40 @@
   },
   "findSearching": "Searching attendees…",
   "findRecommended": "Recommended for you",
+  "findFromInterests": "from your interests",
+  "findTopMatch": "Top match",
+  "findResultsCaption": "{count, plural, =1{1 person at {event} fits} other{{count} people at {event} fit}} · only people who opted in",
+  "@findResultsCaption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "event": {
+        "type": "String"
+      }
+    }
+  },
   "findThinking": "Finding your best matches…",
   "findNoMatches": "No one matches yet. Try describing it differently.",
   "personWhyMeet": "Why you should meet",
   "personSendRequest": "Send contact request",
   "personRequestSent": "Request sent · waiting…",
+  "personRequestSentTo": "Request sent · waiting for {name}",
+  "@personRequestSentTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "personDetailsNote": "Your details are shared only after {name} accepts.",
+  "@personDetailsNote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "personAccepted": "{name} accepted · Message",
   "@personAccepted": {
     "placeholders": {
@@ -154,7 +206,7 @@
       }
     }
   },
-  "messagesMeetAt": "📍 Let's meet at {place}",
+  "messagesMeetAt": "Meet at {place}",
   "@messagesMeetAt": {
     "placeholders": {
       "place": {
@@ -163,6 +215,23 @@
     }
   },
   "messagesSuggestSpot": "Suggest a meeting spot",
+  "messagesMatchedOn": "Matched on {topics}",
+  "@messagesMatchedOn": {
+    "placeholders": {
+      "topics": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesAcceptedPill": "{name} accepted your contact request",
+  "@messagesAcceptedPill": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesShowOnMap": "Show on map",
   "messagesHint": "Message",
   "echoTitle": "Echo",
   "@echoTitle": {
@@ -209,6 +278,20 @@
     }
   },
   "orgReading": "Reading your files and extracting stages, sessions and speakers…",
+  "orgFoundSoFar": "Found {stages}, {sessions}, {speakers} so far…",
+  "@orgFoundSoFar": {
+    "placeholders": {
+      "stages": {
+        "type": "String"
+      },
+      "sessions": {
+        "type": "String"
+      },
+      "speakers": {
+        "type": "String"
+      }
+    }
+  },
   "orgBuild": "Build my event with AI",
   "orgStartByUploading": "Start by uploading files",
   "orgReviewTitle": "Review your event",
@@ -236,6 +319,7 @@
       }
     }
   },
+  "orgCheckRoomMissing": "Check: room missing in the PDF",
   "orgSessions": "Sessions",
   "orgEditSession": "Edit session",
   "orgPublish": "Publish & get join link",

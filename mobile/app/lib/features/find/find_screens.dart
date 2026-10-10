@@ -10,6 +10,7 @@ import '../../data/demo_data.dart' as demo;
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
+import '../join/join_screens.dart' show eventSummaryProvider;
 
 final recommendationsProvider =
     FutureProvider.family<List<PersonMatch>, String>((ref, eventId) {
@@ -46,6 +47,10 @@ class _FindScreenState extends ConsumerState<FindScreen> {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
+    final eventName = ref
+        .watch(eventSummaryProvider(widget.eventId))
+        .value
+        ?.name;
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -71,18 +76,29 @@ class _FindScreenState extends ConsumerState<FindScreen> {
               FutureBuilder<List<PersonMatch>>(
                 future: _search,
                 builder: (context, snap) => snap.hasData
-                    ? _Matches(widget.eventId, snap.data!)
+                    ? _Matches(
+                        widget.eventId,
+                        snap.data!,
+                        caption: eventName == null
+                            ? null
+                            : l10n.findResultsCaption(
+                                snap.data!.length,
+                                eventName,
+                              ),
+                      )
                     : _Thinking(l10n.findSearching),
               ),
             ] else ...[
-              _SectionTitle(l10n.findRecommended),
+              _SectionTitle(
+                l10n.findRecommended,
+                trailing: l10n.findFromInterests,
+              ),
               ref
                   .watch(recommendationsProvider(widget.eventId))
                   .when(
                     loading: () => _Thinking(l10n.findThinking),
                     error: (e, _) => Text('$e'),
-                    data: (m) =>
-                        _Matches(widget.eventId, m, recommended: true),
+                    data: (m) => _Matches(widget.eventId, m, recommended: true),
                   ),
             ],
           ],
@@ -150,9 +166,7 @@ class _SearchField extends StatelessWidget {
                 child: Icon(
                   onClear == null ? Icons.arrow_forward : Icons.close,
                   size: 20,
-                  color: onClear == null
-                      ? scheme.onPrimary
-                      : scheme.onSurface,
+                  color: onClear == null ? scheme.onPrimary : scheme.onSurface,
                 ),
               ),
             ),
@@ -235,18 +249,39 @@ class _FitLine extends StatelessWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
+  const _SectionTitle(this.text, {this.trailing});
 
   final String text;
 
+  /// Small caption on the right (design: "from your interests").
+  final String? trailing;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 18),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+            ),
+          ),
+          if (trailing != null)
+            Text(
+              trailing!,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Thinking extends StatelessWidget {
@@ -268,10 +303,18 @@ class _Thinking extends StatelessWidget {
 }
 
 class _Matches extends StatelessWidget {
-  const _Matches(this.eventId, this.matches, {this.recommended = false});
+  const _Matches(
+    this.eventId,
+    this.matches, {
+    this.recommended = false,
+    this.caption,
+  });
 
   final String eventId;
   final List<PersonMatch> matches;
+
+  /// Line with a sparkle above the list ("3 people at ... fit").
+  final String? caption;
 
   /// Recommendations show the sparkle before the reason; search results don't.
   final bool recommended;
@@ -288,7 +331,25 @@ class _Matches extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Column(
       children: [
-        for (final m in matches)
+        if (caption != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Icon(Icons.auto_awesome, size: 16, color: scheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    caption!,
+                    style: t.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        for (final (i, m) in matches.indexed)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: EhoCard(
@@ -319,6 +380,26 @@ class _Matches extends StatelessWidget {
                           ],
                         ),
                       ),
+                      if (recommended && i == 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            AppLocalizations.of(context).findTopMatch,
+                            style: t.labelSmall?.copyWith(
+                              letterSpacing: 0,
+                              color: scheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -370,6 +451,17 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
     final t = theme.textTheme;
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
+    final firstName = p.name.split(' ').first;
+    // Deep links (and a fresh page load) carry no `?why=`: use the AI reason
+    // from the recommendations when this person is among them.
+    final why =
+        widget.why ??
+        ref
+            .watch(recommendationsProvider(widget.eventId))
+            .value
+            ?.where((m) => m.person.id == p.id)
+            .firstOrNull
+            ?.why;
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -427,7 +519,7 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
                 ),
               ),
             ),
-            if (widget.why != null) ...[
+            if (why != null) ...[
               const SizedBox(height: 18),
               EhoCard(
                 color: scheme.primaryContainer,
@@ -459,7 +551,7 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        widget.why!,
+                        why,
                         style: t.bodyMedium?.copyWith(
                           color: context.eho.bodyOnTint,
                         ),
@@ -478,7 +570,7 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
               ),
               ContactState.requested => OutlinedButton.icon(
                 icon: const Icon(Icons.schedule),
-                label: Text(l10n.personRequestSent),
+                label: Text(l10n.personRequestSentTo(firstName)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: scheme.onSurfaceVariant,
                 ),
@@ -486,7 +578,7 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
               ),
               ContactState.accepted => FilledButton.icon(
                 icon: const Icon(Icons.chat_bubble_outline),
-                label: Text(l10n.personAccepted(p.name.split(' ').first)),
+                label: Text(l10n.personAccepted(firstName)),
                 style: FilledButton.styleFrom(
                   backgroundColor: context.eho.ink,
                   foregroundColor: context.eho.onInk,
@@ -495,6 +587,14 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
                     context.push('/e/${widget.eventId}/messages/${p.id}'),
               ),
             },
+            if (state != ContactState.accepted) ...[
+              const SizedBox(height: 12),
+              Text(
+                l10n.personDetailsNote(firstName),
+                textAlign: TextAlign.center,
+                style: t.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
           ],
         ),
       ),
@@ -542,6 +642,12 @@ class MessagesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final p = demo.people.firstWhere((x) => x.id == personId);
     final spot = ref.watch(meetingSpotProvider);
+    final accepted = ref.watch(contactsProvider)[p.id] == ContactState.accepted;
+    final myInterests = ref.watch(profileProvider).interests;
+    final shared = [
+      for (final i in p.interests)
+        if (myInterests.contains(i)) i.toLowerCase(),
+    ].take(2).toList();
     final theme = Theme.of(context);
     final t = theme.textTheme;
     final scheme = theme.colorScheme;
@@ -554,7 +660,9 @@ class MessagesScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+                border: Border(
+                  bottom: BorderSide(color: scheme.outlineVariant),
+                ),
               ),
               child: Row(
                 children: [
@@ -573,7 +681,9 @@ class MessagesScreen extends ConsumerWidget {
                         Text(p.name, style: t.titleMedium),
                         const SizedBox(height: 2),
                         Text(
-                          p.headline,
+                          shared.isEmpty
+                              ? p.headline
+                              : l10n.messagesMatchedOn(shared.join(' · ')),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: t.labelMedium?.copyWith(
@@ -592,12 +702,16 @@ class MessagesScreen extends ConsumerWidget {
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    if (accepted)
+                      _SystemPill(
+                        l10n.messagesAcceptedPill(p.name.split(' ').first),
+                      ),
                     for (final (mine, text) in demo.demoMessages)
                       _Bubble(text: text, mine: mine),
                     if (spot != null && spot.personName == p.name)
                       _MeetingSpotCard(
                         place: spot.place,
-                        onShowOnMap: () => context.go('/e/$eventId/map'),
+                        onShowOnMap: () => context.go('/e/$eventId/map?spot=1'),
                       ),
                   ],
                 ),
@@ -695,6 +809,34 @@ class MessagesScreen extends ConsumerWidget {
   }
 }
 
+/// Centered system message in the conversation ("X accepted your request").
+class _SystemPill extends StatelessWidget {
+  const _SystemPill(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          text,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Bubble extends StatelessWidget {
   const _Bubble({required this.text, required this.mine});
 
@@ -764,9 +906,7 @@ class _MeetingSpotCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      // Existing string "Let's meet at {place}" with its pin
-                      // emoji dropped: the tile already shows a pin.
-                      l10n.messagesMeetAt(place).replaceFirst('📍', '').trim(),
+                      l10n.messagesMeetAt(place),
                       style: t.titleSmall,
                     ),
                   ),
@@ -785,7 +925,7 @@ class _MeetingSpotCard extends StatelessWidget {
                 ),
                 onPressed: onShowOnMap,
                 child: Text(
-                  l10n.sessionShowOnMap(place),
+                  l10n.messagesShowOnMap,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
