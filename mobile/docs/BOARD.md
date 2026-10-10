@@ -10,7 +10,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-20 | Design polish after M-10b–g: (1) move hardcoded strings to ARB (agenda `_liveLabel`, `_liveNowLabel`, `_echoOnTitle`, `_echoOnBody`; organizer/others per reports) and add the missing design strings: Find "Top match", "from your interests", results caption "{n} people at {event} fit · only people who opted in"; Person "Request sent · waiting for {name}", "Your details are shared only after {name} accepts."; Messages "Matched on …", system pill "{name} accepted your contact request", "Meet at {place}"; Organizer `orgCheckRoomMissing` "Check: room missing in the PDF", `orgFoundSoFar` (see TODO(l10n) in organizer_screens.dart). (2) `Session.isLive` (or similar) in lib/data so agenda stops importing demo_data. (3) Messages "Show on map" → highlight the meeting spot (as the Map tab banner does). | M | dev | ARB, `features/agenda/`, `features/find/`, `data/models.dart`, `data/demo_data.dart` | After M-10d (it owns ARB right now) and M-10b/g. |
+| M-20 | Design polish after M-10b–g: (1) move hardcoded strings to ARB (agenda `_liveLabel`, `_liveNowLabel`, `_echoOnTitle`, `_echoOnBody`; organizer/others per reports) and add the missing design strings: Find "Top match", "from your interests", results caption "{n} people at {event} fit · only people who opted in"; Person "Request sent · waiting for {name}", "Your details are shared only after {name} accepts."; Messages "Matched on …", system pill "{name} accepted your contact request", "Meet at {place}"; Join "With Eho you get"; My events "Live · Day 1" + "Next: <session> · <time> · <stage>" (needs live/next logic from data); Onboarding step subtitles, interests hint "The AI reads this to find your matches.", consent copy; Organizer `orgCheckRoomMissing` "Check: room missing in the PDF", `orgFoundSoFar` (see TODO(l10n) in organizer_screens.dart). (2) `Session.isLive` (or similar) in lib/data so agenda stops importing demo_data. (3) Messages "Show on map" → highlight the meeting spot (as the Map tab banner does). | M | dev | ARB, `features/agenda/`, `features/find/`, `data/models.dart`, `data/demo_data.dart` | After M-10d (it owns ARB right now) and M-10b/g. |
 | M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
 | M-17 | Demo-event name: join screen/agenda say "DevSummit Belgrade 2026" while the map event is "Eho Demo Expo" | S | — | — | Cosmetic. Decide with the design pass / demo script; maybe ask feature:maps to seed the same name. |
 
@@ -26,12 +26,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
 | M-10d | opus | 2026-10-11 01:33 | worktree | Design: Echo + v2 Echo frames (translated, Q&A sheet, ended/paywall, summary) |
-| M-10b | dev | 2026-10-11 01:26 | worktree | Design: Start, Join, Onboarding (+ v2 OnboardingName/Interests), My events (resumed after the 01:30 session limit) |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-10b | Design: Start (echo mark), Join (ink header, perks), Onboarding (progress bar, chips, consent toggles), My events (dark card, past cards, FAB) | `b32d2d6` |
 | M-10g | Design: Organizer upload (drop zone, file rows, progress with real counts), review (count tiles, flagged rows for empty stage), published (ink + QR card) | `d9b71b7` |
 | M-10e | Design: Find (+ results state, clear ×), Person (contact-state button), Messages (bubbles, meeting-spot card, composer) | `988669d` |
 | M-10c | Design: Agenda (live card, chips, breaks), Session detail (v2: badges, speaker card, Echo card, Show on map) | `3480a1f` |
