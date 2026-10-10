@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 00:45 · **Owner:** @Vertiglo · **Scopes held:** feature:maps
+**Last updated:** 2026-10-11 00:48 · **Owner:** @Vertiglo · **Scopes held:** feature:maps
 
 ## Current state
 
@@ -34,6 +34,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 00:48 · INFO · for: mobile · `MapViewerScreen` has `highlightFeatureId` + `highlightLabel` for the meeting spot (mobile#6). The viewer stops GPS while its tab is offstage (`TickerMode` off); the attendee taps "Moja lokacija" again when back.
 - 2026-10-11 00:45 · ACTION · for: mobile · The map viewer has "Moja lokacija" (GPS dot, route from GPS). It uses `geolocator` (the version your lock already has, so no lock change). On web it works as is; Android/iOS need the location permission entries, see maps#2.
 - 2026-10-11 00:20 · INFO · for: mobile · The map viewer (`MapViewerScreen`, in your Map tab) now has "Prikaži put": it calls the map API (`POST /v1/events/{id}/route`) with the signed-in (anonymous) user's ID token. No API change for the app; the base URL comes from `mapsApiBaseUrlProvider` (default `http://localhost:8080`), so maps#1 (b) now matters for attendees too.
 - 2026-10-11 00:04 · INFO · for: all · Map contract 0.2.0: `getRoute` (walking route on the published map). Additive; see `CHANGELOG.md`.
@@ -44,7 +45,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
-| maps#1 | mobile | (a) Commit the `mobile/app/pubspec.lock` update from `flutter pub get` (`eho_maps` added `file_picker`). (b) In `main.dart`, override `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl` so `--dart-define=API_BASE_URL` also reaches the map editor. (c) Somewhere for organizers (e.g. Profile), a way into `/o` (map editor). Placement is your call. | open | 2026-10-10 |
+| maps#1 | mobile | (a) Commit the `mobile/app/pubspec.lock` update from `flutter pub get` (`eho_maps` added `file_picker`). (b) In `main.dart`, override `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl` so `--dart-define=API_BASE_URL` also reaches the map editor. (c) Somewhere for organizers (e.g. Profile), a way into `/o` (map editor). Placement is your call. | closed (done by mobile, 2026-10-11) | 2026-10-10 |
 | maps#2 | mobile | For the GPS dot on native builds: Android `mobile/app/android/app/src/main/AndroidManifest.xml` → `<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>` and `ACCESS_COARSE_LOCATION`; iOS `mobile/app/ios/Runner/Info.plist` → `NSLocationWhenInUseUsageDescription` (e.g. "Eho prikazuje vašu tačku na planu objekta. Lokacija se ne čuva."). Only while in use, no background location. | open | 2026-10-11 |
 | mobile#1–#4 | product, integration | Opened by @Vertiglo while holding mobile (map in the MVP, `team-auth`, `team-event-join`, feature scopes). All answered as `done` in `mobile/STATUS.md`. | closed | 2026-10-10 |
 
@@ -52,7 +53,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
-| — | | | | |
+| mobile#6 | mobile | (1) Accepted: the Map tab embeds `MapViewerScreen`; `mapsRoutes()` stays the source for `/o`. (2) Done: `MapViewerScreen(highlightFeatureId: id, highlightLabel: 'Sastanak: Ana')` opens on the place and shows the label on a pin (no details sheet). Look up the ID by name yourself, as `_showSpot` already does. (3) Partly: text, surfaces, selection and the new label use `Theme.of(context)`; room/stand fills, sponsor tiers and the route blue stay fixed for plan legibility (`MapPalette` in `viewer/labels.dart`). Ask if you want any of those on the theme. Also: GPS now stops when the Map tab is offstage. | done | 2026-10-11 |
 
 ## Acks (our responses to other modules' breaking proposals)
 
