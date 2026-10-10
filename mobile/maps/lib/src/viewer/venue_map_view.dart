@@ -22,6 +22,9 @@ class VenueMapView extends ConsumerWidget {
     required this.onFeatureTap,
     this.selectedId,
     this.initialFocus,
+    this.onPlanTap,
+    this.underLabels = const [],
+    this.overLabels = const [],
   });
 
   final Floor floor;
@@ -32,6 +35,16 @@ class VenueMapView extends ConsumerWidget {
 
   /// Camera bounds to start with instead of the whole plan.
   final LatLngBounds? initialFocus;
+
+  /// When set, a tap reports the plan point instead of a feature
+  /// (picking where the attendee is).
+  final ValueChanged<PlanPoint>? onPlanTap;
+
+  /// Extra layers between the shapes and the labels (the route line).
+  final List<Widget> underLabels;
+
+  /// Extra layers above everything (route ends, "you are here").
+  final List<Widget> overLabels;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,6 +68,10 @@ class VenueMapView extends ConsumerWidget {
           flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
         ),
         onTap: (tap, latLng) {
+          if (onPlanTap != null) {
+            onPlanTap!(proj.toPlan(latLng));
+            return;
+          }
           final camera = controller.camera;
           // 22 screen pixels of tolerance, converted to plan pixels.
           final tolerance = 22 / proj.scaleAt(camera.zoom);
@@ -97,7 +114,9 @@ class VenueMapView extends ConsumerWidget {
                 ),
           ],
         ),
+        ...underLabels,
         _LabelsAndIcons(features: features, proj: proj, selectedId: selectedId),
+        ...overLabels,
       ],
     );
   }

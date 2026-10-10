@@ -12,4 +12,4 @@ flutter test
 flutter analyze
 ```
 
-Layout: `lib/src/model/` (map data, mirrors the contract); viewer, editor, location and stats come in the next phases.
+Layout: `lib/src/model/` (map data and routes, mirror the contract), `lib/src/data/` (published map from Firestore), `lib/src/viewer/` (attendee map, search, routing UI), `lib/src/editor/` (organizer editor, `MapsApi`). Location and stats come in the next phases.

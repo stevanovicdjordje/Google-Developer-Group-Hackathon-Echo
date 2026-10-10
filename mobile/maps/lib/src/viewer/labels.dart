@@ -58,6 +58,8 @@ class MapPalette {
   Color get selected => scheme.primary;
   Color get labelBackground => scheme.surface.withValues(alpha: 0.85);
   Color get labelText => scheme.onSurface;
+  Color get route => const Color(0xFF1E6FE0);
+  Color get onRoute => Colors.white;
 
   Color? tierColor(SponsorTier t) => switch (t) {
     SponsorTier.gold => gold,

@@ -6,10 +6,18 @@ import 'labels.dart';
 
 /// Details of a room, stand or POI, shown in a bottom sheet.
 class FeatureDetails extends StatelessWidget {
-  const FeatureDetails({super.key, required this.feature, this.floorName});
+  const FeatureDetails({
+    super.key,
+    required this.feature,
+    this.floorName,
+    this.onRoute,
+  });
 
   final Feature feature;
   final String? floorName;
+
+  /// "Prikaži put"; hidden when null.
+  final VoidCallback? onRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +81,20 @@ class FeatureDetails extends StatelessWidget {
               SelectableText(
                 '${l10n.website}: ${f.link}',
                 style: theme.textTheme.bodyMedium,
+              ),
+            ],
+            if (onRoute != null) ...[
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onRoute,
+                  icon: const Icon(Icons.directions_walk),
+                  label: Text(l10n.showRoute),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                ),
               ),
             ],
           ],

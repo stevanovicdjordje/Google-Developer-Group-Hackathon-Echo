@@ -395,4 +395,74 @@ class MapsLocalizationsEn extends MapsLocalizations {
   String issueUnreachable(String name) {
     return '\"$name\" is on a part of the walkway that isn\'t connected to the rest.';
   }
+
+  @override
+  String get showRoute => 'Show the way';
+
+  @override
+  String get routeFromTitle => 'Where are you starting from?';
+
+  @override
+  String get routePickOnMap => 'Pick on the map';
+
+  @override
+  String get routePickHint => 'Tap the spot on the map where you are';
+
+  @override
+  String get youAreHere => 'You are here';
+
+  @override
+  String routeTo(String name) {
+    return 'To: $name';
+  }
+
+  @override
+  String routeSummary(int meters, int minutes) {
+    return '$meters m · $minutes min';
+  }
+
+  @override
+  String get routeEstimated => 'estimate';
+
+  @override
+  String get routeNoStairs => 'No stairs';
+
+  @override
+  String get routeLoading => 'Finding the way…';
+
+  @override
+  String get routeNoRoute => 'There\'s no way to this place on the map.';
+
+  @override
+  String get routeFailed =>
+      'Couldn\'t find the way right now. Check your connection.';
+
+  @override
+  String routeByLift(String floor) {
+    return 'Take the lift to $floor';
+  }
+
+  @override
+  String routeByStairs(String floor) {
+    return 'Take the stairs to $floor';
+  }
+
+  @override
+  String routeContinue(String floor) {
+    return 'Continue to $floor';
+  }
+
+  @override
+  String routeStartsOn(String floor) {
+    return 'The way starts on $floor';
+  }
+
+  @override
+  String get routeShowFloor => 'Show';
+
+  @override
+  String get closeRoute => 'Close the way';
+
+  @override
+  String get routeAlreadyHere => 'You\'re already here.';
 }

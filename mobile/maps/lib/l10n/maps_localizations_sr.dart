@@ -395,4 +395,74 @@ class MapsLocalizationsSr extends MapsLocalizations {
   String issueUnreachable(String name) {
     return '„$name“ je na delu staze koji nije povezan sa ostatkom.';
   }
+
+  @override
+  String get showRoute => 'Prikaži put';
+
+  @override
+  String get routeFromTitle => 'Odakle krećete?';
+
+  @override
+  String get routePickOnMap => 'Izaberite na mapi';
+
+  @override
+  String get routePickHint => 'Dodirnite mesto na mapi gde se nalazite';
+
+  @override
+  String get youAreHere => 'Vi ste ovde';
+
+  @override
+  String routeTo(String name) {
+    return 'Do: $name';
+  }
+
+  @override
+  String routeSummary(int meters, int minutes) {
+    return '$meters m · $minutes min';
+  }
+
+  @override
+  String get routeEstimated => 'procena';
+
+  @override
+  String get routeNoStairs => 'Bez stepenica';
+
+  @override
+  String get routeLoading => 'Tražim put…';
+
+  @override
+  String get routeNoRoute => 'Do ovog mesta nema puta na mapi.';
+
+  @override
+  String get routeFailed =>
+      'Put trenutno nije moguće izračunati. Proverite vezu.';
+
+  @override
+  String routeByLift(String floor) {
+    return 'Idite liftom na sprat $floor';
+  }
+
+  @override
+  String routeByStairs(String floor) {
+    return 'Idite stepenicama na sprat $floor';
+  }
+
+  @override
+  String routeContinue(String floor) {
+    return 'Nastavite na sprat $floor';
+  }
+
+  @override
+  String routeStartsOn(String floor) {
+    return 'Put počinje na spratu $floor';
+  }
+
+  @override
+  String get routeShowFloor => 'Prikaži';
+
+  @override
+  String get closeRoute => 'Zatvori put';
+
+  @override
+  String get routeAlreadyHere => 'Već ste ovde.';
 }

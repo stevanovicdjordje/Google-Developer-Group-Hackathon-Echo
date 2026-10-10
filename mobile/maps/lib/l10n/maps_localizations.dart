@@ -781,6 +781,120 @@ abstract class MapsLocalizations {
   /// In sr, this message translates to:
   /// **'„{name}“ je na delu staze koji nije povezan sa ostatkom.'**
   String issueUnreachable(String name);
+
+  /// No description provided for @showRoute.
+  ///
+  /// In sr, this message translates to:
+  /// **'Prikaži put'**
+  String get showRoute;
+
+  /// No description provided for @routeFromTitle.
+  ///
+  /// In sr, this message translates to:
+  /// **'Odakle krećete?'**
+  String get routeFromTitle;
+
+  /// No description provided for @routePickOnMap.
+  ///
+  /// In sr, this message translates to:
+  /// **'Izaberite na mapi'**
+  String get routePickOnMap;
+
+  /// No description provided for @routePickHint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Dodirnite mesto na mapi gde se nalazite'**
+  String get routePickHint;
+
+  /// No description provided for @youAreHere.
+  ///
+  /// In sr, this message translates to:
+  /// **'Vi ste ovde'**
+  String get youAreHere;
+
+  /// No description provided for @routeTo.
+  ///
+  /// In sr, this message translates to:
+  /// **'Do: {name}'**
+  String routeTo(String name);
+
+  /// No description provided for @routeSummary.
+  ///
+  /// In sr, this message translates to:
+  /// **'{meters} m · {minutes} min'**
+  String routeSummary(int meters, int minutes);
+
+  /// No description provided for @routeEstimated.
+  ///
+  /// In sr, this message translates to:
+  /// **'procena'**
+  String get routeEstimated;
+
+  /// No description provided for @routeNoStairs.
+  ///
+  /// In sr, this message translates to:
+  /// **'Bez stepenica'**
+  String get routeNoStairs;
+
+  /// No description provided for @routeLoading.
+  ///
+  /// In sr, this message translates to:
+  /// **'Tražim put…'**
+  String get routeLoading;
+
+  /// No description provided for @routeNoRoute.
+  ///
+  /// In sr, this message translates to:
+  /// **'Do ovog mesta nema puta na mapi.'**
+  String get routeNoRoute;
+
+  /// No description provided for @routeFailed.
+  ///
+  /// In sr, this message translates to:
+  /// **'Put trenutno nije moguće izračunati. Proverite vezu.'**
+  String get routeFailed;
+
+  /// No description provided for @routeByLift.
+  ///
+  /// In sr, this message translates to:
+  /// **'Idite liftom na sprat {floor}'**
+  String routeByLift(String floor);
+
+  /// No description provided for @routeByStairs.
+  ///
+  /// In sr, this message translates to:
+  /// **'Idite stepenicama na sprat {floor}'**
+  String routeByStairs(String floor);
+
+  /// No description provided for @routeContinue.
+  ///
+  /// In sr, this message translates to:
+  /// **'Nastavite na sprat {floor}'**
+  String routeContinue(String floor);
+
+  /// No description provided for @routeStartsOn.
+  ///
+  /// In sr, this message translates to:
+  /// **'Put počinje na spratu {floor}'**
+  String routeStartsOn(String floor);
+
+  /// No description provided for @routeShowFloor.
+  ///
+  /// In sr, this message translates to:
+  /// **'Prikaži'**
+  String get routeShowFloor;
+
+  /// No description provided for @closeRoute.
+  ///
+  /// In sr, this message translates to:
+  /// **'Zatvori put'**
+  String get closeRoute;
+
+  /// No description provided for @routeAlreadyHere.
+  ///
+  /// In sr, this message translates to:
+  /// **'Već ste ovde.'**
+  String get routeAlreadyHere;
 }
 
 class _MapsLocalizationsDelegate

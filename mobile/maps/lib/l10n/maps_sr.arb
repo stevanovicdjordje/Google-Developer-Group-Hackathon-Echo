@@ -269,5 +269,69 @@
         "type": "String"
       }
     }
-  }
+  },
+  "showRoute": "Prikaži put",
+  "routeFromTitle": "Odakle krećete?",
+  "routePickOnMap": "Izaberite na mapi",
+  "routePickHint": "Dodirnite mesto na mapi gde se nalazite",
+  "youAreHere": "Vi ste ovde",
+  "routeTo": "Do: {name}",
+  "@routeTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "routeSummary": "{meters} m · {minutes} min",
+  "@routeSummary": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "routeEstimated": "procena",
+  "routeNoStairs": "Bez stepenica",
+  "routeLoading": "Tražim put…",
+  "routeNoRoute": "Do ovog mesta nema puta na mapi.",
+  "routeFailed": "Put trenutno nije moguće izračunati. Proverite vezu.",
+  "routeByLift": "Idite liftom na sprat {floor}",
+  "@routeByLift": {
+    "placeholders": {
+      "floor": {
+        "type": "String"
+      }
+    }
+  },
+  "routeByStairs": "Idite stepenicama na sprat {floor}",
+  "@routeByStairs": {
+    "placeholders": {
+      "floor": {
+        "type": "String"
+      }
+    }
+  },
+  "routeContinue": "Nastavite na sprat {floor}",
+  "@routeContinue": {
+    "placeholders": {
+      "floor": {
+        "type": "String"
+      }
+    }
+  },
+  "routeStartsOn": "Put počinje na spratu {floor}",
+  "@routeStartsOn": {
+    "placeholders": {
+      "floor": {
+        "type": "String"
+      }
+    }
+  },
+  "routeShowFloor": "Prikaži",
+  "closeRoute": "Zatvori put",
+  "routeAlreadyHere": "Već ste ovde."
 }

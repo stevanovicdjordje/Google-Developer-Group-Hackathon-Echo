@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../model/map_models.dart';
+import '../model/route_models.dart';
 
 /// Error in the API's uniform `{code, message, details}` format, or a
 /// client-side failure (`network`, `timeout`, `bad_response`).
@@ -210,6 +211,26 @@ class MapsApi {
 
   Future<void> deleteFeature(String eventId, String featureId) =>
       _send('DELETE', '/v1/events/$eventId/features/$featureId');
+
+  /// Fastest walking route on the published map. `no_route` (422) means the
+  /// two places aren't connected.
+  Future<MapRoute> getRoute(
+    String eventId, {
+    required RouteEndpoint from,
+    required RouteEndpoint to,
+    bool accessible = false,
+  }) async {
+    final j = await _obj('POST', '/v1/events/$eventId/route', {
+      'from': from.toJson(),
+      'to': to.toJson(),
+      'accessible': accessible,
+    });
+    try {
+      return MapRoute.fromJson(j);
+    } on Object {
+      throw const MapsApiException(0, 'bad_response', 'invalid route');
+    }
+  }
 
   static List<PublishIssue> _issues(Object? v) => [
     for (final i in (v as List?) ?? const [])
