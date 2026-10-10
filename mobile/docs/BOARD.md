@@ -28,13 +28,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | M-10b | dev | 2026-10-11 01:26 | worktree | Design: Start, Join, Onboarding (+ v2 OnboardingName/Interests), My events (resumed after the 01:30 session limit) |
 | M-10c | dev | 2026-10-11 01:26 | worktree | Design: Agenda + session detail (+ v2 Session) (resumed) |
 | M-10e | dev | 2026-10-11 01:26 | worktree | Design: Find (+ v2 FindResults, Person), Messages + meeting spot (resumed) |
-| M-10f | dev | 2026-10-11 01:26 | worktree | Design: Profile + Map tab chrome + event shell nav (resumed) |
 | M-10g | dev | 2026-10-11 01:32 | worktree | Design: Organizer upload/review/published + flagged rows, progress text (relaunched) |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-10f | Design: Profile, event bottom nav (divider, line icons), Map meeting-spot floating card. Map plan chrome (chips, route card) is eho_maps → mobile#8 | `cfa27db` |
 | M-18 | echo#1: Echo screen on the real Echo API (Firestore transcript, catch-up, ask, Q&A + votes, summary, translate to sr; health-check fallback to demo data). E2E: server transcript shown in the web app | `138b7be` |
 | M-10a | Design foundation: theme tokens (`EhoColors`, `context.eho`), bundled Bricolage Grotesque + Instrument Sans, component themes, `core/ui/` widgets | `9fc22c1` |
 | M-16 | QR flow: `/e/{id}?at=` survives join + onboarding → `/e/{id}/map?at=` (`qr_join_test.dart`). Note: `/e/{id}/stand/{id}` still opens the map without the join screen (fine for the demo) | `89c6163` |
