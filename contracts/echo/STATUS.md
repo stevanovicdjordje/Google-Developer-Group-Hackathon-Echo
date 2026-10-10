@@ -47,9 +47,9 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 | Operation | Server (`backend/echo`) | App |
 | --- | --- | --- |
 | `echoHealthz` | implemented | — |
-| `askTalk`, `getCatchUp`, `getSummary` (incl. `summary`), `translateTranscript` | implemented (handler tests, e2e on emulators with the offline assistant **and with real Gemma**) | in progress (M-18); structured summary: M-10d |
-| `listQuestions`, `submitQuestion` (incl. merging), `voteQuestion`, `unvoteQuestion` | implemented (handler tests, Firestore emulator test, e2e with real Gemma) | in progress (M-18) |
-| Transcript in Firestore (`realtime.md`) | written by `cmd/replay`; rules verified on the emulator (attendee read ok, write 403) | not wired (demo data) |
+| `askTalk`, `getCatchUp`, `getSummary` (incl. `summary`), `translateTranscript` | implemented (handler tests, e2e on emulators with the offline assistant **and with real Gemma**) | wired (`138b7be`); structured summary in progress (M-21) |
+| `listQuestions`, `submitQuestion` (incl. merging), `voteQuestion`, `unvoteQuestion` | implemented (handler tests, Firestore emulator test, e2e with real Gemma) | wired (`138b7be`); merged questions in progress (M-21) |
+| Transcript in Firestore (`realtime.md`) | written by `cmd/replay`; rules verified on the emulator (attendee read ok, write 403) | wired (`138b7be`), verified e2e by mobile |
 
 ## Announcements (newest first)
 
@@ -65,7 +65,7 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
-| echo#1 | mobile | Wire `EchoRepository` to the Echo API (mapping table above): an HTTP implementation with its own base URL (default `http://localhost:8082`, e.g. `--dart-define=ECHO_API_BASE_URL`), the transcript from the Firestore listener in `realtime.md`, and translation through `translateTranscript` instead of the precomputed `translated` text. Keep the demo implementation as the fallback if you like. Session `s1` (the keynote) is the one with a replayed transcript. | open | 2026-10-11 |
+| echo#1 | mobile | Wire `EchoRepository` to the Echo API (mapping table above): an HTTP implementation with its own base URL (default `http://localhost:8082`, e.g. `--dart-define=ECHO_API_BASE_URL`), the transcript from the Firestore listener in `realtime.md`, and translation through `translateTranscript` instead of the precomputed `translated` text. Keep the demo implementation as the fallback if you like. Session `s1` (the keynote) is the one with a replayed transcript. | closed (done in mobile `138b7be`, design `0a1a027`) | 2026-10-11 |
 
 ## Inbound requests (others need something from us)
 
