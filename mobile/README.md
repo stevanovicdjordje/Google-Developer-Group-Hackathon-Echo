@@ -47,6 +47,6 @@ flutter analyze
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080   # app only
 ```
 
-Build-time settings (`--dart-define`): `API_BASE_URL` (default `http://localhost:8080`), `USE_EMULATORS` (default `true`; a real Firebase project is not configured yet), `EMULATOR_HOST` (default `localhost`; use `10.0.2.2` on the Android emulator).
+Build-time settings (`--dart-define`): `DEMO_EVENT_ID` (event ID used by the demo, default `devsummit`; set it to the ID printed by `backend/maps` `make seed` so the Map tab shows the real venue), `API_BASE_URL` (default `http://localhost:8080`), `USE_EMULATORS` (default `true`; a real Firebase project is not configured yet), `EMULATOR_HOST` (default `localhost`; use `10.0.2.2` on the Android emulator).
 
 Layout: `lib/core/` (router, theme, Firebase init, API client, config), `lib/features/<feature>/` (`auth`, `dev`; the venue map in `maps/`), `lib/l10n/` (Serbian Latin `app_sr.arb` is the template, English `app_en.arb`).

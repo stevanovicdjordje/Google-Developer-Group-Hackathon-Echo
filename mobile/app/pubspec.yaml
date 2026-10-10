@@ -10,6 +10,7 @@ dependencies:
   cloud_firestore: ^6.10.0
   eho_maps:
     path: ../maps
+  file_picker: ^13.1.0
   firebase_auth: ^6.7.0
   firebase_core: ^4.15.0
   firebase_storage: ^13.6.0
@@ -26,6 +27,7 @@ dependencies:
   http: ^1.6.0
   intl: ^0.20.3
   latlong2: ^0.10.1
+  qr_flutter: ^4.1.0
   web: ^1.1.1
 
 dev_dependencies:

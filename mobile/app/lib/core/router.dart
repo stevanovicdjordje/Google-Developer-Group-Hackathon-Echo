@@ -1,13 +1,158 @@
-import 'package:eho_maps/eho_maps.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/app_state.dart';
+import '../features/agenda/agenda_screens.dart';
 import '../features/dev/dev_status_screen.dart';
+import '../features/echo/echo_screen.dart';
+import '../features/event/event_shell.dart';
+import '../features/find/find_screens.dart';
+import '../features/join/join_screens.dart';
+import '../features/map/map_tab.dart';
+import '../features/organizer/organizer_screens.dart';
+import '../features/profile/profile_screen.dart';
+import '../features/start/start_screen.dart';
 
-/// Deep links: `/e/{eventId}` (optional `?at={markerId}`) and
-/// `/e/{eventId}/stand/{standId}`, provided by the venue map package.
+/// App routes. Links (`docs/decisions/team-event-join.md`):
+/// - `/e/{eventId}` join/open an event (optional `?at={markerId}`)
+/// - `/e/{eventId}/stand/{standId}` a stand on the map
+///
+/// The venue map (`eho_maps`) is shown inside the Map tab via
+/// [MapViewerScreen]; its own `mapsRoutes()` are not mounted.
 GoRouter buildRouter() => GoRouter(
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const DevStatusScreen()),
-    ...mapsRoutes(),
+    GoRoute(path: '/', builder: (c, s) => const StartScreen()),
+    GoRoute(path: '/dev', builder: (c, s) => const DevStatusScreen()),
+    GoRoute(path: '/events', builder: (c, s) => const MyEventsScreen()),
+    GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
+
+    // Organizer
+    GoRoute(
+      path: '/organizer',
+      builder: (c, s) => const OrganizerUploadScreen(),
+      routes: [
+        GoRoute(
+          path: 'review',
+          builder: (c, s) => const OrganizerReviewScreen(),
+        ),
+        GoRoute(
+          path: 'published',
+          builder: (c, s) => OrganizerPublishedScreen(
+            url: s.uri.queryParameters['url'] ?? '',
+            name: s.uri.queryParameters['name'] ?? '',
+          ),
+        ),
+      ],
+    ),
+
+    // Event: bottom-nav tabs
+    ShellRoute(
+      builder: (c, s, child) =>
+          EventShell(eventId: _id(s), location: s.uri.path, child: child),
+      routes: [
+        GoRoute(
+          path: '/e/:eventId/agenda',
+          builder: (c, s) => AgendaScreen(eventId: _id(s)),
+        ),
+        GoRoute(
+          path: '/e/:eventId/map',
+          builder: (c, s) => MapTab(
+            eventId: _id(s),
+            markerId: s.uri.queryParameters['at'],
+          ),
+          routes: [
+            GoRoute(
+              path: 'stand/:standId',
+              builder: (c, s) => MapTab(
+                eventId: _id(s),
+                featureId: s.pathParameters['standId'],
+              ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/e/:eventId/find',
+          builder: (c, s) => FindScreen(eventId: _id(s)),
+          routes: [
+            GoRoute(
+              path: 'person/:personId',
+              builder: (c, s) => PersonScreen(
+                eventId: _id(s),
+                personId: s.pathParameters['personId']!,
+                why: s.uri.queryParameters['why'],
+              ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/e/:eventId/profile',
+          builder: (c, s) => const ProfileScreen(),
+        ),
+      ],
+    ),
+
+    // Event: full-screen pages and link entry points
+    GoRoute(
+      path: '/e/:eventId',
+      builder: (c, s) =>
+          EventEntry(eventId: _id(s), markerId: s.uri.queryParameters['at']),
+    ),
+    GoRoute(
+      path: '/e/:eventId/stand/:standId',
+      redirect: (c, s) =>
+          '/e/${_id(s)}/map/stand/${s.pathParameters['standId']}',
+    ),
+    GoRoute(
+      path: '/e/:eventId/session/:sessionId',
+      builder: (c, s) => SessionScreen(
+        eventId: _id(s),
+        sessionId: s.pathParameters['sessionId']!,
+      ),
+      routes: [
+        GoRoute(
+          path: 'echo',
+          builder: (c, s) => EchoScreen(
+            eventId: _id(s),
+            sessionId: s.pathParameters['sessionId']!,
+          ),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/e/:eventId/messages/:personId',
+      builder: (c, s) => MessagesScreen(
+        eventId: _id(s),
+        personId: s.pathParameters['personId']!,
+      ),
+    ),
   ],
 );
+
+String _id(GoRouterState s) => s.pathParameters['eventId']!;
+
+/// `/e/{eventId}`: joined users go straight in (to the map when a
+/// "you are here" QR was scanned); everyone else sees the join screen.
+class EventEntry extends ConsumerWidget {
+  const EventEntry({super.key, required this.eventId, this.markerId});
+
+  final String eventId;
+  final String? markerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final joined = ref
+        .watch(joinedEventsProvider)
+        .any((e) => e.id == eventId);
+    if (!joined) return JoinScreen(eventId: eventId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      context.go(
+        markerId == null
+            ? '/e/$eventId/agenda'
+            : '/e/$eventId/map?at=${Uri.encodeComponent(markerId!)}',
+      );
+    });
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
+}

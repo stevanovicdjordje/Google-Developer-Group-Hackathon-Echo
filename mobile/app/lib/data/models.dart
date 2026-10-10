@@ -1,0 +1,205 @@
+/// App data models for the attendee and organizer flows.
+///
+/// These mirror what the backend is asked to provide in
+/// `mobile/docs/api-needs.md`. Until those endpoints exist, the demo
+/// repositories in `demo_repositories.dart` return hardcoded data.
+library;
+
+class EventSummary {
+  const EventSummary({
+    required this.id,
+    required this.name,
+    required this.dates,
+    required this.venue,
+    this.isPast = false,
+  });
+
+  final String id;
+  final String name;
+  final String dates;
+  final String venue;
+  final bool isPast;
+}
+
+class Speaker {
+  const Speaker({required this.id, required this.name, required this.title});
+
+  final String id;
+  final String name;
+  final String title;
+}
+
+class Session {
+  const Session({
+    required this.id,
+    required this.title,
+    required this.stage,
+    required this.start,
+    required this.end,
+    required this.speakers,
+    this.description = '',
+    this.track = '',
+    this.isBreak = false,
+  });
+
+  final String id;
+  final String title;
+
+  /// Stage/room name. Matches a room name on the venue map.
+  final String stage;
+  final String start;
+  final String end;
+  final List<Speaker> speakers;
+  final String description;
+  final String track;
+  final bool isBreak;
+}
+
+class TranscriptLine {
+  const TranscriptLine({
+    required this.atSeconds,
+    required this.text,
+    required this.translated,
+  });
+
+  final int atSeconds;
+  final String text;
+
+  /// Demo translation (Serbian). The backend will translate on request.
+  final String translated;
+}
+
+class AiAnswer {
+  const AiAnswer({required this.question, required this.answer});
+
+  final String question;
+  final String answer;
+}
+
+class SpeakerQuestion {
+  SpeakerQuestion({
+    required this.id,
+    required this.text,
+    required this.votes,
+    this.mine = false,
+  });
+
+  final String id;
+  final String text;
+  int votes;
+  final bool mine;
+}
+
+class Person {
+  const Person({
+    required this.id,
+    required this.name,
+    required this.headline,
+    required this.interests,
+    required this.lookingFor,
+  });
+
+  final String id;
+  final String name;
+  final String headline;
+  final List<String> interests;
+  final String lookingFor;
+
+  String get initials =>
+      name.split(' ').where((p) => p.isNotEmpty).map((p) => p[0]).take(2).join();
+}
+
+class PersonMatch {
+  const PersonMatch({required this.person, required this.why});
+
+  final Person person;
+
+  /// AI explanation of why this person fits.
+  final String why;
+}
+
+class Profile {
+  const Profile({
+    this.name = '',
+    this.headline = '',
+    this.interests = const [],
+    this.lookingFor = '',
+    this.visibleInFind = false,
+    this.allowContact = false,
+    this.shareMeetingSpot = false,
+    this.onboarded = false,
+  });
+
+  final String name;
+  final String headline;
+  final List<String> interests;
+  final String lookingFor;
+  final bool visibleInFind;
+  final bool allowContact;
+  final bool shareMeetingSpot;
+  final bool onboarded;
+
+  Profile copyWith({
+    String? name,
+    String? headline,
+    List<String>? interests,
+    String? lookingFor,
+    bool? visibleInFind,
+    bool? allowContact,
+    bool? shareMeetingSpot,
+    bool? onboarded,
+  }) => Profile(
+    name: name ?? this.name,
+    headline: headline ?? this.headline,
+    interests: interests ?? this.interests,
+    lookingFor: lookingFor ?? this.lookingFor,
+    visibleInFind: visibleInFind ?? this.visibleInFind,
+    allowContact: allowContact ?? this.allowContact,
+    shareMeetingSpot: shareMeetingSpot ?? this.shareMeetingSpot,
+    onboarded: onboarded ?? this.onboarded,
+  );
+}
+
+enum ContactState { none, requested, accepted }
+
+class MeetingSpot {
+  const MeetingSpot({required this.personName, required this.place});
+
+  final String personName;
+
+  /// Name of a room/stand/POI on the venue map.
+  final String place;
+}
+
+class UploadedFile {
+  const UploadedFile({required this.name, required this.sizeBytes});
+
+  final String name;
+  final int sizeBytes;
+}
+
+/// What the AI extracted from the organizer's files, before publishing.
+class EventDraft {
+  const EventDraft({
+    required this.name,
+    required this.dates,
+    required this.venue,
+    required this.stages,
+    required this.sessions,
+    required this.speakers,
+  });
+
+  final String name;
+  final String dates;
+  final String venue;
+  final List<String> stages;
+  final List<Session> sessions;
+  final List<Speaker> speakers;
+}
+
+class PublishedLink {
+  const PublishedLink({required this.eventId, required this.url});
+
+  final String eventId;
+  final String url;
+}
