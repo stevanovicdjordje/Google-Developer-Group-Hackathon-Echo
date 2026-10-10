@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
+import '../../l10n/app_localizations.dart';
 
 /// `/organizer`: upload unstructured files; the AI builds the event.
 class OrganizerUploadScreen extends ConsumerStatefulWidget {
@@ -45,22 +46,19 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('New event')),
+      appBar: AppBar(title: Text(l10n.orgNewEvent)),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text('Drop in whatever you have', style: t.headlineSmall),
+          Text(l10n.orgUploadTitle, style: t.headlineSmall),
           const SizedBox(height: 8),
-          Text(
-            'Agenda PDFs, speaker spreadsheets, venue plans, slides. '
-            'Eho reads them and builds your event.',
-            style: t.bodyLarge,
-          ),
+          Text(l10n.orgUploadBody, style: t.bodyLarge),
           const SizedBox(height: 24),
           OutlinedButton.icon(
             icon: const Icon(Icons.upload_file),
-            label: const Text('Choose files'),
+            label: Text(l10n.orgChooseFiles),
             onPressed: _working ? null : _pick,
           ),
           const SizedBox(height: 12),
@@ -68,20 +66,17 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
             ListTile(
               leading: const Icon(Icons.description_outlined),
               title: Text(f.name),
-              subtitle: Text('${(f.sizeBytes / 1024).ceil()} KB'),
+              subtitle: Text(l10n.orgFileSizeKb((f.sizeBytes / 1024).ceil())),
             ),
           const SizedBox(height: 24),
           if (_working) ...[
             const LinearProgressIndicator(),
             const SizedBox(height: 12),
-            Text(
-              'Reading your files and extracting stages, sessions and speakers…',
-              style: t.bodyMedium,
-            ),
+            Text(l10n.orgReading, style: t.bodyMedium),
           ] else
             FilledButton.icon(
               icon: const Icon(Icons.auto_awesome),
-              label: const Text('Build my event with AI'),
+              label: Text(l10n.orgBuild),
               onPressed: _files.isEmpty ? null : _extract,
             ),
         ],
@@ -139,20 +134,21 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final draft = ref.watch(organizerDraftProvider);
+    final l10n = AppLocalizations.of(context);
     if (draft == null) {
       return Scaffold(
         appBar: AppBar(),
         body: Center(
           child: TextButton(
             onPressed: () => context.go('/organizer'),
-            child: const Text('Start by uploading files'),
+            child: Text(l10n.orgStartByUploading),
           ),
         ),
       );
     }
     final t = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Review your event')),
+      appBar: AppBar(title: Text(l10n.orgReviewTitle)),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -162,13 +158,13 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
           Wrap(
             spacing: 8,
             children: [
-              Chip(label: Text('${draft.stages.length} stages')),
-              Chip(label: Text('${draft.sessions.length} sessions')),
-              Chip(label: Text('${draft.speakers.length} speakers')),
+              Chip(label: Text(l10n.orgStagesCount(draft.stages.length))),
+              Chip(label: Text(l10n.orgSessionsCount(draft.sessions.length))),
+              Chip(label: Text(l10n.orgSpeakersCount(draft.speakers.length))),
             ],
           ),
           const SizedBox(height: 16),
-          Text('Sessions', style: t.titleMedium),
+          Text(l10n.orgSessions, style: t.titleMedium),
           for (final s in draft.sessions)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -179,7 +175,7 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
               ),
               trailing: IconButton(
                 icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Edit session',
+                tooltip: l10n.orgEditSession,
                 onPressed: () => _edit(draft, s),
               ),
             ),
@@ -191,7 +187,7 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.publish),
-            label: const Text('Publish & get join link'),
+            label: Text(l10n.orgPublish),
             onPressed: _publishing ? null : () => _publish(draft),
           ),
         ],
@@ -260,9 +256,10 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
     final badTitle = title.isEmpty;
     final badTime = _minutes(_end) <= _minutes(_start);
     if (badTitle || badTime) {
+      final l10n = AppLocalizations.of(context);
       setState(() {
-        _titleError = badTitle ? 'Title is required' : null;
-        _timeError = badTime ? 'End must be after start' : null;
+        _titleError = badTitle ? l10n.orgTitleRequired : null;
+        _timeError = badTime ? l10n.orgEndAfterStart : null;
       });
       return;
     }
@@ -285,6 +282,7 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     // Keep the current stage selectable even if the draft's list lacks it.
     final stages = {...widget.stages, widget.session.stage}.toList();
     return SingleChildScrollView(
@@ -298,12 +296,12 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Edit session', style: t.textTheme.titleLarge),
+          Text(l10n.orgEditSession, style: t.textTheme.titleLarge),
           const SizedBox(height: 16),
           TextField(
             controller: _title,
             decoration: InputDecoration(
-              labelText: 'Title',
+              labelText: l10n.orgTitleLabel,
               border: const OutlineInputBorder(),
               errorText: _titleError,
             ),
@@ -315,7 +313,7 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.schedule),
-                  label: Text('Start $_start'),
+                  label: Text(l10n.orgStartTime(_start)),
                   onPressed: () => _pickTime(start: true),
                 ),
               ),
@@ -323,7 +321,7 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.schedule),
-                  label: Text('End $_end'),
+                  label: Text(l10n.orgEndTime(_end)),
                   onPressed: () => _pickTime(start: false),
                 ),
               ),
@@ -342,9 +340,9 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _stage,
-            decoration: const InputDecoration(
-              labelText: 'Stage',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.orgStageLabel,
+              border: const OutlineInputBorder(),
             ),
             items: [
               for (final s in stages)
@@ -358,10 +356,10 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
             children: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: _save, child: const Text('Save')),
+              FilledButton(onPressed: _save, child: Text(l10n.save)),
             ],
           ),
         ],
@@ -385,18 +383,15 @@ class OrganizerPublishedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Published')),
+      appBar: AppBar(title: Text(l10n.orgPublished)),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text('$name is live', style: t.headlineSmall),
+          Text(l10n.orgIsLive(name), style: t.headlineSmall),
           const SizedBox(height: 8),
-          Text(
-            'Share this link or print the QR code. Attendees join in one tap, '
-            'in the app or the browser.',
-            style: t.bodyLarge,
-          ),
+          Text(l10n.orgShareBody, style: t.bodyLarge),
           const SizedBox(height: 24),
           Center(
             child: Container(
@@ -414,17 +409,17 @@ class OrganizerPublishedScreen extends StatelessWidget {
           const SizedBox(height: 16),
           OutlinedButton.icon(
             icon: const Icon(Icons.copy),
-            label: const Text('Copy link'),
+            label: Text(l10n.orgCopyLink),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: url));
               ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('Link copied')));
+                  .showSnackBar(SnackBar(content: Text(l10n.orgLinkCopied)));
             },
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
             icon: const Icon(Icons.open_in_new),
-            label: const Text('Open as attendee'),
+            label: Text(l10n.orgOpenAsAttendee),
             onPressed: () => context.go(Uri.parse(url).path),
           ),
         ],

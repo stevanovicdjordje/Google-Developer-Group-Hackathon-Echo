@@ -1,6 +1,7 @@
 import 'package:eho/data/models.dart';
 import 'package:eho/data/repositories.dart';
 import 'package:eho/features/echo/echo_screen.dart';
+import 'package:eho/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +29,8 @@ Future<void> _pumpEcho(WidgetTester tester) async {
     ProviderScope(
       overrides: [echoRepositoryProvider.overrideWithValue(_FakeEcho())],
       child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: EchoScreen(eventId: 'devsummit', sessionId: 's1'),
       ),
     ),

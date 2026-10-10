@@ -7,6 +7,7 @@ import '../../data/app_state.dart';
 import '../../data/demo_data.dart' as demo;
 import '../../data/models.dart';
 import '../../data/repositories.dart';
+import '../../l10n/app_localizations.dart';
 
 final recommendationsProvider =
     FutureProvider.family<List<PersonMatch>, String>((ref, eventId) {
@@ -42,8 +43,9 @@ class _FindScreenState extends ConsumerState<FindScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Find people')),
+      appBar: AppBar(title: Text(l10n.findTitle)),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
@@ -54,7 +56,7 @@ class _FindScreenState extends ConsumerState<FindScreen> {
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _run(),
               decoration: InputDecoration(
-                hintText: 'Describe who you want to meet…',
+                hintText: l10n.findSearchHint,
                 prefixIcon: const Icon(Icons.auto_awesome),
                 border: const OutlineInputBorder(),
                 suffixIcon: _search == null
@@ -71,19 +73,19 @@ class _FindScreenState extends ConsumerState<FindScreen> {
           ),
           const SizedBox(height: 8),
           if (_search != null) ...[
-            _SectionTitle('Results for "$_lastPrompt"', t),
+            _SectionTitle(l10n.findResultsFor(_lastPrompt), t),
             FutureBuilder<List<PersonMatch>>(
               future: _search,
               builder: (context, snap) => snap.hasData
                   ? _Matches(widget.eventId, snap.data!)
-                  : const _Thinking('Searching attendees…'),
+                  : _Thinking(l10n.findSearching),
             ),
           ] else ...[
-            _SectionTitle('Recommended for you', t),
+            _SectionTitle(l10n.findRecommended, t),
             ref
                 .watch(recommendationsProvider(widget.eventId))
                 .when(
-                  loading: () => const _Thinking('Finding your best matches…'),
+                  loading: () => _Thinking(l10n.findThinking),
                   error: (e, _) => Text('$e'),
                   data: (m) => _Matches(widget.eventId, m),
                 ),
@@ -134,9 +136,9 @@ class _Matches extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (matches.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(24),
-        child: Text('No one matches yet. Try describing it differently.'),
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(AppLocalizations.of(context).findNoMatches),
       );
     }
     return Column(
@@ -209,6 +211,7 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
     if (p == null) return Scaffold(appBar: AppBar());
     final state = ref.watch(contactsProvider)[p.id] ?? ContactState.none;
     final t = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(),
       body: ListView(
@@ -227,29 +230,29 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
           const SizedBox(height: 16),
           ListTile(
             leading: const Icon(Icons.search),
-            title: const Text('Looking for'),
+            title: Text(l10n.lookingFor),
             subtitle: Text(p.lookingFor),
           ),
           if (widget.why != null)
             ListTile(
               leading: const Icon(Icons.auto_awesome),
-              title: const Text('Why you should meet'),
+              title: Text(l10n.personWhyMeet),
               subtitle: Text(widget.why!),
             ),
           const SizedBox(height: 24),
           switch (state) {
             ContactState.none => FilledButton.icon(
               icon: const Icon(Icons.person_add_alt),
-              label: const Text('Send contact request'),
+              label: Text(l10n.personSendRequest),
               onPressed: _contact,
             ),
-            ContactState.requested => const FilledButton(
+            ContactState.requested => FilledButton(
               onPressed: null,
-              child: Text('Request sent · waiting…'),
+              child: Text(l10n.personRequestSent),
             ),
             ContactState.accepted => FilledButton.icon(
               icon: const Icon(Icons.chat_bubble_outline),
-              label: Text('${p.name.split(' ').first} accepted · Message'),
+              label: Text(l10n.personAccepted(p.name.split(' ').first)),
               onPressed: () =>
                   context.push('/e/${widget.eventId}/messages/${p.id}'),
             ),
@@ -277,6 +280,7 @@ class MessagesScreen extends ConsumerWidget {
     final p = demo.people.firstWhere((x) => x.id == personId);
     final spot = ref.watch(meetingSpotProvider);
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(p.name)),
       body: Column(
@@ -289,7 +293,7 @@ class MessagesScreen extends ConsumerWidget {
                   _Bubble(text: text, mine: mine),
                 if (spot != null && spot.personName == p.name)
                   _Bubble(
-                    text: '📍 Let\'s meet at ${spot.place}',
+                    text: l10n.messagesMeetAt(spot.place),
                     mine: true,
                     color: scheme.tertiaryContainer,
                   ),
@@ -303,16 +307,16 @@ class MessagesScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton.filledTonal(
-                    tooltip: 'Suggest a meeting spot',
+                    tooltip: l10n.messagesSuggestSpot,
                     icon: const Icon(Icons.place_outlined),
                     onPressed: () => _pickSpot(context, ref, p.name),
                   ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: 'Message',
-                        border: OutlineInputBorder(),
+                        hintText: l10n.messagesHint,
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                   ),

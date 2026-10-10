@@ -26,7 +26,7 @@ class _EhoAppState extends State<EhoApp> {
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: lightTheme,
       darkTheme: darkTheme,
-      locale: const Locale('sr'),
+      locale: const Locale('en'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,

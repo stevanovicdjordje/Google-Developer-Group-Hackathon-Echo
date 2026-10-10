@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/models.dart';
 import '../../data/repositories.dart';
+import '../../l10n/app_localizations.dart';
 import '../join/join_screens.dart';
 
 final agendaProvider = FutureProvider.family<List<Session>, String>(
@@ -28,12 +29,13 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
   Widget build(BuildContext context) {
     final agenda = ref.watch(agendaProvider(widget.eventId));
     final event = ref.watch(eventSummaryProvider(widget.eventId)).value;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(event?.name ?? 'Agenda'),
+        title: Text(event?.name ?? l10n.tabAgenda),
         actions: [
           IconButton(
-            tooltip: 'My events',
+            tooltip: l10n.myEvents,
             icon: const Icon(Icons.swap_horiz),
             onPressed: () => context.go('/events'),
           ),
@@ -58,7 +60,7 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
-                          label: Text(st ?? 'All stages'),
+                          label: Text(st ?? l10n.agendaAllStages),
                           selected: _stage == st,
                           onSelected: (_) => setState(() => _stage = st),
                         ),
@@ -132,6 +134,7 @@ class SessionScreen extends ConsumerWidget {
     final sessions = ref.watch(agendaProvider(eventId)).value ?? const [];
     final s = sessions.where((x) => x.id == sessionId).firstOrNull;
     final t = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     if (s == null) {
       return Scaffold(appBar: AppBar(), body: const SizedBox.shrink());
     }
@@ -158,14 +161,14 @@ class SessionScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           FilledButton.icon(
             icon: const Icon(Icons.graphic_eq),
-            label: const Text('Open Echo: live transcript & AI'),
+            label: Text(l10n.sessionOpenEcho),
             onPressed: () =>
                 context.push('/e/$eventId/session/$sessionId/echo'),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             icon: const Icon(Icons.place_outlined),
-            label: Text('Show ${s.stage} on map'),
+            label: Text(l10n.sessionShowOnMap(s.stage)),
             onPressed: () {
               final id = _stageFeatureId(ref, s.stage);
               context.go(
