@@ -25,13 +25,14 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-9 | dev | 2026-10-11 01:35 | worktree | Meeting spot via `MapViewerScreen(highlightFeatureId, highlightLabel)` (mobile#6 done by maps) |
-| M-15 | dev | 2026-10-11 01:35 | worktree | maps#2: location permissions (Android manifest, iOS Info.plist), while-in-use only |
+| — | | | | |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-15 | maps#2: location permissions (Android fine/coarse, iOS when-in-use) | `3cee092` |
+| M-9 | Meeting spot "Show" highlights the place with a "Meeting: <name>" pin (`highlightFeatureId`/`highlightLabel`); not yet seen against a live map | `8c675fa` |
 | M-8 | Event switch: tab roots keyed by eventId so Find/Agenda state from event A never shows on event B (bug found + fixed, `event_switch_test.dart`) | `c2dd1f3` |
 | M-7 | maps#1: map API base URL override in `main.dart`; Profile → For organizers (Create event, Edit venue map → `/o`); `/o` mounted in the router | `5535095` + router fix |
 | M-6 | Echo polish: "Ask about this" menu on long-press, auto-scroll pauses + "Jump to live" | `64b2937` |
