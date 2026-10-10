@@ -16,15 +16,16 @@ A feature is ready for integration when **all** of these hold:
 | # | Task | Owner | Status |
 | --- | --- | --- | --- |
 | 0.1 | Create monorepo scaffold, docs, private GitHub repo | Bootstrap agent | Done (scaffold only) |
-| 0.2 | Invite collaborators on GitHub | Repo owner | TODO |
+| 0.2 | Invite collaborators on GitHub; teammates accept | Repo owner | In progress (2 invites sent 2026-10-10, pending acceptance) |
 | 0.3 | Fill in `OWNERSHIP.md` handles; add `CODEOWNERS` | TBD | TODO |
+| 0.4 | Each teammate: onboarding (`ONBOARDING.md`): scope guard, agent kickoff | Everyone | TODO |
 
 ## Phase 1 — Decide
 
 | # | Task | Owner | Status |
 | --- | --- | --- | --- |
 | 1.1 | Choose the hero flow / demo slice (`MVP.md`) | TBD | TODO |
-| 1.2 | Choose stacks per module; record ADRs | TBD | TODO |
+| 1.2 | Choose stacks per module; record in `docs/decisions/` | TBD | TODO |
 | 1.3 | Decide Gemma model + where it runs | TBD | TODO |
 | 1.4 | Run first user interviews (`USER_RESEARCH.md`) | TBD | TODO |
 

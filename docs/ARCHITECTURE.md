@@ -1,6 +1,6 @@
 # Eho — Architecture (conceptual)
 
-> **Status: Conceptual.** This shows intended boundaries, not a built system. Hosting, providers, frameworks and databases are **not chosen** (see `DECISIONS.md`). Nothing below is deployed.
+> **Status: Conceptual.** This shows intended boundaries, not a built system. Hosting, providers, frameworks and databases are **not chosen** (see `docs/decisions/`). Nothing below is deployed.
 
 ## High-level view
 

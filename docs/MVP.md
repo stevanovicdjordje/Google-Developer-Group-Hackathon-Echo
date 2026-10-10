@@ -1,6 +1,6 @@
 # Eho — MVP (proposal, not a decision)
 
-> **Status: Proposal.** The team has **not** agreed on the MVP. This document lists candidates, one *proposed* demo slice, and the criteria for choosing. Update it when the team decides, and record the decision in `DECISIONS.md`.
+> **Status: Proposal.** The team has **not** agreed on the MVP. This document lists candidates, one *proposed* demo slice, and the criteria for choosing. Update it when the team decides, and record the decision in `docs/decisions/product-hero-flow.md`.
 
 ## Selection criteria
 

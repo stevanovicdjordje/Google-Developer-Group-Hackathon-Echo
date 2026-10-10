@@ -23,7 +23,7 @@ The attendee-facing client. It lets a visitor join an event and use Eho's attend
 
 ## AI integrations
 
-**Planned to go through the backend only.** The app should not call Gemma, STT or other model providers directly, and should not ship provider API keys, unless the team explicitly agrees otherwise (e.g. an on-device Gemma experiment). Record that decision in `docs/DECISIONS.md`.
+**Planned to go through the backend only.** The app should not call Gemma, STT or other model providers directly, and should not ship provider API keys, unless the team explicitly agrees otherwise (e.g. an on-device Gemma experiment). Record that decision in `docs/decisions/`.
 
 ## Open questions
 

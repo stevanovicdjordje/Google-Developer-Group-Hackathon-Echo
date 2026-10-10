@@ -1,34 +1,17 @@
 # CLAUDE.md
 
-Instructions for Claude Code in this repository.
+Claude Code loads this file at launch. Because this repo has a `CLAUDE.md`, Claude Code does **not** read `AGENTS.md` on its own, so the shared rules are imported here:
 
-## Before doing anything
+@AGENTS.md
+@docs/COORDINATION.md
 
-1. Read [`AGENTS.md`](AGENTS.md) (root). It is the source of truth for agent rules.
-2. Read [`docs/OWNERSHIP.md`](docs/OWNERSHIP.md).
-3. Read the scoped `AGENTS.md` of the module you were assigned (`mobile/`, `backend/`, `organizer-web/` or `contracts/`).
-4. Read `docs/PRODUCT.md`, `docs/ARCHITECTURE.md` and the relevant parts of `contracts/`.
+## Claude Code specifics
 
-## READ GLOBAL, WRITE LOCAL
-
-- You may read any file for context.
-- You may write **only** inside your declared scope.
-- Your first message in a session must state: `My write scope is <path>/**`.
-- **If no scope was given, ask for one before changing any file.** You are responsible for asking — do not infer a scope from the files you happen to be looking at.
-- Shared files (`README.md`, `AGENTS.md`, `CLAUDE.md`, `.github/`, `contracts/`, `docs/`) are read-only unless the user explicitly assigns them to you.
-
-| Agent scope | May write | Read-only by default |
-| --- | --- | --- |
-| Mobile | `mobile/**` | `backend/**`, `organizer-web/**`, `contracts/**`, `docs/**`, root |
-| Backend | `backend/**` | `mobile/**`, `organizer-web/**`, `contracts/**`, `docs/**`, root |
-| Organizer web | `organizer-web/**` | `mobile/**`, `backend/**`, `contracts/**`, `docs/**`, root |
-| Contracts owner | `contracts/**` | application modules |
-| Integration/docs owner | explicitly assigned shared files | app modules |
-
-## Important
-
-- This `CLAUDE.md` does **not** replace scope discipline and is **not** a technical guarantee of boundaries. Claude Code can technically write anywhere it has permission; staying in scope is your responsibility, and humans review diffs.
-- Use `git add -- <owned-paths>`, never `git add .` from the root.
-- No force-pushes, no destructive git commands, no repo-wide formatters or dependency upgrades.
-- Never present Proposed/TBD items from `docs/` as decided or implemented.
-- End each session with a list of changed files and the real test status.
+- **Launch from the repo root** (`cd "$(git rev-parse --show-toplevel)" && claude`), even if your IDE has only your module open. That way you can read the whole repo, and `/path` rules in `.claude/settings.local.json` line up with the repo layout (see `ONBOARDING.md`).
+- Each module has its own `CLAUDE.md` that imports its `AGENTS.md`. It loads automatically when you touch files in that module. Still read your module's `AGENTS.md` and `STATUS.md` explicitly at session start.
+- Your first message in a session must state `My write scope is …`. **If no scope was given, ask before changing any file.** Don't infer a scope from the files you happen to be looking at.
+- This file is not a technical guarantee of boundaries. Staying in scope is your responsibility. If deny rules block an edit, that confirms the edit is out of scope: open a request instead of looking for a workaround (no Bash/script writes to other modules).
+- Useful phrases your human may use:
+  - **"sync"** → run `docs/COORDINATION.md` §2 and give the sync report.
+  - **"we decided …"** → record it per §3 (decision file if you own the prefix, otherwise a request).
+  - **"wrap up"** → run §7.

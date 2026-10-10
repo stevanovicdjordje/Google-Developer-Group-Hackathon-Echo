@@ -9,10 +9,21 @@
 ## Policy
 
 - **Who changes it:** only the contract/integration owner, or a member they explicitly authorize (see `docs/OWNERSHIP.md`).
-- **How:** a separate PR that only touches `contracts/**`. In the PR, describe the **compatibility impact** (additive / breaking / fixture-only) and which consumers are affected.
+- **How to ask for a change:** add an outbound request addressed to `contracts` in **your own** module's `STATUS.md` (`docs/COORDINATION.md` §4), with what you need, why, and when it blocks you.
+- **How changes land:** the procedure in [`AGENTS.md`](AGENTS.md): agree, edit spec + fixtures, validate, then write a [`CHANGELOG.md`](CHANGELOG.md) entry with **compatibility impact** (additive / breaking / fixture-only) and affected consumers, then announce in [`STATUS.md`](STATUS.md). Breaking changes go via a PR.
 - **Agree first:** server and client owners agree on a change *before* anyone implements against it. Breaking changes need explicit sign-off from every affected consumer.
 - **Status:** until it is marked approved, an endpoint in the spec is a *proposal*. It is not a working API.
 - **Fixtures follow the spec:** every approved endpoint should have example request/response JSON in `examples/` that validates against the schema.
+
+## Files
+
+| File | Purpose |
+| --- | --- |
+| `openapi.yaml` | The HTTP API contract |
+| `examples/` | Fixtures / mocks that validate against the spec |
+| `CHANGELOG.md` | Every contract change, with impact |
+| `STATUS.md` | Approved operations, proposals under discussion, announcements, requests |
+| `deeplinks.md`, `realtime.md` | *Not yet created.* Non-HTTP contracts, added once `team-event-join` / `contracts-realtime-transport` are decided |
 
 ## Candidate API areas (illustrative — NOT agreed)
 
@@ -29,7 +40,7 @@ These are topics the contract will probably need to cover. They are listed for d
 
 ## Versioning (proposal)
 
-- `info.version` uses semver. Bump the minor version for additive changes and the major version for breaking ones.
+- `info.version` uses semver: minor bump for additive, major bump for breaking. While below `1.0.0`, breaking changes bump the minor version and are flagged **BREAKING** in `CHANGELOG.md`.
 - No URL versioning is decided yet.
 
 ## Validation

@@ -1,24 +1,33 @@
 # mobile/AGENTS.md
 
-Scoped rules for agents working on the attendee app. These **add to** the root [`../AGENTS.md`](../AGENTS.md) and do not replace it.
+Scoped rules for agents working on the attendee app. These **add to** the root [`../AGENTS.md`](../AGENTS.md) and [`../docs/COORDINATION.md`](../docs/COORDINATION.md) and never relax them.
 
 ## Scope
 
-- **Default owned (writable) paths:** `mobile/**`
-- **Read-only:** `../contracts/**`, `../docs/**`, root files, `../backend/**`, `../organizer-web/**`
-- Do not edit shared files or the backend unless the user explicitly assigns them for this session.
+- **Writable:** `mobile/**` (including `mobile/STATUS.md`) and `docs/decisions/mobile-*.md`
+- **Read-only:** everything else (`../contracts/**`, `../docs/**`, `../backend/**`, `../organizer-web/**`, root files)
 
-Start every session with: `My write scope is mobile/**`.
+First line of every session: `My write scope is mobile/** + docs/decisions/mobile-*.md`.
 
-| Agent scope | May write | Read-only by default |
-| --- | --- | --- |
-| Mobile | `mobile/**` | `backend/**`, `organizer-web/**`, `contracts/**`, `docs/**`, root |
+## What other modules expect from you (keep it current in `STATUS.md`)
+
+- **Stack** and how a teammate builds/installs a demo build.
+- **Join link / deep-link** handling, once `team-event-join` is decided.
+- **Contract coverage:** which operations you consume, and whether you're on fixtures, the real API, or verified end-to-end.
+- **Outbound requests** for any endpoint/field you need (to `contracts`) or backend behavior (to `backend`).
+
+## What to watch at each sync
+
+- `contracts/CHANGELOG.md` and `contracts/STATUS.md`: new or changed operations you consume.
+- `backend/STATUS.md` → *How to consume*: base URL, dev auth, AI latency/timeouts.
+- `organizer-web/STATUS.md`: join QR/link format it generates.
+- Decisions: `team-event-join`, `team-auth`, `product-hero-flow`, `contracts-realtime-transport`, `team-captions-and-stt`.
 
 ## Module rules
 
-1. **Stack is TBD.** Android / Compose Multiplatform / Flutter / web is the mobile owner's decision. Do not initialize a project or choose a stack unless the mobile owner asks you to in this session.
-2. **Mock-first.** UI must work against contract fixtures (`../contracts/examples/`) or local mocks while the backend is not ready. Do not block on the backend.
-3. **The contract is the boundary.** Consume the API as described in `../contracts/openapi.yaml`. If you need a field or endpoint that doesn't exist, write a proposal for the contract owner. Do not edit the contract or invent backend behavior.
-4. **No direct AI provider calls / no keys in the app** unless explicitly agreed and recorded in `docs/DECISIONS.md`.
-5. **Privacy:** networking visibility is opt-in; do not collect precise location; do not log personal data. See `../docs/DATA_PRIVACY.md`.
-6. Stage with `git add -- mobile/`.
+1. **Stack is TBD** until `docs/decisions/mobile-stack.md` is `accepted`. Don't initialize a project or pick a stack unless the mobile owner asks in this session. When they decide, record it there, update `STATUS.md` and push.
+2. **Mock-first.** UI must run on fixtures (`../contracts/examples/`) or local mocks while the backend isn't ready. Don't block on the backend.
+3. **The contract is the boundary.** Consume only what `../contracts/openapi.yaml` defines. Need more? Open an outbound request. Don't invent backend behavior.
+4. **No direct AI provider calls and no provider keys in the app**, unless an accepted decision says otherwise.
+5. **Privacy:** networking visibility is opt-in; no precise location; don't log personal data (`../docs/DATA_PRIVACY.md`).
+6. Stage with `git add -- mobile/ docs/decisions/mobile-*.md`.

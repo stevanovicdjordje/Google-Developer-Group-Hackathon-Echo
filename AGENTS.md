@@ -1,48 +1,54 @@
 # AGENTS.md — rules for AI coding agents (and humans)
 
-These rules apply to every AI coding agent (Claude Code, Codex, Gemini CLI, Cursor, etc.) and every human working in this repository. Module-specific rules live in each module's own `AGENTS.md` and add to (never relax) these rules.
+These rules apply to every AI coding agent (Claude Code, Codex, Gemini CLI, Cursor, …) and every human working in this repository. Each module's `AGENTS.md` adds to these rules and never relaxes them.
 
-> **These rules are behavioral, not a technical sandbox.** Git, GitHub and the file system do not enforce them. Agents that can write anywhere must follow them by discipline, and humans must review diffs. Where real isolation exists (separate `git worktree`, restricted permissions, a scoped working directory), use it.
+> **These rules are behavioral, not a technical sandbox.** Git and GitHub don't enforce them. Optional guards exist: the scope-checking pre-commit hook and Claude Code deny rules (see `ONBOARDING.md`). Humans still review diffs.
+
+## How this team works
+
+Each teammate runs their own agent in their **own clone**, usually with the IDE opened on one module and the agent launched from the **repo root** so it can read everything. Agents can't talk to each other. **They coordinate only through files pushed to `origin/main`**, following [`docs/COORDINATION.md`](docs/COORDINATION.md):
+
+- each module publishes its state, interface, announcements and requests in `<module>/STATUS.md`,
+- decisions live one-per-file in `docs/decisions/`,
+- interfaces between modules live in `contracts/`,
+- a **change impact map** says what to update when you change something.
 
 ## The core rule: READ GLOBAL, WRITE LOCAL
 
-An agent may **read any file** in the repository for context, but may **write only inside its assigned module/scope**. It must not change code, dependencies, configuration or generated files that belong to another module.
+Read any file for context. Write **only** inside your assigned scope. Never change code, dependencies, configuration or generated files that belong to another module.
 
 | Agent scope | May write | Read-only by default |
 | --- | --- | --- |
-| Mobile | `mobile/**` | `backend/**`, `organizer-web/**`, `contracts/**`, `docs/**`, root |
-| Backend | `backend/**` | `mobile/**`, `organizer-web/**`, `contracts/**`, `docs/**`, root |
-| Organizer web | `organizer-web/**` | `mobile/**`, `backend/**`, `contracts/**`, `docs/**`, root |
-| Contracts owner | `contracts/**` | application modules |
-| Integration/docs owner | explicitly assigned shared files | app modules |
+| Mobile | `mobile/**`, `docs/decisions/mobile-*.md` | `backend/**`, `organizer-web/**`, `contracts/**`, `docs/**`, root |
+| Backend | `backend/**`, `docs/decisions/backend-*.md` | `mobile/**`, `organizer-web/**`, `contracts/**`, `docs/**`, root |
+| Organizer web | `organizer-web/**`, `docs/decisions/organizer-web-*.md` | `mobile/**`, `backend/**`, `contracts/**`, `docs/**`, root |
+| Contracts / integration owner | `contracts/**`, `docs/decisions/contracts-*.md`, `docs/decisions/team-*.md`, root files (`AGENTS.md`, `CLAUDE.md`, `README.md`, `ONBOARDING.md`, `.gitignore`, `.editorconfig`), `.github/`, `.githooks/`, `docs/COORDINATION.md`, `docs/OWNERSHIP.md`, `docs/INTEGRATION.md`, `docs/DECISIONS.md` | application modules |
+| Product / demo owner | `docs/**` except other workstreams' decision files and the integration-owned docs above | application modules, `contracts/**` |
+
+One person can hold several scopes (4 people, 5 workstreams). Each session still declares exactly which ones it uses.
+
+## Session protocol (mandatory)
+
+1. **Declare scope.** First line of every session: `My write scope is <paths>`. **If no scope was given, do not change any file. Ask for one.**
+2. **Sync.** Run the session-start sync in `docs/COORDINATION.md` §2 and give your human the sync report. That means: fetch, review incoming coordination changes, pull, then read every `STATUS.md`, `contracts/CHANGELOG.md` and the decision statuses.
+3. **Read context.** `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `docs/OWNERSHIP.md`, the contracts you implement or consume, and your module's `AGENTS.md` + `STATUS.md`.
+4. **Work** only in your scope. Before editing, `git status --short`. Never touch changes you didn't make.
+5. **Propagate.** When a change affects other modules, follow the change impact map (`docs/COORDINATION.md` §3): record it at its source of truth, announce it in your `STATUS.md`, and push that coordination commit **immediately**.
+6. **Need something from another module?** Open a request in your own `STATUS.md` (§4). Never edit their files.
+7. **Wrap up** (§7). Update your `STATUS.md`, commit only your paths, pull with rebase, push. Report the changed files and the **real** test status: what ran and the results. Never claim unrun tests passed.
 
 ## Rules
 
-1. **READ GLOBAL, WRITE LOCAL.** Read anything; modify only your assigned scope. No edits to another module's code, dependencies, config or generated files.
-2. **Declared scope is mandatory.** Every session must have a declared scope: `mobile/`, `backend/`, `organizer-web/`, `contracts/` or `docs/`. **If the scope is not clear, do not change any code — ask for it.**
-3. **Shared root files are read-only by default.** `README.md`, `AGENTS.md`, `CLAUDE.md`, `.github/`, `contracts/` and `docs/` may be read freely; changing them requires approval from the integration/contract owner (see `docs/OWNERSHIP.md`). The only exception was the initial bootstrap agent, which was explicitly authorized to create the scaffold.
-4. **Stage precisely.** Do not run `git add .` / `git add -A` from the root during normal work if there is any risk of staging someone else's changes. Use `git add -- <owned-paths>`.
-5. **No repo-wide sweeps.** Do not run root-wide formatters, mass refactors, codemods or dependency upgrades that touch other modules.
-6. **No unilateral breaking API changes.** A breaking change needs a written proposal, an updated contract in `contracts/`, and agreement from both the server and the affected clients.
-7. **Don't promote speculation to requirements.** Ideas in `docs/` marked Proposed/Unvalidated/TBD stay that way until the team decides. Do not write code, docs or commit messages that present them as decided.
-8. **Protect secrets and user data.** Never commit `.env` files, API keys, service-account JSON, keystores, tokens or real user data. Use `.env.example` with placeholder values.
-9. **No destructive git operations.** No `reset --hard` on shared work, no rebasing other people's branches, no `push --force`, no deleting branches you don't own, no rewriting `main`.
-10. **Read the context first.** At the start of every session read: `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `docs/OWNERSHIP.md`, the relevant parts of `contracts/`, and your module's `AGENTS.md`.
-11. **Know your visibility.** If the agent was launched from a subdirectory and technically cannot read parent folders, it must be given that context explicitly, or be launched from the repo root with a restricted write scope. Never claim that these rules are a technical sandbox.
-12. **Treat AI output as untrusted input.** Code that consumes model output (Gemma or otherwise) must validate it. Never let a model produce arbitrary SQL, call privileged functions, or access the database without authorization checks.
-
-## Mandatory session protocol
-
-Every coding agent, every session:
-
-1. Start by stating: **`My write scope is <path>/**`**.
-2. Before editing, run `git status --short` and note any existing changes.
-3. **Do not touch other people's uncommitted changes**, even when they look wrong.
-4. Write only inside the owned scope. If a contract or shared doc needs to change, **write a proposal** (in the PR description or as a note to the owner) instead of editing it.
-5. At the end, list **changed files** and the **real test status**: which checks were run and their results. Never say tests passed if they were not run.
-
-## When agents work in parallel
-
-- Prefer one `git worktree` per agent/module (see `docs/INTEGRATION.md`).
-- Never run two agents with overlapping write scopes on the same working tree.
-- If you notice changes outside your scope in `git status`, leave them alone and mention them in your summary.
+1. **READ GLOBAL, WRITE LOCAL** (table above).
+2. **Declared scope is mandatory.** No scope → no edits.
+3. **Shared files are read-only** unless your scope includes them. To change one, request it from its writer (`docs/COORDINATION.md` §1).
+4. **Stage precisely.** `git add -- <owned-paths>`. Never `git add .` / `git add -A` from the root.
+5. **No repo-wide sweeps.** No root-wide formatters, codemods, mass refactors or dependency upgrades that touch other modules.
+6. **No unilateral breaking changes.** A breaking contract change needs a request/proposal, an updated contract + CHANGELOG, and agreement from the backend and every affected client, before anyone relies on it.
+7. **Don't promote speculation to requirements.** Items marked open/proposed/TBD stay that way until their decision file says `accepted`. Code, docs and commit messages must not present them as decided.
+8. **Decisions made outside the repo don't exist for other agents.** When your human tells you something was decided, record it (if you own the decision prefix) or request it from the writer.
+9. **Protect secrets and user data.** Never commit `.env`, keys, service-account JSON, keystores, tokens or real personal data. Commit `.env.example` with placeholders only.
+10. **No destructive git operations.** No `push --force`, no `reset --hard` on pushed work, no rewriting `main`, no deleting others' branches, never `--no-verify`. `git pull --rebase` (which replays only *your* unpushed commits) is fine. On a conflict in a file you don't own: `git rebase --abort` and ask your human.
+11. **Know your visibility.** Launch from the repo root so you can read everything. If you were launched inside a module and can't read parent folders, say so and ask for the context. Never claim these rules are a technical sandbox.
+12. **Treat AI output as untrusted input.** Code that consumes model output (Gemma or otherwise) validates it. No model-generated SQL, no model-triggered privileged actions, no unauthenticated DB access.
+13. **Fresh over remembered.** Re-sync before cross-module work and before each new task. Never act on what you remember about another module from an earlier session without re-reading its `STATUS.md`.
