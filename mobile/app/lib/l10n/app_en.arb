@@ -1,0 +1,15 @@
+{
+  "@@locale": "en",
+  "appTitle": "Eho",
+  "devStatusTitle": "System status",
+  "backendLabel": "Backend",
+  "authLabel": "Sign-in",
+  "statusOk": "OK",
+  "statusChecking": "Checking…",
+  "statusError": "Error: {message}",
+  "signedInAnonymously": "Anonymous user {uid}",
+  "notSignedIn": "Not signed in",
+  "retry": "Try again",
+  "eventTitle": "Event {eventId}",
+  "backendUnavailable": "The server is not reachable right now. Check your connection and try again."
+}

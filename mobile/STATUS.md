@@ -8,7 +8,7 @@
 
 ## Current state
 
-Stack decided (Flutter). Building the **venue map** feature: attendee map viewer, organizer map editor and stats, in one Flutter app in `mobile/app/` (phase 1: project setup in progress).
+Stack decided (Flutter). Building the **venue map** feature: attendee map viewer, organizer map editor and stats, in one Flutter app in `mobile/app/` Phase 1 done: Flutter app skeleton (Riverpod, go_router, l10n sr/en, light/dark theme, API client, Firebase emulators, anonymous sign-in). Next: map viewer.
 
 ## Stack
 
@@ -18,11 +18,11 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | Item | Value |
 | --- | --- |
-| Platforms targeted for the demo | Not decided |
-| How to build/install a demo build | Not available yet |
+| Platforms targeted for the demo | Flutter web on phones (link/QR, no install); Android/iOS from the same code |
+| How to build/install a demo build | `mobile/scripts/dev_all.sh` (local, everything). Hosted web build: not yet |
 | Join link / deep-link scheme handled | Not decided (see `team-event-join.md`) |
-| Backend base URL configuration | Not available yet |
-| Mock/fixture mode | Not available yet |
+| Backend base URL configuration | `--dart-define=API_BASE_URL=...` (default `http://localhost:8080`) |
+| Mock/fixture mode | Firebase emulators (`demo-eho`) + local API; seed data in phase 2 |
 
 ## Contract coverage (operations consumed)
 
@@ -33,6 +33,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-10 21:25 · INFO · for: all · Flutter app skeleton in `mobile/app/` runs on web against the local API and Firebase emulators. Run: `mobile/scripts/dev_all.sh`.
 - 2026-10-10 21:12 · INFO · for: all · @Vertiglo holds mobile, organizer-web, backend and contracts. Building the venue map (floor plan, stands/rooms, routing, GPS + QR "you are here", organizer stats). Stack: Flutter app in `mobile/app/` (also the organizer UI), Go backend on Cloud Run, Firestore. See decisions mobile-stack, organizer-web-framework, backend-framework, backend-persistence, contracts-realtime-transport.
 - 2026-10-10 · INFO · for: all · STATUS file created. Nothing implemented yet.
 

@@ -8,7 +8,7 @@
 
 ## Current state
 
-Stack decided (Go + Firestore + Cloud Run). Phase 1 (skeleton: `/healthz`, config, slog, Dockerfile, Firebase emulators) in progress. Venue-map API next.
+Stack decided (Go + Firestore + Cloud Run). Phase 1 done: `/healthz`, env config, slog JSON logs, CORS, recover, graceful shutdown, Dockerfile, Firebase emulators + security rules (clients read-only). Next: venue-map API (auth middleware, CRUD, publish, seed).
 
 ## Stack
 
@@ -18,11 +18,11 @@ Go (net/http, slog), Firebase Admin SDK, Firestore, Cloud Storage, Cloud Run. Se
 
 | Item | Value |
 | --- | --- |
-| Local base URL | Not available yet |
-| How to start locally | Not available yet |
+| Local base URL | `http://localhost:8080` |
+| How to start locally | `cd backend && make dev` (Firebase emulators: Auth 9099, Firestore 8081, Storage 9199, UI 4000; project `demo-eho`) + API |
 | Deployed demo URL | None |
-| Dev auth (how a client gets a token) | Not decided (see `team-auth.md`) |
-| Env vars a client needs | None yet |
+| Dev auth (how a client gets a token) | Firebase Auth emulator (anonymous or email/password); send `Authorization: Bearer <ID token>` (verification lands in phase 2) |
+| Env vars a client needs | None. Server env: see `backend/.env.example` |
 | AI endpoints: expected latency / timeouts / limits | Unknown until the Gemma proof-of-concept |
 
 ## Contract coverage
@@ -34,6 +34,7 @@ Go (net/http, slog), Firebase Admin SDK, Firestore, Cloud Storage, Cloud Run. Se
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-10 21:25 · ACTION · for: all · Backend runs locally: `cd backend && make dev` → API on `http://localhost:8080` with Firebase emulators. Errors use `{code, message, details}`.
 - 2026-10-10 21:12 · INFO · for: all · Backend is Go + Firestore. Need an endpoint (Gemma, captions, Q&A…)? Open a request to `contracts`/`backend`; @Vertiglo's agent handles it.
 - 2026-10-10 · INFO · for: all · STATUS file created. Nothing implemented yet.
 

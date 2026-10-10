@@ -1,6 +1,6 @@
 # mobile/ — Eho attendee app
 
-> **Setup status: Not initialized yet — the module owner will initialize it.** There is no project, build file or source code here yet.
+> **Stack:** Flutter (web + Android + iOS) in `app/`. It also contains the organizer role (venue-map editor, stats); see `docs/decisions/mobile-stack.md` and `organizer-web-framework.md`.
 
 ## Purpose
 
@@ -11,7 +11,7 @@ The attendee-facing client. It lets a visitor join an event and use Eho's attend
 - Join an event via QR code or link.
 - Attendee onboarding: interests, language, reason for attending, optional opt-in networking profile.
 - Agenda: sessions, times, rooms, speakers, session details.
-- Venue map (MVP candidate: static SVG/image with clickable rooms; **no** real-time indoor positioning).
+- Venue map: floor plan with rooms/stands/POIs, search, routing from the backend, GPS dot with accuracy and QR/manual "you are here" fallback (in progress).
 - Transcript / captions view for a session.
 - Q&A: ask questions, "ask the talk" over a transcript.
 - Networking: natural-language people search, opt-in only.
@@ -36,8 +36,17 @@ The attendee-facing client. It lets a visitor join an event and use Eho's attend
 
 ## Setup
 
-`Not initialized yet — module owner will initialize.` When initialized, document here:
+Requirements: Flutter stable (3.47+), Chrome; for the backend + emulators see `../backend/README.md`.
 
-- the IDE to use (e.g. Android Studio) and the minimum SDK/toolchain,
-- how to run against fixtures vs. a local/remote backend,
-- how to configure the backend base URL (no secrets in git; use `.env.example` / `local.properties` templates).
+```bash
+mobile/scripts/dev_all.sh          # emulators + Go API + Flutter web in Chrome (http://localhost:5000)
+
+cd mobile/app
+flutter test
+flutter analyze
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080   # app only
+```
+
+Build-time settings (`--dart-define`): `API_BASE_URL` (default `http://localhost:8080`), `USE_EMULATORS` (default `true`; a real Firebase project is not configured yet), `EMULATOR_HOST` (default `localhost`; use `10.0.2.2` on the Android emulator).
+
+Layout: `lib/core/` (router, theme, Firebase init, API client, config), `lib/features/<feature>/` (`auth`, `dev`, later `map_viewer`, `map_editor`, `location`, `stats`), `lib/l10n/` (Serbian Latin `app_sr.arb` is the template, English `app_en.arb`).
