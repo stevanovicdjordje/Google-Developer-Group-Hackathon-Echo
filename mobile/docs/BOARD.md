@@ -22,12 +22,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-63 | dev (sonnet) | 2026-10-11 09:55 | worktree | Resumed review shows "Extracted from N files"; honest small file sizes (1.1 KB) |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-63 | Resumed review keeps "Extracted from N files" (count persisted with the draft id); file sizes 1.1 KB / 12 KB / 2.3 MB (`fileSizeLabel`). Follow-up option: parse server `Draft.sourceFiles` into `EventDraft` (models.dart). 232 tests | `cbad4c2` |
 | V-8 | Galaxy, live `devfest`: PASS M-56, M-55, M-57 (dot on open, no prompt), M-45+M-60 (connected + spot survive restart), M-52+M-55+M-61 (flags, resume after restart, Publish anyway dialog, published). M-58 spinner not observable (join <1.2 s). Found: resumed review lacks "Extracted from N files" + CSV "2 KB" (→ M-63), map first view too close / Sala A label under chips / glyph under dot (→ mobile#22), debug banner (→ R-1). Events + Find re-seeded after | verification |
 | M-62 | Dev shot `echo-qa` without the own-question card (`echo-qa-own` keeps it). 227 tests | `cfb507c` |
 | V-9 | Web regression on main (225 tests, 24 dev shots + join/agenda/map/find live): no regressions; M-57 dot on open confirmed; minor: map "Sala A" label slightly under the filter chips (eho_maps), `echo-qa` = `echo-qa-own` (→ M-62) | verification |
