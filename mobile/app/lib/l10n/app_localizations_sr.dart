@@ -371,6 +371,14 @@ class AppLocalizationsSr extends AppLocalizations {
       'Nešto je pošlo naopako u Find-u. Pokušaj ponovo.';
 
   @override
+  String get findCompleteProfile => 'Dovrši profil';
+
+  @override
+  String findRetryIn(int seconds) {
+    return 'Pokušaj ponovo za ${seconds}s';
+  }
+
+  @override
   String get personWhyMeet => 'Zašto da se upoznate';
 
   @override

@@ -138,6 +138,8 @@
   "findErrorNotAllowed": "Ova osoba ne prima zahteve za kontakt.",
   "findErrorProfileRequired": "Dovrši profil da bi koristio/la Find.",
   "findErrorFailed": "Nešto je pošlo naopako u Find-u. Pokušaj ponovo.",
+  "findCompleteProfile": "Dovrši profil",
+  "findRetryIn": "Pokušaj ponovo za {seconds}s",
   "personWhyMeet": "Zašto da se upoznate",
   "personSendRequest": "Pošalji zahtev za kontakt",
   "personRequestSent": "Zahtev poslat · čeka se…",

@@ -365,6 +365,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get findErrorFailed => 'Something went wrong in Find. Try again.';
 
   @override
+  String get findCompleteProfile => 'Complete profile';
+
+  @override
+  String findRetryIn(int seconds) {
+    return 'Try again in ${seconds}s';
+  }
+
+  @override
   String get personWhyMeet => 'Why you should meet';
 
   @override

@@ -686,6 +686,18 @@ abstract class AppLocalizations {
   /// **'Something went wrong in Find. Try again.'**
   String get findErrorFailed;
 
+  /// No description provided for @findCompleteProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete profile'**
+  String get findCompleteProfile;
+
+  /// No description provided for @findRetryIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {seconds}s'**
+  String findRetryIn(int seconds);
+
   /// No description provided for @personWhyMeet.
   ///
   /// In en, this message translates to:

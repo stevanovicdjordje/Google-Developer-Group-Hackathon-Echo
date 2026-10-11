@@ -27,17 +27,23 @@ final findReloadDelayProvider = Provider<Duration>(
 /// Opening this (the Find tab) also makes the repository join the event's
 /// Find presence, so the first call per event is the join.
 final recommendationsProvider =
-    FutureProvider.family<List<PersonMatch>, String>((ref, eventId) {
-      Timer? timer;
-      ref.onDispose(() => timer?.cancel());
-      ref.listen(profileProvider, (prev, next) {
-        if (prev == null || !_rankingChanged(prev, next)) return;
-        timer?.cancel();
-        timer = Timer(ref.read(findReloadDelayProvider), ref.invalidateSelf);
-      });
-      final me = ref.read(profileProvider);
-      return ref.watch(findRepositoryProvider).recommendations(eventId, me);
-    });
+    FutureProvider.family<List<PersonMatch>, String>(
+      // No automatic retries: errors have their own "Try again" / countdown.
+      retry: (_, _) => null,
+      // Rebuilt in a nested ProviderScope that overrides these (dev shots).
+      dependencies: [findRepositoryProvider, profileProvider],
+      (ref, eventId) {
+        Timer? timer;
+        ref.onDispose(() => timer?.cancel());
+        ref.listen(profileProvider, (prev, next) {
+          if (prev == null || !_rankingChanged(prev, next)) return;
+          timer?.cancel();
+          timer = Timer(ref.read(findReloadDelayProvider), ref.invalidateSelf);
+        });
+        final me = ref.read(profileProvider);
+        return ref.watch(findRepositoryProvider).recommendations(eventId, me);
+      },
+    );
 
 /// Whether a profile edit can change the recommendations.
 bool _rankingChanged(Profile a, Profile b) =>
@@ -49,6 +55,8 @@ bool _rankingChanged(Profile a, Profile b) =>
 /// One person at an event (`(eventId, personId)`); null when not visible.
 final personDetailProvider = FutureProvider.autoDispose
     .family<PersonDetail?, (String, String)>(
+      retry: (_, _) => null,
+      dependencies: [findRepositoryProvider],
       (ref, key) => ref.watch(findRepositoryProvider).person(key.$1, key.$2),
     );
 
@@ -64,23 +72,86 @@ String _findErrorText(AppLocalizations l10n, Object e) => switch (e) {
   _ => l10n.findErrorFailed,
 };
 
-/// Error text with "Try again".
-class _FindError extends StatelessWidget {
+/// Error text with "Try again". A missing profile offers "Complete profile"
+/// (opens onboarding, then retries) instead; a rate limit disables "Try
+/// again" with a countdown from [FindException.retryAfter] (5 s if unknown).
+class _FindError extends StatefulWidget {
   const _FindError(this.error, {required this.onRetry});
 
   final Object error;
   final VoidCallback onRetry;
 
   @override
+  State<_FindError> createState() => _FindErrorState();
+}
+
+class _FindErrorState extends State<_FindError> {
+  static const _fallbackWait = Duration(seconds: 5);
+
+  Timer? _timer;
+  int _left = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  @override
+  void didUpdateWidget(_FindError old) {
+    super.didUpdateWidget(old);
+    if (!identical(old.error, widget.error)) _startCountdown();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdown() {
+    _timer?.cancel();
+    final e = widget.error;
+    if (e is! FindException || e.kind != FindErrorKind.rateLimited) {
+      _left = 0;
+      return;
+    }
+    final wait = e.retryAfter ?? _fallbackWait;
+    _left = wait.inMilliseconds <= 0 ? 1 : (wait.inMilliseconds / 1000).ceil();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      setState(() => _left--);
+      if (_left <= 0) t.cancel();
+    });
+  }
+
+  Future<void> _completeProfile() async {
+    final done = await context.push<bool>('/onboarding');
+    if (done == true) widget.onRetry();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final e = widget.error;
+    final needsProfile =
+        e is FindException && e.kind == FindErrorKind.profileRequired;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Text(_findErrorText(l10n, error), textAlign: TextAlign.center),
+          Text(_findErrorText(l10n, e), textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          TextButton(onPressed: onRetry, child: Text(l10n.retry)),
+          if (needsProfile)
+            FilledButton(
+              onPressed: _completeProfile,
+              child: Text(l10n.findCompleteProfile),
+            )
+          else
+            TextButton(
+              onPressed: _left > 0 ? null : widget.onRetry,
+              child: Text(_left > 0 ? l10n.findRetryIn(_left) : l10n.retry),
+            ),
         ],
       ),
     );

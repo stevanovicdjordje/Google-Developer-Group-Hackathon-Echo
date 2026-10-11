@@ -6,6 +6,7 @@ import 'package:eho/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 const _teodora = Person(
   id: 'k7Qm2xLp',
@@ -20,13 +21,14 @@ const _teodora = Person(
 class _ServiceLike extends DemoFindRepository {
   bool failRecommendations = true;
   FindErrorKind failKind = FindErrorKind.offline;
+  Duration? retryAfter;
   int recommendationCalls = 0;
   PersonDetail? detail;
 
   @override
   Future<List<PersonMatch>> recommendations(String eventId, Profile me) async {
     recommendationCalls++;
-    if (failRecommendations) throw FindException(failKind, 'down');
+    if (failRecommendations) throw FindException(failKind, 'down', retryAfter);
     return const [PersonMatch(person: _teodora, why: 'Speech models.')];
   }
 
@@ -200,5 +202,73 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.recommendationCalls, 1);
     });
+  });
+
+  testWidgets('Find without a profile offers Complete profile, not Try again', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    final repo = _ServiceLike()..failKind = FindErrorKind.profileRequired;
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (c, s) => const FindScreen(eventId: 'ev'),
+        ),
+        GoRoute(
+          path: '/onboarding',
+          builder: (c, s) => Scaffold(
+            body: TextButton(
+              onPressed: () => c.pop(true),
+              child: const Text('Finish onboarding'),
+            ),
+          ),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [findRepositoryProvider.overrideWithValue(repo)],
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Finish your profile to use Find.'), findsOneWidget);
+    expect(find.text('Try again'), findsNothing);
+    repo.failRecommendations = false;
+    await tester.tap(find.text('Complete profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finish onboarding'));
+    await tester.pumpAndSettle();
+    expect(find.text('Teodora Nikolić'), findsOneWidget);
+  });
+
+  testWidgets('Rate limit disables Try again until retryAfter elapses', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    final repo = _ServiceLike()
+      ..failKind = FindErrorKind.rateLimited
+      ..retryAfter = const Duration(seconds: 3);
+    await tester.pumpWidget(_app(const FindScreen(eventId: 'ev'), repo));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Try again in 3s'), findsOneWidget);
+    expect(find.text('Try again'), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    expect(find.text('Try again'), findsOneWidget);
+    repo.failRecommendations = false;
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(find.text('Teodora Nikolić'), findsOneWidget);
   });
 }

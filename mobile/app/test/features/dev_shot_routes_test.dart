@@ -23,15 +23,17 @@ void main() {
     'person-connected': 'Ana accepted · Message',
     'messages-spot': 'Ana Petrović',
     'find-results': 'Speaker · ML Engineer, Lumen Labs',
+    'find-live': 'Recommended for you',
     'myevents-live': 'LIVE · DAY 1',
     'organizer-review': 'Review your event',
     'organizer-upload-files': 'sava-centar-ground-floor.png',
-    'organizer-upload-progress': 'Found 3 stages, 6 sessions, 6 speakers so far',
+    'organizer-upload-progress':
+        'Found 3 stages, 6 sessions, 6 speakers so far',
     'organizer-published': 'PUBLISHED',
   };
 
   Future<void> open(WidgetTester tester, String location) async {
-    tester.view.physicalSize = const Size(1080, 4800);
+    tester.view.physicalSize = const Size(1080, 5200);
     tester.view.devicePixelRatio = 2.5;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(

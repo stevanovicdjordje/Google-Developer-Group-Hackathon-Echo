@@ -1,8 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/providers.dart';
 import '../../data/app_state.dart';
+import '../../data/echo_api_repository.dart' show anonymousIdToken;
+import '../../data/find_api_repository.dart';
 import '../../data/demo_data.dart' as demo;
 import '../../data/models.dart';
 import '../../data/repositories.dart';
@@ -121,6 +125,11 @@ final devShots = <DevShot>[
     'find-results',
     'Find tab with results for a sample prompt',
     () => const _FindShot(),
+  ),
+  DevShot(
+    'find-live',
+    'Find tab from the real Find service (profile seeded as onboarded)',
+    () => const _FindLiveShot(),
   ),
   DevShot(
     'myevents-live',
@@ -367,7 +376,10 @@ class _PersonShot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ProviderScope(
-    overrides: [contactsProvider.overrideWith(() => _Contact(contact))],
+    overrides: [
+      _demoFind,
+      contactsProvider.overrideWith(() => _Contact(contact)),
+    ],
     child: _inShell(
       '/e/$_event/find/person/$_personId',
       PersonScreen(
@@ -385,6 +397,7 @@ class _MessagesShot extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ProviderScope(
     overrides: [
+      _demoFind,
       contactsProvider.overrideWith(() => _Contact(ContactState.accepted)),
       meetingSpotProvider.overrideWith(_Spot.new),
     ],
@@ -392,13 +405,68 @@ class _MessagesShot extends StatelessWidget {
   );
 }
 
+/// Demo people whatever service is running, so the shots are stable.
+final _demoFind = findRepositoryProvider.overrideWithValue(
+  DemoFindRepository(),
+);
+
 class _FindShot extends StatelessWidget {
   const _FindShot();
 
   @override
-  Widget build(BuildContext context) => _inShell(
-    '/e/$_event/find',
-    const FindScreen(eventId: _event, initialPrompt: 'On-device ML on Android'),
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [_demoFind],
+    child: _inShell(
+      '/e/$_event/find',
+      const FindScreen(
+        eventId: _event,
+        initialPrompt: 'On-device ML on Android',
+      ),
+    ),
+  );
+}
+
+class _OnboardedProfile extends ProfileNotifier {
+  @override
+  Profile build() => const Profile(
+    name: 'Dev Tester',
+    headline: 'Mobile dev',
+    interests: ['AI / ML', 'Mobile'],
+    lookingFor: 'People building on-device ML apps',
+    visibleInFind: true,
+    allowContact: true,
+    shareMeetingSpot: true,
+    onboarded: true,
+  );
+}
+
+/// Find from the real service (same wiring as `findRepositoryProvider`, which
+/// must be rebuilt here to read the seeded profile), with an onboarded profile.
+class _FindLiveShot extends StatelessWidget {
+  const _FindLiveShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      profileProvider.overrideWith(_OnboardedProfile.new),
+      findRepositoryProvider.overrideWith((ref) {
+        final config = ref.watch(appConfigProvider);
+        var firebaseUp = false;
+        try {
+          firebaseUp = Firebase.apps.isNotEmpty;
+        } catch (_) {}
+        if (!config.useFindApi || !firebaseUp) return DemoFindRepository();
+        return FallbackFindRepository(
+          primary: FindApiRepository(
+            baseUrl: config.findApiBaseUrl,
+            tokenProvider: anonymousIdToken(ref.watch(firebaseAuthProvider)),
+            profile: () => ref.read(profileProvider),
+          ),
+          fallback: DemoFindRepository(),
+        );
+      }),
+    ],
+    child: _inShell('/e/$_event/find', const FindScreen(eventId: _event)),
   );
 }
 
