@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/theme.dart';
+import '../../core/ui/ui.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
@@ -49,9 +50,36 @@ class _TopBar extends StatelessWidget {
   }
 }
 
+/// How many files the current draft was extracted from (the review's
+/// "Extracted from 3 files" overline). 0 = unknown, the overline is hidden.
+class OrganizerFileCountNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void set(int count) => state = count;
+}
+
+final organizerFileCountProvider =
+    NotifierProvider<OrganizerFileCountNotifier, int>(
+      OrganizerFileCountNotifier.new,
+    );
+
 /// `/organizer`: upload unstructured files; the AI builds the event.
+///
+/// The optional parameters only seed a state for the dev screenshot routes:
+/// [initialFiles] (already chosen) and [foundSoFar] (the extraction progress
+/// state, with the bar at [progress]).
 class OrganizerUploadScreen extends ConsumerStatefulWidget {
-  const OrganizerUploadScreen({super.key});
+  const OrganizerUploadScreen({
+    super.key,
+    this.initialFiles = const [],
+    this.foundSoFar,
+    this.progress,
+  });
+
+  final List<UploadedFile> initialFiles;
+  final EventDraft? foundSoFar;
+  final double? progress;
 
   @override
   ConsumerState<OrganizerUploadScreen> createState() =>
@@ -59,11 +87,11 @@ class OrganizerUploadScreen extends ConsumerStatefulWidget {
 }
 
 class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
-  final _files = <UploadedFile>[];
-  bool _working = false;
+  late final _files = <UploadedFile>[...widget.initialFiles];
+  late bool _working = widget.foundSoFar != null;
 
   /// Set once the extraction finished; drives the "found N stages…" line.
-  EventDraft? _found;
+  late EventDraft? _found = widget.foundSoFar;
 
   Future<void> _pick() async {
     final picked = await FilePicker.pickFiles();
@@ -80,6 +108,7 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
     setState(() => _working = true);
     final draft = await ref.read(organizerRepositoryProvider).extract(_files);
     if (!mounted) return;
+    ref.read(organizerFileCountProvider.notifier).set(_files.length);
     ref.read(organizerDraftProvider.notifier).set(draft);
     // Show what was found for a beat, then move on to the review.
     setState(() => _found = draft);
@@ -151,7 +180,7 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
                   borderRadius: BorderRadius.circular(3),
                   child: LinearProgressIndicator(
                     minHeight: 6,
-                    value: found == null ? null : 1,
+                    value: found == null ? null : widget.progress ?? 1,
                     color: scheme.primary,
                     backgroundColor: scheme.outlineVariant,
                   ),
@@ -255,6 +284,13 @@ class _DashedBorderPainter extends CustomPainter {
       old.color != color || old.radius != radius;
 }
 
+/// "412 KB", or "1.2 MB" from a megabyte up.
+String _sizeLabel(AppLocalizations l10n, int bytes) {
+  final kb = (bytes / 1024).ceil();
+  if (kb < 1024) return l10n.orgFileSizeKb(kb);
+  return l10n.orgFileSizeMb((bytes / (1024 * 1024)).toStringAsFixed(1));
+}
+
 /// One picked file: type badge, name, size.
 class _FileRow extends StatelessWidget {
   const _FileRow({required this.file});
@@ -276,7 +312,12 @@ class _FileRow extends StatelessWidget {
       'csv' => (scheme.primaryContainer, scheme.onPrimaryContainer),
       _ => (eho.background, scheme.onSurfaceVariant),
     };
-    final badge = (ext.length > 4 ? ext.substring(0, 4) : ext).toUpperCase();
+    // "xlsx" reads as "XLS" (same for docx, pptx), like the design.
+    final short = ext.length == 4 && ext.endsWith('x')
+        ? ext.substring(0, 3)
+        : ext;
+    final badge = (short.length > 4 ? short.substring(0, 4) : short)
+        .toUpperCase();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
@@ -316,7 +357,7 @@ class _FileRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  l10n.orgFileSizeKb((file.sizeBytes / 1024).ceil()),
+                  _sizeLabel(l10n, file.sizeBytes),
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -393,6 +434,7 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
     }
     final t = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    final fileCount = ref.watch(organizerFileCountProvider);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -408,6 +450,13 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              if (fileCount > 0) ...[
+                AiHint(
+                  l10n.orgExtractedFrom(fileCount),
+                  style: t.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 6),
+              ],
               Text(
                 draft.name,
                 style: t.headlineLarge?.copyWith(fontSize: 30, height: 1.05),
@@ -551,6 +600,8 @@ class _SessionRow extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   meta,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: flagged
                         ? eho.onLiveContainer
@@ -748,6 +799,30 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
   }
 }
 
+/// Public host the join link is shown with (`--dart-define=LINK_BASE=...`,
+/// the same setting `linkBase()` uses off the web); empty = the link's own.
+const _publicLinkBase = String.fromEnvironment('LINK_BASE');
+
+/// The join link as shown to people: no scheme, and the public host when one
+/// is configured ("eho.app/e/devfest"). Display only: copy and QR keep the
+/// full working [url].
+String displayJoinLink(String url, {String publicBase = _publicLinkBase}) {
+  final uri = Uri.tryParse(url);
+  if (uri == null || !uri.hasAuthority) {
+    return url.replaceFirst(
+      RegExp(r'^[a-z][a-z0-9+.-]*://', caseSensitive: false),
+      '',
+    );
+  }
+  final public = publicBase.isEmpty ? null : Uri.tryParse(publicBase);
+  final host = public != null && public.hasAuthority
+      ? public.authority
+      : uri.authority;
+  final query = uri.hasQuery ? '?${uri.query}' : '';
+  final path = uri.path == '/' ? '' : uri.path;
+  return '$host$path$query';
+}
+
 /// `/organizer/published`: the join link and QR code.
 class OrganizerPublishedScreen extends StatelessWidget {
   const OrganizerPublishedScreen({
@@ -856,7 +931,8 @@ class OrganizerPublishedScreen extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: SelectableText(
-                                  url,
+                                  displayJoinLink(url),
+                                  maxLines: 1,
                                   style: t.bodyMedium?.copyWith(
                                     color: eho.onInkPrimary,
                                   ),
@@ -865,7 +941,7 @@ class OrganizerPublishedScreen extends StatelessWidget {
                               const SizedBox(width: 10),
                               FilledButton.icon(
                                 icon: const Icon(Icons.copy, size: 16),
-                                label: Text(l10n.orgCopyLink),
+                                label: Text(l10n.orgCopy),
                                 style: FilledButton.styleFrom(
                                   minimumSize: const Size(0, 40),
                                   padding: const EdgeInsets.symmetric(

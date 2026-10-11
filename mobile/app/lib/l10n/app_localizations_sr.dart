@@ -509,6 +509,11 @@ class AppLocalizationsSr extends AppLocalizations {
   }
 
   @override
+  String orgFileSizeMb(String mb) {
+    return '$mb MB';
+  }
+
+  @override
   String get orgReading =>
       'Čitam fajlove i izdvajam bine, predavanja i predavače…';
 
@@ -525,6 +530,18 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String get orgReviewTitle => 'Pregledaj događaj';
+
+  @override
+  String orgExtractedFrom(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fajlova',
+      few: '$count fajla',
+      one: '$count fajla',
+    );
+    return 'Izdvojeno iz $_temp0';
+  }
 
   @override
   String orgStagesCount(int count) {
@@ -609,7 +626,7 @@ class AppLocalizationsSr extends AppLocalizations {
       'Podeli ovaj link ili odštampaj QR kod. Posetioci se pridružuju jednim dodirom, u aplikaciji ili pregledaču.';
 
   @override
-  String get orgCopyLink => 'Kopiraj link';
+  String get orgCopy => 'Kopiraj';
 
   @override
   String get orgLinkCopied => 'Link je kopiran';

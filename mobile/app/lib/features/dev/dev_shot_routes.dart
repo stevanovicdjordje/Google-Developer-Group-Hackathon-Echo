@@ -53,24 +53,14 @@ const _session = demo.keynoteId;
 
 /// Person on the person/messages shots (`demo.people`).
 const _personId = 'p1';
-const _personWhy =
-    'You both care about Mobile and AI / ML. Ana is looking for: people who '
-    'shipped on-device ML in production.';
 
 final devShots = <DevShot>[
   DevShot('echo-qa', 'Echo, "Questions for the speaker" sheet open', () {
     return _EchoShot(ended: false, onReady: _openQuestions);
   }),
-  DevShot(
-    'echo-qa-own',
-    'Echo, questions sheet with one of your own questions',
-    () {
-      return _EchoShot(
-        ended: false,
-        onReady: (c) => _openQuestions(c, ownIndex: 1),
-      );
-    },
-  ),
+  DevShot('echo-qa-own', 'Echo, questions sheet with one of your own questions (q2 is seeded as yours)', () {
+    return _EchoShot(ended: false, onReady: _openQuestions);
+  }),
   DevShot(
     'echo-selected',
     'Echo live, a line selected ("Ask about this") and an AI answer inline',
@@ -141,6 +131,20 @@ final devShots = <DevShot>[
     'organizer-review',
     'Organizer review, draft with a flagged empty-stage row',
     () => const _OrganizerReviewShot(),
+  ),
+  DevShot(
+    'organizer-upload-files',
+    'Organizer upload, three files chosen',
+    () => OrganizerUploadScreen(initialFiles: _uploadedFiles),
+  ),
+  DevShot(
+    'organizer-upload-progress',
+    'Organizer upload, extraction progress ("Found 3 stages, 6 sessions, ...")',
+    () => OrganizerUploadScreen(
+      initialFiles: _uploadedFiles,
+      foundSoFar: _foundSoFar,
+      progress: 0.62,
+    ),
   ),
   DevShot(
     'organizer-published',
@@ -286,25 +290,13 @@ class _AfterFirstFrameState extends State<_AfterFirstFrame> {
   Widget build(BuildContext context) => widget.child;
 }
 
-/// Opens the questions sheet; the question at [ownIndex] (if any) is yours.
-Future<void> _openQuestions(BuildContext context, {int? ownIndex}) async {
+/// Opens the questions sheet with the seeded demo questions as they are
+/// (the second one is yours and voted).
+Future<void> _openQuestions(BuildContext context) async {
   final repo = ProviderScope.containerOf(context).read(echoRepositoryProvider);
   final loaded = await repo.questions(_event, _session);
   if (!context.mounted) return;
-  // Some votes: the second question is already voted by "me".
-  final questions = ValueNotifier<List<SpeakerQuestion>>([
-    for (final (i, q) in loaded.indexed)
-      i == 1
-          ? SpeakerQuestion(
-              id: q.id,
-              text: q.text,
-              votes: q.votes + 1,
-              mine: i == ownIndex,
-              voted: true,
-              mergedCount: q.mergedCount,
-            )
-          : q,
-  ]);
+  final questions = ValueNotifier<List<SpeakerQuestion>>(loaded);
   final name = demo.sessions
       .where((s) => s.id == _session)
       .firstOrNull
@@ -358,7 +350,9 @@ class _Spot extends MeetingSpotNotifier {
   @override
   MeetingSpot? build() => MeetingSpot(
     personName: demo.people.firstWhere((p) => p.id == _personId).name,
-    place: demo.stages.first,
+    place: 'Info pult',
+    time: demo.demoMeetingTime,
+    floor: demo.demoFloorName,
   );
 }
 
@@ -376,7 +370,11 @@ class _PersonShot extends StatelessWidget {
     overrides: [contactsProvider.overrideWith(() => _Contact(contact))],
     child: _inShell(
       '/e/$_event/find/person/$_personId',
-      const PersonScreen(eventId: _event, personId: _personId, why: _personWhy),
+      PersonScreen(
+        eventId: _event,
+        personId: _personId,
+        why: demo.fitLines[_personId],
+      ),
     ),
   );
 }
@@ -429,14 +427,39 @@ class _MyEventsShot extends StatelessWidget {
   );
 }
 
+/// The files on the upload shots (the design's three).
+const _uploadedFiles = [
+  UploadedFile(name: 'devfest-agenda-final-v3.pdf', sizeBytes: 412 * 1024),
+  UploadedFile(name: 'speakers.xlsx', sizeBytes: 38 * 1024),
+  UploadedFile(name: 'sava-centar-ground-floor.png', sizeBytes: 1258291),
+];
+
+/// What the extraction has found so far on the progress shot: 3 stages,
+/// 6 sessions, 6 speakers (as in the design).
+final _foundSoFar = EventDraft(
+  name: demo.demoEventName,
+  dates: demo.demoEventDates,
+  venue: demo.demoEventVenue,
+  stages: demo.stages,
+  sessions: demo.sessions.take(6).toList(),
+  speakers: demo.speakers,
+);
+
+class _FileCount extends OrganizerFileCountNotifier {
+  @override
+  int build() => _uploadedFiles.length;
+}
+
 /// The demo draft with one session without a stage (a flagged row).
 class _FlaggedDraft extends DraftNotifier {
   @override
   EventDraft? build() {
     final sessions = demo.sessions.where((s) => !s.isBreak).toList();
-    final i = sessions.length > 1 ? 1 : 0;
-    final s = sessions[i];
-    sessions[i] = Session(
+    final i = sessions.indexWhere(
+      (s) => s.id == demo.organizerFlaggedSessionId,
+    );
+    final s = sessions[i < 0 ? 0 : i];
+    sessions[i < 0 ? 0 : i] = Session(
       id: s.id,
       title: s.title,
       stage: '',
@@ -463,7 +486,10 @@ class _OrganizerReviewShot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ProviderScope(
-    overrides: [organizerDraftProvider.overrideWith(_FlaggedDraft.new)],
+    overrides: [
+      organizerDraftProvider.overrideWith(_FlaggedDraft.new),
+      organizerFileCountProvider.overrideWith(_FileCount.new),
+    ],
     child: const OrganizerReviewScreen(),
   );
 }

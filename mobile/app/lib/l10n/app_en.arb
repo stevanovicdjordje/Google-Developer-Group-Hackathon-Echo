@@ -363,6 +363,14 @@
       }
     }
   },
+  "orgFileSizeMb": "{mb} MB",
+  "@orgFileSizeMb": {
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
   "orgReading": "Reading your files and extracting stages, sessions and speakers…",
   "orgFoundSoFar": "Found {stages}, {sessions}, {speakers} so far…",
   "@orgFoundSoFar": {
@@ -381,6 +389,14 @@
   "orgBuild": "Build my event with AI",
   "orgStartByUploading": "Start by uploading files",
   "orgReviewTitle": "Review your event",
+  "orgExtractedFrom": "Extracted from {count, plural, =1{1 file} other{{count} files}}",
+  "@orgExtractedFrom": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "orgStagesCount": "{count, plural, =1{1 stage} other{{count} stages}}",
   "@orgStagesCount": {
     "placeholders": {
@@ -439,7 +455,7 @@
     }
   },
   "orgShareBody": "Share this link or print the QR code. Attendees join in one tap, in the app or the browser.",
-  "orgCopyLink": "Copy link",
+  "orgCopy": "Copy",
   "orgLinkCopied": "Link copied",
   "orgOpenAsAttendee": "Open as attendee",
   "devStatusTitle": "System status",

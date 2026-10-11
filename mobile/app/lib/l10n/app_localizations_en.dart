@@ -502,6 +502,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String orgFileSizeMb(String mb) {
+    return '$mb MB';
+  }
+
+  @override
   String get orgReading =>
       'Reading your files and extracting stages, sessions and speakers…';
 
@@ -518,6 +523,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orgReviewTitle => 'Review your event';
+
+  @override
+  String orgExtractedFrom(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return 'Extracted from $_temp0';
+  }
 
   @override
   String orgStagesCount(int count) {
@@ -599,7 +615,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Share this link or print the QR code. Attendees join in one tap, in the app or the browser.';
 
   @override
-  String get orgCopyLink => 'Copy link';
+  String get orgCopy => 'Copy';
 
   @override
   String get orgLinkCopied => 'Link copied';

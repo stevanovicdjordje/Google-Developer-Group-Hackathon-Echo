@@ -896,6 +896,12 @@ abstract class AppLocalizations {
   /// **'{kb} KB'**
   String orgFileSizeKb(int kb);
 
+  /// No description provided for @orgFileSizeMb.
+  ///
+  /// In en, this message translates to:
+  /// **'{mb} MB'**
+  String orgFileSizeMb(String mb);
+
   /// No description provided for @orgReading.
   ///
   /// In en, this message translates to:
@@ -925,6 +931,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review your event'**
   String get orgReviewTitle;
+
+  /// No description provided for @orgExtractedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracted from {count, plural, =1{1 file} other{{count} files}}'**
+  String orgExtractedFrom(int count);
 
   /// No description provided for @orgStagesCount.
   ///
@@ -1022,11 +1034,11 @@ abstract class AppLocalizations {
   /// **'Share this link or print the QR code. Attendees join in one tap, in the app or the browser.'**
   String get orgShareBody;
 
-  /// No description provided for @orgCopyLink.
+  /// No description provided for @orgCopy.
   ///
   /// In en, this message translates to:
-  /// **'Copy link'**
-  String get orgCopyLink;
+  /// **'Copy'**
+  String get orgCopy;
 
   /// No description provided for @orgLinkCopied.
   ///
