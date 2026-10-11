@@ -51,4 +51,29 @@ class PlanProjection {
     minZoom: minZoom,
     maxZoom: zoomFor(maxScale),
   );
+
+  /// Whole-plan fit with the plan's top edge right under [padding].top when
+  /// the plan is wider than the screen (no empty band above it).
+  CameraFit fitPlan({required EdgeInsets padding}) =>
+      _TopAlignedFit(fit(bounds, padding: padding), bounds, padding);
+}
+
+class _TopAlignedFit extends CameraFit {
+  const _TopAlignedFit(this.inner, this.bounds, this.padding);
+
+  final CameraFit inner;
+  final LatLngBounds bounds;
+  final EdgeInsets padding;
+
+  @override
+  MapCamera fit(MapCamera camera) {
+    final c = inner.fit(camera);
+    final top = c.projectAtZoom(bounds.northWest);
+    final bottom = c.projectAtZoom(bounds.southEast);
+    final size = c.nonRotatedSize;
+    if (bottom.dy - top.dy >= size.height - padding.vertical) return c;
+    final center = c.projectAtZoom(c.center);
+    final y = top.dy - padding.top + size.height / 2;
+    return c.withPosition(center: c.unprojectAtZoom(Offset(center.dx, y)));
+  }
 }

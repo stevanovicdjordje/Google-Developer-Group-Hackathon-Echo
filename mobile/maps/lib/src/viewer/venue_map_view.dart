@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,9 +13,10 @@ import 'providers.dart';
 /// Room for the search bar on top and the details sheet at the bottom.
 const _focusPadding = EdgeInsets.fromLTRB(48, 120, 48, 260);
 
-/// Whole-plan fit: edge to edge across the width, clear of the search bar and
-/// chips on top and the buttons at the bottom.
-const planFitPadding = EdgeInsets.fromLTRB(8, 132, 8, 96);
+/// Whole-plan fit: across the width with a small margin (POI icons on the
+/// plan's edge stay whole), top-aligned under the search bar and chips, clear
+/// of the buttons at the bottom.
+const planFitPadding = EdgeInsets.fromLTRB(22, 140, 22, 96);
 
 /// Interactive floor plan of one floor: image, rooms, stands, POIs, labels.
 /// Zoom and pan; rotation is disabled.
@@ -64,7 +67,7 @@ class VenueMapView extends ConsumerWidget {
         crs: const CrsSimple(),
         initialCameraFit: initialFocus != null
             ? proj.fit(initialFocus!, padding: _focusPadding, maxScale: 2)
-            : proj.fit(proj.bounds, padding: planFitPadding),
+            : proj.fitPlan(padding: planFitPadding),
         minZoom: proj.minZoom,
         maxZoom: proj.maxZoom,
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -199,15 +202,52 @@ class _LabelsAndIcons extends StatelessWidget {
               f.id != selectedId) {
             break;
           }
-          final width = f.type == FeatureType.room ? 160.0 : 110.0;
+          var width = f.type == FeatureType.room ? 160.0 : 110.0;
+          var height = 40.0;
+          // Keep the label inside its shape; hide it if the shape is too
+          // small on screen (the selected one always shows).
+          final shape = outline(f.geometry);
+          if (shape.isNotEmpty) {
+            var minX = shape.first.x, maxX = minX;
+            var minY = shape.first.y, maxY = minY;
+            for (final p in shape) {
+              minX = math.min(minX, p.x);
+              maxX = math.max(maxX, p.x);
+              minY = math.min(minY, p.y);
+              maxY = math.max(maxY, p.y);
+            }
+            width = math.min(width, (maxX - minX) * scale - 6);
+            height = math.min(height, (maxY - minY) * scale - 4);
+            if ((width < 36 || height < 16) && f.id != selectedId) break;
+            width = math.max(width, 36);
+            height = math.max(height, 16);
+          }
+          final style = TextStyle(
+            color: palette.labelText,
+            fontSize: f.type == FeatureType.room ? 14 : 11,
+            fontWeight:
+                f.type == FeatureType.room || f.sponsorTier == SponsorTier.gold
+                ? FontWeight.w700
+                : FontWeight.w500,
+          );
           markers.add(
             Marker(
               point: at,
               width: width,
-              height: 40,
+              height: height,
               child: IgnorePointer(
-                child: Center(
+                // Wraps at the shape's width; a short shape shrinks the text.
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Container(
+                    // Never narrower than the longest word: wrap between
+                    // words, and let the FittedBox shrink what still overflows.
+                    constraints: BoxConstraints(
+                      maxWidth: math.max(
+                        width,
+                        _longestWord(f.name, style) + 16,
+                      ),
+                    ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 2,
@@ -218,18 +258,10 @@ class _LabelsAndIcons extends StatelessWidget {
                     ),
                     child: Text(
                       f.name,
-                      maxLines: 2,
+                      maxLines: height >= 34 ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: palette.labelText,
-                        fontSize: f.type == FeatureType.room ? 14 : 11,
-                        fontWeight:
-                            f.type == FeatureType.room ||
-                                f.sponsorTier == SponsorTier.gold
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
+                      style: style,
                     ),
                   ),
                 ),
@@ -242,4 +274,19 @@ class _LabelsAndIcons extends StatelessWidget {
     }
     return MarkerLayer(markers: markers);
   }
+}
+
+/// Width of the widest word of [text] in [style].
+double _longestWord(String text, TextStyle style) {
+  var widest = 0.0;
+  for (final word in text.split(RegExp(r'\s+'))) {
+    final p = TextPainter(
+      text: TextSpan(text: word, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    widest = math.max(widest, p.width);
+    p.dispose();
+  }
+  return widest;
 }

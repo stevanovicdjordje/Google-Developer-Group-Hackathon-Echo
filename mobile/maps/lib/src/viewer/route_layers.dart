@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -180,6 +182,42 @@ Widget routeMarkers(
   return MarkerLayer(markers: markers);
 }
 
+const _youAreHereStyle = TextStyle(fontSize: 12, fontWeight: FontWeight.w700);
+
+/// Shifts the "You are here" label sideways so it stays on screen when the
+/// dot sits near the screen edge.
+class _InViewport extends StatelessWidget {
+  const _InViewport({
+    required this.point,
+    required this.label,
+    required this.child,
+  });
+
+  final LatLng point;
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final camera = MapCamera.of(context);
+    final x = camera.latLngToScreenOffset(point).dx;
+    final text = TextPainter(
+      text: TextSpan(text: label, style: _youAreHereStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final half = math.min(text.width + 12, 160) / 2; // + padding, box is 160
+    const margin = 8.0;
+    var dx = 0.0;
+    if (x - half < margin) dx = margin - (x - half);
+    final right = camera.nonRotatedSize.width - margin;
+    if (x + half > right) dx = right - (x + half);
+    text.dispose();
+    return Transform.translate(offset: Offset(dx, 0), child: child);
+  }
+}
+
 /// "You are here" dot with a label (the scanned QR marker or a picked point).
 Widget youAreHereMarker(
   BuildContext context,
@@ -199,6 +237,7 @@ Widget youAreHereMarker(
         child: IgnorePointer(
           child: Stack(
             alignment: Alignment.center,
+            clipBehavior: Clip.none, // the label may shift past the box
             children: [
               Container(
                 width: 30,
@@ -215,23 +254,25 @@ Widget youAreHereMarker(
                 right: 0,
                 bottom: 66,
                 child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: palette.route,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: palette.onRoute,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                  child: _InViewport(
+                    point: proj.toLatLng(at),
+                    label: label,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: palette.route,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _youAreHereStyle.copyWith(
+                          color: palette.onRoute,
+                        ),
                       ),
                     ),
                   ),

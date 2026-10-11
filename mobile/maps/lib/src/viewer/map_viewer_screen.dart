@@ -708,6 +708,13 @@ class _ViewerState extends ConsumerState<_Viewer> {
         if (leg.floorId == floor.id) ...leg.points,
     ];
     if (pts.isEmpty) return null;
+    // The whole destination, not just the point where the route ends.
+    final target =
+        _routeTarget ??
+        _map.features.where((f) => f.id == _selectedId).firstOrNull;
+    if (target != null && target.floorId == floor.id) {
+      pts.addAll(outline(target.geometry));
+    }
     const r = 60.0; // plan pixels, so a short route isn't zoomed in too far
     var minX = pts.first.x, maxX = minX, minY = pts.first.y, maxY = minY;
     for (final p in pts) {
@@ -1046,9 +1053,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
           'fit',
           l10n.fitPlan,
           Icons.fit_screen,
-          () => _controller.fitCamera(
-            proj.fit(proj.bounds, padding: planFitPadding),
-          ),
+          () => _controller.fitCamera(proj.fitPlan(padding: planFitPadding)),
         ),
       ],
     );
