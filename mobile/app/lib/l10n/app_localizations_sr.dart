@@ -661,6 +661,24 @@ class AppLocalizationsSr extends AppLocalizations {
   String get orgPublish => 'Objavi i dobij link';
 
   @override
+  String orgPublishFlaggedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count predavanja još treba da se provere',
+      few: '$count predavanja još treba da se provere',
+      one: '$count predavanje još treba proveru',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get orgPublishAnyway => 'Objavi ipak';
+
+  @override
+  String get orgPublishReview => 'Pregledaj';
+
+  @override
   String get orgTitleRequired => 'Naslov je obavezan';
 
   @override

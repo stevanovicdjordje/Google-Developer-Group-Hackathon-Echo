@@ -43,7 +43,10 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('$e')),
           data: (sessions) {
-            final stages = {for (final s in sessions) s.stage}.toList();
+            final stages = {
+              for (final s in sessions)
+                if (s.stage.trim().isNotEmpty) s.stage,
+            }.toList();
             final shown = sessions
                 .where((s) => _stage == null || s.stage == _stage)
                 .toList();
@@ -158,6 +161,11 @@ class _SessionTile extends StatelessWidget {
     }
     final live = session.isLive;
     final speakers = session.speakers.map((p) => p.name).join(', ');
+    // Room and speaker, whichever exist (a session may have no room).
+    final meta = [
+      session.stage,
+      speakers,
+    ].where((p) => p.trim().isNotEmpty).join(' · ');
     return EhoCard(
       borderColor: live ? context.eho.live : null,
       onTap: () => context.push('/e/$eventId/session/${session.id}'),
@@ -178,13 +186,10 @@ class _SessionTile extends StatelessWidget {
                   session.title,
                   style: t.titleMedium?.copyWith(height: 1.3),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  speakers.isEmpty
-                      ? session.stage
-                      : '${session.stage} · $speakers',
-                  style: secondary,
-                ),
+                if (meta.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(meta, style: secondary),
+                ],
               ],
             ),
           ),
@@ -284,7 +289,10 @@ class SessionScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      '${s.start}–${s.end} · ${s.stage}',
+                      [
+                        '${s.start}–${s.end}',
+                        s.stage,
+                      ].where((p) => p.trim().isNotEmpty).join(' · '),
                       style: t.bodyLarge?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -386,22 +394,24 @@ class SessionScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
+              if (s.stage.trim().isNotEmpty) ...[
+                const SizedBox(height: 18),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                  icon: const Icon(Icons.place_outlined, size: 18),
+                  label: Text(l10n.sessionShowOnMap(s.stage)),
+                  onPressed: () {
+                    final id = _stageFeatureId(ref, s.stage);
+                    context.go(
+                      id == null
+                          ? '/e/$eventId/map'
+                          : '/e/$eventId/map/stand/$id',
+                    );
+                  },
                 ),
-                icon: const Icon(Icons.place_outlined, size: 18),
-                label: Text(l10n.sessionShowOnMap(s.stage)),
-                onPressed: () {
-                  final id = _stageFeatureId(ref, s.stage);
-                  context.go(
-                    id == null
-                        ? '/e/$eventId/map'
-                        : '/e/$eventId/map/stand/$id',
-                  );
-                },
-              ),
+              ],
             ],
           ),
         ),

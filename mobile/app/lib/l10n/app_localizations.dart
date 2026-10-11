@@ -1106,6 +1106,24 @@ abstract class AppLocalizations {
   /// **'Publish & get join link'**
   String get orgPublish;
 
+  /// No description provided for @orgPublishFlaggedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 session still needs a check} other{{count} sessions still need a check}}'**
+  String orgPublishFlaggedTitle(int count);
+
+  /// No description provided for @orgPublishAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish anyway'**
+  String get orgPublishAnyway;
+
+  /// No description provided for @orgPublishReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get orgPublishReview;
+
   /// No description provided for @orgTitleRequired.
   ///
   /// In en, this message translates to:
