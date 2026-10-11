@@ -66,46 +66,56 @@ class _EventShellState extends State<EventShell> {
     }
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    // Android back on Map / Find / Profile goes to Agenda first (the person
+    // page returned above pops as usual); back on Agenda leaves the app.
     // Design: 1 px divider on top of the bar, same line icon whether selected
     // or not (the pill marks the active tab).
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: theme.colorScheme.outlineVariant,
-          ),
-          Theme(
-            data: theme.copyWith(
-              navigationBarTheme: theme.navigationBarTheme.copyWith(height: 80),
+    return PopScope(
+      canPop: _index == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go('/e/${widget.eventId}/agenda');
+      },
+      child: Scaffold(
+        body: widget.child,
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: theme.colorScheme.outlineVariant,
             ),
-            child: NavigationBar(
-              selectedIndex: _index,
-              onDestinationSelected: _select,
-              destinations: [
-                NavigationDestination(
-                  icon: const Icon(Icons.calendar_today_outlined),
-                  label: l10n.tabAgenda,
+            Theme(
+              data: theme.copyWith(
+                navigationBarTheme: theme.navigationBarTheme.copyWith(
+                  height: 80,
                 ),
-                NavigationDestination(
-                  icon: const Icon(Icons.map_outlined),
-                  label: l10n.tabMap,
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.people_outline),
-                  label: l10n.tabFind,
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.person_outline),
-                  label: l10n.tabProfile,
-                ),
-              ],
+              ),
+              child: NavigationBar(
+                selectedIndex: _index,
+                onDestinationSelected: _select,
+                destinations: [
+                  NavigationDestination(
+                    icon: const Icon(Icons.calendar_today_outlined),
+                    label: l10n.tabAgenda,
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.map_outlined),
+                    label: l10n.tabMap,
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.people_outline),
+                    label: l10n.tabFind,
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.person_outline),
+                    label: l10n.tabProfile,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
