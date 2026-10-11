@@ -38,6 +38,7 @@ http.Response _json(Object? body, [int status = 200, Map<String, String>? h]) =>
 class _RecordingFind extends DemoFindRepository {
   final saved = <Profile>[];
   final spots = <(String, String, String, String?)>[];
+  Future<List<Contact>> Function() contacts = () async => const [];
 
   @override
   Future<void> saveProfile(Profile profile) async => saved.add(profile);
@@ -52,6 +53,9 @@ class _RecordingFind extends DemoFindRepository {
     spots.add((eventId, personId, place, time));
     return (place: 'Info pult', time: time);
   }
+
+  @override
+  Future<List<Contact>> listContacts(String eventId) => contacts();
 }
 
 void main() {
@@ -77,6 +81,12 @@ void main() {
       ('POST', '/v1/events/ev/contacts') => _json(
         _fixture('contact.response.json'),
       ),
+      ('GET', '/v1/events/ev/contacts') => _json({
+        'contacts': [
+          _fixture('meeting-spot.response.json'),
+          _fixture('contact.response.json'),
+        ],
+      }),
       ('PUT', '/v1/events/ev/contacts/k7Qm2xLp/meeting-spot') => _json(
         _fixture('meeting-spot.response.json'),
       ),
@@ -323,6 +333,46 @@ void main() {
     expect(matches.single.why, '');
   });
 
+  test('listContacts maps the contacts and their meeting spots', () async {
+    final r = repo();
+    final contacts = await r.listContacts('ev');
+    expect(calls().last, 'GET /v1/events/ev/contacts');
+    expect(contacts.map((c) => c.person.id), ['k7Qm2xLp', 'k7Qm2xLp']);
+    expect(contacts.first.state, ContactState.accepted);
+    expect(contacts.first.person.name, 'Teodora Nikolić');
+    expect(contacts.first.meetingSpot, (place: 'Info pult', time: '15:20'));
+    // contact.response.json has no spot yet.
+    expect(contacts.last.state, ContactState.requested);
+    expect(contacts.last.meetingSpot, isNull);
+  });
+
+  test('listContacts skips invalid entries and tolerates a bad spot', () {
+    final contacts = FindApiRepository.parseContacts({
+      'contacts': [
+        'junk',
+        {'person': null, 'state': 'accepted'},
+        {
+          'person': {'id': 'a1', 'name': 'A'},
+        },
+        {
+          'person': {'id': 'a2', 'name': 'B'},
+          'state': 'accepted',
+          'meetingSpot': {'place': '  ', 'time': '9:99'},
+        },
+        {
+          'person': {'id': 'a3', 'name': 'C'},
+          'state': 'incoming',
+          'meetingSpot': {'place': 'Info pult', 'time': '25:00'},
+        },
+      ],
+    });
+    expect(contacts.map((c) => c.person.id), ['a2', 'a3']);
+    expect(contacts[0].meetingSpot, isNull);
+    expect(contacts[1].state, ContactState.none);
+    expect(contacts[1].meetingSpot, (place: 'Info pult', time: null));
+    expect(() => FindApiRepository.parseContacts({}), throwsA(anything));
+  });
+
   test('profile edits during a save are coalesced to the latest', () async {
     final r = repo();
     final a = r.saveProfile(_ana);
@@ -409,5 +459,91 @@ void main() {
         expect(spot.personId, 'p3');
       },
     );
+
+    group('spot set by the other person', () {
+      const mine = MeetingSpot(
+        personName: 'Teodora Nikolić',
+        place: 'Info pult',
+        time: '15:20',
+        floor: 'Ground floor',
+        personId: 'p3',
+      );
+      Contact contact(String id, {({String place, String? time})? spot}) =>
+          Contact(
+            person: Person(
+              id: id,
+              name: 'Teodora Nikolić',
+              headline: '',
+              interests: const [],
+              lookingFor: '',
+            ),
+            state: ContactState.accepted,
+            meetingSpot: spot,
+          );
+
+      test('a contact\'s server spot surfaces in the notifier', () async {
+        find.contacts = () async => [
+          contact('p3', spot: (place: 'Main stage', time: '11:00')),
+        ];
+        await c.read(contactSpotSyncProvider(('ev', 'p3')).future);
+        final spot = c.read(meetingSpotProvider)!;
+        expect(spot.personName, 'Teodora Nikolić');
+        expect(spot.place, 'Main stage');
+        expect(spot.time, '11:00');
+        expect(spot.personId, 'p3');
+      });
+
+      test('the server wins over a different local spot; floor kept only '
+          'for the same place', () async {
+        c.read(meetingSpotProvider.notifier).set(mine);
+        find.contacts = () async => [
+          contact('p3', spot: (place: 'Info pult', time: '16:00')),
+        ];
+        await c.read(meetingSpotProvider.notifier).loadFromContacts('ev', 'p3');
+        expect(c.read(meetingSpotProvider)?.time, '16:00');
+        expect(c.read(meetingSpotProvider)?.floor, 'Ground floor');
+        find.contacts = () async => [
+          contact('p3', spot: (place: 'Main stage', time: null)),
+        ];
+        await c.read(meetingSpotProvider.notifier).loadFromContacts('ev', 'p3');
+        expect(c.read(meetingSpotProvider)?.place, 'Main stage');
+        expect(c.read(meetingSpotProvider)?.floor, isNull);
+      });
+
+      test(
+        'no server spot, another contact or a failure change nothing',
+        () async {
+          c.read(meetingSpotProvider.notifier).set(mine);
+          final n = c.read(meetingSpotProvider.notifier);
+          find.contacts = () async => [contact('p3')];
+          await n.loadFromContacts('ev', 'p3');
+          find.contacts = () async => [
+            contact('p9', spot: (place: 'Main stage', time: null)),
+          ];
+          await n.loadFromContacts('ev', 'p3');
+          find.contacts = () async =>
+              throw const FindException(FindErrorKind.offline);
+          await n.loadFromContacts('ev', 'p3');
+          expect(c.read(meetingSpotProvider), same(mine));
+        },
+      );
+
+      test('a spot set here while loading is not overwritten', () async {
+        find.contacts = () async {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+          return [contact('p3', spot: (place: 'Main stage', time: '11:00'))];
+        };
+        final load = c
+            .read(meetingSpotProvider.notifier)
+            .loadFromContacts('ev', 'p3');
+        c.read(meetingSpotProvider.notifier).set(mine);
+        await load;
+        expect(c.read(meetingSpotProvider), same(mine));
+      });
+
+      test('the demo repository has no contacts', () async {
+        expect(await DemoFindRepository().listContacts('ev'), isEmpty);
+      });
+    });
   });
 }

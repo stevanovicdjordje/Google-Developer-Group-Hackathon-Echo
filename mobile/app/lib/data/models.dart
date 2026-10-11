@@ -243,6 +243,18 @@ class PersonDetail {
   final ContactState? contactState;
 }
 
+/// One of the caller's contacts at an event (`Contact` in `contracts/find`).
+class Contact {
+  const Contact({required this.person, required this.state, this.meetingSpot});
+
+  final Person person;
+  final ContactState state;
+
+  /// The spot stored with the contact (set by either side); null when there
+  /// is none or the server doesn't share it.
+  final ({String place, String? time})? meetingSpot;
+}
+
 class MeetingSpot {
   const MeetingSpot({
     required this.personName,

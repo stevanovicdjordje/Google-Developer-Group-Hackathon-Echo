@@ -165,6 +165,11 @@ abstract interface class FindRepository {
     String place, {
     String? time,
   });
+
+  /// The caller's contacts at the event with the meeting spot stored with
+  /// each (set by either side). Demo data has none: its spot lives in the
+  /// app only.
+  Future<List<Contact>> listContacts(String eventId);
 }
 
 enum FindErrorKind {
@@ -567,6 +572,9 @@ class DemoFindRepository implements FindRepository {
     String place, {
     String? time,
   }) async => (place: place, time: time);
+
+  @override
+  Future<List<Contact>> listContacts(String eventId) async => const [];
 }
 
 class DemoOrganizerRepository implements OrganizerRepository {

@@ -226,7 +226,53 @@ class MeetingSpotNotifier extends Notifier<MeetingSpot?> {
           }),
     );
   }
+
+  /// Reads back the spot stored with [personId] (`listContacts`), so a spot
+  /// the other person set or changed shows up. The server's value wins: it
+  /// is the single stored spot, so it replaces a different local one for
+  /// that person (the local floor is kept when the place is the same). No
+  /// server spot, or a failed call, leaves the state alone; so does a spot
+  /// set here while the call was running.
+  Future<void> loadFromContacts(String eventId, String personId) async {
+    final before = state;
+    final List<Contact> contacts;
+    try {
+      contacts = await ref.read(findRepositoryProvider).listContacts(eventId);
+    } catch (e) {
+      debugPrint(
+        'Contacts load failed: '
+        '${e is FindException ? e.kind.name : e.runtimeType}',
+      );
+      return;
+    }
+    if (!ref.mounted || !identical(state, before)) return;
+    final contact = contacts.where((c) => c.person.id == personId).firstOrNull;
+    final stored = contact?.meetingSpot;
+    if (contact == null || stored == null) return;
+    final cur = state;
+    final same = cur != null && cur.personId == personId;
+    if (same && cur.place == stored.place && cur.time == stored.time) return;
+    set(
+      MeetingSpot(
+        personName: contact.person.name,
+        place: stored.place,
+        time: stored.time,
+        floor: same && cur.place == stored.place ? cur.floor : null,
+        personId: personId,
+      ),
+    );
+  }
 }
+
+/// Loads the spot stored with a contact into [meetingSpotProvider] when
+/// Messages opens: watch it with `(eventId, personId)`; it runs again each
+/// time the screen is reopened (or when invalidated), never on a timer.
+final contactSpotSyncProvider = FutureProvider.autoDispose
+    .family<void, (String, String)>(
+      (ref, key) => ref
+          .read(meetingSpotProvider.notifier)
+          .loadFromContacts(key.$1, key.$2),
+    );
 
 final meetingSpotProvider = NotifierProvider<MeetingSpotNotifier, MeetingSpot?>(
   MeetingSpotNotifier.new,
