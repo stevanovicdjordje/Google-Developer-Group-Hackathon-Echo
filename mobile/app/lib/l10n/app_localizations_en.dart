@@ -476,6 +476,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get echoJumpToLive => 'Jump to live';
 
   @override
+  String get echoJumpToEnd => 'Jump to end';
+
+  @override
   String get echoQuestionsTitle => 'Questions for the speaker';
 
   @override

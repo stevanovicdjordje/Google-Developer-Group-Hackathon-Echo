@@ -34,6 +34,15 @@ class _FakeEcho extends DemoEchoRepository {
   );
 }
 
+/// Still live (never ends), so the pill says "Jump to live".
+class _LiveEcho extends _FakeEcho {
+  @override
+  Stream<List<TranscriptLine>> transcript(String eventId, String sessionId) =>
+      Stream<List<TranscriptLine>>.multi((c) {
+        c.add(_FakeEcho.lines);
+      });
+}
+
 /// Fails the first Ask with `502 ai_unavailable`, then answers.
 class _FlakyEcho extends _FakeEcho {
   int asks = 0;
@@ -152,23 +161,41 @@ void main() {
     expect(find.text('Spoken line number 39'), findsNothing);
   });
 
-  testWidgets('scrolling up pauses follow and shows Jump to live', (
+  testWidgets('an ended talk labels the pill Jump to end, not live', (
+    tester,
+  ) async {
+    await _pumpEcho(tester, null, true);
+    await tester.drag(find.byType(ListView).last, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(find.text('Jump to end'), findsOneWidget);
+    expect(find.text('Jump to live'), findsNothing);
+  });
+
+  testWidgets('scrolling up pauses follow and shows Jump to end', (
     tester,
   ) async {
     await _pumpEcho(tester);
     // Following the live edge: the newest line is visible, no button.
     expect(find.text('Spoken line number 39'), findsOneWidget);
-    expect(find.text('Jump to live'), findsNothing);
+    expect(find.text('Jump to end'), findsNothing);
 
     await tester.drag(find.byType(ListView).last, const Offset(0, 800));
     await tester.pumpAndSettle();
-    expect(find.text('Jump to live'), findsOneWidget);
+    expect(find.text('Jump to end'), findsOneWidget);
     expect(find.text('Spoken line number 39'), findsNothing);
 
-    await tester.tap(find.text('Jump to live'));
+    await tester.tap(find.text('Jump to end'));
     await tester.pumpAndSettle();
-    expect(find.text('Jump to live'), findsNothing);
+    expect(find.text('Jump to end'), findsNothing);
     expect(find.text('Spoken line number 39'), findsOneWidget);
+  });
+
+  testWidgets('a live talk labels the pill Jump to live', (tester) async {
+    await _pumpEcho(tester, _LiveEcho());
+    await tester.drag(find.byType(ListView).last, const Offset(0, 800));
+    await tester.pumpAndSettle();
+    expect(find.text('Jump to live'), findsOneWidget);
+    expect(find.text('Jump to end'), findsNothing);
   });
 
   testWidgets('AI failure shows a friendly message and Try again', (

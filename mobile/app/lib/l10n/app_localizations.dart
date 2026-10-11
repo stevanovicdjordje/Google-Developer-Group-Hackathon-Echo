@@ -842,6 +842,12 @@ abstract class AppLocalizations {
   /// **'Jump to live'**
   String get echoJumpToLive;
 
+  /// No description provided for @echoJumpToEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to end'**
+  String get echoJumpToEnd;
+
   /// No description provided for @echoQuestionsTitle.
   ///
   /// In en, this message translates to:

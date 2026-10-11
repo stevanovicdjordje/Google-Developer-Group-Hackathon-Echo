@@ -483,6 +483,9 @@ class AppLocalizationsSr extends AppLocalizations {
   String get echoJumpToLive => 'Nazad na uživo';
 
   @override
+  String get echoJumpToEnd => 'Na kraj';
+
+  @override
   String get echoQuestionsTitle => 'Pitanja za predavača';
 
   @override

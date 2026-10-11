@@ -624,7 +624,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
                           shape: const StadiumBorder(),
                         ),
                         icon: const Icon(Icons.arrow_downward, size: 18),
-                        label: Text(l10n.echoJumpToLive),
+                        label: Text(_ended ? l10n.echoJumpToEnd : l10n.echoJumpToLive),
                         onPressed: () => _toBottom(force: true),
                       ),
                     ),
