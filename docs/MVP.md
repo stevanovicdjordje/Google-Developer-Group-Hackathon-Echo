@@ -18,6 +18,7 @@
 5. After the talk: **Summary** → "unlock" (mock paywall) → AI summary.
 6. **Find**: recommendations ("3 people you should meet, and why") → a **prompt search** ("someone who has shipped on-device ML") → **Contact** a match → they accept → **Messages** screen → suggest a **meeting spot**, which shows on the Map.
 7. **Profile → My events**: the event is listed there (plus a second, older demo event).
+8. **After the event — organizer**: the post-event report for DevFest Belgrade 2026 (overall score, invite funnel, ratings per session, comments) in the organizer web (`backend/onboarding`, `team-post-event-report`).
 
 ## Feature status
 
@@ -41,6 +42,7 @@
 | Contact a match (request → accept) | **Build** | — | — |
 | Messages screen | **Mock** | Static screen with a hardcoded conversation, shown on camera only | — |
 | Profile tab + My events | **Build** | Second "past" event is seeded | — |
+| Post-event report for the organizer (`backend/onboarding`, `team-post-event-report`) | **Build** (@stevanovicdjordje) | Reviews are seeded fake data for `devfest` | — (statistical summary, not AI) |
 
 ## Who builds what (2026-10-11)
 
@@ -51,7 +53,7 @@
 | Echo: transcript, translation, Q&A, Ask, summary (`backend/echo`, `contracts/echo`) | `feature:echo` · @MilosBG03 (away; @Ilij4n maintains it, `team-echo-holder`) | done, wired into the app |
 | Events backend: join, agenda, My events, organizer AI extraction + publish (`backend/events`, `contracts/events`) | `feature:events` · @Vertiglo | done, wired into the app |
 | People backend: Find recommendations + prompt search, contact requests, meeting spot (`backend/find`, `contracts/find`) | `feature:find` · @Vertiglo (`team-find-holder`) | done, wired into the app |
-| Web onboarding app: registration, event wizard, invitations, reviews, post-event report (`backend/onboarding`, Serbian, server-rendered) | @stevanovicdjordje (not registered yet, `mobile#21`) | built separately; how it fits the demo is not decided yet |
+| Web onboarding app: registration, event wizard, invitations, reviews, post-event report (`backend/onboarding`, Serbian, server-rendered) | @stevanovicdjordje (not registered yet, `mobile#21`) | used for the post-event report in the demo (`team-post-event-report`); seed for `devfest` + port + English requested |
 
 ## Not in the demo
 
