@@ -11,7 +11,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
 | V-7 | After the local stack restart (stable `devfest`, events :8084, Find on Gemini): rebuild the Galaxy (`DEMO_EVENT_ID=devfest`, `DEMO_LOCATION` from `make seed`), run `integration_test/` + live smoke incl. organizer upload of `backend/events/demo/*` and publish; re-check M-46 status bar/keyboard and the map polish | M | verifier | none | Blocked on the human stopping the old servers |
-| M-50 | Join screen: friendly message for `EventsException` (notFound → "This event isn't published yet", network → retry) instead of the raw exception | S | dev | `features/join/join_screens.dart`, ARB | |
 | M-45 | (Low) Read the other person's meeting spot back: `listContacts`/`Contact.meetingSpot` → Messages spot card (`FindApiRepository.parseMeetingSpot` exists) | M | dev | `data/find_api_repository.dart`, `repositories.dart`, `app_state.dart` | Only matters with two real users; demo person auto-accepts |
 | M-34 | (Likely superseded by `mobile#16` stable event id — prefer that.) Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 
@@ -30,6 +29,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-50 | Join errors: notFound → "This event isn't available yet" + Back to start; offline/rate-limited → "Can't reach Eho right now" + Try again; else generic + Try again (`eventSummaryProvider` no auto-retry) | `4794abf` |
 | M-13 | Events 0.1.0 wired (`data/events_api_repository.dart`): join, agenda, My events (server merged on top of saved), leave, organizer upload with bytes → AI draft → background saves → publish into `devfest`; demo fallback on healthz fail / demo-id 404. `devfest` keynote `s1` stays live (demo script). `phone_android.sh` reverses 8084. Not e2e yet | `2867aa3` |
 | M-46 | Status bar: transparent app-wide, dark icons (`ehoStatusBarOnLight`), light over ink headers (Join, organizer published) via `AnnotatedRegion(ehoStatusBarOnDark)`, edge-to-edge; onboarding keeps the focused + next field above Continue with the keyboard. Needs a device re-check | `78e4bc6` |
 | M-49 | Sheets over the bottom nav (`useRootNavigator`), Android back on Map/Find/Profile → Agenda | `f26e2ce` |
