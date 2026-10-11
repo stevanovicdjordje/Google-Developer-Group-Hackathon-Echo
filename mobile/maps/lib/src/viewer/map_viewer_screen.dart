@@ -31,9 +31,19 @@ class MapViewerScreen extends ConsumerWidget {
     this.markerId,
     this.highlightFeatureId,
     this.highlightLabel,
+    this.featureSheetBuilder,
+    this.previewRouteOnSelect = true,
   });
 
   final String eventId;
+
+  /// Lets the app supply the details sheet of a selected place (null from the
+  /// builder = the map's default sheet).
+  final MapFeatureSheetBuilder? featureSheetBuilder;
+
+  /// When a place is selected and "You are here" is known, draw the route to
+  /// it behind the details sheet.
+  final bool previewRouteOnSelect;
 
   /// Feature to select on open (`/e/{eventId}/stand/{standId}`).
   final String? initialFeatureId;
@@ -60,6 +70,8 @@ class MapViewerScreen extends ConsumerWidget {
         openSheet: initialFeatureId != null,
         highlightFeatureId: highlightFeatureId,
         highlightLabel: highlightLabel,
+        featureSheetBuilder: featureSheetBuilder,
+        previewRouteOnSelect: previewRouteOnSelect,
       ),
       loading: () => _Message(
         title: l10n.mapLoading,
@@ -120,6 +132,9 @@ const _rerouteEvery = Duration(seconds: 8);
 /// Room for the search bar / banner on top and the route card at the bottom.
 const _routePadding = EdgeInsets.fromLTRB(48, 130, 48, 240);
 
+/// Leaves room for the details sheet over the lower half.
+const _previewPadding = EdgeInsets.fromLTRB(48, 100, 48, 380);
+
 class _Viewer extends ConsumerStatefulWidget {
   const _Viewer({
     required this.event,
@@ -128,6 +143,8 @@ class _Viewer extends ConsumerStatefulWidget {
     this.openSheet = false,
     this.highlightFeatureId,
     this.highlightLabel,
+    this.featureSheetBuilder,
+    this.previewRouteOnSelect = true,
   });
 
   final PublishedEvent event;
@@ -136,6 +153,8 @@ class _Viewer extends ConsumerStatefulWidget {
   final bool openSheet;
   final String? highlightFeatureId;
   final String? highlightLabel;
+  final MapFeatureSheetBuilder? featureSheetBuilder;
+  final bool previewRouteOnSelect;
 
   @override
   ConsumerState<_Viewer> createState() => _ViewerState();
@@ -156,6 +175,9 @@ class _ViewerState extends ConsumerState<_Viewer> {
   RouteQuery? _routeQuery;
   Feature? _routeTarget;
 
+  /// Route drawn behind an open details sheet (from "You are here").
+  RouteQuery? _previewQuery;
+
   /// Set while the attendee taps where they are; the route then goes here.
   Feature? _pickingFor;
 
@@ -175,6 +197,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
 
   /// Fit the camera to the next route answer (not after a re-route).
   bool _fitNextRoute = true;
+  bool _fitNextPreview = true;
 
   VenueMap get _map => widget.event.map;
 
@@ -313,47 +336,95 @@ class _ViewerState extends ConsumerState<_Viewer> {
     );
   }
 
+  /// Where a route from "You are here" starts: a good GPS fix, a tapped
+  /// spot, or the scanned QR marker; null if none is known.
+  ({RouteEndpoint from, bool gps})? get _hereStart {
+    final fix = _planFix;
+    if (fix != null && fix.usable) {
+      return (from: RouteEndpoint.point(fix.floorId, fix.at), gps: true);
+    }
+    if (_pickedHere case final h?) {
+      return (from: RouteEndpoint.point(h.floorId, h.at), gps: false);
+    }
+    if (_marker case final m?) {
+      return (from: RouteEndpoint.feature(m.id), gps: false);
+    }
+    return null;
+  }
+
   Future<void> _select(Feature? f) async {
-    setState(() => _selectedId = f?.id);
+    final start = _hereStart;
+    final preview =
+        f != null &&
+            widget.previewRouteOnSelect &&
+            f.type != FeatureType.marker &&
+            _routeQuery == null &&
+            start != null &&
+            start.from.featureId != f.id
+        ? RouteQuery(
+            eventId: widget.event.id,
+            from: start.from,
+            to: RouteEndpoint.feature(f.id),
+            version: _map.version,
+            accessible: false,
+          )
+        : null;
+    setState(() {
+      _selectedId = f?.id;
+      _previewQuery = preview;
+      _fitNextPreview = true;
+    });
     if (f == null) return;
     if (f.type != FeatureType.marker) _stats.featureView(f.id);
     final floorName = _map.floors.length > 1
         ? _map.floors.where((x) => x.id == f.floorId).firstOrNull?.name
         : null;
+    var startRoute = false;
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (sheet) => FeatureDetails(
-        feature: f,
-        floorName: floorName,
-        onRoute: f.type == FeatureType.marker
-            ? null
-            : () {
-                Navigator.pop(sheet);
-                _routeTo(f);
-              },
+      builder: (sheet) => Consumer(
+        builder: (context, ref, _) {
+          final routeAsync = preview == null
+              ? null
+              : ref.watch(mapsRouteProvider(preview));
+          final onRoute = f.type == FeatureType.marker
+              ? null
+              : () {
+                  startRoute = true;
+                  Navigator.pop(sheet);
+                };
+          final data = MapFeatureSheetData(
+            feature: f,
+            floorName: floorName,
+            route: routeAsync?.value,
+            routeLoading: routeAsync?.isLoading ?? false,
+            startRoute: onRoute,
+          );
+          return widget.featureSheetBuilder?.call(context, data) ??
+              FeatureDetails(
+                feature: f,
+                floorName: floorName,
+                onRoute: onRoute,
+                route: data.route,
+              );
+        },
       ),
     );
-    if (mounted && _selectedId == f.id) setState(() => _selectedId = null);
+    if (!mounted) return;
+    setState(() {
+      if (_selectedId == f.id) _selectedId = null;
+      if (_previewQuery == preview) _previewQuery = null;
+    });
+    if (startRoute) _routeTo(f);
   }
 
   /// Starts a route to [to] from the QR marker or a picked point; otherwise
   /// asks where the attendee is.
   Future<void> _routeTo(Feature to) async {
-    final marker = _marker;
-    final here = _pickedHere;
-    final fix = _planFix;
-    if (fix != null && fix.usable) {
-      _requestRoute(RouteEndpoint.point(fix.floorId, fix.at), to, gps: true);
-      return;
-    }
-    if (here != null) {
-      _requestRoute(RouteEndpoint.point(here.floorId, here.at), to);
-      return;
-    }
-    if (marker != null) {
-      _requestRoute(RouteEndpoint.feature(marker.id), to);
+    if (_hereStart case final start?) {
+      _requestRoute(start.from, to, gps: start.gps);
       return;
     }
     final starts = [
@@ -410,6 +481,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
     _searchCtrl.clear(); // closing the route goes back to the plain map
     setState(() {
       _selectedId = null;
+      _previewQuery = null;
       _routeTarget = to;
       _routeFromGps = gps;
       _fitNextRoute = true;
@@ -420,6 +492,14 @@ class _ViewerState extends ConsumerState<_Viewer> {
         version: _map.version,
         accessible: _routeQuery?.accessible ?? false,
       );
+    });
+    // The preview behind the details sheet may already have the answer; a
+    // listener only hears changes, so handle it here.
+    final q = _routeQuery!;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _routeQuery != q) return;
+      final now = ref.read(mapsRouteProvider(q));
+      if (!now.isLoading) _onRouteAnswer(now);
     });
   }
 
@@ -550,6 +630,26 @@ class _ViewerState extends ConsumerState<_Viewer> {
 
   MapsLocalizations get _l10n => MapsLocalizations.of(context);
 
+  /// Fits the camera to a new route (not after a re-route), or reports why
+  /// there is none.
+  void _onRouteAnswer(AsyncValue<MapRoute> next) {
+    next.whenOrNull(
+      data: (r) {
+        if (!_fitNextRoute) return; // a re-route keeps the camera
+        _fitNextRoute = false;
+        final first = r.legs.first.floorId;
+        // Show where the route starts, unless it passes the open floor.
+        _showRouteOn(
+          r,
+          r.legs.any((l) => l.floorId == _floor?.id) && _floor?.id == first
+              ? _floor!.id
+              : first,
+        );
+      },
+      error: (e, _) => _onRouteError(e),
+    );
+  }
+
   void _onRouteError(Object e) {
     final noRoute = e is MapsApiException && e.code == 'no_route';
     ScaffoldMessenger.of(context).showSnackBar(
@@ -669,26 +769,29 @@ class _ViewerState extends ConsumerState<_Viewer> {
     final q = _routeQuery;
     final routeAsync = q == null ? null : ref.watch(mapsRouteProvider(q));
     if (q != null) {
-      ref.listen(mapsRouteProvider(q), (_, next) {
-        next.whenOrNull(
-          data: (r) {
-            if (!_fitNextRoute) return; // a re-route keeps the camera
-            _fitNextRoute = false;
-            final first = r.legs.first.floorId;
-            // Show where the route starts, unless it passes the open floor.
-            _showRouteOn(
-              r,
-              r.legs.any((l) => l.floorId == _floor?.id) && _floor?.id == first
-                  ? _floor!.id
-                  : first,
-            );
-          },
-          error: (e, _) => _onRouteError(e),
+      ref.listen(mapsRouteProvider(q), (_, next) => _onRouteAnswer(next));
+    }
+    final pq = _routeQuery == null ? _previewQuery : null;
+    if (pq != null) {
+      ref.listen(mapsRouteProvider(pq), (_, next) {
+        final r = next.value;
+        if (r == null || !_fitNextPreview) return;
+        _fitNextPreview = false;
+        final floor = _floor;
+        final bounds = floor == null ? null : _routeBounds(r, floor);
+        if (bounds == null) return; // the route doesn't pass this floor
+        _controller.fitCamera(
+          PlanProjection(
+            floor!.width,
+            floor.height,
+          ).fit(bounds, padding: _previewPadding, maxScale: 2),
         );
       });
     }
+    final preview = pq == null ? null : ref.watch(mapsRouteProvider(pq)).value;
     final route = routeAsync?.value;
     final routing = _routeTarget != null && q != null;
+    final shown = routing ? route : preview;
     final picking = _pickingFor != null;
     final searching =
         !routing &&
@@ -739,10 +842,10 @@ class _ViewerState extends ConsumerState<_Viewer> {
                           proj: PlanProjection(floor.width, floor.height),
                           weak: !fix.usable,
                         ),
-                      if (routing && route != null)
+                      if (shown != null)
                         routeLines(
                           context,
-                          route,
+                          shown,
                           floor.id,
                           PlanProjection(floor.width, floor.height),
                         ),
@@ -762,10 +865,10 @@ class _ViewerState extends ConsumerState<_Viewer> {
                           PlanProjection(floor.width, floor.height),
                           widget.highlightLabel!,
                         ),
-                      if (routing && route != null)
+                      if (shown != null)
                         routeMarkers(
                           context,
-                          route,
+                          shown,
                           floor.id,
                           PlanProjection(floor.width, floor.height),
                         ),

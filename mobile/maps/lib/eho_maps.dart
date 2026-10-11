@@ -9,6 +9,8 @@ export 'src/editor/qr_screen.dart' show mapsLinkBaseProvider;
 export 'src/model/map_models.dart';
 export 'src/model/route_models.dart';
 export 'src/routes.dart';
+export 'src/viewer/feature_sheet.dart'
+    show MapFeatureSheetData, MapFeatureSheetBuilder, FeatureDetails;
 export 'src/viewer/map_viewer_screen.dart';
 export 'src/viewer/providers.dart';
 export 'src/viewer/search.dart'

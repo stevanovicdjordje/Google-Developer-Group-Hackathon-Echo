@@ -77,6 +77,8 @@ Widget app(
   FakeRouteServer server, {
   String? featureId,
   String? markerId,
+  MapFeatureSheetBuilder? sheetBuilder,
+  bool previewRoute = true,
 }) => ProviderScope(
   overrides: [
     mapsSignedInProvider.overrideWith((ref) async => 'test-uid'),
@@ -96,6 +98,8 @@ Widget app(
       eventId: 'e',
       initialFeatureId: featureId,
       markerId: markerId,
+      featureSheetBuilder: sheetBuilder,
+      previewRouteOnSelect: previewRoute,
     ),
   ),
 );
@@ -258,5 +262,100 @@ void main() {
     await tester.pumpAndSettle();
     expect(server.requests, hasLength(2));
     expect(find.text('Do: Glavna sala'), findsOneWidget);
+  });
+
+  testWidgets(
+    'selecting a place draws the route from the QR behind the sheet',
+    (tester) async {
+      final repo = FakeRepository();
+      final server = FakeRouteServer(twoFloors);
+      await tester.pumpWidget(
+        app(repo, server, featureId: 's3', markerId: 'qr'),
+      );
+      await publish(tester, repo);
+
+      // Kvant's details are open and the route is already asked for and drawn.
+      expect(server.requests.single, {
+        'from': {'featureId': 'qr'},
+        'to': {'featureId': 's3'},
+        'accessible': false,
+      });
+      expect(find.textContaining('52 m · 1 min'), findsOneWidget);
+      expect(find.byKey(const ValueKey('route-end')), findsOneWidget);
+      expect(find.text('Do: Kvant'), findsNothing); // not started yet
+
+      // Closing the sheet removes the preview.
+      await tester.tapAt(const Offset(20, 120));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('route-end')), findsNothing);
+      expect(server.requests, hasLength(1));
+    },
+  );
+
+  testWidgets('the app supplies the sheet and starts the route from it', (
+    tester,
+  ) async {
+    final repo = FakeRepository();
+    final server = FakeRouteServer(twoFloors);
+    MapFeatureSheetData? got;
+    await tester.pumpWidget(
+      app(
+        repo,
+        server,
+        featureId: 's3',
+        markerId: 'qr',
+        sheetBuilder: (context, data) {
+          got = data;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('App sheet: ${data.feature.name}'),
+              if (data.route case final r?) Text('Walk ${r.minutes} min'),
+              TextButton(
+                onPressed: data.startRoute,
+                child: const Text('Start route'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    await publish(tester, repo);
+
+    expect(find.text('App sheet: Kvant'), findsOneWidget);
+    expect(find.text('Walk 1 min'), findsOneWidget);
+    expect(got!.floorName, 'Sprat 1');
+    expect(find.text('Prikaži put'), findsNothing); // the default sheet
+
+    await tester.tap(find.text('Start route'));
+    await tester.pumpAndSettle();
+    expect(find.text('Do: Kvant'), findsOneWidget);
+    expect(
+      find.text('Vi ste ovde'),
+      findsOneWidget,
+    ); // starts on the ground floor
+    expect(server.requests, hasLength(1)); // the preview's answer is reused
+  });
+
+  testWidgets('a builder returning null keeps the default sheet; preview off', (
+    tester,
+  ) async {
+    final repo = FakeRepository();
+    final server = FakeRouteServer(twoFloors);
+    await tester.pumpWidget(
+      app(
+        repo,
+        server,
+        featureId: 's3',
+        markerId: 'qr',
+        sheetBuilder: (_, _) => null,
+        previewRoute: false,
+      ),
+    );
+    await publish(tester, repo);
+
+    expect(find.text('Prikaži put'), findsOneWidget);
+    expect(server.requests, isEmpty);
+    expect(find.byKey(const ValueKey('route-end')), findsNothing);
   });
 }

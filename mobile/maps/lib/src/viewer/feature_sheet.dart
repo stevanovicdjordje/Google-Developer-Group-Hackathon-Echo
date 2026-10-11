@@ -2,7 +2,40 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/maps_localizations.dart';
 import '../model/map_models.dart';
+import '../model/route_models.dart';
 import 'labels.dart';
+
+/// What an app-supplied details sheet gets ([MapFeatureSheetBuilder]).
+class MapFeatureSheetData {
+  const MapFeatureSheetData({
+    required this.feature,
+    this.floorName,
+    this.route,
+    this.routeLoading = false,
+    this.startRoute,
+  });
+
+  final Feature feature;
+
+  /// Floor name when the map has more than one floor.
+  final String? floorName;
+
+  /// Walking route from "You are here" (GPS, a tapped spot or the scanned QR
+  /// marker) to [feature], already drawn on the map behind the sheet. Null
+  /// while it loads, when there is no start yet, or when there is no route.
+  final MapRoute? route;
+  final bool routeLoading;
+
+  /// Closes the sheet and starts the route (asks for a start if there is
+  /// none). Null for QR markers.
+  final VoidCallback? startRoute;
+}
+
+/// Builds the details sheet for a selected place; null = the map's default.
+typedef MapFeatureSheetBuilder = Widget? Function(
+  BuildContext context,
+  MapFeatureSheetData data,
+);
 
 /// Details of a room, stand or POI, shown in a bottom sheet.
 class FeatureDetails extends StatelessWidget {
@@ -11,10 +44,14 @@ class FeatureDetails extends StatelessWidget {
     required this.feature,
     this.floorName,
     this.onRoute,
+    this.route,
   });
 
   final Feature feature;
   final String? floorName;
+
+  /// Route preview from "You are here"; shows its length and walk time.
+  final MapRoute? route;
 
   /// "Prikaži put"; hidden when null.
   final VoidCallback? onRoute;
@@ -81,6 +118,19 @@ class FeatureDetails extends StatelessWidget {
               SelectableText(
                 '${l10n.website}: ${f.link}',
                 style: theme.textTheme.bodyMedium,
+              ),
+            ],
+            if (route case final r?) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.directions_walk, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.routeSummary(r.distanceMeters.round(), r.minutes),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ],
               ),
             ],
             if (onRoute != null) ...[
