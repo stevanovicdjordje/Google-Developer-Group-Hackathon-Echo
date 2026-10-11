@@ -22,12 +22,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-61 | dev (sonnet) | 2026-10-11 09:20 | worktree | Organizer resumes an open draft after restart via Events `getDraft` |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-61 | Organizer resumes an open draft after restart (`getDraft`; only the id is stored, `eho.organizerDraftId`; cleared on publish / 404 / any failure). 225 tests. Not tried on the live Events API | `8304de3` |
 | M-59 | Dev shots `organizer-review-issues` (row issues + "To check") and `organizer-published-warnings`. Batch after M-57/59/60: analyze clean, 214/214 tests | `e34cf1d` |
 | M-57 | Map tab you-are-here on open (`locateOnOpen: true`, feature:maps mobile#20); 4 widget tests; shot with `DEMO_LOCATION` shows the dot. Not yet seen on a phone | `831535a` |
 | M-60 | Server contact state from `listContacts` → `contactsProvider` (server wins, local-only kept, unknown states skipped); Person + Messages watch `contactSpotSyncProvider`. 206 tests | `1e38ecc` |
