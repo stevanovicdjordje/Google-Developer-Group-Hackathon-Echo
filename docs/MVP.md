@@ -46,13 +46,12 @@
 
 | Area | Holder | Status |
 | --- | --- | --- |
-| App UI (all screens, design pass) | `mobile` · @Ilij4n | in progress |
-| Venue map: viewer, editor, routing, GPS (`mobile/maps`, `backend/maps`) | `feature:maps` · @Vertiglo | in progress |
-| Echo: transcript, translation, Q&A, Ask, summary (`backend/echo`, `contracts/echo`) | `feature:echo` · @MilosBG03 | in progress, wired into the app |
-| **Events backend:** join, agenda, My events, organizer AI extraction + publish (API-1, 2, 3, 12, 13, 14) | **nobody yet** | the app runs these on demo data |
-| **People backend:** Find recommendations + prompt search, contact requests, meeting spot (API-9, 10, 11, 15) | **nobody yet** | the app runs these on demo data |
-
-Unowned rows: what the app needs is in `mobile/docs/api-needs.md`. Suggested scopes: `feature:events` and `feature:people` (`docs/COORDINATION.md` §1a).
+| App UI (all screens, design pass) | `mobile` · @Ilij4n | all demo flows run on the four real backends (with demo fallback), verified on the Galaxy |
+| Venue map: viewer, editor, routing, GPS (`mobile/maps`, `backend/maps`) | `feature:maps` · @Vertiglo | done, wired into the app |
+| Echo: transcript, translation, Q&A, Ask, summary (`backend/echo`, `contracts/echo`) | `feature:echo` · @MilosBG03 (away; @Ilij4n maintains it, `team-echo-holder`) | done, wired into the app |
+| Events backend: join, agenda, My events, organizer AI extraction + publish (`backend/events`, `contracts/events`) | `feature:events` · @Vertiglo | done, wired into the app |
+| People backend: Find recommendations + prompt search, contact requests, meeting spot (`backend/find`, `contracts/find`) | `feature:find` · @Vertiglo (`team-find-holder`) | done, wired into the app |
+| Web onboarding app: registration, event wizard, invitations, reviews, post-event report (`backend/onboarding`, Serbian, server-rendered) | @stevanovicdjordje (not registered yet, `mobile#21`) | built separately; how it fits the demo is not decided yet |
 
 ## Not in the demo
 
