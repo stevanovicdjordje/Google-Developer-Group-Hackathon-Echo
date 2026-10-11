@@ -29,10 +29,12 @@ void main() {
     'find-live': 'Recommended for you',
     'myevents-live': 'LIVE · DAY 1',
     'organizer-review': 'Review your event',
+    'organizer-review-issues': 'No room given for this session',
     'organizer-upload-files': 'sava-centar-ground-floor.png',
     'organizer-upload-progress':
         'Found 3 stages, 6 sessions, 6 speakers so far',
     'organizer-published': 'PUBLISHED',
+    'organizer-published-warnings': 'CHECK BEFORE THE EVENT',
   };
 
   Future<void> open(WidgetTester tester, String location) async {

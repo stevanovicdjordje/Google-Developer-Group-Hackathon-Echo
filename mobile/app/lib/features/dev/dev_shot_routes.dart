@@ -161,6 +161,11 @@ final devShots = <DevShot>[
     () => const _OrganizerReviewShot(),
   ),
   DevShot(
+    'organizer-review-issues',
+    'Organizer review, server issues: flagged rows with messages + "To check" block',
+    () => const _OrganizerReviewIssuesShot(),
+  ),
+  DevShot(
     'organizer-upload-files',
     'Organizer upload, three files chosen',
     () => OrganizerUploadScreen(initialFiles: _uploadedFiles),
@@ -181,6 +186,11 @@ final devShots = <DevShot>[
       url: '${linkBase()}/e/$_event',
       name: demo.demoEventName,
     ),
+  ),
+  DevShot(
+    'organizer-published-warnings',
+    'Organizer published, with publish warnings ("Check before the event")',
+    () => const _OrganizerPublishedWarningsShot(),
   ),
 ];
 
@@ -593,5 +603,67 @@ class _OrganizerReviewShot extends StatelessWidget {
       organizerFileCountProvider.overrideWith(_FileCount.new),
     ],
     child: const OrganizerReviewScreen(),
+  );
+}
+
+/// What the server flagged on the issues shot: a row without a room, a row
+/// with another problem, and one issue about the event as a whole.
+const _draftIssues = [
+  DraftIssue(
+    sessionId: demo.organizerFlaggedSessionId,
+    field: 'sessions[2].stage',
+    message: 'No room given for this session',
+  ),
+  DraftIssue(
+    sessionId: 's5',
+    field: 'sessions[4].speakers',
+    message: 'Speaker not found in the speakers list',
+  ),
+  DraftIssue(
+    field: 'sessions',
+    message: '2 sessions overlap in Sala A at 11:00',
+  ),
+];
+
+/// [_FlaggedDraft] with the server's [_draftIssues].
+class _IssuesDraft extends _FlaggedDraft {
+  @override
+  EventDraft? build() => super.build()?.withIssues(_draftIssues);
+}
+
+class _OrganizerReviewIssuesShot extends StatelessWidget {
+  const _OrganizerReviewIssuesShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      organizerDraftProvider.overrideWith(_IssuesDraft.new),
+      organizerFileCountProvider.overrideWith(_FileCount.new),
+    ],
+    child: const OrganizerReviewScreen(),
+  );
+}
+
+/// The warnings of the last publish on the published shot.
+const _publishWarnings = [
+  "Session s3 has no room; attendees won't see it on the map",
+  'Speaker "Dr. Petrov" has no photo or bio',
+];
+
+class _PublishWarnings extends OrganizerWarningsNotifier {
+  @override
+  List<String> build() => _publishWarnings;
+}
+
+class _OrganizerPublishedWarningsShot extends StatelessWidget {
+  const _OrganizerPublishedWarningsShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [organizerWarningsProvider.overrideWith(_PublishWarnings.new)],
+    child: OrganizerPublishedScreen(
+      url: '${linkBase()}/e/$_event',
+      name: demo.demoEventName,
+    ),
   );
 }
