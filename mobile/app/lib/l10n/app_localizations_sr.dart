@@ -47,7 +47,7 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String get startTagline =>
-      'Tvoj AI pratilac na događajima: program, prostor, predavanja i ljudi.';
+      'Tvoj AI pratilac za događaje. Program, prostor, svako predavanje i ljudi koje vredi upoznati.';
 
   @override
   String get startJoinButton => 'Pridruži se linkom ili kodom';
@@ -150,7 +150,18 @@ class AppLocalizationsSr extends AppLocalizations {
       'Transkript uživo, prevod, pitaj AI o onome što je rečeno i pošalji pitanja predavaču.';
 
   @override
-  String get sessionOpenEcho => 'Otvori Eho: transkript uživo i AI';
+  String get sessionOpenEcho => 'Otvori Eho';
+
+  @override
+  String sessionTrack(String track) {
+    return 'Tok: $track';
+  }
+
+  @override
+  String get sessionSave => 'Sačuvaj u moj program';
+
+  @override
+  String get sessionSaved => 'Ukloni iz mog programa';
 
   @override
   String sessionShowOnMap(String stage) {
@@ -186,7 +197,7 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String onboardingStep(int step, int total) {
-    return 'Korak $step od $total';
+    return '$step od $total';
   }
 
   @override
@@ -247,7 +258,10 @@ class AppLocalizationsSr extends AppLocalizations {
       'Tvoj profil ide samo do AI-ja radi pronalaženja poklapanja, i samo dok je „Prikaži me u Pronađi” uključeno.';
 
   @override
-  String get myEventsUpcoming => 'Sada i uskoro';
+  String get myEventsNow => 'Trenutno aktivni';
+
+  @override
+  String get myEventsLiveDay => 'Uživo · Dan 1';
 
   @override
   String get myEventsPast => 'Prošli';

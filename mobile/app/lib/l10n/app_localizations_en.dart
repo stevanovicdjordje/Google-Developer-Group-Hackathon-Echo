@@ -47,7 +47,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startTagline =>
-      'Your AI companion for events: agenda, venue, talks and people.';
+      'Your AI companion for events. The agenda, the venue, every talk, and the people worth meeting.';
 
   @override
   String get startJoinButton => 'Join with a link or code';
@@ -148,7 +148,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Live transcript, translation, ask the AI about what was said, and send questions to the speaker.';
 
   @override
-  String get sessionOpenEcho => 'Open Echo: live transcript & AI';
+  String get sessionOpenEcho => 'Open Echo';
+
+  @override
+  String sessionTrack(String track) {
+    return '$track track';
+  }
+
+  @override
+  String get sessionSave => 'Save to my agenda';
+
+  @override
+  String get sessionSaved => 'Remove from my agenda';
 
   @override
   String sessionShowOnMap(String stage) {
@@ -183,7 +194,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String onboardingStep(int step, int total) {
-    return 'Step $step of $total';
+    return '$step of $total';
   }
 
   @override
@@ -243,7 +254,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your profile only ever goes to the AI to find matches, and only while \"Show me in Find\" is on.';
 
   @override
-  String get myEventsUpcoming => 'Now & upcoming';
+  String get myEventsNow => 'Happening now';
+
+  @override
+  String get myEventsLiveDay => 'Live · Day 1';
 
   @override
   String get myEventsPast => 'Past';

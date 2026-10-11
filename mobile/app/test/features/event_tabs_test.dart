@@ -99,7 +99,7 @@ void main() {
 
     go(tester, '/e/devfest/session/s1');
     await tester.pumpAndSettle();
-    expect(find.text('Open Echo: live transcript & AI'), findsOneWidget);
+    expect(find.text('Open Echo'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
 
     // Not joined yet: `/e/{id}` shows the join screen.

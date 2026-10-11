@@ -22,7 +22,7 @@ void main() {
   testWidgets('live talk shows the Echo card', (tester) async {
     await open(tester, 's1');
     expect(find.text('Echo is on for this talk'), findsOneWidget);
-    expect(find.text('Open Echo: live transcript & AI'), findsOneWidget);
+    expect(find.text('Open Echo'), findsOneWidget);
   });
 
   testWidgets('talk without Echo hides the Echo card', (tester) async {
@@ -32,6 +32,6 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Echo is on for this talk'), findsNothing);
-    expect(find.text('Open Echo: live transcript & AI'), findsNothing);
+    expect(find.text('Open Echo'), findsNothing);
   });
 }

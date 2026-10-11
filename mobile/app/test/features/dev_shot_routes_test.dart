@@ -21,7 +21,7 @@ void main() {
     'person-connected': 'Ana accepted · Message',
     'messages-spot': 'Ana Petrović',
     'find-results': 'Results for "On-device ML on Android"',
-    'myevents-live': 'LIVE NOW',
+    'myevents-live': 'LIVE · DAY 1',
     'organizer-review': 'Review your event',
     'organizer-published': 'PUBLISHED',
   };

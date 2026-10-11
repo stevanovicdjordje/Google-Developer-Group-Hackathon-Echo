@@ -41,7 +41,7 @@ void main() {
 
     router.go('/events');
     await settle(tester);
-    expect(find.text('LIVE NOW'), findsOneWidget);
+    expect(find.text('LIVE · DAY 1'), findsOneWidget);
     expect(find.textContaining('Next: On-device AI'), findsOneWidget);
 
     router.go('/e/devfest/agenda');

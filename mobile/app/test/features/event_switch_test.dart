@@ -142,7 +142,7 @@ void main() {
       await tester.tap(find.text('Talk of $id'));
       await tester.pumpAndSettle();
       expect(location(), '/e/$id/session/s1');
-      await tester.tap(find.text('Open Echo: live transcript & AI'));
+      await tester.tap(find.text('Open Echo'));
       await tester.pump(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
       expect(find.text('Spoken in $id'), findsOneWidget);
