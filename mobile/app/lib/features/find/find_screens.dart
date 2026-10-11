@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:eho_maps/eho_maps.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,11 +14,37 @@ import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
 
+/// How long the profile must stay unchanged before recommendations reload.
+/// Overridden in tests.
+final findReloadDelayProvider = Provider<Duration>(
+  (ref) => const Duration(seconds: 2),
+);
+
+/// Recommendations for the event. Loads once; later profile edits reload it
+/// only when they change what the ranking uses (interests, "looking for",
+/// visibility) and only after [findReloadDelayProvider] without a further
+/// edit, so flicking consent switches doesn't hit the service's rate limit.
+/// Opening this (the Find tab) also makes the repository join the event's
+/// Find presence, so the first call per event is the join.
 final recommendationsProvider =
     FutureProvider.family<List<PersonMatch>, String>((ref, eventId) {
-      final me = ref.watch(profileProvider);
+      Timer? timer;
+      ref.onDispose(() => timer?.cancel());
+      ref.listen(profileProvider, (prev, next) {
+        if (prev == null || !_rankingChanged(prev, next)) return;
+        timer?.cancel();
+        timer = Timer(ref.read(findReloadDelayProvider), ref.invalidateSelf);
+      });
+      final me = ref.read(profileProvider);
       return ref.watch(findRepositoryProvider).recommendations(eventId, me);
     });
+
+/// Whether a profile edit can change the recommendations.
+bool _rankingChanged(Profile a, Profile b) =>
+    a.onboarded != b.onboarded ||
+    a.visibleInFind != b.visibleInFind ||
+    a.lookingFor != b.lookingFor ||
+    !listEquals(a.interests, b.interests);
 
 /// One person at an event (`(eventId, personId)`); null when not visible.
 final personDetailProvider = FutureProvider.autoDispose
@@ -25,9 +54,14 @@ final personDetailProvider = FutureProvider.autoDispose
 
 /// Friendly text for a failed Find call.
 String _findErrorText(AppLocalizations l10n, Object e) => switch (e) {
-  FindException(kind: FindErrorKind.offline) => l10n.backendUnavailable,
-  FindException(kind: FindErrorKind.rateLimited) => l10n.echoErrorRateLimited,
-  _ => l10n.echoErrorFailed,
+  FindException(kind: FindErrorKind.offline) => l10n.findErrorOffline,
+  FindException(kind: FindErrorKind.rateLimited) => l10n.findErrorRateLimited,
+  FindException(kind: FindErrorKind.aiBusy) => l10n.findErrorAiBusy,
+  FindException(kind: FindErrorKind.notFound) => l10n.findErrorNotFound,
+  FindException(kind: FindErrorKind.notAllowed) => l10n.findErrorNotAllowed,
+  FindException(kind: FindErrorKind.profileRequired) =>
+    l10n.findErrorProfileRequired,
+  _ => l10n.findErrorFailed,
 };
 
 /// Error text with "Try again".
@@ -134,6 +168,7 @@ class _FindScreenState extends ConsumerState<FindScreen> {
               ref
                   .watch(recommendationsProvider(widget.eventId))
                   .when(
+                    skipLoadingOnReload: true,
                     loading: () => _Thinking(l10n.findThinking),
                     error: (e, _) => _FindError(
                       e,
@@ -676,6 +711,16 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
                           context.push('/e/${widget.eventId}/messages/${p.id}'),
                     ),
                   },
+                  if (state == ContactState.none && !allowContact) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.personNotAccepting(firstName),
+                      textAlign: TextAlign.center,
+                      style: t.labelMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   Text(
                     l10n.personDetailsNote(firstName),

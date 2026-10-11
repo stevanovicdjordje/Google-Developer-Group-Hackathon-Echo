@@ -341,6 +341,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'No one matches yet. Try describing it differently.';
 
   @override
+  String get findErrorOffline =>
+      'Find can\'t be reached. Check your connection and try again.';
+
+  @override
+  String get findErrorRateLimited =>
+      'Too many requests. Wait a few seconds and try again.';
+
+  @override
+  String get findErrorAiBusy =>
+      'Couldn\'t find matches right now. Try again in a moment.';
+
+  @override
+  String get findErrorNotFound => 'This person is no longer visible in Find.';
+
+  @override
+  String get findErrorNotAllowed =>
+      'This person doesn\'t accept contact requests.';
+
+  @override
+  String get findErrorProfileRequired => 'Finish your profile to use Find.';
+
+  @override
+  String get findErrorFailed => 'Something went wrong in Find. Try again.';
+
+  @override
   String get personWhyMeet => 'Why you should meet';
 
   @override
@@ -362,6 +387,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String personAccepted(String name) {
     return '$name accepted · Message';
+  }
+
+  @override
+  String personNotAccepting(String name) {
+    return '$name doesn\'t accept contact requests.';
   }
 
   @override
