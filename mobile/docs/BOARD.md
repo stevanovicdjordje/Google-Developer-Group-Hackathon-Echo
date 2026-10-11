@@ -25,16 +25,18 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| V-4a | verifier (sonnet, medium) | 04:04 | — | live flow check vs running backends + Echo AI API table |
 | V-4b | dev (sonnet, medium) | 04:04 | worktree | tap-through flow tests `test/flows/` (bugs → skip + report) |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| V-4a | Live flows on web vs local backends: join, agenda, session, Echo transcript, map + you-are-here, stand sheet (400 seats, 1 min / 52 m, NOW, Start route, Open Echo), Find (demo), messages, organizer, published all OK. Echo API: translate sr (Gemma) OK, questions/votes OK; ask/catch-up/summary 502 (B-1). App↔contract: no mismatch | verification |
 | M-35 | Agenda "<event> · Day N" (N=1: no day data in models), "Live · Day {day}", Profile "Premium" badge, demo extract flags s3, alias cleanup in repositories.dart, shots.sh forwards `LINK_BASE` | `e693bc1` |
 | M-36 | Find error strings (`findError*`, `personNotAccepting` hint), recommendations reload debounced 2 s and only on ranking fields; joinFind stays lazy (fires on Find tab open) | `2bcd600` |
 | P-1 | Run on phones (other @Ilij4n session): Galaxy A55 via `adb reverse`, iPhone via LAN + port forward for emulators; eho:// deep links; APP_GUIDE *Run on phones* | `9dbd308` |
+| M-38 | Echo screen: the "Full talk summary / Premium" banner overlaps/clips the top transcript line on ended talks (V-4a echo.png) | S | dev | `features/echo/` | |
+| B-1 | **Echo backend:** Gemini path (`AI_MODEL=gemini-3.8-flash`) times out (20 s, `context deadline exceeded`) for ask/catch-up/summary/grouping since the model split; translate (Gemma) answered from cache. Owner: Echo maintainer (team-echo-holder → @Ilij4n's other session). App shows friendly "AI busy" | — | other session | `backend/echo` | Reported 2026-10-11 |
 | M-23 | Find on contract 0.1.1 (`data/find_api_repository.dart`, health-check fallback to demo; `USE_FIND_API`, `FIND_API_BASE_URL`), `PersonDetail`, contact state stream, `MeetingSpotNotifier.agree` → `putMeetingSpot`; 15 mapping tests on the fixtures. Not e2e (service down) | `0f11f3d` |
 | M-31 | Organizer: "✦ Extracted from N files", short join link (`LINK_BASE` define, else host), "Copy", upload shots `organizer-upload-files`/`-progress`; dev shots use new demo data (fit line, Info pult 15:20, seeded questions) | `64be061` |
 | M-33 | Stand links keep `?at=` → map `markerId`; `data/demo_ids.dart` `demoEventAliases`; saved `devfest`/`devsummit` joins migrate to `DEMO_EVENT_ID` (`demoEventIdProvider`). Left: repositories.dart private `_legacyDemoEventId` → use `demoEventAliases` (M-35) | `96e428c` |
