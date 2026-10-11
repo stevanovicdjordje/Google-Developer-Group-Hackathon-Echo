@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:find` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 05:40 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find
+**Last updated:** 2026-10-11 04:18 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find
 
 ## Current state
 
@@ -31,10 +31,10 @@ AI: Gemma through the Gemini API (`team-gemma-core`), same key/env as Echo (`GEM
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
-- 2026-10-11 05:40 · ACTION · for: mobile · Find contract 0.2.0 (additive, mobile#13): optional meeting `time` ("HH:mm") on `putMeetingSpot` and on `Contact.meetingSpot`; the service stores and returns it. See the answers in mobile#13 below.
-- 2026-10-11 05:00 · ACTION · for: mobile · **Find service runs** (`backend/find`, `:8083`, see *How to consume*). You can switch `FindRepository` from demo data to it: `putMyProfile` from onboarding/Profile, `joinFind` when an event opens, then recommendations/search/person/contacts/meeting spot. Contract 0.1.1 is fixture-only over 0.1.0. Meeting spot `place` must be a feature name on the published map (e.g. "Info pult").
-- 2026-10-11 04:05 · ACTION · for: mobile · Find contract 0.1.0 (`contracts/find/openapi.yaml`, see `CHANGELOG.md` for the differences from `api-needs.md`). You can wire `FindRepository` against it now; the service follows (announced here when it runs). Profile + consents (`/v1/me/profile`), `joinFind` per event, recommendations from the saved profile, prompt search, person, contacts (seeded demo people accept at once), meeting spot = a feature name on the published map.
-- 2026-10-11 03:45 · INFO · for: all · `feature:find` now held by @Vertiglo (`docs/decisions/team-find-holder.md`, mobile#12). `feature:echo` stays with @MilosBG03. Contract (`contracts/find/openapi.yaml`) comes first.
+- 2026-10-11 04:18 · ACTION · for: mobile · Find contract 0.2.0 (additive, mobile#13): optional meeting `time` ("HH:mm") on `putMeetingSpot` and on `Contact.meetingSpot`; the service stores and returns it. See the answers in mobile#13 below.
+- 2026-10-11 03:37 · ACTION · for: mobile · **Find service runs** (`backend/find`, `:8083`, see *How to consume*). You can switch `FindRepository` from demo data to it: `putMyProfile` from onboarding/Profile, `joinFind` when an event opens, then recommendations/search/person/contacts/meeting spot. Contract 0.1.1 is fixture-only over 0.1.0. Meeting spot `place` must be a feature name on the published map (e.g. "Info pult").
+- 2026-10-11 03:22 · ACTION · for: mobile · Find contract 0.1.0 (`contracts/find/openapi.yaml`, see `CHANGELOG.md` for the differences from `api-needs.md`). You can wire `FindRepository` against it now; the service follows (announced here when it runs). Profile + consents (`/v1/me/profile`), `joinFind` per event, recommendations from the saved profile, prompt search, person, contacts (seeded demo people accept at once), meeting spot = a feature name on the published map.
+- 2026-10-11 03:19 · INFO · for: all · `feature:find` now held by @Vertiglo (`docs/decisions/team-find-holder.md`, mobile#12). `feature:echo` stays with @MilosBG03. Contract (`contracts/find/openapi.yaml`) comes first.
 - 2026-10-11 01:56 · INFO · for: all · `feature:find` registered (@MilosBG03, same holder as `feature:echo`). It takes the Find part of `mobile#5`: API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, and the profile + consent part of API-14. The rest of `mobile#5` (join, agenda, My events, organizer) stays with backend/contracts.
 
 ## Outbound requests (we need something from another module)
@@ -47,7 +47,7 @@ AI: Gemma through the Gemini API (`team-gemma-core`), same key/env as Echo (`GEM
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
-| mobile#13 | mobile | (1) Done: 0.2.0 adds optional `time` ("HH:mm", 24 h) to the meeting spot, so you can stop keeping it on the device. (2) No field needed: `requestContact` to a seeded demo attendee already returns `state: accepted` in the same response (real people return `requested`), so show what comes back. Rate limit: recommendations + search share 20 per user at once, refilling 20/min; reloading on each consent toggle is fine. The service runs: see *How to consume* (announced 05:00). | done | 2026-10-11 |
+| mobile#13 | mobile | (1) Done: 0.2.0 adds optional `time` ("HH:mm", 24 h) to the meeting spot, so you can stop keeping it on the device. (2) No field needed: `requestContact` to a seeded demo attendee already returns `state: accepted` in the same response (real people return `requested`), so show what comes back. Rate limit: recommendations + search share 20 per user at once, refilling 20/min; reloading on each consent toggle is fine. The service runs: see *How to consume* (announced 03:37). | done | 2026-10-11 |
 | mobile#5 (API-9, API-10, API-11, API-15, profile part of API-14) | mobile | Done: contract 0.1.1 + service `backend/find` (see *How to consume*). | done | 2026-10-11 |
 
 ## Acks (our responses to other modules' breaking proposals)

@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 05:40 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find
+**Last updated:** 2026-10-11 04:18 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find
 
 ## Current state
 
@@ -35,10 +35,10 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
-- 2026-10-11 05:40 · ACTION · for: mobile · mobile#14 done: `DEMO_LOCATION` dart-define for a pretend GPS position/walk on demo phones; values printed by `make seed`. See mobile#14 below.
-- 2026-10-11 04:40 · INFO · for: mobile · mobile#10 done: map viewer and `/o` sign-in polished per the design review. Floor chips moved from the bottom to under the search bar (bottom only while a route is shown). No API change.
-- 2026-10-11 03:45 · INFO · for: mobile, feature:echo · Demo event renamed to "DevFest Belgrade 2026" in the map seed and the Echo replay together (mobile#10 (1), mobile#11). Re-run `make seed`; the new event gets a new ID.
-- 2026-10-11 03:35 · ACTION · for: mobile · mobile#8 done: `MapViewerScreen` draws the route from "You are here" when a place is selected, and takes `featureSheetBuilder` (`MapFeatureSheetData`: feature, floorName, route, routeLoading, startRoute) for your own details sheet. Additive; without a builder nothing changes except the route preview (`previewRouteOnSelect: false` turns it off).
+- 2026-10-11 04:18 · ACTION · for: mobile · mobile#14 done: `DEMO_LOCATION` dart-define for a pretend GPS position/walk on demo phones; values printed by `make seed`. See mobile#14 below.
+- 2026-10-11 03:33 · INFO · for: mobile · mobile#10 done: map viewer and `/o` sign-in polished per the design review. Floor chips moved from the bottom to under the search bar (bottom only while a route is shown). No API change.
+- 2026-10-11 03:19 · INFO · for: mobile, feature:echo · Demo event renamed to "DevFest Belgrade 2026" in the map seed and the Echo replay together (mobile#10 (1), mobile#11). Re-run `make seed`; the new event gets a new ID.
+- 2026-10-11 03:15 · ACTION · for: mobile · mobile#8 done: `MapViewerScreen` draws the route from "You are here" when a place is selected, and takes `featureSheetBuilder` (`MapFeatureSheetData`: feature, floorName, route, routeLoading, startRoute) for your own details sheet. Additive; without a builder nothing changes except the route preview (`previewRouteOnSelect: false` turns it off).
 - 2026-10-11 02:52 · ACTION · for: mobile · Request maps#3: real Firebase options for a non-emulator build (needed before the map can be deployed).
 - 2026-10-11 02:50 · INFO · for: mobile · Map editor has a QR signs page (`/o/e/{eventId}/qr`, under the `/o` route you mount). `eho_maps` now depends on `qr`, `qr_flutter`, `web`; your `pubspec.lock` already has them, `flutter analyze` in `mobile/app` is clean. Nothing to change.
 - 2026-10-11 01:15 · INFO · for: all · Map contract 0.3.0 (additive): `recordStats` + `getStats`. The map viewer in the Map tab now reports, in batches, what attendees search/open/route to and QR scans (no positions, no user IDs stored). Organizers: Profile → Edit venue map → event → chart icon (`/o/e/{id}/stats`, already covered by the `/o` route you mount). Nothing to change in `mobile/app`.
