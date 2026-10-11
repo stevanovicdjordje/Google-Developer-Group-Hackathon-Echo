@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../data/app_state.dart';
 import '../../l10n/app_localizations.dart';
+import '../agenda/agenda_screens.dart' show agendaProvider;
+import 'map_feature_sheet.dart';
 
 /// Map tab: the venue map from `feature:maps`, plus the agreed meeting spot.
 class MapTab extends ConsumerStatefulWidget {
@@ -62,6 +64,7 @@ class _MapTabState extends ConsumerState<MapTab> {
             eventId: eventId,
             initialFeatureId: widget.featureId,
             markerId: widget.markerId,
+            featureSheetBuilder: _featureSheet,
             highlightFeatureId: spot == null ? null : spotId,
             highlightLabel: spot == null || spotId == null
                 ? null
@@ -133,6 +136,43 @@ class _MapTabState extends ConsumerState<MapTab> {
             ),
           ),
       ],
+    );
+  }
+
+  /// Stages of the event (linked to map rooms by name) get the app's own
+  /// details sheet; everything else keeps the map's default one (null). The
+  /// agenda is read when a place is selected, not when the tab is built.
+  Widget? _featureSheet(BuildContext context, MapFeatureSheetData data) {
+    final eventId = widget.eventId;
+    final agenda = ref.read(agendaProvider(eventId));
+    final sessions = agenda.value;
+    if (sessions != null) {
+      return buildStageSheet(
+        context,
+        eventId: eventId,
+        sessions: sessions,
+        data: data,
+      );
+    }
+    // Agenda still loading: show the default look, then switch if it is a stage.
+    return Consumer(
+      builder: (context, ref, _) {
+        final loaded = ref.watch(agendaProvider(eventId)).value;
+        return (loaded == null
+                ? null
+                : buildStageSheet(
+                    context,
+                    eventId: eventId,
+                    sessions: loaded,
+                    data: data,
+                  )) ??
+            FeatureDetails(
+              feature: data.feature,
+              floorName: data.floorName,
+              onRoute: data.startRoute,
+              route: data.route,
+            );
+      },
     );
   }
 

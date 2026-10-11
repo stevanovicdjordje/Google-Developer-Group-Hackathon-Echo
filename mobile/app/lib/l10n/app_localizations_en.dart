@@ -92,6 +92,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapShowSpot => 'Show';
 
   @override
+  String mapSheetCapacity(int count) {
+    return 'up to $count seats';
+  }
+
+  @override
+  String mapSheetWalkMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String mapSheetWalkDistance(int meters) {
+    return '~$meters m walk';
+  }
+
+  @override
+  String mapSheetNow(String start, String end) {
+    return 'Now · $start–$end';
+  }
+
+  @override
+  String mapSheetNext(String start) {
+    return 'Next · $start';
+  }
+
+  @override
+  String get mapSheetStartRoute => 'Start route';
+
+  @override
+  String get mapSheetOpenEcho => 'Open Echo';
+
+  @override
   String get profileYourName => 'Your name';
 
   @override

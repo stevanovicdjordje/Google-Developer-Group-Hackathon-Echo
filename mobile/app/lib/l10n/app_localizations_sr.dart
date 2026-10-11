@@ -92,6 +92,37 @@ class AppLocalizationsSr extends AppLocalizations {
   String get mapShowSpot => 'Prikaži';
 
   @override
+  String mapSheetCapacity(int count) {
+    return 'do $count mesta';
+  }
+
+  @override
+  String mapSheetWalkMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String mapSheetWalkDistance(int meters) {
+    return '~$meters m hoda';
+  }
+
+  @override
+  String mapSheetNow(String start, String end) {
+    return 'Sada · $start–$end';
+  }
+
+  @override
+  String mapSheetNext(String start) {
+    return 'Sledeće · $start';
+  }
+
+  @override
+  String get mapSheetStartRoute => 'Kreni';
+
+  @override
+  String get mapSheetOpenEcho => 'Otvori Echo';
+
+  @override
   String get profileYourName => 'Tvoje ime';
 
   @override
