@@ -38,7 +38,7 @@ All demo flows run in `mobile/app` against all real backends, with demo fallback
 
 ## In flight
 
-- **R-2** (verifier, Sonnet medium): rebuild + reinstall the recording APK, then check that the map shows the whole plan with the dot and that Find has no "Ilija"/"Dev Tester". After it: tell eho-f7 it's ready, and wait for "record".
+- Nothing running. R-2 is done and the Galaxy is **ready to record**. Waiting for the human's "record", then start the Echo replay.
 
 ## Next up
 

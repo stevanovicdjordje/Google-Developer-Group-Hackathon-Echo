@@ -26,6 +26,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| R-2 | Recording APK rebuilt with eho_maps first view (mobile#22) after Find `RESET=1` seed: map shows whole plan + dot, nothing under chips; Find only demo attendees; phone `pm clear`ed, location granted. Ready to record (Echo replay at "record") | ops |
 | R-1 | Recording build on the Galaxy: release APK (`flutter build apk --release --dart-define=EMULATOR_HOST=0.0.0.0 --dart-define=DEMO_EVENT_ID=devfest --dart-define=DEMO_LOCATION=44.799820,20.400025`), main manifest INTERNET + cleartext only to local hosts; checked join (Sava Centar), live agenda, map dot, Find server people; `pm clear` → fresh Start. Leftover Find test profiles → mobile#23 | `df7d605` |
 | M-63 | Resumed review keeps "Extracted from N files" (count persisted with the draft id); file sizes 1.1 KB / 12 KB / 2.3 MB (`fileSizeLabel`). Follow-up option: parse server `Draft.sourceFiles` into `EventDraft` (models.dart). 232 tests | `cbad4c2` |
 | V-8 | Galaxy, live `devfest`: PASS M-56, M-55, M-57 (dot on open, no prompt), M-45+M-60 (connected + spot survive restart), M-52+M-55+M-61 (flags, resume after restart, Publish anyway dialog, published). M-58 spinner not observable (join <1.2 s). Found: resumed review lacks "Extracted from N files" + CSV "2 KB" (→ M-63), map first view too close / Sala A label under chips / glyph under dot (→ mobile#22), debug banner (→ R-1). Events + Find re-seeded after | verification |
