@@ -24,6 +24,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| M-52 | dev | 2026-10-11 07:07 | worktree | Events draft `issues` → review flags (by sessionId + general "To check" block), publish `warnings` on published screen; files: models.dart, events_api_repository.dart, repositories.dart (demo organizer), organizer_screens.dart, ARB. M-45 waits (repositories.dart) |
 
 ## Done
 
