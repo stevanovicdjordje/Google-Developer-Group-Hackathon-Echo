@@ -21,6 +21,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| M-64 | opus | 13:58 | worktree | **Speaker mode** (`team-live-stt`): mic → on-device STT → Echo live-ingest (mobile#24 sketch, behind a repository with demo fallback), partial text + level, top Q&A for the presenter, keep screen on. Holds pubspec, router, repositories, AndroidManifest, iOS Info.plist |
+| M-65 | dev | 13:58 | worktree | **Wi-Fi build profile** (`team-live-stt` §4): `scripts/phone_wifi.sh` (LAN IP → all base URLs + `EMULATOR_HOST`, starts `lan_forward.py` for 8081/9099/9199), release cleartext to the LAN IP, APP_GUIDE *Run on phones*. No device install |
 
 ## Done
 
