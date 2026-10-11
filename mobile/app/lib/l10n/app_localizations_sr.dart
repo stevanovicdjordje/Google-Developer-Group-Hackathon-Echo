@@ -196,9 +196,27 @@ class AppLocalizationsSr extends AppLocalizations {
   }
 
   @override
-  String joinLoadError(String error) {
-    return 'Događaj nije učitan: $error';
-  }
+  String get joinErrorNotFoundTitle => 'Ovaj događaj još nije dostupan';
+
+  @override
+  String get joinErrorNotFoundBody =>
+      'Proveri link koji si otvorio/la ili zamoli organizatora da ga ponovo podeli. Događaj možda još nije objavljen.';
+
+  @override
+  String get joinErrorOfflineTitle => 'Eho trenutno nije dostupan';
+
+  @override
+  String get joinErrorOfflineBody => 'Proveri vezu i pokušaj ponovo.';
+
+  @override
+  String get joinErrorFailedTitle => 'Nešto nije u redu';
+
+  @override
+  String get joinErrorFailedBody =>
+      'Nismo uspeli da učitamo ovaj događaj. Pokušaj ponovo za trenutak.';
+
+  @override
+  String get joinBackToStart => 'Nazad na početak';
 
   @override
   String get joinInvited => 'Pozvani ste na';

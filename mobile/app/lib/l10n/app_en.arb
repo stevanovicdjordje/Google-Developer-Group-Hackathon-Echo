@@ -153,14 +153,13 @@
       }
     }
   },
-  "joinLoadError": "Could not load event: {error}",
-  "@joinLoadError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "joinErrorNotFoundTitle": "This event isn't available yet",
+  "joinErrorNotFoundBody": "Check the link you opened, or ask the organizer to share it again. The event may not be published yet.",
+  "joinErrorOfflineTitle": "Can't reach Eho right now",
+  "joinErrorOfflineBody": "Check your connection and try again.",
+  "joinErrorFailedTitle": "Something went wrong",
+  "joinErrorFailedBody": "We couldn't load this event. Try again in a moment.",
+  "joinBackToStart": "Back to start",
   "joinInvited": "You're invited to",
   "joinPerkAgenda": "Agenda for every stage",
   "joinPerkMap": "Venue map and directions",

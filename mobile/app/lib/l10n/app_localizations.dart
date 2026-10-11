@@ -404,11 +404,47 @@ abstract class AppLocalizations {
   /// **'Show {stage} on map'**
   String sessionShowOnMap(String stage);
 
-  /// No description provided for @joinLoadError.
+  /// No description provided for @joinErrorNotFoundTitle.
   ///
   /// In en, this message translates to:
-  /// **'Could not load event: {error}'**
-  String joinLoadError(String error);
+  /// **'This event isn\'t available yet'**
+  String get joinErrorNotFoundTitle;
+
+  /// No description provided for @joinErrorNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the link you opened, or ask the organizer to share it again. The event may not be published yet.'**
+  String get joinErrorNotFoundBody;
+
+  /// No description provided for @joinErrorOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach Eho right now'**
+  String get joinErrorOfflineTitle;
+
+  /// No description provided for @joinErrorOfflineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get joinErrorOfflineBody;
+
+  /// No description provided for @joinErrorFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get joinErrorFailedTitle;
+
+  /// No description provided for @joinErrorFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load this event. Try again in a moment.'**
+  String get joinErrorFailedBody;
+
+  /// No description provided for @joinBackToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to start'**
+  String get joinBackToStart;
 
   /// No description provided for @joinInvited.
   ///

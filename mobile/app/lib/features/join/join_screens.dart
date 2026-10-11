@@ -10,8 +10,11 @@ import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
 
+/// No automatic retries: the Join screen shows the failure and offers "Try
+/// again" itself.
 final eventSummaryProvider = FutureProvider.family<EventSummary, String>(
   (ref, id) => ref.watch(eventRepositoryProvider).getEvent(id),
+  retry: (_, _) => null,
 );
 
 /// 1-based day of the event the Agenda and My events labels show ("Day N").
@@ -70,10 +73,13 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     final eho = context.eho;
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: event.hasValue ? null : AppBar(),
+      appBar: event.hasValue || event.hasError ? null : AppBar(),
       body: event.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l10n.joinLoadError('$e'))),
+        error: (e, _) => _JoinError(
+          error: e,
+          onRetry: () => ref.invalidate(eventSummaryProvider(widget.eventId)),
+        ),
         data: (e) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -186,6 +192,117 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The Join screen when the event can't be loaded: a designed message per
+/// failure kind, "Try again" where retrying can help, and a way back.
+class _JoinError extends StatelessWidget {
+  const _JoinError({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final kind = error is EventsException
+        ? (error as EventsException).kind
+        : EventsErrorKind.failed;
+    final (icon, title, body, canRetry) = switch (kind) {
+      EventsErrorKind.notFound => (
+        Icons.event_busy,
+        l10n.joinErrorNotFoundTitle,
+        l10n.joinErrorNotFoundBody,
+        false,
+      ),
+      EventsErrorKind.offline || EventsErrorKind.rateLimited => (
+        Icons.wifi_off,
+        l10n.joinErrorOfflineTitle,
+        l10n.joinErrorOfflineBody,
+        true,
+      ),
+      _ => (
+        Icons.error_outline,
+        l10n.joinErrorFailedTitle,
+        l10n.joinErrorFailedBody,
+        true,
+      ),
+    };
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: scheme.surface,
+                  foregroundColor: scheme.onSurface,
+                ),
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                icon: const Icon(Icons.chevron_left),
+                onPressed: () =>
+                    context.canPop() ? context.pop() : context.go('/'),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(child: IconTile(icon, size: 64)),
+                    const SizedBox(height: 24),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: t.headlineSmall,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      body,
+                      textAlign: TextAlign.center,
+                      style: t.bodyLarge?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (canRetry)
+                  FilledButton(onPressed: onRetry, child: Text(l10n.retry)),
+                if (canRetry) const SizedBox(height: 8),
+                canRetry
+                    ? TextButton(
+                        onPressed: () => context.go('/'),
+                        child: Text(l10n.joinBackToStart),
+                      )
+                    : FilledButton(
+                        onPressed: () => context.go('/'),
+                        child: Text(l10n.joinBackToStart),
+                      ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

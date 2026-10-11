@@ -195,9 +195,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String joinLoadError(String error) {
-    return 'Could not load event: $error';
-  }
+  String get joinErrorNotFoundTitle => 'This event isn\'t available yet';
+
+  @override
+  String get joinErrorNotFoundBody =>
+      'Check the link you opened, or ask the organizer to share it again. The event may not be published yet.';
+
+  @override
+  String get joinErrorOfflineTitle => 'Can\'t reach Eho right now';
+
+  @override
+  String get joinErrorOfflineBody => 'Check your connection and try again.';
+
+  @override
+  String get joinErrorFailedTitle => 'Something went wrong';
+
+  @override
+  String get joinErrorFailedBody =>
+      'We couldn\'t load this event. Try again in a moment.';
+
+  @override
+  String get joinBackToStart => 'Back to start';
 
   @override
   String get joinInvited => 'You\'re invited to';
