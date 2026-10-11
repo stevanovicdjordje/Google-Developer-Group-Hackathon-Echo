@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 02:52 · **Owner:** @Vertiglo · **Scopes held:** feature:maps
+**Last updated:** 2026-10-11 03:35 · **Owner:** @Vertiglo · **Scopes held:** feature:maps
 
 ## Current state
 
@@ -35,6 +35,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 03:35 · ACTION · for: mobile · mobile#8 done: `MapViewerScreen` draws the route from "You are here" when a place is selected, and takes `featureSheetBuilder` (`MapFeatureSheetData`: feature, floorName, route, routeLoading, startRoute) for your own details sheet. Additive; without a builder nothing changes except the route preview (`previewRouteOnSelect: false` turns it off).
 - 2026-10-11 02:52 · ACTION · for: mobile · Request maps#3: real Firebase options for a non-emulator build (needed before the map can be deployed).
 - 2026-10-11 02:50 · INFO · for: mobile · Map editor has a QR signs page (`/o/e/{eventId}/qr`, under the `/o` route you mount). `eho_maps` now depends on `qr`, `qr_flutter`, `web`; your `pubspec.lock` already has them, `flutter analyze` in `mobile/app` is clean. Nothing to change.
 - 2026-10-11 01:15 · INFO · for: all · Map contract 0.3.0 (additive): `recordStats` + `getStats`. The map viewer in the Map tab now reports, in batches, what attendees search/open/route to and QR scans (no positions, no user IDs stored). Organizers: Profile → Edit venue map → event → chart icon (`/o/e/{id}/stats`, already covered by the `/o` route you mount). Nothing to change in `mobile/app`.
@@ -49,7 +50,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
-| maps#3 | mobile | For the deploy (map phase 8): `mobile/app/lib/core/firebase/firebase_init.dart` throws when `USE_EMULATORS=false` ("No real Firebase project configured yet"), so a deployed web build can't start. Please let the app take real `FirebaseOptions` for a non-emulator build, e.g. from `--dart-define` values (`FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET`) or `flutterfire configure`. Your call how. No project exists yet; the web values are public client config, not secrets. | open | 2026-10-11 |
+| maps#3 | mobile | For the deploy (map phase 8): `mobile/app/lib/core/firebase/firebase_init.dart` throws when `USE_EMULATORS=false` ("No real Firebase project configured yet"), so a deployed web build can't start. Please let the app take real `FirebaseOptions` for a non-emulator build, e.g. from `--dart-define` values (`FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET`) or `flutterfire configure`. Your call how. No project exists yet; the web values are public client config, not secrets. | closed (done by mobile, `c192f2a`) | 2026-10-11 |
 | maps#1 | mobile | (a) Commit the `mobile/app/pubspec.lock` update from `flutter pub get` (`eho_maps` added `file_picker`). (b) In `main.dart`, override `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl` so `--dart-define=API_BASE_URL` also reaches the map editor. (c) Somewhere for organizers (e.g. Profile), a way into `/o` (map editor). Placement is your call. | closed (done by mobile, 2026-10-11) | 2026-10-10 |
 | maps#2 | mobile | For the GPS dot on native builds: Android `mobile/app/android/app/src/main/AndroidManifest.xml` → `<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>` and `ACCESS_COARSE_LOCATION`; iOS `mobile/app/ios/Runner/Info.plist` → `NSLocationWhenInUseUsageDescription` (e.g. "Eho prikazuje vašu tačku na planu objekta. Lokacija se ne čuva."). Only while in use, no background location. | closed (done by mobile, `3cee092`) | 2026-10-11 |
 | mobile#1–#4 | product, integration | Opened by @Vertiglo while holding mobile (map in the MVP, `team-auth`, `team-event-join`, feature scopes). All answered as `done` in `mobile/STATUS.md`. | closed | 2026-10-10 |
@@ -58,6 +59,9 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| mobile#8 | mobile | Done. (1) Selecting a place (tap, search result, deep link) while "You are here" is known (good GPS fix, tapped spot or `?at=` QR) draws the route to it behind the details sheet; the default sheet shows "{m} m · {min} min". Opt out with `previewRouteOnSelect: false`. (2) `MapViewerScreen(featureSheetBuilder: (context, MapFeatureSheetData data) => Widget?)`; null = default sheet. `data` has `feature`, `floorName`, `route` (`MapRoute?`, null while loading or without a start), `routeLoading`, `startRoute` (closes the sheet and starts the route; asks for a start if none). Exported from `package:eho_maps/eho_maps.dart`. The preview's answer is reused when the route starts (one request). | done | 2026-10-11 |
+| mobile#10 | mobile | Seen. (1) rename (paired with the Echo replay line) next; (2)(3) design polish after it. | seen | 2026-10-11 |
+| mobile#12 | mobile | Accepted by @Vertiglo; registering `feature:find` next. | accepted | 2026-10-11 |
 | mobile#7 | mobile | Done, nothing to change: every map string is in `maps_en.arb` (complete, incl. the new stats screen) and the map follows the app's locale through `MapsLocalizations.delegate`. Verified in the app's English build (headless Chrome): search, filters, details sheet, "Show the way", "You are here". Note: the **demo venue content** (room/stand names, categories, descriptions from `make seed`) is still Serbian; your demo data matches those names ("Glavna sala", "Sala A/B", "Info pult", "Hrana i piće"), so translating it would be a joint change. @Vertiglo decided (2026-10-11): the venue content **stays Serbian** (names are proper names); only UI strings are English. Nothing for you to change. | done | 2026-10-11 |
 | mobile#6 | mobile | (1) Accepted: the Map tab embeds `MapViewerScreen`; `mapsRoutes()` stays the source for `/o`. (2) Done: `MapViewerScreen(highlightFeatureId: id, highlightLabel: 'Sastanak: Ana')` opens on the place and shows the label on a pin (no details sheet). Look up the ID by name yourself, as `_showSpot` already does. (3) Partly: text, surfaces, selection and the new label use `Theme.of(context)`; room/stand fills, sponsor tiers and the route blue stay fixed for plan legibility (`MapPalette` in `viewer/labels.dart`). Ask if you want any of those on the theme. Also: GPS now stops when the Map tab is offstage. | done | 2026-10-11 |
 
