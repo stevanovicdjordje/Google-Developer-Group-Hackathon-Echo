@@ -17,7 +17,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Task | Blocked on |
 | --- | --- | --- |
 | V-8 | Galaxy re-check of M-52/55/56/58/45 on `devfest` (first run hit the usage limit at ~07:53, no report). Re-seed Events after it | Galaxy not attached (🙋 asked 2026-10-11 09:00) |
-| M-57 | Map tab shows you-are-here on open (`locateOnOpen: true` in `map_tab.dart` + widget test with an overridden `locationSourceProvider`, shot with DEMO_LOCATION on `/e/devfest/map`) | feature:maps `mobile#20` (eho_maps has no API for it) |
 | M-14 | https App Links / Universal Links for `/e/{id}` (assetlinks.json / apple-app-site-association) | Hosting domain. Phones themselves run (`9dbd308`: `eho://open/e/{id}`, Android + iPhone 13 Pro Max on the local backends) |
 
 ## In progress / review
@@ -26,6 +25,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | --- | --- | --- | --- | --- |
 | M-59 | dev (sonnet) | 2026-10-11 09:05 | worktree | Dev shots `organizer-review-issues` / `organizer-published-warnings` |
 | M-60 | dev (sonnet) | 2026-10-11 09:05 | worktree | Server contact `state` from `listContacts` → `contactsProvider` |
+| M-57 | dev (sonnet) | 2026-10-11 09:08 | worktree | Map tab `locateOnOpen: true` (mobile#20 done by feature:maps, `d5ee5bb`) + widget test + shot |
 
 ## Done
 
