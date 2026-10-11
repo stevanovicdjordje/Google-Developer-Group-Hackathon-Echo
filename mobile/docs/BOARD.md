@@ -23,13 +23,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-46 | dev | session 4 | worktree | Status bar style + onboarding keyboard |
 | M-13 | opus | session 4 | worktree | Events API 0.1.0 with demo fallback |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-46 | Status bar: transparent app-wide, dark icons (`ehoStatusBarOnLight`), light over ink headers (Join, organizer published) via `AnnotatedRegion(ehoStatusBarOnDark)`, edge-to-edge; onboarding keeps the focused + next field above Continue with the keyboard. Needs a device re-check | `78e4bc6` |
 | M-49 | Sheets over the bottom nav (`useRootNavigator`), Android back on Map/Find/Profile → Agenda | `f26e2ce` |
 | M-48 | Echo translate: ended talks say "Translated from English", chrome + placeholder stay English (default call: UI English, content translated), title wraps to 2 lines; `language=sr` already sent | `5dfc90c` |
 | M-47 | Person footer by contact state ("You're connected…"), spot sheet title + safe area, Find search no autofocus. Chips were already the person's own interests (seed overlap) | `4cdd3a5` |

@@ -163,3 +163,7 @@ Start the backends on the Mac first (`backend/maps/scripts/dev.sh`, `backend/ech
 - **Deep links:** `eho://open/e/<id>` opens the installed app on both platforms (`adb shell am start -a android.intent.action.VIEW -d "eho://open/e/<id>"`, or paste in Safari). https links for `/e/<id>` need a hosting domain (board M-14).
 - **Integration tests on a device:** `app/integration_test/flow_*_it_test.dart` wrap the `test/flows/` widget flows (demo data). Keep the phone awake and unlocked (`adb shell svc power stayon usb; adb shell input keyevent KEYCODE_WAKEUP`, else the run hangs at "did not complete"), then `cd app && flutter test integration_test -d <serial> --dart-define=USE_ECHO_API=false --dart-define=USE_FIND_API=false`.
 - **GPS:** the seeded venue is georeferenced at a fictional spot (44.8000, 20.4000), so a real GPS dot lands off the plan anywhere else. Use `DEMO_LOCATION` (above) or the QR "you are here" (`?at=<markerId>`).
+
+## Status bar
+
+Two styles in `core/theme.dart`: `ehoStatusBarOnLight` (app-wide default via `app.dart` and `AppBarTheme`) and `ehoStatusBarOnDark`. A screen with a dark (ink) header wraps that header in `AnnotatedRegion<SystemUiOverlayStyle>(value: ehoStatusBarOnDark)`. The app runs edge-to-edge (`main.dart`).
