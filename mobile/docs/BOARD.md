@@ -10,6 +10,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
+| M-45 | (Low) Read the other person's meeting spot back: `listContacts`/`Contact.meetingSpot` → Messages spot card (`FindApiRepository.parseMeetingSpot` exists) | M | dev | `data/find_api_repository.dart`, `repositories.dart`, `app_state.dart` | Only matters with two real users; demo person auto-accepts |
 | M-34 | (Likely superseded by `mobile#16` stable event id — prefer that.) Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 
 ## Blocked
@@ -23,13 +24,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-43 | dev | 2026-10-11 session 4 | worktree | find 0.2.0 meeting `time` |
 | V-6 | verifier (sonnet, medium) | 2026-10-11 session 4 | — (Galaxy) | Real-device visual pass vs design |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-43 | Find 0.2.0: `setMeetingSpot(…, {time})` sends "HH:mm" and returns the stored place/time (server wins); `parseMeetingSpot` ready for reading `Contact.meetingSpot` | `748f986` |
 | M-44 | `DEMO_LOCATION` pretend GPS: `phone_android.sh` and `shots.sh` forward the env var; APP_GUIDE *Run on phones* + README | `4a3abcc` |
 | M-41/42 | `mobile/scripts/phone_android.sh` (adb reverse, `fwd6.py` IPv6→IPv4 for emulators, `EMULATOR_HOST=0.0.0.0`) verified on the Galaxy; onboarding unfocuses the keyboard between steps | `c726924` |
 | V-5 | Galaxy A55: integration_test of all 5 flows pass (`integration_test/`, keep screen on: `adb shell svc power stayon usb`); live smoke OK (Echo ask ~3 s, translate progressive 4–8 s, stage sheet + route, Find server people, contact auto-accept, meeting spot). Found: Android emulator host + IPv6 `adb reverse` (→ M-41), onboarding keyboard (→ M-42), you-are-here label clipped at plan edge (→ mobile#18), agenda s1 LIVE vs Echo ENDED (replay with `-instant`; for the video replay without it) | `8d783d2` |
