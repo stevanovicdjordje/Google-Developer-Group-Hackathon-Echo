@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/app_state.dart';
+import '../data/demo_ids.dart';
 import '../data/repositories.dart' show demoEventId;
 import '../features/agenda/agenda_screens.dart';
 import '../features/dev/dev_shot_routes.dart';
@@ -96,6 +97,7 @@ GoRouter buildRouter({String demoId = demoEventId}) => GoRouter(
                     key: ValueKey(_id(s)),
                     eventId: _id(s),
                     featureId: s.pathParameters['standId'],
+                    markerId: s.uri.queryParameters['at'],
                   ),
                 ),
               ],
@@ -143,8 +145,12 @@ GoRouter buildRouter({String demoId = demoEventId}) => GoRouter(
     ),
     GoRoute(
       path: '/e/:eventId/stand/:standId',
-      redirect: (c, s) =>
-          '/e/${_id(s)}/map/stand/${s.pathParameters['standId']}',
+      // Keeps the query: `?at=` is the "you are here" QR marker.
+      redirect: (c, s) => s.uri
+          .replace(
+            path: '/e/${_id(s)}/map/stand/${s.pathParameters['standId']}',
+          )
+          .toString(),
     ),
     GoRoute(
       path: '/e/:eventId/session/:sessionId',
@@ -172,10 +178,6 @@ GoRouter buildRouter({String demoId = demoEventId}) => GoRouter(
   ],
 );
 
-/// Event ids that mean "the demo event": the default `DEMO_EVENT_ID` and the
-/// one used before the rename (same literal as `_legacyDemoEventId` in data/).
-const _demoEventAliases = {'devfest', 'devsummit'};
-
 /// Maps `/e/{alias}/...` to `/e/{demoId}/...`, keeping the sub-path and query
 /// (e.g. `?at=`). Returns null when nothing changes, which also rules out a
 /// redirect loop when [demoId] is itself an alias (the default `devfest`).
@@ -184,8 +186,8 @@ String? demoEventRedirect(Uri uri, String demoId) {
   if (seg.length < 2 || seg[0] != 'e' || !uri.path.startsWith('/e/')) {
     return null;
   }
-  if (!_demoEventAliases.contains(seg[1]) || seg[1] == demoId) return null;
-  if (_demoEventAliases.contains(demoId)) return null;
+  if (!demoEventAliases.contains(seg[1]) || seg[1] == demoId) return null;
+  if (demoEventAliases.contains(demoId)) return null;
   // Rewrite the raw path (keeps encoding and the leading slash).
   final rest = uri.path.substring('/e/${seg[1]}'.length);
   return uri.replace(path: '/e/${Uri.encodeComponent(demoId)}$rest').toString();

@@ -1,5 +1,6 @@
 import 'package:eho/app.dart';
 import 'package:eho/core/router.dart';
+import 'package:eho_maps/eho_maps.dart' show MapViewerScreen;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -54,5 +55,39 @@ void main() {
     router.go('/e/devfest/agenda?at=m1');
     await tester.pumpAndSettle();
     expect(location(router), '/e/$real/agenda?at=m1');
+  });
+
+  testWidgets('stand link keeps ?at= as the you-are-here marker', (
+    tester,
+  ) async {
+    await tester.pumpWidget(ProviderScope(child: EhoApp()));
+    await tester.pumpAndSettle();
+    final router = GoRouter.of(tester.element(find.text('Eho')));
+    for (final link in [
+      '/e/devfest/stand/x1?at=m1',
+      '/e/devfest/map/stand/x1?at=m1',
+    ]) {
+      router.go(link);
+      await tester.pumpAndSettle();
+      expect(location(router), '/e/devfest/map/stand/x1?at=m1');
+      final map = tester.widget<MapViewerScreen>(find.byType(MapViewerScreen));
+      expect(map.initialFeatureId, 'x1');
+      expect(map.markerId, 'm1');
+      router.go('/e/devfest/agenda');
+      await tester.pumpAndSettle();
+    }
+  });
+
+  testWidgets('stand link without ?at= has no marker', (tester) async {
+    await tester.pumpWidget(ProviderScope(child: EhoApp()));
+    await tester.pumpAndSettle();
+    final router = GoRouter.of(tester.element(find.text('Eho')));
+    router.go('/e/devfest/stand/x1');
+    await tester.pumpAndSettle();
+    expect(location(router), '/e/devfest/map/stand/x1');
+    expect(
+      tester.widget<MapViewerScreen>(find.byType(MapViewerScreen)).markerId,
+      isNull,
+    );
   });
 }
