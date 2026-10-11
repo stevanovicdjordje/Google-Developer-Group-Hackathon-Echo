@@ -119,6 +119,11 @@ void main() {
     container.read(organizerDraftProvider.notifier).set(draft);
     expect(draft.sessions, isNotEmpty);
     expect(draft.sessions.any((s) => s.isBreak), isFalse);
+    // The demo extraction leaves one session without a stage (flagged row).
+    expect(
+      [for (final s in draft.sessions.where((s) => s.stage.isEmpty)) s.id],
+      [demo.organizerFlaggedSessionId],
+    );
 
     GoRouter.of(tester.element(find.text('New event'))).go('/organizer/review');
     await tester.pumpAndSettle();

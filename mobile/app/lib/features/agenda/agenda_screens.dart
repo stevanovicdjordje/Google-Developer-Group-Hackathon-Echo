@@ -59,18 +59,11 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (event != null)
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      event.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: meta,
-                                    ),
-                                  ),
-                                  Text(' · ${event.dates}', style: meta),
-                                ],
+                              Text(
+                                l10n.agendaEventDay(event.name, shownEventDay),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: meta,
                               ),
                             const SizedBox(height: 2),
                             Text(

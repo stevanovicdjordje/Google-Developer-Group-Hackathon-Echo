@@ -1,9 +1,16 @@
 import 'package:eho/data/demo_data.dart' as demo;
+import 'package:eho/data/demo_ids.dart';
 import 'package:eho/data/models.dart';
 import 'package:eho/data/repositories.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('every demo alias resolves to the demo event', () async {
+    for (final alias in demoEventAliases) {
+      expect((await DemoEventRepository().getEvent(alias)).id, demoEventId);
+    }
+  });
+
   test('legacy devsummit ID resolves to the DevFest demo event', () async {
     final e = await DemoEventRepository().getEvent('devsummit');
     expect(e.id, demoEventId);

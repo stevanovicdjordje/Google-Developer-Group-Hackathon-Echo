@@ -118,7 +118,7 @@ void main() {
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(find.text('Talk of $id'), findsOneWidget);
       expect(find.text('Talk of $other'), findsNothing);
-      expect(find.text(event.name), findsWidgets);
+      expect(find.text('${event.name} · Day 1'), findsWidgets);
 
       await tapTab('Map');
       expect(location(), startsWith('/e/$id/map'));

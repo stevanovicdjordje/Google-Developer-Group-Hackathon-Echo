@@ -13,6 +13,11 @@ final eventSummaryProvider = FutureProvider.family<EventSummary, String>(
   (ref, id) => ref.watch(eventRepositoryProvider).getEvent(id),
 );
 
+/// 1-based day of the event the Agenda and My events labels show ("Day N").
+/// `EventSummary` has no day list (`dates` is free text) and sessions carry
+/// only a time of day, so the demo's agenda is a single day: always 1.
+const shownEventDay = 1;
+
 /// The talk that is on right now at an event, if any (for the My events card).
 final _liveSessionProvider = FutureProvider.family<Session?, String>((
   ref,
@@ -718,7 +723,7 @@ class _LiveEventCard extends ConsumerWidget {
           if (live != null) ...[
             Align(
               alignment: Alignment.centerLeft,
-              child: LiveBadge(l10n.myEventsLiveDay, onDark: true),
+              child: LiveBadge(l10n.myEventsLiveDay(shownEventDay), onDark: true),
             ),
             const SizedBox(height: 12),
           ],

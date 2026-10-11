@@ -22,7 +22,6 @@ class ProfileScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final rowTitle = t.bodyLarge?.copyWith(fontSize: 16);
     final joined = ref.watch(joinedEventsProvider).length;
-    final unlocked = ref.watch(unlockedSummariesProvider).length;
 
     Widget switchRow(String title, bool value, ValueChanged<bool> onChanged) =>
         SwitchListTile(
@@ -176,7 +175,7 @@ class ProfileScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      l10n.profileUnlockedCount(unlocked),
+                      l10n.profilePremium,
                       style: t.labelMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: eho.onLiveContainer,

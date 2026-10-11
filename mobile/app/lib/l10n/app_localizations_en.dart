@@ -143,15 +143,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileTalkSummaries => 'Talk summaries';
 
   @override
-  String profileUnlockedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count unlocked',
-      one: '1 unlocked',
-    );
-    return '$_temp0';
-  }
+  String get profilePremium => 'Premium';
 
   @override
   String get profileForOrganizers => 'For organizers';
@@ -161,6 +153,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileEditVenueMap => 'Edit venue map';
+
+  @override
+  String agendaEventDay(String event, int day) {
+    return '$event · Day $day';
+  }
 
   @override
   String get agendaAllStages => 'All stages';
@@ -288,7 +285,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myEventsNow => 'Happening now';
 
   @override
-  String get myEventsLiveDay => 'Live · Day 1';
+  String myEventsLiveDay(int day) {
+    return 'Live · Day $day';
+  }
 
   @override
   String get myEventsPast => 'Past';

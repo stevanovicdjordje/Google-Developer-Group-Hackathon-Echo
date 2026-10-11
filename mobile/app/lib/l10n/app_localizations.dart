@@ -314,11 +314,11 @@ abstract class AppLocalizations {
   /// **'Talk summaries'**
   String get profileTalkSummaries;
 
-  /// No description provided for @profileUnlockedCount.
+  /// No description provided for @profilePremium.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 unlocked} other{{count} unlocked}}'**
-  String profileUnlockedCount(int count);
+  /// **'Premium'**
+  String get profilePremium;
 
   /// No description provided for @profileForOrganizers.
   ///
@@ -337,6 +337,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit venue map'**
   String get profileEditVenueMap;
+
+  /// No description provided for @agendaEventDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{event} · Day {day}'**
+  String agendaEventDay(String event, int day);
 
   /// No description provided for @agendaAllStages.
   ///
@@ -557,8 +563,8 @@ abstract class AppLocalizations {
   /// No description provided for @myEventsLiveDay.
   ///
   /// In en, this message translates to:
-  /// **'Live · Day 1'**
-  String get myEventsLiveDay;
+  /// **'Live · Day {day}'**
+  String myEventsLiveDay(int day);
 
   /// No description provided for @myEventsPast.
   ///

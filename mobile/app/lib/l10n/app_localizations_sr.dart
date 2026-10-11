@@ -144,16 +144,7 @@ class AppLocalizationsSr extends AppLocalizations {
   String get profileTalkSummaries => 'Rezimei predavanja';
 
   @override
-  String profileUnlockedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count otključanih',
-      few: '$count otključana',
-      one: '$count otključan',
-    );
-    return '$_temp0';
-  }
+  String get profilePremium => 'Premium';
 
   @override
   String get profileForOrganizers => 'Za organizatore';
@@ -163,6 +154,11 @@ class AppLocalizationsSr extends AppLocalizations {
 
   @override
   String get profileEditVenueMap => 'Uredi mapu prostora';
+
+  @override
+  String agendaEventDay(String event, int day) {
+    return '$event · Dan $day';
+  }
 
   @override
   String get agendaAllStages => 'Sve bine';
@@ -292,7 +288,9 @@ class AppLocalizationsSr extends AppLocalizations {
   String get myEventsNow => 'Trenutno aktivni';
 
   @override
-  String get myEventsLiveDay => 'Uživo · Dan 1';
+  String myEventsLiveDay(int day) {
+    return 'Uživo · Dan $day';
+  }
 
   @override
   String get myEventsPast => 'Prošli';
