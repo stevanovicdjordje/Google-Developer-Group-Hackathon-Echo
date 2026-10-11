@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 05:02 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 07:02 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -45,7 +45,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 | echo 0.3.1 (no model name shown in the app): transcript (Firestore), `getCatchUp`, `ask`, `listQuestions`, `submitQuestion`, vote/unvote, `getSummary` (0.3.0 structured `summary`), `translateTranscript`, `mergedCount`/merged submit, `language` on catch-up/ask/summary | verified e2e (transcript, catch-up, questions in the app; ask/translate/submit/unvote via curl; UI paths by widget tests) |
 | maps: `getRoute`, `/o` editor | verified e2e (via `eho_maps`) |
 | find 0.2.0: `putMyProfile` (after onboarding, consents as set), `joinFind`, `getRecommendations`, `searchPeople`, `getPerson`, `requestContact`, `putMeetingSpot` (with 0.2.0 `time` "HH:mm"), `findHealthz` (`USE_FIND_API`, `FIND_API_BASE_URL` default `http://localhost:8083`; demo fallback when healthz fails) | on fixtures (contract examples, mapping tests); not e2e yet, service not running. Not used yet: `getMyProfile`, `deleteMyProfile` (no UI), `leaveFind`, `listContacts`, `acceptContact`, `deleteMeetingSpot` |
-| API-1…3, API-12…14 (join, agenda, organizer; `docs/api-needs.md`) | on demo data (no backend owner) |
+| events 0.1.0: `getPublicEvent`, `joinEvent`, `leaveEvent`, `listMyEvents`, `getAgenda`, `createDraft` (multipart with bytes), `updateDraft`, `publishDraft` (into `DEMO_EVENT_ID`, default `devfest`), `eventsHealthz` (`USE_EVENTS_API`, `EVENTS_API_BASE_URL` default `http://localhost:8084`; demo fallback when healthz fails or a demo id 404s; organizer = `/o` account, or `organizer@eho.test` on emulator builds) | on fixtures (mapping tests on all examples); e2e pending local restart. Not used yet: `getDraft`, draft `issues`, publish `warnings`, `hasMap`/`hasAgenda` |
 
 ## Announcements (newest first)
 
