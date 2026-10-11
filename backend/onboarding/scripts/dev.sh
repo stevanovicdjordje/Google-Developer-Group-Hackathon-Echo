@@ -29,5 +29,5 @@ if ! curl -sf "http://$FIRESTORE_EMULATOR_HOST/" >/dev/null; then
 fi
 
 cd "$HERE"
-echo "onboarding web app: ${EHO_BASE_URL:-http://localhost:8090}  (Firebase emulator UI: http://localhost:4000)"
+echo "onboarding web app: ${EHO_BASE_URL:-http://localhost:8085}  (Firebase emulator UI: http://localhost:4000)"
 go run ./cmd/eho-web

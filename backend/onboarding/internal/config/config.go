@@ -13,6 +13,8 @@ type Config struct {
 	MapsAPIKey   string
 	// Timezone is used to display and enter event times (stored as UTC).
 	Timezone string
+	// Lang is the UI language: en (default, product-ui-language) or sr.
+	Lang string
 
 	// Firebase. The Admin SDKs honor FIRESTORE_EMULATOR_HOST,
 	// FIREBASE_AUTH_EMULATOR_HOST and STORAGE_EMULATOR_HOST themselves.
@@ -27,9 +29,10 @@ type Config struct {
 
 func Load() Config {
 	c := Config{
-		Port:          env("PORT", "8090"),
+		Port:          env("PORT", "8085"),
 		CookieSecure:  envBool("EHO_COOKIE_SECURE", false),
-		BaseURL:       env("EHO_BASE_URL", "http://localhost:8090"),
+		BaseURL:       env("EHO_BASE_URL", "http://localhost:8085"),
+		Lang:          env("EHO_LANG", "en"),
 		MapsAPIKey:    os.Getenv("GOOGLE_MAPS_API_KEY"),
 		Timezone:      env("EHO_TIMEZONE", "Europe/Belgrade"),
 		ProjectID:     env("FIREBASE_PROJECT_ID", "demo-eho"),

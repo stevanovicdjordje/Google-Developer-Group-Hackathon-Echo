@@ -3,13 +3,17 @@ package app_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Ilij4n/eho/backend/onboarding/internal/app"
+	"github.com/Ilij4n/eho/backend/onboarding/internal/config"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/events"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/invitations"
+	"github.com/Ilij4n/eho/backend/onboarding/internal/reviews"
 )
 
 func completeOnboarding(c *client) {
@@ -272,4 +276,44 @@ func TestEventListSearchAndEmptyState(t *testing.T) {
 	}
 	_, body = org.get("/org/events?status=finished")
 	mustContain(t, body, "Nema eventova koji odgovaraju pretrazi")
+}
+
+func TestReportInEnglish(t *testing.T) {
+	deps := app.MemDeps()
+	h, err := app.New(config.Config{Timezone: "UTC", Lang: "en"}, deps)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+	ctx := context.Background()
+
+	org := newClient(t, srv)
+	res, _ := org.post("/register/organizer", "/register/organizer", url.Values{
+		"full_name": {"Ana Anić"}, "email": {"org@example.com"}, "org_name": {"GDG Belgrade"},
+		"password": {"password123"}, "password_confirm": {"password123"},
+	})
+	expect(t, res, http.StatusSeeOther, "/org/events")
+	res, _ = org.post("/org/events/new", "/org/events/new", url.Values{"title": {"DevFest Belgrade 2026"}, "action": {"draft"}})
+	expect(t, res, http.StatusSeeOther, "/org/events?ok=saved")
+
+	// Make it a finished event with one session and one review.
+	repo := deps.Events.(*events.MemRepo)
+	ev := repo.ListAll()[0]
+	start, end := time.Now().UTC().Add(-48*time.Hour), time.Now().UTC().Add(-40*time.Hour)
+	ev.StartsAt, ev.EndsAt, ev.PublishedAt = &start, &end, &start
+	repo.Update(ctx, ev)
+	var a events.Agenda
+	a.Add(events.Session{Title: "On-device AI", Stage: "Glavna sala", StartsAt: start.Add(time.Hour), EndsAt: start.Add(2 * time.Hour)}, time.UTC)
+	repo.SaveAgenda(ctx, ev.ID, a)
+	deps.Reviews.Save(ctx, reviews.WithAuthor{Review: reviews.Review{ID: "u1", EventID: ev.ID, UserID: "u1", Rating: 4,
+		Comment: "Great talks", SessionRatings: map[string]int{a.Sessions[0].ID: 5}, UpdatedAt: end}, AuthorName: "Mara"})
+
+	res, body := org.get("/org/events/" + ev.ID + "/report")
+	expect(t, res, http.StatusOK, "")
+	mustContain(t, body, `<html lang="en">`, "Overall impression", "4.0", "Good: most attendees", "Best-rated session",
+		"not AI", "Ratings per session", "Export CSV")
+	if strings.Contains(body, "Ukupan utisak") {
+		t.Error("Serbian text on the English report")
+	}
 }

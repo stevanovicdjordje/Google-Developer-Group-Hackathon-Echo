@@ -2,6 +2,11 @@ package i18n
 
 // sr is the Serbian (Latin script) catalog.
 var sr = map[string]string{
+	// formats
+	"fmt.datetime": "02.01.2006. 15:04",
+	"fmt.date":     "02.01.2006.",
+	"fmt.decimal":  ",",
+
 	// navigation / generic
 	"nav.logout":     "Odjavi se",
 	"nav.login":      "Prijava",
@@ -69,7 +74,7 @@ var sr = map[string]string{
 	"err.email":             "Unesite ispravnu email adresu.",
 	"err.email_taken":       "Nalog sa ovom email adresom već postoji.",
 	"err.password_short":    "Lozinka mora imati najmanje 8 karaktera.",
-	"err.password_long":     "Lozinka može imati najviše 72 karaktera.",
+	"err.password_long":     "Lozinka može imati najviše 128 karaktera.",
 	"err.password_mismatch": "Lozinke se ne poklapaju.",
 	"err.website":           "Unesite ispravnu adresu sajta (http:// ili https://).",
 	"err.credentials":       "Pogrešan email ili lozinka.",
@@ -322,7 +327,7 @@ var sr = map[string]string{
 	"report.liked":           "Šta se dopalo",
 	"report.disliked":        "Šta se nije dopalo",
 	"report.recommendations": "Preporuke",
-	"report.summary_note":    "Rezime je napravljen automatski iz ocena i komentara.",
+	"report.summary_note":    "Rezime je statistički, napravljen automatski iz ocena i učestalosti reči u komentarima (nije AI).",
 	"report.turnout":         "Odziv",
 	"report.declined":        "Odbilo",
 	"report.no_answer":       "Bez odgovora",

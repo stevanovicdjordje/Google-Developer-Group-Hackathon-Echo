@@ -74,8 +74,9 @@ func Funcs(bundle *i18n.Bundle, loc *time.Location) template.FuncMap {
 			}
 			return out
 		},
-		"date":  format("02.01.2006. 15:04"),
-		"day":   format("02.01.2006."),
+		"date":  format(bundle.T("fmt.datetime")),
+		"day":   format(bundle.T("fmt.date")),
+		"lang":  bundle.Lang,
 		"clock": format("15:04"),
 		"weekday": func(v any) string {
 			t, ok := asTime(v)
@@ -91,7 +92,7 @@ func Funcs(bundle *i18n.Bundle, loc *time.Location) template.FuncMap {
 			}
 			return t.In(loc).Format("2006-01-02T15:04")
 		},
-		"rating": FormatRating,
+		"rating": bundle.Rating,
 		"pct":    func(f float64) string { return fmt.Sprintf("%.0f%%", f*100) },
 		"num":    func(f float64) string { return fmt.Sprintf("%.2f", f) },
 		"coord": func(p *float64) string {
@@ -110,11 +111,6 @@ func Funcs(bundle *i18n.Bundle, loc *time.Location) template.FuncMap {
 		},
 		"float": func(i int) float64 { return float64(i) },
 	}
-}
-
-// FormatRating renders an average like "4,3" (Serbian decimal comma).
-func FormatRating(f float64) string {
-	return strings.Replace(fmt.Sprintf("%.1f", f), ".", ",", 1)
 }
 
 // NewRenderer parses every page under templates/ together with the layout and partials.

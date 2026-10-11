@@ -118,7 +118,7 @@ func New(cfg config.Config, d Deps) (http.Handler, error) {
 		d.Mail = mail.LogSender{}
 	}
 	loc := Location(cfg)
-	bundle := i18n.New("sr")
+	bundle := i18n.New(cfg.Lang)
 	view, err := httpx.NewRenderer(webassets.FS, bundle, loc)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func New(cfg config.Config, d Deps) (http.Handler, error) {
 
 	(&reports.Handlers{
 		Access: access, Invitations: d.Invitations, Reviews: d.Reviews,
-		Summarizer: reports.StatSummarizer{T: bundle.T}, Loc: loc, Now: d.Now,
+		Summarizer: reports.StatSummarizer{T: bundle.T, Rating: bundle.Rating}, Loc: loc, Now: d.Now,
 	}).Register(mux, organizerOnly)
 
 	var h http.Handler = mux

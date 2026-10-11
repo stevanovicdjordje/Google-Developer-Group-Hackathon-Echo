@@ -124,7 +124,8 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		h.Set("Referrer-Policy", "same-origin")
 		// No scripts at all. The Maps embed is an iframe from google.com.
 		h.Set("Content-Security-Policy",
-			"default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; "+
+			"default-src 'self'; img-src 'self' data:; style-src 'self' https://fonts.googleapis.com; "+
+				"font-src https://fonts.gstatic.com; script-src 'none'; "+
 				"frame-src https://www.google.com; frame-ancestors 'none'; form-action 'self'; base-uri 'self'")
 		next.ServeHTTP(w, r)
 	})

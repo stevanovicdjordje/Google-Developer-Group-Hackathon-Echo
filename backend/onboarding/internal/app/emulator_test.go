@@ -28,7 +28,7 @@ func TestAgainstEmulators(t *testing.T) {
 	}
 	ctx := context.Background()
 	cfg := config.Load()
-	cfg.BaseURL, cfg.AppURL = "http://eho.test", "http://app.test"
+	cfg.BaseURL, cfg.AppURL, cfg.Lang = "http://eho.test", "http://app.test", "sr"
 	clients, err := fb.New(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)

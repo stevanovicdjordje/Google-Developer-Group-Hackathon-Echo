@@ -14,6 +14,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"math/rand/v2"
@@ -39,6 +41,10 @@ const (
 	summitID     = "onb-summit"
 	startupID    = "onb-startup"
 	devfestID    = "devfest"
+	// reportID is a finished copy of DevFest for the post-event report in the
+	// demo video (team-post-event-report): same sessions as the devfest
+	// agenda, held yesterday, with fake reviews.
+	reportID = "devfest-report"
 )
 
 var names = []string{
@@ -49,6 +55,8 @@ var names = []string{
 }
 
 func main() {
+	agendaPath := flag.String("agenda", "../events/cmd/seed/agenda.json", "the devfest demo agenda (backend/events)")
+	flag.Parse()
 	if os.Getenv("FIRESTORE_EMULATOR_HOST") == "" || os.Getenv("FIREBASE_AUTH_EMULATOR_HOST") == "" {
 		log.Fatal("seed works only against the Firebase emulators (set FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST, or use scripts/dev.sh)")
 	}
@@ -60,7 +68,7 @@ func main() {
 	}
 	defer c.Close()
 	loc := app.Location(cfg)
-	s := &seeder{cfg: cfg, c: c, loc: loc, rnd: rand.New(rand.NewPCG(2026, 10)), now: time.Now().UTC(),
+	s := &seeder{cfg: cfg, agendaPath: *agendaPath, c: c, loc: loc, rnd: rand.New(rand.NewPCG(2026, 10)), now: time.Now().UTC(),
 		users: users.NewFirestoreRepo(c.Firestore), events: events.NewFirestoreRepo(c.Firestore, loc),
 		invs: invitations.NewFirestoreRepo(c.Firestore), reviews: reviews.NewFirestoreRepo(c.Firestore)}
 	if err := s.run(ctx); err != nil {
@@ -69,15 +77,16 @@ func main() {
 }
 
 type seeder struct {
-	cfg     config.Config
-	c       *fb.Clients
-	loc     *time.Location
-	rnd     *rand.Rand
-	now     time.Time
-	users   *users.FirestoreRepo
-	events  *events.FirestoreRepo
-	invs    *invitations.FirestoreRepo
-	reviews *reviews.FirestoreRepo
+	cfg        config.Config
+	agendaPath string
+	c          *fb.Clients
+	loc        *time.Location
+	rnd        *rand.Rand
+	now        time.Time
+	users      *users.FirestoreRepo
+	events     *events.FirestoreRepo
+	invs       *invitations.FirestoreRepo
+	reviews    *reviews.FirestoreRepo
 
 	orgUID       string
 	participants []participant
@@ -112,7 +121,7 @@ func (s *seeder) run(ctx context.Context) error {
 	if err := s.seedParticipants(ctx); err != nil {
 		return err
 	}
-	for _, evID := range []string{summitID, startupID, devfestID} {
+	for _, evID := range []string{summitID, startupID, devfestID, reportID} {
 		if err := s.clear(ctx, evID); err != nil {
 			return err
 		}
@@ -129,7 +138,7 @@ func (s *seeder) run(ctx context.Context) error {
 	if err := s.invite(ctx, summitID, 0, 20, 16, 3); err != nil {
 		return err
 	}
-	if err := s.seedReviews(ctx, summitID, 13); err != nil {
+	if err := s.seedReviews(ctx, summitID, srStyle); err != nil {
 		return err
 	}
 
@@ -140,6 +149,10 @@ func (s *seeder) run(ctx context.Context) error {
 		return err
 	}
 	if err := s.invite(ctx, startupID, 0, 12, 6, 1); err != nil {
+		return err
+	}
+
+	if err := s.seedDevfestReport(ctx, today.AddDate(0, 0, -1)); err != nil {
 		return err
 	}
 
@@ -155,10 +168,11 @@ func (s *seeder) run(ctx context.Context) error {
 
   Organizer:    %s / %s   (same account as the map editor demo)
   Participants: ucesnik01@eho.test … ucesnik20@eho.test / %s
-  Events:       %q (finished, 13 reviews), %q (upcoming), %s
+  Events:       %q (finished yesterday, %s: report for the demo video),
+                %q (finished, 13 reviews), %q (upcoming), %s
 
 Open %s
-`, s.cfg.ProjectID, orgEmail, demoPassword, demoPassword, "Eho Dev Summit 2026", "Startap vikend Novi Sad", devfestNote, s.cfg.BaseURL)
+`, s.cfg.ProjectID, orgEmail, demoPassword, demoPassword, "DevFest Belgrade 2026", reportID, "Eho Dev Summit 2026", "Startap vikend Novi Sad", devfestNote, s.cfg.BaseURL)
 	return nil
 }
 
@@ -307,26 +321,95 @@ func (s *seeder) invite(ctx context.Context, evID string, from, to, accepted, de
 	return nil
 }
 
-var positive = []string{
-	"Odlična organizacija, sve je teklo po satnici.",
-	"Keynote je bio inspirativan, a govornici odlično pripremljeni.",
-	"Sjajna atmosfera i odlični govornici. Networking je bio koristan.",
-	"Titlovi uživo su mi mnogo pomogli, odlična organizacija!",
-	"Radionica je bila praktična i korisna, sledeće godine opet dolazim.",
+// reviewStyle is the fake feedback of one event.
+type reviewStyle struct {
+	ratings                     []int // overall rating per reviewer, in order
+	positive, negative, neutral []string
+	weak, strong                string // session titles rated lower / higher
 }
 
-var negative = []string{
-	"Sala je bila pretrpana, a ozvučenje loše.",
-	"Panel je trajao predugo i bio je dosadan, ozvučenje loše.",
-	"Kašnjenje na početku i premalo hrane za pauzu.",
+var srStyle = reviewStyle{
+	ratings: []int{5, 4, 5, 4, 2, 5, 4, 3, 5, 4, 1, 4, 5},
+	positive: []string{
+		"Odlična organizacija, sve je teklo po satnici.",
+		"Keynote je bio inspirativan, a govornici odlično pripremljeni.",
+		"Sjajna atmosfera i odlični govornici. Networking je bio koristan.",
+		"Titlovi uživo su mi mnogo pomogli, odlična organizacija!",
+		"Radionica je bila praktična i korisna, sledeće godine opet dolazim.",
+	},
+	negative: []string{
+		"Sala je bila pretrpana, a ozvučenje loše.",
+		"Panel je trajao predugo i bio je dosadan, ozvučenje loše.",
+		"Kašnjenje na početku i premalo hrane za pauzu.",
+	},
+	neutral: []string{"Solidno, ali neka predavanja su bila previše uvodna.", ""},
+	weak:    "Panel: AI i privatnost",
+	strong:  "Otvaranje i keynote: Budućnost eventa",
 }
 
-var neutral = []string{
-	"Solidno, ali neka predavanja su bila previše uvodna.",
-	"",
+var enStyle = reviewStyle{
+	ratings: []int{5, 4, 5, 4, 5, 3, 4, 5, 2, 4, 5, 4, 3, 5, 4},
+	positive: []string{
+		"Great speakers and a really smooth schedule. The keynote on on-device AI was the highlight.",
+		"Loved the keynote, very practical. Live captions helped a lot in the big room.",
+		"Well organized, great speakers, and finding rooms with the map was easy.",
+		"The design workshop was hands-on and fun. Great speakers overall.",
+		"Smooth check-in and great coffee. Learned a lot about backend costs.",
+	},
+	negative: []string{
+		"The panel ran too long and the room was crowded; hard to hear in the back.",
+		"Lunch queue was too long and the panel felt like a sales pitch.",
+		"Sala B was crowded during the workshop, not enough seats.",
+	},
+	neutral: []string{"Good event overall, but some talks were too introductory.", ""},
+	weak:    "From prototype to paying customers with LLMs",
+	strong:  "On-device AI: when the model lives in your pocket",
 }
 
-func (s *seeder) seedReviews(ctx context.Context, evID string, n int) error {
+// seedDevfestReport creates the finished DevFest copy from the devfest agenda
+// of backend/events, invites 20 participants and adds 15 reviews.
+func (s *seeder) seedDevfestReport(ctx context.Context, day time.Time) error {
+	raw, err := os.ReadFile(s.agendaPath)
+	if err != nil {
+		return fmt.Errorf("read devfest agenda (run from backend/onboarding or pass -agenda): %w", err)
+	}
+	var a events.Agenda
+	if err := json.Unmarshal(raw, &a); err != nil {
+		return fmt.Errorf("decode %s: %w", s.agendaPath, err)
+	}
+	// Same sessions (IDs, titles, rooms, speakers), moved to `day`.
+	first, last := "23:59", "00:00"
+	for i := range a.Sessions {
+		a.Sessions[i].Day = day.Format("2006-01-02")
+		first, last = min(first, a.Sessions[i].Start), max(last, a.Sessions[i].End)
+	}
+	start, err1 := time.ParseInLocation("2006-01-02 15:04", day.Format("2006-01-02")+" "+first, s.loc)
+	end, err2 := time.ParseInLocation("2006-01-02 15:04", day.Format("2006-01-02")+" "+last, s.loc)
+	if err1 != nil || err2 != nil || len(a.Sessions) == 0 {
+		return fmt.Errorf("devfest agenda has no usable sessions")
+	}
+	end = end.Add(30 * time.Minute) // closing drinks
+	created := s.now.Add(-30 * 24 * time.Hour)
+	st, en := start.UTC(), end.UTC()
+	lat, lng := 44.7866, 20.4489
+	ev := events.Event{ID: reportID, OwnerUID: s.orgUID, Title: "DevFest Belgrade 2026",
+		Description: "Community conference on AI, backend, mobile and design. Demo copy of the event, after it ended.",
+		Address:     "Demo hala, Beograd", StartsAt: &st, EndsAt: &en, Lat: &lat, Lng: &lng,
+		PublishedAt: &created, CreatedAt: created, UpdatedAt: created}
+	if err := s.events.Create(ctx, ev); err != nil {
+		return err
+	}
+	a.PublishedAt = created
+	if err := s.events.SaveAgenda(ctx, reportID, a); err != nil {
+		return err
+	}
+	if err := s.invite(ctx, reportID, 0, 20, 17, 2); err != nil {
+		return err
+	}
+	return s.seedReviews(ctx, reportID, enStyle)
+}
+
+func (s *seeder) seedReviews(ctx context.Context, evID string, st reviewStyle) error {
 	a, err := s.events.GetAgenda(ctx, evID)
 	if err != nil {
 		return err
@@ -341,32 +424,30 @@ func (s *seeder) seedReviews(ctx context.Context, evID string, n int) error {
 			sessions = append(sessions, se)
 		}
 	}
-	ratings := []int{5, 4, 5, 4, 2, 5, 4, 3, 5, 4, 1, 4, 5}
-	for i := 0; i < n && i < len(ratings); i++ {
+	for i, r := range st.ratings {
 		p := s.participants[i]
-		r := ratings[i]
 		var comment string
 		switch {
 		case r >= 4:
-			comment = positive[s.rnd.IntN(len(positive))]
+			comment = st.positive[s.rnd.IntN(len(st.positive))]
 		case r <= 2:
-			comment = negative[s.rnd.IntN(len(negative))]
+			comment = st.negative[s.rnd.IntN(len(st.negative))]
 		default:
-			comment = neutral[s.rnd.IntN(len(neutral))]
+			comment = st.neutral[s.rnd.IntN(len(st.neutral))]
 		}
 		sr := map[string]int{}
 		for _, se := range sessions {
 			if s.rnd.IntN(3) == 0 {
 				continue
 			}
-			base := r
-			switch {
-			case se.Title == "Panel: AI i privatnost": // the weak spot in the demo data
-				base = 2
-			case se.Title == "Otvaranje i keynote: Budućnost eventa" && base < 5:
-				base++
+			switch se.Title {
+			case st.weak: // the weak spot in the demo data
+				sr[se.ID] = 1 + s.rnd.IntN(3)
+			case st.strong: // the highlight: mostly 5s
+				sr[se.ID] = 5 - min(1, s.rnd.IntN(4)/3)
+			default:
+				sr[se.ID] = min(5, max(1, r+s.rnd.IntN(3)-1))
 			}
-			sr[se.ID] = min(5, max(1, base+s.rnd.IntN(3)-1))
 		}
 		at := ev.EndsAt.Add(time.Duration(2+i) * time.Hour)
 		if err := s.reviews.Save(ctx, reviews.WithAuthor{

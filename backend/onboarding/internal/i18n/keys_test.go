@@ -16,6 +16,23 @@ import (
 
 // Every literal key used in templates, and every dynamic key built from the
 // language/topic/goal lists, must exist in the Serbian catalog.
+func TestCatalogsHaveSameKeys(t *testing.T) {
+	en, sr := i18n.New("en"), i18n.New("sr")
+	for _, k := range i18n.Keys("sr") {
+		if !en.Has(k) {
+			t.Errorf("en is missing %q", k)
+		}
+	}
+	for _, k := range i18n.Keys("en") {
+		if !sr.Has(k) {
+			t.Errorf("sr is missing %q", k)
+		}
+	}
+	if en.Rating(4.25) != "4.2" && en.Rating(4.25) != "4.3" || sr.Rating(4.5) != "4,5" {
+		t.Errorf("decimal separators: %s %s", en.Rating(4.25), sr.Rating(4.5))
+	}
+}
+
 func TestTemplateKeysExist(t *testing.T) {
 	b := i18n.New("sr")
 	re := regexp.MustCompile(`\bt "([a-z0-9_.]+)"`)

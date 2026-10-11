@@ -2,12 +2,11 @@ package reports
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 	"unicode"
 	"unicode/utf8"
-
-	"github.com/Ilij4n/eho/backend/onboarding/internal/httpx"
 )
 
 // Summary is the text part of "ukupan utisak".
@@ -29,11 +28,16 @@ type FeedbackSummarizer interface {
 // StatSummarizer builds the summary from statistics and keyword counts, with
 // no AI. T is the i18n lookup, so the generated sentences live in the catalog.
 type StatSummarizer struct {
-	T func(key string, args ...any) string
+	T      func(key string, args ...any) string
+	Rating func(float64) string // e.g. 4.3 / 4,3
 }
 
 func (s StatSummarizer) Summarize(_ context.Context, r Report) (Summary, error) {
 	t := s.T
+	rating := s.Rating
+	if rating == nil {
+		rating = func(f float64) string { return fmt.Sprintf("%.1f", f) }
+	}
 	var out Summary
 	if r.Reviews == 0 {
 		out.Headline = t("sum.no_reviews")
@@ -56,7 +60,7 @@ func (s StatSummarizer) Summarize(_ context.Context, r Report) (Summary, error) 
 		out.Liked = append(out.Liked, t("sum.positive_share", pct(r.PositiveShare)))
 	}
 	if len(rated) > 0 && rated[0].Avg >= 4 {
-		out.Liked = append(out.Liked, t("sum.best_session", rated[0].Session.Title, httpx.FormatRating(rated[0].Avg)))
+		out.Liked = append(out.Liked, t("sum.best_session", rated[0].Session.Title, rating(rated[0].Avg)))
 	}
 	if kw := keywords(r.Comments, func(c Comment) bool { return c.Rating >= 4 }); len(kw) > 0 {
 		out.Liked = append(out.Liked, t("sum.positive_words", strings.Join(kw, ", ")))
@@ -68,7 +72,7 @@ func (s StatSummarizer) Summarize(_ context.Context, r Report) (Summary, error) 
 	var worst *SessionScore
 	if len(rated) > 1 && rated[len(rated)-1].Avg < 3.5 {
 		worst = &rated[len(rated)-1]
-		out.Disliked = append(out.Disliked, t("sum.worst_session", worst.Session.Title, httpx.FormatRating(worst.Avg)))
+		out.Disliked = append(out.Disliked, t("sum.worst_session", worst.Session.Title, rating(worst.Avg)))
 	}
 	if kw := keywords(r.Comments, func(c Comment) bool { return c.Rating <= 2 }); len(kw) > 0 {
 		out.Disliked = append(out.Disliked, t("sum.negative_words", strings.Join(kw, ", ")))
@@ -102,7 +106,10 @@ func init() {
 		jako jedan jedna jedno kada kako koja koje koji koju malo mnogo možda nije nisu ništa
 		onda ovaj ova ovo ovog ovde previše samo sasvim sigurno sledeći svaka svaki sve svi
 		svima taj tako takođe tamo toga treba vrlo više zato zbog this that with very
-		event eventu eventa događaj događaja predavanje predavanja sesija sesije`) {
+		event eventu eventa događaj događaja predavanje predavanja sesija sesije
+		about after also been could even from have just like more much only really
+		some than that their them then there they this were what when which while
+		would your talk talks session sessions`) {
 		stopwords[w] = true
 	}
 }

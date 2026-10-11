@@ -23,9 +23,12 @@ Firestore, Storage; locally the emulators from `backend/maps`):
   offers its rooms as halls for sessions.
 
 It is a separate Go module (own `go.mod`, `cmd/`, `internal/`) and doesn't
-import the other services. UI: `net/http` + `html/template`, one CSS file,
-**no JavaScript** (CSP `script-src 'none'`); texts in Serbian (Latin),
-in `internal/i18n/sr.go`.
+import the other services. Registered as `feature:onboarding`
+([`contracts/onboarding/STATUS.md`](../../contracts/onboarding/STATUS.md)).
+UI: `net/http` + `html/template`, one CSS file following the app design tokens
+(`mobile/docs/design/`), **no JavaScript** (CSP `script-src 'none'`). UI texts
+are in `internal/i18n/` — English by default (`EHO_LANG=en`), Serbian with
+`EHO_LANG=sr`.
 
 ## Run locally
 
@@ -35,11 +38,11 @@ finds Homebrew's Java even if it isn't on `PATH`).
 
 ```bash
 cd backend/onboarding
-make dev     # emulators + map API (:8080) if not running, then this app on :8090
+make dev     # emulators + map API (:8080) if not running, then this app on :8085
 make seed    # in a second terminal: map + agenda (devfest) and onboarding demo data
 ```
 
-Open **http://localhost:8090**. Emulator UI: http://localhost:4000.
+Open **http://localhost:8085**. Emulator UI: http://localhost:4000.
 Emulator data persists in `backend/maps/firebase/.emulator-data/`.
 
 | Who | Login | Password |
@@ -47,10 +50,17 @@ Emulator data persists in `backend/maps/firebase/.emulator-data/`.
 | Organizer (same as the map editor demo) | `organizer@eho.test` | `eho-demo-123` |
 | Participants | `ucesnik01@eho.test` … `ucesnik20@eho.test` | `eho-demo-123` |
 
-Demo events: "DevFest Belgrade 2026" (`devfest`, today, with the map and agenda
-from `backend/maps` / `backend/events`; 14 participants invited), "Eho Dev
-Summit 2026" (finished 10 days ago, 13 reviews: open its report) and "Startap
-vikend Novi Sad" (in 14 days). `make seed` can be re-run; it replaces its own data.
+Demo events:
+- **"DevFest Belgrade 2026" (`devfest-report`, finished yesterday)**: the report
+  for the demo video, `http://localhost:8085/org/events/devfest-report/report`.
+  Its sessions are read from `backend/events/cmd/seed/agenda.json`; 20 invited,
+  17 accepted, 15 fake reviews with per-session ratings.
+- "DevFest Belgrade 2026" (`devfest`, today, live): the map and agenda from
+  `backend/maps` / `backend/events`; 14 participants invited.
+- "Eho Dev Summit 2026" (finished 10 days ago, Serbian reviews) and "Startap
+  vikend Novi Sad" (in 14 days).
+
+`make seed` can be re-run; it replaces its own data.
 
 To see the attendee side in the Flutter app as well: `mobile/scripts/dev_all.sh`
 (needs Flutter). Event links in this app point to `EHO_APP_URL`.
@@ -79,11 +89,12 @@ See `.env.example`. Nothing secret is committed.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `PORT` | `8090` | HTTP port (`backend/maps` uses 8080) |
-| `EHO_BASE_URL` | `http://localhost:8090` | Builds invitation links |
+| `PORT` | `8085` | HTTP port (`backend/maps` uses 8080) |
+| `EHO_BASE_URL` | `http://localhost:8085` | Builds invitation links |
 | `EHO_APP_URL` | `http://localhost:5000` | Flutter app: map editor (`/organizer`) and event links (`/e/{id}`) |
 | `EHO_COOKIE_SECURE` | `false` | `true` behind HTTPS |
 | `EHO_TIMEZONE` | `Europe/Belgrade` | Entering/showing times; agenda days and clock times are local |
+| `EHO_LANG` | `en` | UI language: `en` or `sr` |
 | `FIREBASE_PROJECT_ID` | `demo-eho` | Shared Firebase project |
 | `FIREBASE_API_KEY` | (any value with the emulator) | Web API key, for the email/password check |
 | `STORAGE_BUCKET` | `<project>.appspot.com` | Floor-plan images (same default as `backend/maps`) |
@@ -152,8 +163,8 @@ are not readable from the app.
   another organizer's event is a 404. Floor images are proxied only to the owner
   and to participants who accepted.
 - **Security:** Firebase session cookie (HttpOnly, SameSite=Lax), CSRF token on
-  every form + `Sec-Fetch-Site` check, CSP without scripts, open-redirect
-  protection, CSV formula-injection guard.
+  every form + `Sec-Fetch-Site` check, CSP without scripts (styles/fonts only
+  from self and Google Fonts), open-redirect protection, CSV formula-injection guard.
 
 ### Extension points
 
@@ -162,8 +173,8 @@ are not readable from the app.
 | `auth.Identity` | Firebase Auth | — |
 | `*.Repository` | Firestore (+ in-memory for tests) | — |
 | `mail.Sender` | `LogSender` (link in log + shown to the organizer) | real email |
-| `reports.FeedbackSummarizer` | `StatSummarizer` (statistics, no AI) | Gemma; output treated as untrusted text, only rendered escaped |
-| `i18n` catalogs | `sr` | `en` + locale switch |
+| `reports.FeedbackSummarizer` | `StatSummarizer` (statistics, no AI; the page says so) | Gemma; output treated as untrusted text, only rendered escaped, labeled as AI |
+| `i18n` catalogs | `en`, `sr` (same keys, tested) | more languages |
 
 ## Known limitations
 

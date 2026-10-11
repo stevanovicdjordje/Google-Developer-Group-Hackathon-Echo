@@ -1,29 +1,40 @@
 // Package i18n holds UI texts. All user-facing strings live in a per-locale
-// catalog so another language (e.g. English) can be added later by adding a
-// catalog and a locale switch; templates only reference keys.
+// catalog (en, sr); templates only reference keys. The language comes from
+// EHO_LANG (default English, per product-ui-language).
 package i18n
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+var catalogs = map[string]map[string]string{"en": en, "sr": sr}
+
+// Languages lists the supported UI languages.
+var Languages = []string{"en", "sr"}
 
 type Bundle struct {
-	def      string
-	catalogs map[string]map[string]string
+	lang string
 }
 
-// New returns a bundle with the built-in catalogs. def is the default locale.
-func New(def string) *Bundle {
-	return &Bundle{
-		def:      def,
-		catalogs: map[string]map[string]string{"sr": sr},
+// New returns a bundle for lang; unknown languages fall back to English.
+func New(lang string) *Bundle {
+	if _, ok := catalogs[lang]; !ok {
+		lang = "en"
 	}
+	return &Bundle{lang: lang}
 }
 
-// T returns the text for key in the default locale. Unknown keys are returned
-// as-is so a missing translation is visible instead of blank.
+func (b *Bundle) Lang() string { return b.lang }
+
+// T returns the text for key. Missing keys fall back to the other catalog
+// and finally to the key itself, so a gap is visible instead of blank.
 func (b *Bundle) T(key string, args ...any) string {
-	s, ok := b.catalogs[b.def][key]
+	s, ok := catalogs[b.lang][key]
 	if !ok {
-		return key
+		if s, ok = catalogs["en"][key]; !ok {
+			return key
+		}
 	}
 	if len(args) > 0 {
 		return fmt.Sprintf(s, args...)
@@ -31,8 +42,22 @@ func (b *Bundle) T(key string, args ...any) string {
 	return s
 }
 
-// Has reports whether key exists in the default locale.
+// Has reports whether key exists in this bundle's language.
 func (b *Bundle) Has(key string) bool {
-	_, ok := b.catalogs[b.def][key]
+	_, ok := catalogs[b.lang][key]
 	return ok
+}
+
+// Rating formats an average like "4.3" (en) or "4,3" (sr).
+func (b *Bundle) Rating(f float64) string {
+	return strings.Replace(fmt.Sprintf("%.1f", f), ".", b.T("fmt.decimal"), 1)
+}
+
+// Keys returns every key of a language (tests).
+func Keys(lang string) []string {
+	var out []string
+	for k := range catalogs[lang] {
+		out = append(out, k)
+	}
+	return out
 }

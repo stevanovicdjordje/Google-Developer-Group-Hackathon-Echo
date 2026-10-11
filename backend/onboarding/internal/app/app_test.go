@@ -29,7 +29,7 @@ func newServer(t *testing.T) *httptest.Server {
 func newServerDeps(t *testing.T) (*httptest.Server, app.Deps) {
 	t.Helper()
 	deps := app.MemDeps()
-	h, err := app.New(config.Config{Timezone: "UTC", BaseURL: "http://eho.test", AppURL: "http://app.test"}, deps)
+	h, err := app.New(config.Config{Timezone: "UTC", BaseURL: "http://eho.test", AppURL: "http://app.test", Lang: "sr"}, deps)
 	if err != nil {
 		t.Fatal(err)
 	}
