@@ -24,13 +24,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
 | M-59 | dev (sonnet) | 2026-10-11 09:05 | worktree | Dev shots `organizer-review-issues` / `organizer-published-warnings` |
-| M-60 | dev (sonnet) | 2026-10-11 09:05 | worktree | Server contact `state` from `listContacts` → `contactsProvider` |
 | M-57 | dev (sonnet) | 2026-10-11 09:08 | worktree | Map tab `locateOnOpen: true` (mobile#20 done by feature:maps, `d5ee5bb`) + widget test + shot |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-60 | Server contact state from `listContacts` → `contactsProvider` (server wins, local-only kept, unknown states skipped); Person + Messages watch `contactSpotSyncProvider`. 206 tests | `1e38ecc` |
 | M-58 | Join button spinner while joining (Semantics label); a failed join resets the button | `35debc8` |
 | M-54 | integration_test 6/6 on the Galaxy again: on device `pumpAndSettle` returned before the demo join's 400 ms delay (Join shows no spinner), so flows continued from the Join screen. Harness `pumpUntil`/`waitForJoin` in `test/flows/flow_helpers.dart` | `d06d23c` |
 | M-55 | Agenda: sessions without a stage → no empty chip, no stray "·", no "Show on map"; review Publish with flagged rows/issues → "Publish anyway" / "Review" dialog | `9e44929` |
