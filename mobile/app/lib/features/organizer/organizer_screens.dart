@@ -10,6 +10,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme.dart';
 import '../../core/ui/ui.dart';
 import '../../data/app_state.dart';
+import '../../data/local_store.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
@@ -54,11 +55,23 @@ class _TopBar extends StatelessWidget {
 
 /// How many files the current draft was extracted from (the review's
 /// "Extracted from 3 files" overline). 0 = unknown, the overline is hidden.
+///
+/// Kept in local storage next to the draft id ([DraftIdNotifier]), so a draft
+/// resumed after a restart shows the same count.
 class OrganizerFileCountNotifier extends Notifier<int> {
   @override
-  int build() => 0;
+  int build() =>
+      ref
+          .read(localStoreProvider)
+          .readAs(DraftIdNotifier.fileCountKey, (j) => j as int) ??
+      0;
 
-  void set(int count) => state = count;
+  void set(int count) {
+    state = count;
+    ref
+        .read(localStoreProvider)
+        .write(DraftIdNotifier.fileCountKey, count > 0 ? count : null);
+  }
 }
 
 final organizerFileCountProvider =
@@ -128,7 +141,7 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
       return;
     }
     if (stale) return;
-    ref.read(organizerFileCountProvider.notifier).set(0);
+    // The remembered file count stays (set at extract); unknown = line hidden.
     ref.read(organizerDraftProvider.notifier).set(draft);
     context.go('/organizer/review');
   }
@@ -361,10 +374,20 @@ class _DashedBorderPainter extends CustomPainter {
       old.color != color || old.radius != radius;
 }
 
-/// "412 KB", or "1.2 MB" from a megabyte up.
-String _sizeLabel(AppLocalizations l10n, int bytes) {
-  final kb = (bytes / 1024).ceil();
-  if (kb < 1024) return l10n.orgFileSizeKb(kb);
+/// "1.1 KB" under 10 KB, "412 KB" up to a megabyte, "1.2 MB" from there.
+/// Never "0 KB" for a non-empty file.
+@visibleForTesting
+String fileSizeLabel(AppLocalizations l10n, int bytes) {
+  final kb = bytes / 1024;
+  if (kb < 10) {
+    // One decimal (at least 0.1 for a non-empty file); 9.99 KB rounds up to
+    // "10 KB" below, not "10.0 KB".
+    final tenths = bytes == 0 ? 0 : (kb * 10).round().clamp(1, 100);
+    if (tenths < 100) {
+      return l10n.orgFileSizeKb((tenths / 10).toStringAsFixed(1));
+    }
+  }
+  if (kb.round() < 1024) return l10n.orgFileSizeKb(kb.round().toString());
   return l10n.orgFileSizeMb((bytes / (1024 * 1024)).toStringAsFixed(1));
 }
 
@@ -434,7 +457,7 @@ class _FileRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _sizeLabel(l10n, file.sizeBytes),
+                  fileSizeLabel(l10n, file.sizeBytes),
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

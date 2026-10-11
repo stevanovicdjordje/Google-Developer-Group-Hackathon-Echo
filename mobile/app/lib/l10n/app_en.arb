@@ -400,7 +400,7 @@
   "@orgFileSizeKb": {
     "placeholders": {
       "kb": {
-        "type": "int"
+        "type": "String"
       }
     }
   },

@@ -560,7 +560,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orgChooseFiles => 'Choose files';
 
   @override
-  String orgFileSizeKb(int kb) {
+  String orgFileSizeKb(String kb) {
     return '$kb KB';
   }
 

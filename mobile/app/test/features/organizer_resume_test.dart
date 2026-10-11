@@ -4,6 +4,7 @@ import 'package:eho/data/demo_data.dart' as demo;
 import 'package:eho/data/local_store.dart';
 import 'package:eho/data/models.dart';
 import 'package:eho/data/repositories.dart';
+import 'package:eho/features/organizer/organizer_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -96,6 +97,44 @@ void main() {
     expect(prefs.getString('eho.organizerDraftId'), '"k2v9q3m1x8a7b6c5"');
   });
 
+  testWidgets('the resumed review shows how many files it came from', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'eho.organizerDraftId': '"k2v9q3m1x8a7b6c5"',
+      'eho.organizerDraftFileCount': '3',
+    });
+    final prefs = await SharedPreferences.getInstance();
+    usePhoneView(tester);
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        organizerRepositoryProvider.overrideWithValue(
+          _FakeOrganizer(stored: _draft()),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: EhoApp()),
+    );
+    await tester.pumpAndSettle();
+    GoRouter.of(tester.element(find.text('Eho'))).go('/organizer');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Review your event'), findsOneWidget);
+    expect(find.textContaining('Extracted from 3 files'), findsOneWidget);
+  });
+
+  testWidgets('a resumed review with an unknown file count hides the line', (
+    tester,
+  ) async {
+    await open(tester, _FakeOrganizer(stored: _draft()));
+
+    expect(find.text('Review your event'), findsOneWidget);
+    expect(find.textContaining('Extracted from'), findsNothing);
+  });
+
   testWidgets('a draft that is gone: upload screen, id cleared', (
     tester,
   ) async {
@@ -163,6 +202,25 @@ void main() {
     expect(find.text('Resumed Conf is live'), findsOneWidget);
     expect(c.read(organizerDraftIdProvider), isNull);
     expect(prefs.getString('eho.organizerDraftId'), isNull);
+  });
+
+  test('the file count is kept with the id and forgotten with it', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    ProviderContainer fresh() {
+      final c = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    final first = fresh();
+    first.read(organizerDraftIdProvider.notifier).set('abc123');
+    first.read(organizerFileCountProvider.notifier).set(3);
+    expect(fresh().read(organizerFileCountProvider), 3);
+    first.read(organizerDraftIdProvider.notifier).set(null);
+    expect(fresh().read(organizerFileCountProvider), 0);
   });
 
   test('the draft id survives a restart and can be forgotten', () async {

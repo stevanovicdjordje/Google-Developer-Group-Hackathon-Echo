@@ -364,6 +364,10 @@ final organizerDraftProvider = NotifierProvider<DraftNotifier, EventDraft?>(
 class DraftIdNotifier extends Notifier<String?> {
   static const _key = 'organizerDraftId';
 
+  /// How many files the remembered draft was extracted from (the review's
+  /// "Extracted from N files" line after a restart). Forgotten with the id.
+  static const fileCountKey = 'organizerDraftFileCount';
+
   @override
   String? build() =>
       ref.read(localStoreProvider).readAs(_key, (j) => j as String);
@@ -372,7 +376,9 @@ class DraftIdNotifier extends Notifier<String?> {
   void set(String? id) {
     if (state == id) return;
     state = id;
-    ref.read(localStoreProvider).write(_key, id);
+    final store = ref.read(localStoreProvider);
+    store.write(_key, id);
+    if (id == null) store.write(fileCountKey, null);
   }
 }
 
