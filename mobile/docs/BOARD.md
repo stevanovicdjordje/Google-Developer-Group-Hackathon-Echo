@@ -26,13 +26,14 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-37 | verifier (sonnet, medium) | now | — | Find e2e vs local :8083 (offline ranking, 20 seeded attendees in `ik6vmvjr7wlektj6`) |
+| M-39 | dev (sonnet, medium) | now | worktree | Find profile-required → Complete profile; retryAfter; `find-live` shot |
 | M-38 | dev (sonnet, medium) | now | worktree | Echo banner overlap |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-37 | Find e2e (API): profile → joinFind → recs → search → person → contact (auto-accept) → meeting spot "Info pult" all 200 and parse-compatible with `find_api_repository.dart`; 429 not reproducible. App: fresh profile dead-ends on "Finish your profile" + Try again → M-39 | verification |
 | V-4b | Tap-through flow tests `test/flows/` (deep link→join→onboarding→agenda; Echo ask/translate/Q&A/paywall/summary; map stage sheet + spot banner; Find→person→contact→messages→spot; organizer upload→review→publish). All pass on demo data; no app bugs. Live map pins/route not covered | `c9ad750` |
 | V-4a | Live flows on web vs local backends: join, agenda, session, Echo transcript, map + you-are-here, stand sheet (400 seats, 1 min / 52 m, NOW, Start route, Open Echo), Find (demo), messages, organizer, published all OK. Echo API: translate sr (Gemma) OK, questions/votes OK; ask/catch-up/summary 502 (B-1). App↔contract: no mismatch | verification |
 | M-35 | Agenda "<event> · Day N" (N=1: no day data in models), "Live · Day {day}", Profile "Premium" badge, demo extract flags s3, alias cleanup in repositories.dart, shots.sh forwards `LINK_BASE` | `e693bc1` |
