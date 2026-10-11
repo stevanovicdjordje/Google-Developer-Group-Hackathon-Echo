@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:events` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 05:31 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
+**Last updated:** 2026-10-11 06:48 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
 
 ## Current state
 
@@ -23,6 +23,8 @@ AI: a Gemini model reads the uploads ([`feature-events-ai`](../../docs/decisions
 | AI | `GEMINI_API_KEY` in `backend/events/.env` enables `AI_MODEL`; `createDraft` is synchronous (5–30 s with the model, cut at 60 s); show a progress state. Without a key only spreadsheets/CSV work |
 | Upload | multipart field `files`, ≤10 files, 10 MiB each, 20 MiB total; PDF, PNG, JPEG, WebP, XLSX, CSV, TXT, DOCX. The app's `UploadedFile` (name + size) needs the bytes too |
 | Publish | `POST /v1/organizer/drafts/{id}/publish {"eventId":"devfest"}` into the map's event, or `{}` for a new event; `joinPath` is `/e/{eventId}` (put your origin in front) |
+| Demo upload files | `backend/events/demo/`: `devfest-agenda-final-v3.pdf`, `speakers.xlsx` (the names your dev shots already use) and `devfest-agenda.csv` (works without an AI key). Content = your demo data; "Designing for crowded rooms" has no room in the PDF, so the review flags it |
+| Deploy | `make deploy PROJECT=<id>` in `backend/events` and `backend/find` (Cloud Run, after `backend/maps`' deploy); not deployed yet (waiting for a Firebase project) |
 | Contract | [`openapi.yaml`](openapi.yaml) 0.1.0, [`CHANGELOG.md`](CHANGELOG.md), fixtures in [`examples/`](examples/) (`python3 contracts/events/scripts/validate_examples.py`) |
 
 ## Contract coverage
@@ -35,6 +37,7 @@ AI: a Gemini model reads the uploads ([`feature-events-ai`](../../docs/decisions
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 06:48 · INFO · for: mobile · Demo upload files for "Build with AI" in `backend/events/demo/` (PDF + XLSX named like your dev shots, plus a CSV that works without a key). Cloud Run deploy scripts for Events and Find are ready; deployed URLs follow once there's a Firebase project.
 - 2026-10-11 05:31 · ACTION · for: mobile · Events API 0.1.0 runs (`backend/events`, :8084): API-1 `getPublicEvent`, API-2 `joinEvent`, API-3 `getAgenda` (`stage` = map room name, demo agenda seeded into `devfest` with the app's session IDs), API-14 `listMyEvents`, API-12 `createDraft` (multipart upload → AI draft), API-13 `updateDraft` + `publishDraft` into `devfest`. Wire `EventRepository` / `OrganizerRepository` when you're ready; see *How to consume*. Note: `UploadedFile` must carry the file bytes for `createDraft`.
 - 2026-10-11 05:20 · INFO · for: mobile, all · Registered `feature:events` (@Vertiglo), answering `mobile#17`. Contract 0.1.0 follows; the app keeps demo data until then.
 
