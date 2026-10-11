@@ -882,6 +882,8 @@ class MessagesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final key = (eventId, personId);
     final detail = ref.watch(personDetailProvider(key));
+    // Reads the other person's meeting spot from `listContacts` (M-45).
+    ref.watch(contactSpotSyncProvider(key));
     if (detail.hasError && !detail.hasValue) {
       return Scaffold(
         appBar: AppBar(),
