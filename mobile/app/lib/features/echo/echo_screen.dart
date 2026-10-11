@@ -25,6 +25,8 @@ class EchoScreen extends ConsumerStatefulWidget {
     required this.eventId,
     required this.sessionId,
     this.startTranslated = false,
+    this.devSelectLine,
+    this.devAsk,
   });
 
   final String eventId;
@@ -32,6 +34,11 @@ class EchoScreen extends ConsumerStatefulWidget {
 
   /// Opens with translate already on (dev screenshot routes only).
   final bool startTranslated;
+
+  /// Index of a transcript line to highlight once it has loaded, and a
+  /// question to ask the AI right after (dev screenshot routes only).
+  final int? devSelectLine;
+  final String? devAsk;
 
   @override
   ConsumerState<EchoScreen> createState() => _EchoScreenState();
@@ -89,6 +96,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
   int? _selected;
   bool _paywallShown = false; // auto-opened once when the talk ends
   int _updates = 0; // transcript snapshots received
+  bool _devApplied = false; // devSelectLine/devAsk done
 
   /// Auto-scroll follows new lines only while the user is at the bottom.
   /// Scrolling up pauses it and shows "Jump to live".
@@ -127,6 +135,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
             });
             _toBottom();
             _translateMore();
+            _applyDevStart();
           },
           onError: (Object e) {
             if (mounted) setState(() => _transcriptError = e);
@@ -139,6 +148,16 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
         );
     _loadCatchUp();
     _loadQuestions();
+  }
+
+  /// Dev screenshot routes: select a line and ask a question, once.
+  void _applyDevStart() {
+    final at = widget.devSelectLine;
+    if (_devApplied || at == null || _lineCount <= at) return;
+    _devApplied = true;
+    setState(() => _selected = at);
+    final ask = widget.devAsk;
+    if (ask != null) _send(ask);
   }
 
   /// Loads the catch-up in the current language; [force] starts over even
@@ -823,7 +842,12 @@ class _CatchUpCardState extends State<_CatchUpCard> {
             ),
             const SizedBox(height: 6),
             if (!_open)
-              Text(l10n.echoCatchUpSubtitle, style: body)
+              Text(
+                widget.catchUp ?? l10n.echoCatchUpSubtitle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: body,
+              )
             else if (widget.error != null) ...[
               Text(widget.error!, style: body),
               TextButton(onPressed: widget.onLoad, child: Text(l10n.echoRetry)),
@@ -845,13 +869,14 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    final eho = context.eho;
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: EhoCard(
-        color: eho.liveContainer,
+        color: scheme.surfaceContainer,
         radius: 16,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         onTap: onTap,
@@ -860,7 +885,7 @@ class _SummaryCard extends StatelessWidget {
             Icon(
               unlocked ? Icons.auto_awesome : Icons.lock_outline,
               size: 20,
-              color: eho.onLiveContainer,
+              color: scheme.onSurface,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -870,12 +895,14 @@ class _SummaryCard extends StatelessWidget {
                   Text(l10n.echoFullSummary, style: t.titleSmall),
                   Text(
                     unlocked ? l10n.echoUnlocked : l10n.echoPremiumSubtitle,
-                    style: t.bodySmall?.copyWith(color: eho.bodyOnTint),
+                    style: t.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: eho.onLiveContainer),
+            Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
           ],
         ),
       ),

@@ -61,6 +61,26 @@ final devShots = <DevShot>[
   DevShot('echo-qa', 'Echo, "Questions for the speaker" sheet open', () {
     return _EchoShot(ended: false, onReady: _openQuestions);
   }),
+  DevShot(
+    'echo-qa-own',
+    'Echo, questions sheet with one of your own questions',
+    () {
+      return _EchoShot(
+        ended: false,
+        onReady: (c) => _openQuestions(c, ownIndex: 1),
+      );
+    },
+  ),
+  DevShot(
+    'echo-selected',
+    'Echo live, a line selected ("Ask about this") and an AI answer inline',
+    () => _EchoShot(
+      ended: false,
+      // The second-to-last line; the answer lands below it.
+      selectLine: demo.keynoteTranscript.length - 2,
+      ask: 'What is the main advice of the talk?',
+    ),
+  ),
   DevShot('echo-paywall', 'Echo, ended, "Missed something?" paywall sheet', () {
     return _EchoShot(
       ended: true,
@@ -205,12 +225,16 @@ class _EchoShot extends StatelessWidget {
     required this.ended,
     this.translated = false,
     this.unlocked = false,
+    this.selectLine,
+    this.ask,
     this.onReady,
   });
 
   final bool ended;
   final bool translated;
   final bool unlocked;
+  final int? selectLine;
+  final String? ask;
   final void Function(BuildContext context)? onReady;
 
   @override
@@ -227,6 +251,8 @@ class _EchoShot extends StatelessWidget {
         eventId: _event,
         sessionId: _session,
         startTranslated: translated,
+        devSelectLine: selectLine,
+        devAsk: ask,
       ),
     ),
   );
@@ -260,7 +286,8 @@ class _AfterFirstFrameState extends State<_AfterFirstFrame> {
   Widget build(BuildContext context) => widget.child;
 }
 
-Future<void> _openQuestions(BuildContext context) async {
+/// Opens the questions sheet; the question at [ownIndex] (if any) is yours.
+Future<void> _openQuestions(BuildContext context, {int? ownIndex}) async {
   final repo = ProviderScope.containerOf(context).read(echoRepositoryProvider);
   final loaded = await repo.questions(_event, _session);
   if (!context.mounted) return;
@@ -272,6 +299,7 @@ Future<void> _openQuestions(BuildContext context) async {
               id: q.id,
               text: q.text,
               votes: q.votes + 1,
+              mine: i == ownIndex,
               voted: true,
               mergedCount: q.mergedCount,
             )

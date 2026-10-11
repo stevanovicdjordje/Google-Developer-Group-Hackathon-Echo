@@ -83,7 +83,7 @@ class _EchoPaywallSheetState extends ConsumerState<EchoPaywallSheet> {
           children: [
             const Align(
               alignment: Alignment.centerLeft,
-              child: IconTile(Icons.lock_outline, live: true, size: 56),
+              child: IconTile(Icons.description_outlined, live: true, size: 56),
             ),
             const SizedBox(height: 16),
             Text(l10n.echoPaywallTitle, style: t.headlineMedium),
