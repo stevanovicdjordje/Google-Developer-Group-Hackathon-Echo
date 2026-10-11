@@ -370,6 +370,18 @@ void main() {
     expect(contacts[0].meetingSpot, isNull);
     expect(contacts[1].state, ContactState.none);
     expect(contacts[1].meetingSpot, (place: 'Info pult', time: null));
+    // A state this app doesn't know is ignored, not turned into `none`.
+    expect(
+      FindApiRepository.parseContacts({
+        'contacts': [
+          {
+            'person': {'id': 'a4', 'name': 'D'},
+            'state': 'blocked',
+          },
+        ],
+      }),
+      isEmpty,
+    );
     expect(() => FindApiRepository.parseContacts({}), throwsA(anything));
   });
 
@@ -539,6 +551,78 @@ void main() {
         c.read(meetingSpotProvider.notifier).set(mine);
         await load;
         expect(c.read(meetingSpotProvider), same(mine));
+      });
+
+      test(
+        'contact states: server wins, local-only entries are kept',
+        () async {
+          final n = c.read(contactsProvider.notifier);
+          n.set('p3', ContactState.requested);
+          n.set('local', ContactState.requested);
+          find.contacts = () async => [
+            contact('p3'), // accepted
+            contact('p4'),
+          ];
+          await c
+              .read(meetingSpotProvider.notifier)
+              .loadFromContacts('ev', 'p9');
+          expect(c.read(contactsProvider), {
+            'p3': ContactState.accepted,
+            'p4': ContactState.accepted,
+            'local': ContactState.requested,
+          });
+        },
+      );
+
+      test(
+        'contact states: failure or a state set while loading wins',
+        () async {
+          c.read(contactsProvider.notifier).set('p3', ContactState.requested);
+          find.contacts = () async =>
+              throw const FindException(FindErrorKind.offline);
+          await c
+              .read(meetingSpotProvider.notifier)
+              .loadFromContacts('ev', 'p3');
+          expect(c.read(contactsProvider), {'p3': ContactState.requested});
+          find.contacts = () async {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+            return [contact('p3')];
+          };
+          final load = c
+              .read(meetingSpotProvider.notifier)
+              .loadFromContacts('ev', 'p3');
+          c.read(contactsProvider.notifier).set('p5', ContactState.requested);
+          await load;
+          expect(c.read(contactsProvider)['p3'], ContactState.requested);
+        },
+      );
+
+      test('the sync provider feeds both the spot and the states', () async {
+        find.contacts = () async => [
+          contact('p3', spot: (place: 'Main stage', time: '11:00')),
+        ];
+        await c.read(contactSpotSyncProvider(('ev', 'p3')).future);
+        expect(c.read(contactsProvider)['p3'], ContactState.accepted);
+        expect(c.read(meetingSpotProvider)?.place, 'Main stage');
+      });
+
+      test('ContactsNotifier.loadFromContacts maps every state', () {
+        c.read(contactsProvider.notifier).loadFromContacts([
+          for (final s in ContactState.values)
+            Contact(
+              person: Person(
+                id: s.name,
+                name: s.name,
+                headline: '',
+                interests: const [],
+                lookingFor: '',
+              ),
+              state: s,
+            ),
+        ]);
+        expect(c.read(contactsProvider), {
+          for (final s in ContactState.values) s.name: s,
+        });
       });
 
       test('the demo repository has no contacts', () async {

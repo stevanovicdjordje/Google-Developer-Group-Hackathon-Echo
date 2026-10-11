@@ -264,14 +264,15 @@ class FindApiRepository implements FindRepository {
   // ------------------------------------------------------------ mapping
 
   /// `{contacts: Contact[]}` -> valid contacts in server order; entries
-  /// without a valid person or state are skipped. A missing or invalid
-  /// `meetingSpot` just means none.
+  /// without a valid person or a known state (`none`, `requested`,
+  /// `incoming`, `accepted`; a newer server's value is ignored, not guessed)
+  /// are skipped. A missing or invalid `meetingSpot` just means none.
   static List<Contact> parseContacts(Object? json) {
     final list = json is Map ? json['contacts'] : null;
     if (list is! List) throw _badResponse;
     final contacts = <Contact>[];
     for (final c in list) {
-      if (c is! Map || c['state'] is! String) continue;
+      if (c is! Map || !_knownContactStates.contains(c['state'])) continue;
       final person = parsePerson(c['person']);
       if (person == null) continue;
       contacts.add(
@@ -357,6 +358,13 @@ class FindApiRepository implements FindRepository {
           : '',
     );
   }
+
+  static const _knownContactStates = {
+    'none',
+    'requested',
+    'incoming',
+    'accepted',
+  };
 
   /// `ContactState` from the caller's side. `incoming` shows as `none`: the
   /// app has no accept button yet, and sending a request to someone who
