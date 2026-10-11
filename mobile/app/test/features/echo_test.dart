@@ -94,6 +94,22 @@ class _LanguageEcho extends _FakeEcho {
   }
 }
 
+/// Like [_LanguageEcho] but the talk has ended (the default fake stream).
+class _EndedLanguageEcho extends _FakeEcho {
+  final languages = <String>[];
+
+  @override
+  Future<String> ask(
+    String eventId,
+    String sessionId,
+    String question, {
+    String language = 'en',
+  }) async {
+    languages.add('ask:$language');
+    return language == 'sr' ? 'Odgovor na srpskom' : 'English answer';
+  }
+}
+
 Future<void> _pumpEcho(
   WidgetTester tester, [
   EchoRepository? repo,
@@ -252,6 +268,45 @@ void main() {
     await tester.tap(find.text('Catch up'));
     await tester.pumpAndSettle();
     expect(find.text('Sažetak na srpskom'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Kako su rešili bateriju?');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+    expect(repo.languages.last, 'ask:sr');
+    expect(find.text('Odgovor na srpskom'), findsOneWidget);
+  });
+
+  testWidgets('translated banner: "live" only while the talk is live', (
+    tester,
+  ) async {
+    await _pumpEcho(tester, _LiveEcho(), true);
+    await tester.tap(find.byTooltip('Translate to Serbian'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Translated live from English · tap SR for the original'),
+      findsOneWidget,
+    );
+    expect(find.text('Ask about this talk…'), findsOneWidget);
+  });
+
+  testWidgets('ended talk, translate on: banner without "live", English '
+      'chrome, ask after switching sends language=sr', (tester) async {
+    final repo = _EndedLanguageEcho();
+    await _pumpEcho(tester, repo, true);
+    await tester.tap(find.byTooltip('Translate to Serbian'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Translated from English · tap SR for the original'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Translated live from English · tap SR for the original'),
+      findsNothing,
+    );
+    // The chrome stays English; only content is translated.
+    expect(find.text('Ask about this talk…'), findsOneWidget);
+    expect(find.text('Ask AI'), findsOneWidget);
+    expect(find.text('Full talk summary'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'Kako su rešili bateriju?');
     await tester.tap(find.byTooltip('Send'));

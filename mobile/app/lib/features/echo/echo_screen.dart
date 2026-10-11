@@ -541,7 +541,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
               translate: _translate,
               onTranslate: _toggleTranslate,
             ),
-            if (_translate) const _TranslatedBanner(),
+            if (_translate) _TranslatedBanner(ended: _ended),
             if (_ended)
               _SummaryCard(unlocked: unlocked, onTap: _openSummary)
             else
@@ -624,7 +624,9 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
                           shape: const StadiumBorder(),
                         ),
                         icon: const Icon(Icons.arrow_downward, size: 18),
-                        label: Text(_ended ? l10n.echoJumpToEnd : l10n.echoJumpToLive),
+                        label: Text(
+                          _ended ? l10n.echoJumpToEnd : l10n.echoJumpToLive,
+                        ),
                         onPressed: () => _toBottom(force: true),
                       ),
                     ),
@@ -635,7 +637,6 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
               controller: _input,
               focusNode: _inputFocus,
               mode: _mode,
-              translate: _translate,
               questionCount: _questions.value.length,
               onMode: (m) => setState(() => _mode = m),
               onSend: _send,
@@ -710,7 +711,7 @@ class _Header extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     session?.title ?? l10n.echoTitle,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: t.titleSmall?.copyWith(fontSize: 16),
                   ),
@@ -768,7 +769,10 @@ class _Header extends StatelessWidget {
 }
 
 class _TranslatedBanner extends StatelessWidget {
-  const _TranslatedBanner();
+  const _TranslatedBanner({required this.ended});
+
+  /// An ended talk was not translated "live".
+  final bool ended;
 
   @override
   Widget build(BuildContext context) {
@@ -784,7 +788,9 @@ class _TranslatedBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              AppLocalizations.of(context).echoTranslatedBanner,
+              ended
+                  ? AppLocalizations.of(context).echoTranslatedBannerEnded
+                  : AppLocalizations.of(context).echoTranslatedBanner,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: eho.primaryPressed,
               ),
@@ -1200,7 +1206,6 @@ class _Composer extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.mode,
-    required this.translate,
     required this.questionCount,
     required this.onMode,
     required this.onSend,
@@ -1210,7 +1215,6 @@ class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final _Mode mode;
-  final bool translate;
   final int questionCount;
   final ValueChanged<_Mode> onMode;
   final Future<void> Function([String?]) onSend;
@@ -1268,11 +1272,7 @@ class _Composer extends StatelessWidget {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onSend(),
                 decoration: InputDecoration(
-                  hintText: speaker
-                      ? l10n.echoSpeakerHint
-                      : translate
-                      ? l10n.echoAskHintTranslated
-                      : l10n.echoAskHint,
+                  hintText: speaker ? l10n.echoSpeakerHint : l10n.echoAskHint,
                   suffixIcon: Padding(
                     padding: const EdgeInsets.all(6),
                     child: IconButton(

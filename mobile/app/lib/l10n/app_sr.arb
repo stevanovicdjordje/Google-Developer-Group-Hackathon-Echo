@@ -236,7 +236,7 @@
   "echoLiveAt": "Uživo · {stage}",
   "echoEndedAt": "Završeno · {stage}",
   "echoTranslatedBanner": "Prevedeno uživo sa engleskog · dodirni SR za original",
-  "echoAskHintTranslated": "Pitajte bilo šta o predavanju…",
+  "echoTranslatedBannerEnded": "Prevedeno sa engleskog · dodirni SR za original",
   "echoLangOriginal": "EN",
   "echoLangTranslated": "SR",
   "echoSend": "Pošalji",

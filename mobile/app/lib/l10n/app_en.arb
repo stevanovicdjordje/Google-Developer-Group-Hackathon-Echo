@@ -555,11 +555,11 @@
   },
   "echoTranslatedBanner": "Translated live from English · tap SR for the original",
   "@echoTranslatedBanner": {
-    "description": "Banner under the Echo header while translate is on."
+    "description": "Banner under the Echo header while translate is on and the talk is live."
   },
-  "echoAskHintTranslated": "Pitajte bilo šta o predavanju…",
-  "@echoAskHintTranslated": {
-    "description": "Ask input placeholder while translate (to Serbian) is on. Intentionally Serbian in every locale."
+  "echoTranslatedBannerEnded": "Translated from English · tap SR for the original",
+  "@echoTranslatedBannerEnded": {
+    "description": "Banner under the Echo header while translate is on and the talk has ended (no \"live\")."
   },
   "echoLangOriginal": "EN",
   "@echoLangOriginal": {
