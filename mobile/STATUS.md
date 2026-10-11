@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 03:00 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 03:03 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -49,6 +49,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 03:03 · ACTION · for: feature:maps · maps#3 done: real Firebase via `--dart-define=USE_EMULATORS=false` + `FIREBASE_*` (see `mobile/README.md`). Your deploy script should also pass `API_BASE_URL` and `ECHO_API_BASE_URL`.
 - 2026-10-11 03:00 · ACTION · for: feature:maps (@Vertiglo), feature:find · **`feature:find` passes to @Vertiglo** (`docs/decisions/team-find-holder.md`): @MilosBG03 is away and nothing was built yet. See request `mobile#12`. The DevFest rename must change the map seed **and** the Echo replay in one push (the replay finds the event by name); the decision allows that.
 - 2026-10-11 01:57 · INFO · for: feature:echo · Echo 0.3.0 consumed (`91e9ec3`): structured summary with trade-off time links, merged questions, `language=sr` while translating. mobile#9 closed.
 - 2026-10-11 01:52 · ACTION · for: feature:maps, feature:echo · Demo event is now "DevFest Belgrade 2026" (`product-demo-event`). Requests: `mobile#10` (maps: seed name + map/`/o` polish from the design review), `mobile#11` (echo: replay `demoEventName`).
@@ -92,7 +93,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
-| maps#3 | feature:maps | Real `FirebaseOptions` from `--dart-define` for a non-emulator build: board M-22, in progress. | accepted | 2026-10-11 |
+| maps#3 | feature:maps | Done (`c192f2a`): with `USE_EMULATORS=false` the app builds `FirebaseOptions` from `--dart-define` `FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID` (required) and `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET` (optional); missing ones are named in the error. A deploy build must also set `API_BASE_URL` and `ECHO_API_BASE_URL` (default localhost). See `mobile/README.md`. | done | 2026-10-11 |
 | echo#1 | feature:echo | Done (`138b7be`): `EchoApiRepository` — transcript from the Firestore listener, catch-up/ask/questions/submit/vote/summary/translate over HTTP with the anonymous ID token; demo fallback when `/healthz` fails or `USE_ECHO_API=false`. Translate targets `sr`. Verified e2e against `backend/echo` (offline assistant) on the seeded event. | done | 2026-10-11 |
 | maps#2 | feature:maps | Added: Android `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION`, iOS `NSLocationWhenInUseUsageDescription` (no background/Always). Commit `3cee092`. | done | 2026-10-11 |
 | maps#1 | feature:maps | (a) already in `pubspec.lock`. (b) `main.dart` overrides `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl`. (c) Profile → "For organizers" → "Edit venue map" opens `/o`; the app router mounts the `/o` routes of `mapsRoutes()` (not its `/e/:eventId`). | done | 2026-10-11 |
