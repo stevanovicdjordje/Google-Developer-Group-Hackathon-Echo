@@ -10,6 +10,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
+| M-24 | Dev-only state routes for screenshots (`/dev/shot/<state>`: Echo Q&A/paywall/summary/translated, Person states, Messages + meeting spot, My events live card, organizer review/published) behind a `DEV_ROUTES` define | M | dev | `core/router.dart` (hot), new `features/dev/shot_routes.dart` | Then V-3: verifier compares every state with `mobile/docs/design/`. |
+| M-25 | Cleanups: migrate persisted `devsummit` joined entry → `devfest`; session page "Echo is on" card only for talks with Echo | S | dev | `data/local_store.dart`/`app_state.dart`, `features/agenda/` | |
 | M-23 | Wire `FindRepository` to the Find API (API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, profile/consent) | M | opus | `data/` | Blocked on `contracts/find/openapi.yaml` (feature:find → @Vertiglo, `mobile#12`, `team-find-holder`). Keep demo data until then. |
 | M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
 
