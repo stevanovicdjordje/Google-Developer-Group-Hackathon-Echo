@@ -392,6 +392,17 @@ void main() {
       expect(find.text('Vi ste ovde'), findsOneWidget);
     });
 
+    testWidgets('keeps the opening view (mobile#22): no zoom to the dot', (
+      tester,
+    ) async {
+      final h = Harness(location: QuietFakeLocation(), locateOnOpen: true);
+      await h.start(tester);
+      final before = tester.getCenter(find.text('Glavna sala').first);
+      await h.gps(tester, fixAt(300, 600));
+      expect(find.text('Vi ste ovde'), findsOneWidget);
+      expect(tester.getCenter(find.text('Glavna sala').first), before);
+    });
+
     testWidgets('stays idle when it would need a prompt', (tester) async {
       final h = Harness(
         location: QuietFakeLocation(allowed: false),

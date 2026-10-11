@@ -32,6 +32,8 @@ class VenueMapView extends ConsumerWidget {
     this.onPlanTap,
     this.underLabels = const [],
     this.overLabels = const [],
+    this.labelTopInset = 0,
+    this.hideIconsNear,
   });
 
   final Floor floor;
@@ -52,6 +54,14 @@ class VenueMapView extends ConsumerWidget {
 
   /// Extra layers above everything (route ends, "you are here").
   final List<Widget> overLabels;
+
+  /// Height of the controls drawn over the top of the map (search, chips):
+  /// room and stand labels whose center would sit under them are hidden.
+  final double labelTopInset;
+
+  /// Where the "You are here" dot is: POI icons under it are left out, so the
+  /// dot isn't drawn on top of another icon.
+  final PlanPoint? hideIconsNear;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -122,7 +132,13 @@ class VenueMapView extends ConsumerWidget {
           ],
         ),
         ...underLabels,
-        _LabelsAndIcons(features: features, proj: proj, selectedId: selectedId),
+        _LabelsAndIcons(
+          features: features,
+          proj: proj,
+          selectedId: selectedId,
+          topInset: labelTopInset,
+          hideIconsNear: hideIconsNear,
+        ),
         ...overLabels,
       ],
     );
@@ -153,11 +169,15 @@ class _LabelsAndIcons extends StatelessWidget {
     required this.features,
     required this.proj,
     this.selectedId,
+    this.topInset = 0,
+    this.hideIconsNear,
   });
 
   final List<Feature> features;
   final PlanProjection proj;
   final String? selectedId;
+  final double topInset;
+  final PlanPoint? hideIconsNear;
 
   @override
   Widget build(BuildContext context) {
@@ -167,10 +187,20 @@ class _LabelsAndIcons extends StatelessWidget {
     final showStandLabels = scale >= 0.9;
     final markers = <Marker>[];
 
+    final dot = hideIconsNear == null
+        ? null
+        : camera.latLngToScreenOffset(proj.toLatLng(hideIconsNear!));
     for (final f in features) {
       final at = proj.toLatLng(f.geometry.center);
+      final screen = camera.latLngToScreenOffset(at);
       switch (f.type) {
         case FeatureType.poi:
+          // 30 px: the dot's halo is 30 wide, the icon 34.
+          if (dot != null &&
+              (screen - dot).distance < 30 &&
+              f.id != selectedId) {
+            break;
+          }
           markers.add(
             Marker(
               point: at,
@@ -201,6 +231,9 @@ class _LabelsAndIcons extends StatelessWidget {
               !showStandLabels &&
               f.id != selectedId) {
             break;
+          }
+          if (screen.dy < topInset && f.id != selectedId) {
+            break; // would sit under the search bar and chips
           }
           var width = f.type == FeatureType.room ? 160.0 : 110.0;
           var height = 40.0;

@@ -181,6 +181,10 @@ const _rerouteEvery = Duration(seconds: 8);
 /// Room for the search bar / banner on top and the route card at the bottom.
 const _routePadding = EdgeInsets.fromLTRB(48, 130, 48, 240);
 
+/// The search card and chip row over the top of the map: 12 + 54 + 10 + 40,
+/// plus a few pixels so a label doesn't touch the chips.
+const _overlayBand = 124.0;
+
 /// Leaves room for the details sheet over the lower half.
 const _previewPadding = EdgeInsets.fromLTRB(48, 100, 48, 380);
 
@@ -337,8 +341,10 @@ class _ViewerState extends ConsumerState<_Viewer> {
       _gpsOn = true;
       _gpsQuiet = true;
       _gps = null;
-      // Keep a place the map opened on (QR marker, feature, highlight) in view.
-      _centerOnNextFix = widget.initialFeatureId == null;
+      // Keep the opening view: the whole plan (already in view, with the dot
+      // on it once it arrives), or the place the map opened on (QR marker,
+      // feature, highlight). Zooming to the dot would hide the rooms around it.
+      _centerOnNextFix = false;
     });
     _gpsSub = source.watch().listen(_onFix, onError: _onGpsError);
   }
@@ -925,6 +931,10 @@ class _ViewerState extends ConsumerState<_Viewer> {
                       _searchFocus.unfocus();
                       _select(f);
                     },
+                    labelTopInset: routing ? 0 : _overlayBand,
+                    hideIconsNear: here != null && here.floorId == floor.id
+                        ? here.at
+                        : null,
                     underLabels: [
                       if (fix != null && fix.inside)
                         GpsAccuracyLayer(
