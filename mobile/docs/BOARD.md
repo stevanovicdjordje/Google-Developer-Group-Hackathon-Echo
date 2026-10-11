@@ -24,6 +24,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| V-5 | dev (sonnet, medium) | now | worktree | Galaxy A55 (`RZCX511WWLF`): integration_test of 5 flows + live adb smoke (one device worker at a time; iPhone off-limits) |
 | M-39 | dev (sonnet, medium) | now | worktree | Find profile-required → Complete profile; retryAfter; `find-live` shot |
 | M-38 | dev (sonnet, medium) | now | worktree | Echo banner overlap |
 
