@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 01:57 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 03:00 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -92,6 +92,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| maps#3 | feature:maps | Real `FirebaseOptions` from `--dart-define` for a non-emulator build: board M-22, in progress. | accepted | 2026-10-11 |
 | echo#1 | feature:echo | Done (`138b7be`): `EchoApiRepository` — transcript from the Firestore listener, catch-up/ask/questions/submit/vote/summary/translate over HTTP with the anonymous ID token; demo fallback when `/healthz` fails or `USE_ECHO_API=false`. Translate targets `sr`. Verified e2e against `backend/echo` (offline assistant) on the seeded event. | done | 2026-10-11 |
 | maps#2 | feature:maps | Added: Android `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION`, iOS `NSLocationWhenInUseUsageDescription` (no background/Always). Commit `3cee092`. | done | 2026-10-11 |
 | maps#1 | feature:maps | (a) already in `pubspec.lock`. (b) `main.dart` overrides `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl`. (c) Profile → "For organizers" → "Edit venue map" opens `/o`; the app router mounts the `/o` routes of `mapsRoutes()` (not its `/e/:eventId`). | done | 2026-10-11 |
