@@ -841,137 +841,143 @@ class OrganizerPublishedScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: eho.ink,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, box) => SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: box.maxHeight),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _TopBar(
-                          onInk: true,
-                          onBack: () => context.go('/organizer/review'),
-                          caption: Row(
-                            children: [
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: BoxDecoration(
-                                  color: eho.live,
-                                  shape: BoxShape.circle,
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        // The whole screen is ink: light status-bar icons.
+        value: ehoStatusBarOnDark,
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, box) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: box.maxHeight),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _TopBar(
+                            onInk: true,
+                            onBack: () => context.go('/organizer/review'),
+                            caption: Row(
+                              children: [
+                                Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(
+                                    color: eho.live,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  l10n.orgPublished.toUpperCase(),
+                                  style: t.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.6,
+                                    color: eho.onInkLive,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            l10n.orgIsLive(name),
+                            style: t.displaySmall?.copyWith(
+                              color: eho.onInk,
+                              height: 1.05,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.orgShareBody,
+                            style: t.bodyLarge?.copyWith(
+                              fontSize: 16,
+                              color: eho.onInkMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                // The QR needs a light ground to scan.
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: QrImageView(
+                                data: url,
+                                size: 220,
+                                padding: EdgeInsets.zero,
+                                eyeStyle: QrEyeStyle(
+                                  eyeShape: QrEyeShape.square,
+                                  color: eho.ink,
+                                ),
+                                dataModuleStyle: QrDataModuleStyle(
+                                  dataModuleShape: QrDataModuleShape.square,
+                                  color: eho.ink,
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              Text(
-                                l10n.orgPublished.toUpperCase(),
-                                style: t.labelMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.6,
-                                  color: eho.onInkLive,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          l10n.orgIsLive(name),
-                          style: t.displaySmall?.copyWith(
-                            color: eho.onInk,
-                            height: 1.05,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.orgShareBody,
-                          style: t.bodyLarge?.copyWith(
-                            fontSize: 16,
-                            color: eho.onInkMuted,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: Container(
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
                             decoration: BoxDecoration(
-                              // The QR needs a light ground to scan.
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
+                              color: eho.inkOverlay,
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            padding: const EdgeInsets.all(20),
-                            child: QrImageView(
-                              data: url,
-                              size: 220,
-                              padding: EdgeInsets.zero,
-                              eyeStyle: QrEyeStyle(
-                                eyeShape: QrEyeShape.square,
-                                color: eho.ink,
-                              ),
-                              dataModuleStyle: QrDataModuleStyle(
-                                dataModuleShape: QrDataModuleShape.square,
-                                color: eho.ink,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-                          decoration: BoxDecoration(
-                            color: eho.inkOverlay,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: SelectableText(
-                                  displayJoinLink(url),
-                                  maxLines: 1,
-                                  style: t.bodyMedium?.copyWith(
-                                    color: eho.onInkPrimary,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: SelectableText(
+                                    displayJoinLink(url),
+                                    maxLines: 1,
+                                    style: t.bodyMedium?.copyWith(
+                                      color: eho.onInkPrimary,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              FilledButton.icon(
-                                icon: const Icon(Icons.copy, size: 16),
-                                label: Text(l10n.orgCopy),
-                                style: FilledButton.styleFrom(
-                                  minimumSize: const Size(0, 40),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
+                                const SizedBox(width: 10),
+                                FilledButton.icon(
+                                  icon: const Icon(Icons.copy, size: 16),
+                                  label: Text(l10n.orgCopy),
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: const Size(0, 40),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                    ),
+                                    backgroundColor: eho.onInk,
+                                    foregroundColor: eho.ink,
+                                    textStyle: t.labelLarge,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                  backgroundColor: eho.onInk,
-                                  foregroundColor: eho.ink,
-                                  textStyle: t.labelLarge,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                                  onPressed: () {
+                                    Clipboard.setData(ClipboardData(text: url));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(l10n.orgLinkCopied),
+                                      ),
+                                    );
+                                  },
                                 ),
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: url));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(l10n.orgLinkCopied)),
-                                  );
-                                },
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    FilledButton(
-                      onPressed: () => context.go(Uri.parse(url).path),
-                      child: Text(l10n.orgOpenAsAttendee),
-                    ),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      FilledButton(
+                        onPressed: () => context.go(Uri.parse(url).path),
+                        child: Text(l10n.orgOpenAsAttendee),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
