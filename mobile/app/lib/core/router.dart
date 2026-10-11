@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../data/app_state.dart';
 import '../features/agenda/agenda_screens.dart';
+import '../features/dev/dev_shot_routes.dart';
 import '../features/dev/dev_status_screen.dart';
 import '../features/echo/echo_screen.dart';
 import '../features/event/event_shell.dart';
@@ -26,6 +27,7 @@ GoRouter buildRouter() => GoRouter(
   routes: [
     GoRoute(path: '/', builder: (c, s) => const StartScreen()),
     GoRoute(path: '/dev', builder: (c, s) => const DevStatusScreen()),
+    if (devRoutesEnabled) ...devShotRoutes(),
     GoRoute(path: '/events', builder: (c, s) => const MyEventsScreen()),
     GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
 

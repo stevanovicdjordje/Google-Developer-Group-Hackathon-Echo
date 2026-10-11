@@ -20,10 +20,18 @@ import 'echo_summary_screen.dart';
 /// summary on top (becomes the premium full summary when the talk ends);
 /// one input at the bottom with two modes: Ask AI / Ask speaker.
 class EchoScreen extends ConsumerStatefulWidget {
-  const EchoScreen({super.key, required this.eventId, required this.sessionId});
+  const EchoScreen({
+    super.key,
+    required this.eventId,
+    required this.sessionId,
+    this.startTranslated = false,
+  });
 
   final String eventId;
   final String sessionId;
+
+  /// Opens with translate already on (dev screenshot routes only).
+  final bool startTranslated;
 
   @override
   ConsumerState<EchoScreen> createState() => _EchoScreenState();
@@ -69,7 +77,7 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
   bool _catchUpLoading = false;
   int _catchUpRequest = 0; // only the newest request's result is shown
   Object? _transcriptError;
-  bool _translate = false;
+  late bool _translate = widget.startTranslated;
   final _translations = <int, String>{};
   int _translatedTo = 0; // first line index without a translation
   bool _translating = false;

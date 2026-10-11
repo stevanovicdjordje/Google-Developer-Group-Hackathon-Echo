@@ -20,9 +20,12 @@ final recommendationsProvider =
 
 /// Find tab: AI recommendations, or describe who you want to meet.
 class FindScreen extends ConsumerStatefulWidget {
-  const FindScreen({super.key, required this.eventId});
+  const FindScreen({super.key, required this.eventId, this.initialPrompt});
 
   final String eventId;
+
+  /// Starts with this search already run (dev screenshot routes only).
+  final String? initialPrompt;
 
   @override
   ConsumerState<FindScreen> createState() => _FindScreenState();
@@ -32,6 +35,17 @@ class _FindScreenState extends ConsumerState<FindScreen> {
   final _prompt = TextEditingController();
   Future<List<PersonMatch>>? _search;
   String _lastPrompt = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.initialPrompt;
+    if (p != null) {
+      _prompt.text = p;
+      _lastPrompt = p;
+      _search = ref.read(findRepositoryProvider).search(widget.eventId, p);
+    }
+  }
 
   void _run() {
     final p = _prompt.text.trim();

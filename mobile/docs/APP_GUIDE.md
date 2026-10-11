@@ -51,6 +51,7 @@ mobile/
 | `/e/:eventId/session/:sessionId` (+ `/echo`) | Session detail, Echo | `features/agenda/`, `features/echo/echo_screen.dart` |
 | `/e/:eventId/messages/:personId` | Messages (MOCK) + meeting spot | `features/find/find_screens.dart` |
 | `/dev` | Backend/auth status (dev only) | `features/dev/` |
+| `/dev/shot`, `/dev/shot/:state` | Index / one screen state opened directly (see Verifying) | `features/dev/dev_shot_routes.dart` |
 
 Use `context.go` for tab/top-level navigation and `context.push` for drill-down pages that should keep "back".
 
@@ -143,6 +144,7 @@ flutter test                # all tests must pass
 ../scripts/shots.sh /tmp/eho-shots start=/ agenda=/e/devfest/agenda echo=/e/devfest/session/s1/echo
 ```
 
+- **Shot routes** (dev only, `DEV_ROUTES` dart-define, default true; `--dart-define=DEV_ROUTES=false` unmounts them): `shots.sh` can't tap, so states that need interaction have a direct URL: `/dev/shot/<state>` for `echo-qa`, `echo-paywall`, `echo-summary`, `echo-translated`, `echo-ended`, `echo-ended-unlocked`, `person-none|pending|connected`, `messages-spot`, `find-results`, `myevents-live`, `organizer-review`, `organizer-published`. `/dev/shot` lists them as links. Add a new state in `devShots` (seed it with a nested `ProviderScope`, or open the sheet in a post-frame callback) and in `test/features/dev_shot_routes_test.dart`.
 - Widget tests: follow `test/features/happy_path_test.dart`. Use a phone-sized `tester.view`, `pumpAndSettle` for navigation, and an extra `pump` after stream/async updates (Echo uses timed streams; `pumpAndSettle` alone won't wait for them).
 - Look at screenshots with the Read tool. The Map tab shows "The server is not reachable right now…" unless the `backend/maps` emulators are running. That's expected locally.
 - The Firebase Auth emulator banner is hidden on web by CSS + a MutationObserver in `web/index.html` (FlutterFire doesn't expose `disableWarnings`).
