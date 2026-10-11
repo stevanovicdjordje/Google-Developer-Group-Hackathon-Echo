@@ -54,7 +54,12 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
       if (done != true || !mounted) return;
     }
     setState(() => _joining = true);
-    await ref.read(eventRepositoryProvider).join(event.id);
+    try {
+      await ref.read(eventRepositoryProvider).join(event.id);
+    } catch (_) {
+      if (mounted) setState(() => _joining = false);
+      rethrow;
+    }
     ref.read(joinedEventsProvider.notifier).add(event);
     if (!mounted) return;
     final at = widget.markerId;
@@ -186,7 +191,19 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: FilledButton(
                   onPressed: _joining ? null : () => _join(e),
-                  child: Text(_joining ? l10n.joinJoining : l10n.joinEvent),
+                  child: _joining
+                      ? Semantics(
+                          label: l10n.joinJoining,
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          ),
+                        )
+                      : Text(l10n.joinEvent),
                 ),
               ),
             ),
