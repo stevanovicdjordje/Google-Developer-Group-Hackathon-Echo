@@ -2,62 +2,56 @@
 
 Rewritten by the orchestrator at the end of every session. The next orchestrator reads this right after syncing (`mobile/docs/WORKFLOW.md` §1).
 
-**Last session:** 2026-10-11, fifth orchestrator session. Ran M-51 (stack restart), V-7, M-52…M-58, opened `mobile#20`; V-8 dispatched.
+**Last session:** 2026-10-11, sixth orchestrator session. Done: M-57, M-59…M-63, V-8, V-9, R-1. Opened mobile#22 and mobile#23 (both done by feature:maps/find). R-2 running.
 
-## Standing mandate from @Ilij4n (relayed by his other session "ilijan-72")
+## Standing mandate from @Ilij4n (relayed by his coordinator session **eho-f7**; message it, not ilijan-72)
 
 1. Work through `BOARD.md`, highest demo value first, in parallel where files don't overlap. Use Sonnet at medium effort (`model: sonnet`, `effort: medium`) for test/verify workers.
 2. Wire teammates' contracts as they land. Don't wait for him; stop only for real 🧭 product decisions. Note defaults here.
-3. **Don't touch the iPhone.** It still runs an old release build. He'll ask for a `devfest` rebuild. The **Galaxy A55** (`adb -s RZCX511WWLF`, `~/Library/Android/sdk/platform-tools/adb`) is a dedicated test device. Reinstall and clear it freely, one device worker at a time.
-4. When context nears 200k: WORKFLOW §5 handoff, then `SendMessage` to `ilijan-72`. It starts the successor.
+3. **Don't touch the iPhone.** The **Galaxy A55** (`adb -s RZCX511WWLF`) is the test device **and now the recording phone**. Run one device worker at a time.
+4. When context nears 200k: WORKFLOW §5 handoff, then `SendMessage` to `eho-f7`. It starts the successor.
 
 ## State in one paragraph
 
-All demo flows run in `mobile/app` on all four real backends, with demo fallback. **Verified e2e on the Galaxy against local `devfest` (V-7):**
-- join, agenda, My events/leave
-- Echo: ask ~6 s, translate sr
-- map: you-are-here and route
-- Find: search ~4 s, contact, spot
-- organizer: upload → AI draft ~5 s → publish → attendee agenda
+All demo flows run in `mobile/app` against all real backends, with demo fallback. V-8 on the Galaxy verified M-55/56/57/45/60/61/52 live. `flutter analyze` is clean and **232/232 tests** pass. The video now ends with the organizer **post-event report** (feature:onboarding, :8085, `docs/MVP.md` step 8).
 
-Fixes from V-7 are merged:
-- M-54: integration_test 6/6 on the device again (harness timing)
-- M-55: room-less sessions are clean in the agenda, and Publish with flagged rows asks first
-- M-56: demo-only "AI Meetup Novi Sad" is hidden when Events is live
-- M-58: Join spinner
+## Recording prep (the current goal)
 
-Also merged:
-- M-52: draft `issues` / publish `warnings`
-- M-45: other person's meeting spot via `listContacts`
-- M-53: dev shots `echo-answer`, `echo-jump-live`, `messages-spot-picker`
+- **Galaxy:** a release APK (no debug banner).
+  - Build: `flutter build apk --release --dart-define=EMULATOR_HOST=0.0.0.0 --dart-define=DEMO_EVENT_ID=devfest --dart-define=DEMO_LOCATION=44.799820,20.400025`
+  - Install: `adb install -r`, then `pm clear rs.eho.eho`, then `pm grant … ACCESS_FINE_LOCATION`.
+  - R-2 is rebuilding it with the new eho_maps first view (mobile#22).
+  - adb reverse covers 8080–8084, 9099 and 9199. fwd6.py is PID 58985, started 07:10 from mobile/ by another session.
+- **Seeds** (order matters):
+  1. `cd backend/onboarding && make seed`. It also re-seeds maps and events.
+  2. `cd backend/find && RESET=1 make seed`. This removes non-demo people and contacts.
+  3. Echo replay: `cd backend/echo && make replay EVENT=devfest` (no `-instant`), **only when he says "record"**. The keynote lasts ~3.5 min at speed 2.
+  4. Re-seed Events (`cd backend/events && EVENT=devfest make seed`) after any test publish.
+- **Organizer report:** http://localhost:8085/org/events/devfest-report/report. Log in as organizer@eho.test / eho-demo-123.
 
-`flutter analyze` is clean, **201/201 tests**.
+## Local stack
 
-## Local stack (running since ~07:08, started by this session)
-
-- Firebase emulators: the **old** processes (node 84459, java 84497) on 127.0.0.1, which survived the kill. Reused, not restarted, because `phone_android.sh`'s `fwd6.py` + adb reverse handle 127.0.0.1.
-- maps API :8080: new code, `go run ./cmd/api` with the emulator env vars, not via `make dev`, which would start a second emulator set.
-- Find :8083 and Events :8084: `make dev`, Gemini.
-- Echo :8082: the other session's process (25634). Leave it alone.
-- Logs: `/private/tmp/claude-501/-Users-ilijan-Developer-eho/3a9df22b-2784-4690-9927-259687df740a/scratchpad/stack/` (session scratchpad; it may be gone in a new session, so re-check with `lsof -nP -iTCP -sTCP:LISTEN`).
-- Seeds: maps `devfest` (DEMO_LOCATION entrance `44.799820,20.400025`; walk entrance → Glavna sala `44.799820,20.400025;44.799820,20.400557;44.799910,20.400557`), Find 20 attendees, Events 7 sessions.
-- **The Events agenda was re-seeded after V-7's test publish. V-8 publishes again, so re-seed after it:** `cd backend/events && EVENT=devfest make seed`.
-- **Before recording the video:** `cd backend/echo && make replay EVENT=devfest` (no `-instant`) so `s1` is live in Echo. The previous replay ended, so Echo showed ENDED while the agenda shows LIVE. Also re-seed Find (`make seed`) to clear test contacts.
+- Firebase emulators on 127.0.0.1: node 84459, java 84497.
+- maps :8080, Echo :8082 (the other session's process, leave it alone), Find :8083, Events :8084.
+- Onboarding web :8085: started by session 6 with `make dev` (background); its log is in that session's scratchpad.
+- Check with `lsof -nP -iTCP -sTCP:LISTEN`.
 
 ## In flight
 
-- **V-8** (verifier, Sonnet medium): Galaxy re-check of M-52/55/56/58/45 on `devfest`. After it, re-seed Events (above) and fix whatever it finds.
+- **R-2** (verifier, Sonnet medium): rebuild + reinstall the recording APK, then check that the map shows the whole plan with the dot and that Find has no "Ilija"/"Dev Tester". After it: tell eho-f7 it's ready, and wait for "record".
 
 ## Next up
 
-1. Act on V-8's findings.
-2. **M-57** blocked on feature:maps `mobile#20` (`MapViewerScreen.locateOnOpen`, silent you-are-here on open). When it lands, one line in `map_tab.dart` + a widget test + a shot.
-3. Optional:
-   - dev shots seeded with draft issues / publish warnings (`dev_shot_routes.dart`, `_FlaggedDraft`)
-   - feed the server's contact `state` from `listContacts` into `contactsProvider`
-   - Events `getDraft`
+1. After recording: anything the human or eho-f7 reports from the video.
+2. Optional:
+   - parse the server's `Draft.sourceFiles` into `EventDraft` (models.dart) instead of the persisted count (M-63 follow-up)
+   - Events `hasMap`/`hasAgenda`
+   - M-58 spinner check by eye (join takes <1.2 s, so it's hard to see)
+   - Messages chat history is canned demo text even with live Find (no chat contract; fine for the demo).
 
-## Defaults decided this session (no 🧭 needed; tell him if asked)
+## Defaults decided (no 🧭 needed; tell him if asked)
+
+- Session 6: an organizer draft id and file count are persisted to resume after a restart; the id is cleared on any `getDraft` failure (also offline). Android release builds allow cleartext only to local hosts.
 
 - Publishing with flagged rows is allowed, after a "Publish anyway / Review" dialog (the contract says issues don't block).
 - Server issue messages are shown as sent (English); only the headings are localized.
