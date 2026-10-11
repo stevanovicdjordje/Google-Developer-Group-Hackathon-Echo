@@ -14,6 +14,7 @@ The Firebase emulators and the published demo event come from `backend/maps`
 ```bash
 make dev     # API on :8083 against the emulators (scripts/dev.sh, reads .env)
 make seed    # 20 demo attendees present at "DevFest Belgrade 2026" (EVENT=<id> for another)
+RESET=1 make seed  # same, after removing everyone else from the event's Find (test users, contacts); profiles stay
 make test    # unit + handler tests
 make test-emulator   # also the Firestore store test (emulator on 127.0.0.1:8081)
 ```

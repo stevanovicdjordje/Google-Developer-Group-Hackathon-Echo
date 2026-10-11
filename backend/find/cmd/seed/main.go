@@ -1,7 +1,7 @@
 // Command seed writes fake demo attendees to Firestore (the emulator) and
 // marks them present at the published demo event, so Find has people to show.
 //
-//	go run ./cmd/seed [-event <eventId>]
+//	go run ./cmd/seed [-event <eventId>] [-reset]
 //
 // Without -event it picks the published event created by backend/maps
 // `make seed` ("DevFest Belgrade 2026"). Idempotent: person IDs are kept.
@@ -14,6 +14,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -52,8 +53,9 @@ var attendees = []store.ProfileFields{
 func main() {
 	eventID := flag.String("event", "", "event ID (default: the published "+demoEventName+")")
 	project := flag.String("project", envOr("FIREBASE_PROJECT_ID", "demo-eho"), "Firebase project ID")
+	reset := flag.Bool("reset", false, "first remove everyone else from the event's Find (presence, contacts), e.g. test users from phone runs")
 	flag.Parse()
-	if err := run(context.Background(), *project, *eventID); err != nil {
+	if err := run(context.Background(), *project, *eventID, *reset); err != nil {
 		fmt.Fprintln(os.Stderr, "seed:", err)
 		os.Exit(1)
 	}
@@ -66,7 +68,7 @@ func envOr(k, def string) string {
 	return def
 }
 
-func run(ctx context.Context, project, eventID string) error {
+func run(ctx context.Context, project, eventID string, reset bool) error {
 	if os.Getenv("FIRESTORE_EMULATOR_HOST") == "" {
 		return errors.New("FIRESTORE_EMULATOR_HOST is not set: the seed only writes to the emulator")
 	}
@@ -84,6 +86,11 @@ func run(ctx context.Context, project, eventID string) error {
 	if e, err := st.GetEvent(ctx, eventID); err != nil || !e.Published() {
 		return fmt.Errorf("event %s is missing or not published (%v)", eventID, err)
 	}
+	if reset {
+		if err := resetEvent(ctx, fs, st, eventID); err != nil {
+			return fmt.Errorf("reset: %w", err)
+		}
+	}
 	now := time.Now().UTC()
 	for i, a := range attendees {
 		uid := fmt.Sprintf("demo-attendee-%02d", i+1)
@@ -99,6 +106,38 @@ func run(ctx context.Context, project, eventID string) error {
 		}
 	}
 	fmt.Printf("event %s: %d demo attendees present (demo-attendee-01..%02d)\n", eventID, len(attendees), len(attendees))
+	return nil
+}
+
+// resetEvent leaves only the demo attendees in the event's Find: everyone
+// else leaves (presence, the event in their profile), and every contact at
+// the event is deleted. Profiles themselves stay (a phone keeps its own).
+func resetEvent(ctx context.Context, fs *firestore.Client, st *store.FirestoreStore, eventID string) error {
+	ev := fs.Collection("events").Doc(eventID)
+	people, err := ev.Collection("people").DocumentRefs(ctx).GetAll()
+	if err != nil {
+		return err
+	}
+	left := 0
+	for _, ref := range people {
+		if strings.HasPrefix(ref.ID, "demo-attendee-") {
+			continue
+		}
+		if err := st.Leave(ctx, eventID, ref.ID); err != nil {
+			return err
+		}
+		left++
+	}
+	contacts, err := ev.Collection("contacts").DocumentRefs(ctx).GetAll()
+	if err != nil {
+		return err
+	}
+	for _, ref := range contacts {
+		if _, err := ref.Delete(ctx); err != nil {
+			return err
+		}
+	}
+	fmt.Printf("event %s: reset (%d other people removed, %d contacts deleted)\n", eventID, left, len(contacts))
 	return nil
 }
 

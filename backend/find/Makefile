@@ -15,9 +15,9 @@ test-emulator:  ## also runs the Firestore store test (emulator on 127.0.0.1:808
 vet:
 	go vet ./...
 
-seed:           ## 20 demo attendees present at the published demo event (EVENT=<id> picks another)
+seed:           ## 20 demo attendees present at the published demo event (EVENT=<id> picks another; RESET=1 removes everyone else first)
 	FIREBASE_PROJECT_ID=$${FIREBASE_PROJECT_ID:-demo-eho} FIRESTORE_EMULATOR_HOST=$${FIRESTORE_EMULATOR_HOST:-127.0.0.1:8081} \
-		go run ./cmd/seed $${EVENT:+-event $$EVENT}
+		go run ./cmd/seed $${EVENT:+-event $$EVENT} $${RESET:+-reset}
 
 docker:
 	docker build -t eho-find .
