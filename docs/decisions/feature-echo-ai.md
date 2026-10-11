@@ -21,7 +21,7 @@ covers Echo.
 
 ## Decision
 
-**Revised 2026-10-11 (@Ilij4n): a Gemini model for Ask, Catch up, Summary and question grouping; Gemma stays on Translation.** Configured by `AI_MODEL` (currently `gemini-3.8-flash`, thinking `low`) and `GEMMA_MODEL` (`gemma-4-26b-a4b-it`) via `assist.Routed`; the API's `model` field reports the model that actually produced each answer (`/healthz` also reports `translationModel`). `AI_MODEL` empty falls back to Gemma for everything.
+**Revised 2026-10-11 (@Ilij4n): a Gemini model for Ask, Catch up, Summary and question grouping; Gemma stays on Translation.** Configured by `AI_MODEL` (currently `gemini-3-flash-preview`, thinking `low`; switched from `gemini-3.8-flash` at 04:30 when 3.8 and 3.7 Flash started timing out on every call while 3 Flash answered in ~2.6 s) and `GEMMA_MODEL` (`gemma-4-26b-a4b-it`) via `assist.Routed`; the API's `model` field reports the model that actually produced each answer (`/healthz` also reports `translationModel`). `AI_MODEL` empty falls back to Gemma for everything.
 
 - Measured 2026-10-11 on the demo keynote (45 lines): Gemini 3.8 Flash gave more precise answers with consistent timestamps and better Serbian at similar latency (Ask 2–5 s, Catch up 2 s, Summary 2.6 s vs Gemma 5.8 s); translation is unchanged (Gemma, ~1.8 s).
 - `gemini-3.1-pro-preview` was the first choice, but the current key is free tier and gets HTTP 429 on every Pro call. With a billed key, set `AI_MODEL=gemini-3.1-pro-preview` (no code change).
