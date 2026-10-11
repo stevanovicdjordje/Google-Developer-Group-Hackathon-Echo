@@ -219,6 +219,11 @@ abstract interface class OrganizerRepository {
   /// Publish the draft and get the join link. Unsaved edits are saved
   /// first. [API-13]
   Future<PublishedLink> publish(EventDraft draft);
+
+  /// The caller's draft [id] while it is still open, to resume a review
+  /// after a restart. Null when it doesn't exist, isn't theirs to resume or
+  /// is already published. [API-12]
+  Future<EventDraft?> getDraft(String id);
 }
 
 enum EventsErrorKind {
@@ -651,6 +656,10 @@ class DemoOrganizerRepository implements OrganizerRepository {
     await _think(1000);
     return PublishedLink(eventId: demoEventId, url: '$linkBase/e/$demoEventId');
   }
+
+  /// Demo drafts have no id and live only in memory: nothing to resume.
+  @override
+  Future<EventDraft?> getDraft(String id) async => null;
 }
 
 // ---------------------------------------------------------------- providers

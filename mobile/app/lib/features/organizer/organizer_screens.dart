@@ -95,6 +95,44 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
   /// Set once the extraction finished; drives the "found N stages…" line.
   late EventDraft? _found = widget.foundSoFar;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.foundSoFar == null && widget.initialFiles.isEmpty) _resume();
+  }
+
+  /// After a restart: a remembered, still open draft goes straight to its
+  /// review. Anything else (gone, published, offline) forgets the id and
+  /// leaves this screen as it is, without an error.
+  Future<void> _resume() async {
+    final id = ref.read(organizerDraftIdProvider);
+    if (id == null || ref.read(organizerDraftProvider) != null) return;
+    EventDraft? draft;
+    try {
+      draft = await ref.read(organizerRepositoryProvider).getDraft(id);
+    } catch (e) {
+      debugPrint(
+        'Draft resume failed: '
+        '${e is EventsException ? e.kind.name : e.runtimeType}',
+      );
+    }
+    if (!mounted) return;
+    final ids = ref.read(organizerDraftIdProvider.notifier);
+    // The organizer may have started a new upload meanwhile.
+    final stale =
+        _working ||
+        _files.isNotEmpty ||
+        ref.read(organizerDraftProvider) != null;
+    if (draft == null) {
+      if (ref.read(organizerDraftIdProvider) == id) ids.set(null);
+      return;
+    }
+    if (stale) return;
+    ref.read(organizerFileCountProvider.notifier).set(0);
+    ref.read(organizerDraftProvider.notifier).set(draft);
+    context.go('/organizer/review');
+  }
+
   Future<void> _pick() async {
     final picked = await FilePicker.pickFiles();
     if (picked.isEmpty) return;
@@ -123,6 +161,8 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
     if (!mounted) return;
     ref.read(organizerFileCountProvider.notifier).set(_files.length);
     ref.read(organizerDraftProvider.notifier).set(draft);
+    // Replaces the id of an earlier draft (starting over).
+    ref.read(organizerDraftIdProvider.notifier).set(draft.id);
     // Show what was found for a beat, then move on to the review.
     setState(() => _found = draft);
     await Future<void>.delayed(const Duration(milliseconds: 700));
@@ -481,6 +521,7 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
       return;
     }
     ref.read(organizerWarningsProvider.notifier).set(link.warnings);
+    ref.read(organizerDraftIdProvider.notifier).set(null);
     // Attendee screens show the newly published agenda and event info.
     ref.invalidate(agendaProvider(link.eventId));
     ref.invalidate(eventSummaryProvider(link.eventId));
