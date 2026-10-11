@@ -248,6 +248,48 @@ abstract class AppLocalizations {
   /// **'Show'**
   String get mapShowSpot;
 
+  /// No description provided for @mapSheetCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'up to {count} seats'**
+  String mapSheetCapacity(int count);
+
+  /// Walking time to the selected room, big blue number in the map details sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String mapSheetWalkMinutes(int minutes);
+
+  /// No description provided for @mapSheetWalkDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'~{meters} m walk'**
+  String mapSheetWalkDistance(int meters);
+
+  /// Overline of the live session in the map details sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Now · {start}–{end}'**
+  String mapSheetNow(String start, String end);
+
+  /// No description provided for @mapSheetNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next · {start}'**
+  String mapSheetNext(String start);
+
+  /// No description provided for @mapSheetStartRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Start route'**
+  String get mapSheetStartRoute;
+
+  /// No description provided for @mapSheetOpenEcho.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Echo'**
+  String get mapSheetOpenEcho;
+
   /// No description provided for @profileYourName.
   ///
   /// In en, this message translates to:

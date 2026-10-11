@@ -25,6 +25,53 @@
   "mapMeetingTitle": "Sastanak sa {name}",
   "mapMeetingAt": "kod: {place}",
   "mapShowSpot": "Prikaži",
+  "mapSheetCapacity": "do {count} mesta",
+  "@mapSheetCapacity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapSheetWalkMinutes": "{minutes} min",
+  "@mapSheetWalkMinutes": {
+    "description": "Walking time to the selected room, big blue number in the map details sheet.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mapSheetWalkDistance": "~{meters} m hoda",
+  "@mapSheetWalkDistance": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "mapSheetNow": "Sada · {start}–{end}",
+  "@mapSheetNow": {
+    "description": "Overline of the live session in the map details sheet.",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "mapSheetNext": "Sledeće · {start}",
+  "@mapSheetNext": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      }
+    }
+  },
+  "mapSheetStartRoute": "Kreni",
+  "mapSheetOpenEcho": "Otvori Echo",
   "profileYourName": "Tvoje ime",
   "profilePrivacy": "Privatnost",
   "profileJoinedCount": "{count, plural, one{{count} događaj} few{{count} događaja} other{{count} događaja}}",
