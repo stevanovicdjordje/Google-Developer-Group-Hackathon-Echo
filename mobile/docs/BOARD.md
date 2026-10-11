@@ -10,7 +10,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| R-1 | Recording build on the Galaxy: release/profile build (no debug banner) with live defines + `DEMO_LOCATION`, `pm clear`, check live data loads (cleartext http in release!). Then Echo replay without `-instant` right before recording (keynote ~3.5 min at speed 2) | S | verifier/dev | none (ops) | After M-63 |
 
 ## Blocked
 
@@ -22,6 +21,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| R-1 | dev (sonnet, medium) | 2026-10-11 10:15 | worktree | Recording build on the Galaxy (release/profile, no banner), live defines, clean state. Echo replay at record time (keynote ~3.5 min) |
 
 ## Done
 
