@@ -1008,7 +1008,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{kb} KB'**
-  String orgFileSizeKb(int kb);
+  String orgFileSizeKb(String kb);
 
   /// No description provided for @orgFileSizeMb.
   ///

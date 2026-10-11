@@ -567,7 +567,7 @@ class AppLocalizationsSr extends AppLocalizations {
   String get orgChooseFiles => 'Izaberi fajlove';
 
   @override
-  String orgFileSizeKb(int kb) {
+  String orgFileSizeKb(String kb) {
     return '$kb KB';
   }
 
