@@ -26,7 +26,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| — | | | | |
+| M-24 | dev | 03:08 | worktree | screenshot state routes |
+| M-25 | dev | 03:08 | worktree | cleanups |
 
 ## Done
 
