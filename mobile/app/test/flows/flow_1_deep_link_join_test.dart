@@ -42,6 +42,7 @@ void main() {
     expect(find.text('Allow meeting spots'), findsOneWidget);
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
+    await waitForJoin(tester);
 
     // The marker survives onboarding: lands on the map with `at`.
     expect(locationOf(tester), '/e/devfest/map?at=m1');

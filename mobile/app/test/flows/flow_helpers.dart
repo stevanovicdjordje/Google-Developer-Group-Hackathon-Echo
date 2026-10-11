@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:eho/app.dart';
+import 'package:eho/features/join/join_screens.dart' show JoinScreen;
 import 'package:eho_maps/eho_maps.dart' show mapsSignedInProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,6 +72,32 @@ Future<void> joinAndOnboard(
   await tester.tap(find.text('Continue'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Done'));
+  await tester.pumpAndSettle();
+  await waitForJoin(tester);
+}
+
+/// Waits until the Join screen's `join` call has finished and navigated away.
+/// Only a disabled button shows while it runs (no spinner), so on a device
+/// `pumpAndSettle` returns before the demo repository's real-time delay ends.
+Future<void> waitForJoin(WidgetTester tester) =>
+    pumpUntil(tester, () => find.byType(JoinScreen).evaluate().isEmpty);
+
+/// Pumps until [done] holds (fails after [timeout]). Unlike `pumpAndSettle`
+/// it also waits out async work that schedules no frames: on a device
+/// (`LiveTestWidgetsFlutterBinding`) it waits in real time, on the host it
+/// advances the fake clock.
+Future<void> pumpUntil(
+  WidgetTester tester,
+  bool Function() done, {
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  const step = Duration(milliseconds: 100);
+  final live = tester.binding is LiveTestWidgetsFlutterBinding;
+  for (var waited = Duration.zero; !done(); waited += step) {
+    if (waited >= timeout) fail('condition not met within $timeout');
+    if (live) await tester.runAsync(() => Future<void>.delayed(step));
+    await tester.pump(step);
+  }
   await tester.pumpAndSettle();
 }
 
