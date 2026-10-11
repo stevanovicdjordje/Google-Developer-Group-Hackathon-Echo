@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:onboarding` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 11:00 · **Owner:** @stevanovicdjordje · **Scopes held:** feature:onboarding
+**Last updated:** 2026-10-11 11:40 · **Owner:** @stevanovicdjordje · **Scopes held:** feature:onboarding
 
 ## Current state
 
@@ -24,7 +24,8 @@ It runs on the **shared Firebase project** (Auth, Firestore, Storage; locally th
 | --- | --- |
 | Run locally | `cd backend/onboarding && make dev` (starts the `backend/maps` emulators + map API on :8080 if they aren't running, then this app on **http://localhost:8085**); `make seed` in a second terminal (runs the maps and events seeds, then this one) |
 | Demo login | `organizer@eho.test` / `eho-demo-123` (the same demo organizer as the map editor) |
-| **Report for the video** | Sign in → My events → *Past* → **DevFest Belgrade 2026** → *Report* = `http://localhost:8085/org/events/devfest-report/report` (print view: `?print=1`, CSV: `/report.csv`) |
+| Talk reports (paid) | `http://localhost:8085/talks` → a talk → *Get report · €2.99* → test card `4242 4242 4242 4242`, any future date, any CVC → *Download PDF*. Needs Echo running (`backend/echo`, :8082) for the AI summary; without it the PDF says the summary is unavailable |
+| **Report for the video** | Sign in → My events → *Past* → **DevFest Belgrade 2026** → *Report* = `http://localhost:8085/org/events/devfest-report/report` (one-click PDF: `/report.pdf`; print view: `?print=1`) |
 | Demo data | `devfest-report`: finished copy of DevFest (yesterday), sessions = `backend/events/cmd/seed/agenda.json`, 20 invited / 17 accepted, 15 fake reviews with per-session ratings. Also: 20 attendees `ucesnik01..20@eho.test`, invitations to the live `devfest`, two more sample events |
 | Port | 8085 (`PORT`) |
 | Env | `backend/onboarding/.env.example` (`FIREBASE_PROJECT_ID`, `FIREBASE_API_KEY` outside the emulator, `EHO_APP_URL`, `EHO_LANG`, …) |
@@ -35,6 +36,8 @@ It runs on the **shared Firebase project** (Auth, Firestore, Storage; locally th
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 11:40 · INFO · for: all · **Paid talk reports** on the web portal (`/talks`): anyone signed in can buy the PDF report of any ended talk for €2.99 (AI summary from Echo + audience rating + top questions); organizers get their own talks free. **Test checkout only** (Stripe test cards, no money moves). New Firestore collection `purchases/*` (Admin-only). Echo is called with a service account (`svc-onboarding`, custom token). See `docs/decisions/feature-onboarding-talk-reports.md`.
+- 2026-10-11 11:20 · INFO · for: all · Event report: one-click **PDF download** (`/org/events/{id}/report.pdf`); the CSV export was removed.
 - 2026-10-11 11:00 · ACTION · for: mobile, feature:maps · **Flutter web dev port 5000 → 5050**, at @stevanovicdjordje's explicit request: on macOS port 5000 is taken by the AirPlay Receiver, so `flutter run` fails there. Changed (one line each): `mobile/scripts/dev_all.sh`, `mobile/README.md`, `backend/maps/cmd/seed` (printed links), `contracts/maps/KAKO-RADI.md`, `contracts/maps/PLAN.md`; onboarding's `EHO_APP_URL` default. Backends already allow any localhost port (CORS `localhost:*`). Revert in your files if you object; nothing depends on 5000.
 - 2026-10-11 10:30 · ACTION · for: mobile, integration · `mobile#21` done: registered, port 8085, `devfest-report` seed (DevFest agenda + fake reviews), English report pages with the design tokens, summary labeled "not AI". Report URL in *How to consume*.
 - 2026-10-11 10:30 · INFO · for: feature:maps, feature:events · Onboarding writes into shared Firestore paths (see *Current state*): extra fields on `events/{id}` (field-level), `published/agenda` (your format), `draft/map` on create, `members/{uid}/events/{id}` on accept. Nothing of yours is overwritten.
@@ -43,6 +46,7 @@ It runs on the **shared Firebase project** (Auth, Firestore, Storage; locally th
 
 | ID | To | What / why | Status | Updated |
 | --- | --- | --- | --- | --- |
+| onboarding#2 | product | Please add purchase records to `docs/DATA_PRIVACY.md`: `purchases/{uid}_{eventId}_{sessionId}` keeps user, talk, amount, card brand + last four digits, payment ID, time (no card number/CVC). Retention TBD. (`feature-onboarding-talk-reports`) | open | 2026-10-11 |
 | onboarding#1 | feature:maps | Organizer check: please also accept/deny on the `role` custom claim (`organizer` / `participant`). Today every non-anonymous account counts as an organizer, so an attendee who signed up on the web portal (email/password, `role: participant`) could create events in the map editor. Accounts without the claim can keep today's rule. | open | 2026-10-11 |
 
 ## Inbound requests (others need something from us)
