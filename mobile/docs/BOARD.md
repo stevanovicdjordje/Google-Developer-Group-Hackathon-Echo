@@ -10,6 +10,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
+| M-43 | Consume find 0.2.0: send `MeetingSpot.time` ("HH:mm") in `putMeetingSpot`, read `Contact.meetingSpot.time` back (keep floor app-side); update mapping tests with the 0.2.0 fixtures | S | dev | `data/find_api_repository.dart`, `data/models.dart`?, tests | `9654e4f` |
+| M-44 | `DEMO_LOCATION` (maps `114a5d3`): pass it through `phone_android.sh` / iPhone run docs (values printed by `make seed`), document in APP_GUIDE *Run on phones*; check how eho_maps reads it (dart-define name) | S | dev | `mobile/scripts/`, APP_GUIDE, README | |
 | M-34 | (Likely superseded by `mobile#16` stable event id — prefer that.) Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 
 ## Blocked
@@ -23,13 +25,14 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-41/42 | dev (sonnet, medium) | now | worktree | `scripts/phone_android.sh` + fwd6.py + firebase_init host; onboarding keyboard unfocus (uses the Galaxy) |
+| — | | | | |
 | M-38 | dev (sonnet, medium) | now | worktree | Echo banner overlap |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-41/42 | `mobile/scripts/phone_android.sh` (adb reverse, `fwd6.py` IPv6→IPv4 for emulators, `EMULATOR_HOST=0.0.0.0`) verified on the Galaxy; onboarding unfocuses the keyboard between steps | `c726924` |
 | V-5 | Galaxy A55: integration_test of all 5 flows pass (`integration_test/`, keep screen on: `adb shell svc power stayon usb`); live smoke OK (Echo ask ~3 s, translate progressive 4–8 s, stage sheet + route, Find server people, contact auto-accept, meeting spot). Found: Android emulator host + IPv6 `adb reverse` (→ M-41), onboarding keyboard (→ M-42), you-are-here label clipped at plan edge (→ mobile#18), agenda s1 LIVE vs Echo ENDED (replay with `-instant`; for the video replay without it) | `8d783d2` |
 | M-40 | Echo pill "Jump to end" on ended talks, "Jump to live" on live | `ac3fcfc` |
 | M-39 | Find `profileRequired` → "Complete profile" (onboarding, retries on return); rate-limit countdown; no auto-retry; shots force demo except new `find-live` (server people seen: Ana Petrović, Sara Uzorić…) | `9077791` |

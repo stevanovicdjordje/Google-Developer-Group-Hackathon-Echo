@@ -14,11 +14,11 @@ Rewritten by the orchestrator at the end of every session. The next orchestrator
 
 ## State in one paragraph
 
-All demo flows run in `mobile/app` in the human's design, English UI (all strings in ARB, sr too). Echo on the real Echo API (contract 0.3.1; Gemini `gemini-3-flash-preview` for ask/catch-up/summary/grouping, Gemma for translate; app shows no model names). Map tab on the live maps backend incl. the app's own stage sheet (M-19). Find wired to `contracts/find` 0.1.1 with demo fallback (M-23), verified end to end via API (M-37); fresh users get "Complete profile" (M-39). `/e/devfest|devsummit/...` redirect to `DEMO_EVENT_ID` (M-32); saved alias joins migrate (M-33). Dev screenshot routes `/dev/shot/<state>` (incl. `find-live`), tap-through flow tests in `test/flows/` (5 flows). `flutter analyze` clean, **143/143 tests** (HEAD after M-40). Runs on Android + iPhone (`9dbd308`, `31fcb1b`; APP_GUIDE *Run on phones*). Still demo data: Events (join/agenda/organizer) → @Vertiglo `mobile#17`.
+All demo flows run in `mobile/app` in the human's design, English UI (all strings in ARB, sr too). Echo on the real Echo API (contract 0.3.1; Gemini `gemini-3-flash-preview` for ask/catch-up/summary/grouping, Gemma for translate; app shows no model names). Map tab on the live maps backend incl. the app's own stage sheet (M-19). Find wired to `contracts/find` 0.1.1 with demo fallback (M-23), verified end to end via API (M-37); fresh users get "Complete profile" (M-39). `/e/devfest|devsummit/...` redirect to `DEMO_EVENT_ID` (M-32); saved alias joins migrate (M-33). Dev screenshot routes `/dev/shot/<state>` (incl. `find-live`), tap-through flow tests in `test/flows/` (5 flows). `flutter analyze` clean, **144/144 tests** + 5 integration flows passing on the Galaxy (`integration_test/`, V-5). Runs on Android + iPhone (`9dbd308`, `31fcb1b`; APP_GUIDE *Run on phones*). Still demo data: Events (join/agenda/organizer) → @Vertiglo `mobile#17`.
 
 ## In flight
 
-- **V-5** (mobile-dev, sonnet/medium, worktree): integration_test of the 5 flows on the Galaxy A55 + live adb smoke against the local backends. Touches `pubspec.yaml` (dev_dependencies: integration_test) and `mobile/app/integration_test/`. When it reports: merge, turn bugs into tasks.
+Nothing. No worker branches open.
 
 ## Running locally (don't kill; the human's phones use them)
 
@@ -26,9 +26,9 @@ Firebase emulators (Firestore 8081, Auth 9099, Storage 9199) + maps API 8080 (`b
 
 ## Next up (priority order)
 
-1. Sync; merge V-5; handle its bugs.
-2. Watch @Vertiglo's list (in `mobile/STATUS.md` 04:40): `mobile#16` stable event id + emulators on 0.0.0.0 (then re-seed once, rebuild phones with the stable id — replaces M-34), `mobile#14` demo location, `mobile#15` Find on Gemini with timeout fallback (then restart Find with its `.env`), `mobile#17` Events backend (→ M-13: wire like M-23 with demo fallback).
-3. `mobile#13` (our questions to feature:find): meeting-spot time, seeded auto-accept flag — low priority.
+1. Sync. Ready now: **M-43** (find 0.2.0 meeting time) and **M-44** (`DEMO_LOCATION` for phones) — parallel-safe. Android phone: `DEMO_EVENT_ID=<id> mobile/scripts/phone_android.sh RZCX511WWLF`. A `::1` forwarder from V-5 (PID 36443) may still serve 8081/9099/9199.
+2. Watch @Vertiglo's list (in `mobile/STATUS.md` 04:40): `mobile#16` stable event id + emulators on 0.0.0.0 (then re-seed once, rebuild phones with the stable id — replaces M-34), `mobile#15` Find on Gemini with timeout fallback (then restart Find with its `.env`), `mobile#17` Events backend (→ M-13: wire like M-23 with demo fallback).
+3. For the video: replay the keynote **without** `-instant` (`cd backend/echo && make replay EVENT=<id>`) so `s1` is live; with `-instant` it's ended while the demo agenda says LIVE.
 4. Ideas if idle: real-device visual pass on the Galaxy vs design; hide the Echo "Echo is on" card logic for past talks with transcripts (needs a `hasEcho` flag); share via a package (needs a 🧭 if a new dependency matters to him — it's a small call, default: keep copy-to-clipboard).
 
 ## Waiting on the human
