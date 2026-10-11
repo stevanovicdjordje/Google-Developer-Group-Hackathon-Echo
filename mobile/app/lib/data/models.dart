@@ -214,18 +214,38 @@ class Profile {
 enum ContactState { none, requested, accepted }
 
 class MeetingSpot {
-  const MeetingSpot({required this.personName, required this.place});
+  const MeetingSpot({
+    required this.personName,
+    required this.place,
+    this.time,
+    this.floor,
+  });
 
   final String personName;
 
-  /// Name of a room/stand/POI on the venue map.
+  /// Name of a room/stand/POI on the venue map (`MeetingSpot.place` in
+  /// `contracts/find`).
   final String place;
 
-  Map<String, Object?> toJson() => {'personName': personName, 'place': place};
+  /// Agreed time, "HH:mm" (app-only for now; the contract has no time yet).
+  final String? time;
+
+  /// Name of the map floor the place is on, e.g. "Ground floor" (app-only,
+  /// resolved from the published map when the spot is picked).
+  final String? floor;
+
+  Map<String, Object?> toJson() => {
+    'personName': personName,
+    'place': place,
+    if (time != null) 'time': time,
+    if (floor != null) 'floor': floor,
+  };
 
   factory MeetingSpot.fromJson(Map<String, dynamic> j) => MeetingSpot(
     personName: j['personName'] as String,
     place: j['place'] as String,
+    time: j['time'] as String?,
+    floor: j['floor'] as String?,
   );
 }
 

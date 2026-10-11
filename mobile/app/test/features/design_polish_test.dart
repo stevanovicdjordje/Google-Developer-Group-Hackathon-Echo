@@ -56,8 +56,15 @@ void main() {
     await tester.enterText(find.byType(TextField), 'android');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await settle(tester);
-    expect(find.text('Results for "android"'), findsOneWidget);
-    expect(find.textContaining('only people who opted in'), findsOneWidget);
+    // No extra heading; the caption counts the results.
+    expect(find.textContaining('Results for'), findsNothing);
+    expect(
+      find.text('3 people here fit · only people who opted in'),
+      findsOneWidget,
+    );
+    // A speaker shows up with their role, and the reason is hand-written.
+    expect(find.text('Speaker · ML Engineer, Lumen Labs'), findsOneWidget);
+    expect(find.textContaining('looking for:'), findsNothing);
     expect(find.text('Top match'), findsNothing);
   });
 
@@ -73,26 +80,37 @@ void main() {
     container.read(joinedEventsProvider.notifier).add(_event);
     final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
 
-    router.go('/e/devfest/find/person/p2');
+    router.go('/e/devfest/find/person/p3');
     await settle(tester);
     // A deep link has no `?why=`; the reason comes from the recommendations.
     expect(find.text('Why you should meet'), findsOneWidget);
     expect(
-      find.text('Your details are shared only after Milan accepts.'),
+      find.text('Your details are shared only after Teodora accepts.'),
       findsOneWidget,
     );
-    container.read(contactsProvider.notifier).set('p2', ContactState.requested);
+    container.read(contactsProvider.notifier).set('p3', ContactState.requested);
     await tester.pumpAndSettle();
-    expect(find.text('Request sent · waiting for Milan'), findsOneWidget);
+    expect(find.text('Request sent · waiting for Teodora'), findsOneWidget);
 
-    container.read(contactsProvider.notifier).set('p2', ContactState.accepted);
+    container.read(contactsProvider.notifier).set('p3', ContactState.accepted);
+    await tester.pumpAndSettle();
+    expect(find.text('Teodora accepted · Message'), findsOneWidget);
+    // The privacy note stays in every state, like the design.
+    expect(
+      find.text('Your details are shared only after Teodora accepts.'),
+      findsOneWidget,
+    );
+
+    container.read(contactsProvider.notifier).set('p3', ContactState.accepted);
     container
         .read(meetingSpotProvider.notifier)
-        .set(const MeetingSpot(personName: 'Milan Jovanović', place: 'Sala A'));
-    router.go('/e/devfest/messages/p2');
+        .set(const MeetingSpot(personName: 'Teodora Nikolić', place: 'Sala A'));
+    router.go('/e/devfest/messages/p3');
     await settle(tester);
-    expect(find.text('Milan accepted your contact request'), findsOneWidget);
+    expect(find.text('Teodora accepted your contact request'), findsOneWidget);
     expect(find.text('Meet at Sala A'), findsOneWidget);
+    // Time from the conversation, floor of the demo place (map not loaded).
+    expect(find.text('15:20 · Ground floor'), findsOneWidget);
 
     await tester.tap(find.text('Show on map'));
     await settle(tester);

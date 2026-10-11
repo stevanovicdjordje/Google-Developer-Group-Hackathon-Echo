@@ -115,7 +115,7 @@ void main() {
 
     expect(find.text('Questions for Mara'), findsOneWidget);
     expect(
-      find.text('3 questions · shown to the speaker at the end'),
+      find.text('12 questions · shown to the speaker at the end'),
       findsOneWidget,
     );
 
@@ -127,20 +127,21 @@ void main() {
     await tester.tap(find.byTooltip('Send question'));
     await tester.pumpAndSettle();
     expect(
-      find.text('4 questions · shown to the speaker at the end'),
+      find.text('13 questions · shown to the speaker at the end'),
       findsOneWidget,
     );
-    expect(find.text('YOUR QUESTION'), findsOneWidget);
+    // The demo seed already has one of yours (the design's second question).
+    expect(find.text('YOUR QUESTION'), findsNWidgets(2));
     // After asking, the sheet shows Newest: your question first.
     expect(_questionOrder(tester).first, 'Mine: what about iOS?');
 
     await tester.tap(find.text('Top'));
     await tester.pumpAndSettle();
-    expect(_questionOrder(tester), [
+    // Most votes first (your 1-vote question is further down the list).
+    expect(_questionOrder(tester).take(3), [
       'Which model did you use for the hybrid router?',
       'How do you update on-device models without app releases?',
       'Does quantization hurt Serbian language quality?',
-      'Mine: what about iOS?',
     ]);
 
     // Voting a question up to 10 moves it above the 9-vote one.
@@ -152,7 +153,10 @@ void main() {
 
     await tester.tap(find.text('Mine'));
     await tester.pumpAndSettle();
-    expect(_questionOrder(tester), ['Mine: what about iOS?']);
+    expect(_questionOrder(tester), [
+      'Mine: what about iOS?',
+      'How do you update on-device models without app releases?',
+    ]);
 
     // The AI grouped 3 similar questions into the first one (design chip).
     await tester.tap(find.text('Top'));
@@ -161,7 +165,7 @@ void main() {
 
     // The vote button is the design's 52×56 and filled when voted.
     final voteBox = find.ancestor(
-      of: find.text('1'),
+      of: find.text('14'),
       matching: find.byWidgetPredicate(
         (w) => w is SizedBox && w.width == 52 && w.height == 56,
       ),
@@ -188,11 +192,12 @@ void main() {
     );
     // No new question: the existing one is now yours, with your vote.
     expect(
-      find.text('3 questions · shown to the speaker at the end'),
+      find.text('12 questions · shown to the speaker at the end'),
       findsOneWidget,
     );
     expect(find.text('What model runs the router?'), findsNothing);
-    expect(find.text('YOUR QUESTION'), findsOneWidget);
+    // This one plus the seeded question that is already yours.
+    expect(find.text('YOUR QUESTION'), findsNWidgets(2));
     expect(
       _questionOrder(tester).first,
       'Which model did you use for the hybrid router?',

@@ -53,7 +53,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'android');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
-    expect(find.text('Results for "android"'), findsOneWidget);
+    expect(find.textContaining('people here fit'), findsOneWidget);
 
     // Back to Agenda: same scroll position.
     await tapTab(tester, 'Agenda');
@@ -61,20 +61,24 @@ void main() {
 
     // Back to Find: same query and results.
     await tapTab(tester, 'Find');
-    expect(find.text('Results for "android"'), findsOneWidget);
+    expect(find.textContaining('people here fit'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'android'), findsOneWidget);
 
-    // Open a person, switch away and back: the person page is still open.
+    // Open a person: full screen (no bottom navigation, like the design).
     await tester.tap(find.text('Ana Petrović').first);
     await tester.pumpAndSettle();
     expect(find.text('Android dev at Fintio'), findsWidgets);
-    await tapTab(tester, 'Profile');
-    await tapTab(tester, 'Find');
-    expect(find.text('Android dev at Fintio'), findsWidgets);
+    expect(find.byType(NavigationBar), findsNothing);
+
+    // Back: the results are still there, with the navigation.
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('people here fit'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
 
     // Tapping the active tab goes to its root, results still there.
     await tapTab(tester, 'Find');
-    expect(find.text('Results for "android"'), findsOneWidget);
+    expect(find.textContaining('people here fit'), findsOneWidget);
   });
 
   testWidgets('event deep links open the right screens', (tester) async {
@@ -92,6 +96,7 @@ void main() {
     go(tester, '/e/devfest/find/person/p2');
     await tester.pumpAndSettle();
     expect(find.text('Founder, ParkIt'), findsWidgets);
+    expect(find.byType(NavigationBar), findsNothing);
 
     go(tester, '/e/devfest/profile');
     await tester.pumpAndSettle();

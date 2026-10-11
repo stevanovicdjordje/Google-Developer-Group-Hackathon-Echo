@@ -10,7 +10,6 @@ import '../../data/demo_data.dart' as demo;
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
-import '../join/join_screens.dart' show eventSummaryProvider;
 
 final recommendationsProvider =
     FutureProvider.family<List<PersonMatch>, String>((ref, eventId) {
@@ -34,7 +33,6 @@ class FindScreen extends ConsumerStatefulWidget {
 class _FindScreenState extends ConsumerState<FindScreen> {
   final _prompt = TextEditingController();
   Future<List<PersonMatch>>? _search;
-  String _lastPrompt = '';
 
   @override
   void initState() {
@@ -42,7 +40,6 @@ class _FindScreenState extends ConsumerState<FindScreen> {
     final p = widget.initialPrompt;
     if (p != null) {
       _prompt.text = p;
-      _lastPrompt = p;
       _search = ref.read(findRepositoryProvider).search(widget.eventId, p);
     }
   }
@@ -52,7 +49,6 @@ class _FindScreenState extends ConsumerState<FindScreen> {
     if (p.isEmpty) return;
     FocusScope.of(context).unfocus();
     setState(() {
-      _lastPrompt = p;
       _search = ref.read(findRepositoryProvider).search(widget.eventId, p);
     });
   }
@@ -61,10 +57,6 @@ class _FindScreenState extends ConsumerState<FindScreen> {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
-    final eventName = ref
-        .watch(eventSummaryProvider(widget.eventId))
-        .value
-        ?.name;
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -86,19 +78,13 @@ class _FindScreenState extends ConsumerState<FindScreen> {
             ),
             const SizedBox(height: 20),
             if (_search != null) ...[
-              _SectionTitle(l10n.findResultsFor(_lastPrompt)),
               FutureBuilder<List<PersonMatch>>(
                 future: _search,
                 builder: (context, snap) => snap.hasData
                     ? _Matches(
                         widget.eventId,
                         snap.data!,
-                        caption: eventName == null
-                            ? null
-                            : l10n.findResultsCaption(
-                                snap.data!.length,
-                                eventName,
-                              ),
+                        caption: l10n.findResultsCaption(snap.data!.length),
                       )
                     : _Thinking(l10n.findSearching),
               ),
@@ -476,139 +462,160 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
             ?.where((m) => m.person.id == p.id)
             .firstOrNull
             ?.why;
+    // Design: no bottom navigation here (the event shell hides it); the
+    // contact button and the privacy note sit at the bottom in every state.
     return Scaffold(
       body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+        child: Column(
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: _BackButton(
-                onSurface: true,
-                onPressed: () => context.canPop()
-                    ? context.pop()
-                    : context.go('/e/${widget.eventId}/find'),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Center(child: _Avatar(p, size: 96)),
-            const SizedBox(height: 10),
-            Text(
-              p.name,
-              style: t.headlineMedium?.copyWith(fontSize: 28),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              p.headline,
-              style: t.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: [for (final i in p.interests) Chip(label: Text(i))],
-            ),
-            const SizedBox(height: 18),
-            EhoCard(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: SizedBox(
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.lookingFor,
-                      style: t.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSurfaceVariant,
-                      ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _BackButton(
+                      onSurface: true,
+                      onPressed: () => context.canPop()
+                          ? context.pop()
+                          : context.go('/e/${widget.eventId}/find'),
                     ),
-                    const SizedBox(height: 4),
-                    Text(p.lookingFor, style: t.bodyMedium),
-                  ],
-                ),
-              ),
-            ),
-            if (why != null) ...[
-              const SizedBox(height: 18),
-              EhoCard(
-                color: scheme.primaryContainer,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  const SizedBox(height: 18),
+                  Center(child: _Avatar(p, size: 96)),
+                  const SizedBox(height: 10),
+                  Text(
+                    p.name,
+                    style: t.headlineMedium?.copyWith(fontSize: 28),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    p.headline,
+                    style: t.bodyLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            size: 14,
-                            color: scheme.onPrimaryContainer,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            l10n.personWhyMeet,
-                            style: t.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: scheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        why,
-                        style: t.bodyMedium?.copyWith(
-                          color: context.eho.bodyOnTint,
-                        ),
-                      ),
+                      for (final i in p.interests) Chip(label: Text(i)),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 18),
+                  EhoCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.lookingFor,
+                            style: t.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(p.lookingFor, style: t.bodyMedium),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (why != null) ...[
+                    const SizedBox(height: 18),
+                    EhoCard(
+                      color: scheme.primaryContainer,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  size: 14,
+                                  color: scheme.onPrimaryContainer,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  l10n.personWhyMeet,
+                                  style: t.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: scheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              why,
+                              style: t.bodyMedium?.copyWith(
+                                color: context.eho.bodyOnTint,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
-            const SizedBox(height: 28),
-            switch (state) {
-              ContactState.none => FilledButton.icon(
-                icon: const Icon(Icons.person_add_alt),
-                label: Text(l10n.personSendRequest),
-                onPressed: _contact,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  switch (state) {
+                    ContactState.none => FilledButton.icon(
+                      icon: const Icon(Icons.person_add_alt),
+                      label: Text(l10n.personSendRequest),
+                      onPressed: _contact,
+                    ),
+                    ContactState.requested => OutlinedButton.icon(
+                      icon: const Icon(Icons.schedule),
+                      label: Text(l10n.personRequestSentTo(firstName)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: scheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {},
+                    ),
+                    ContactState.accepted => FilledButton.icon(
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: Text(l10n.personAccepted(firstName)),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: context.eho.ink,
+                        foregroundColor: context.eho.onInk,
+                      ),
+                      onPressed: () =>
+                          context.push('/e/${widget.eventId}/messages/${p.id}'),
+                    ),
+                  },
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.personDetailsNote(firstName),
+                    textAlign: TextAlign.center,
+                    style: t.labelMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-              ContactState.requested => OutlinedButton.icon(
-                icon: const Icon(Icons.schedule),
-                label: Text(l10n.personRequestSentTo(firstName)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: scheme.onSurfaceVariant,
-                ),
-                onPressed: () {},
-              ),
-              ContactState.accepted => FilledButton.icon(
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: Text(l10n.personAccepted(firstName)),
-                style: FilledButton.styleFrom(
-                  backgroundColor: context.eho.ink,
-                  foregroundColor: context.eho.onInk,
-                ),
-                onPressed: () =>
-                    context.push('/e/${widget.eventId}/messages/${p.id}'),
-              ),
-            },
-            if (state != ContactState.accepted) ...[
-              const SizedBox(height: 12),
-              Text(
-                l10n.personDetailsNote(firstName),
-                textAlign: TextAlign.center,
-                style: t.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-            ],
+            ),
           ],
         ),
       ),
@@ -658,9 +665,10 @@ class MessagesScreen extends ConsumerWidget {
     final spot = ref.watch(meetingSpotProvider);
     final accepted = ref.watch(contactsProvider)[p.id] == ContactState.accepted;
     final myInterests = ref.watch(profileProvider).interests;
+    // "Matched on": shared interests, or theirs when the profile has none.
+    final mine = p.interests.where(myInterests.contains).toList();
     final shared = [
-      for (final i in p.interests)
-        if (myInterests.contains(i)) i.toLowerCase(),
+      for (final i in mine.isEmpty ? p.interests : mine) _asTopic(i),
     ].take(2).toList();
     final theme = Theme.of(context);
     final t = theme.textTheme;
@@ -697,7 +705,14 @@ class MessagesScreen extends ConsumerWidget {
                         Text(
                           shared.isEmpty
                               ? p.headline
-                              : l10n.messagesMatchedOn(shared.join(' · ')),
+                              : l10n.messagesMatchedOn(
+                                  shared.length == 1
+                                      ? shared.first
+                                      : l10n.messagesTopicsTwo(
+                                          shared[0],
+                                          shared[1],
+                                        ),
+                                ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: t.labelMedium?.copyWith(
@@ -725,6 +740,7 @@ class MessagesScreen extends ConsumerWidget {
                     if (spot != null && spot.personName == p.name)
                       _MeetingSpotCard(
                         place: spot.place,
+                        when: _spotWhen(l10n, ref, spot),
                         onShowOnMap: () => context.go('/e/$eventId/map?spot=1'),
                       ),
                   ],
@@ -796,7 +812,7 @@ class MessagesScreen extends ConsumerWidget {
   ) async {
     final event = ref.read(publishedEventProvider(eventId)).value;
     final places = event == null
-        ? [...demo.stages, 'Info pult', 'Hrana i piće']
+        ? _demoPlaces
         : [
             for (final f in event.map.features)
               if (f.type != FeatureType.marker) f.name,
@@ -819,9 +835,50 @@ class MessagesScreen extends ConsumerWidget {
     if (place == null) return;
     ref
         .read(meetingSpotProvider.notifier)
-        .set(MeetingSpot(personName: personName, place: place));
+        .set(
+          MeetingSpot(
+            personName: personName,
+            place: place,
+            time: demo.demoMeetingTime,
+            floor: _floorOf(ref, place),
+          ),
+        );
+  }
+
+  /// Name of the map floor [place] is on: from the published map, or the
+  /// demo ground floor for the demo places when the map isn't loaded.
+  String? _floorOf(WidgetRef ref, String place) {
+    // Only a map that is already loaded: never start loading it from here.
+    final provider = publishedEventProvider(eventId);
+    final map = ref.exists(provider) ? ref.read(provider).value?.map : null;
+    if (map == null) {
+      return _demoPlaces.contains(place) ? demo.demoFloorName : null;
+    }
+    final floorId = map.features
+        .where((f) => f.name == place)
+        .firstOrNull
+        ?.floorId;
+    return map.floors.where((f) => f.id == floorId).firstOrNull?.name;
+  }
+
+  /// "15:20 · Ground floor" under the meeting spot. Spots saved before these
+  /// fields existed fall back to the time agreed in the (mock) conversation.
+  String? _spotWhen(AppLocalizations l10n, WidgetRef ref, MeetingSpot spot) {
+    final time = spot.time ?? demo.demoMeetingTime;
+    final floor = spot.floor ?? _floorOf(ref, spot.place);
+    return floor == null ? time : l10n.messagesSpotWhen(time, floor);
   }
 }
+
+/// Places to meet when the venue map isn't loaded (names on the seeded map).
+const _demoPlaces = [...demo.stages, 'Info pult', 'Hrana i piće'];
+
+/// An interest as a topic in a sentence: "Mobile" → "mobile", acronyms
+/// ("AI / ML") stay as they are.
+String _asTopic(String interest) =>
+    interest.substring(1) == interest.substring(1).toLowerCase()
+    ? interest.toLowerCase()
+    : interest;
 
 /// Centered system message in the conversation ("X accepted your request").
 class _SystemPill extends StatelessWidget {
@@ -892,9 +949,16 @@ class _Bubble extends StatelessWidget {
 /// The agreed meeting spot: white card with a 2 px live border, pin tile,
 /// place name and a "show on map" button.
 class _MeetingSpotCard extends StatelessWidget {
-  const _MeetingSpotCard({required this.place, required this.onShowOnMap});
+  const _MeetingSpotCard({
+    required this.place,
+    required this.onShowOnMap,
+    this.when,
+  });
 
   final String place;
+
+  /// Time and floor line ("15:20 · Ground floor").
+  final String? when;
   final VoidCallback onShowOnMap;
 
   @override
@@ -919,9 +983,20 @@ class _MeetingSpotCard extends StatelessWidget {
                   const IconTile(Icons.place_outlined, live: true, size: 36),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      l10n.messagesMeetAt(place),
-                      style: t.titleSmall,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.messagesMeetAt(place), style: t.titleSmall),
+                        if (when != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            when!,
+                            style: t.labelMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ],
