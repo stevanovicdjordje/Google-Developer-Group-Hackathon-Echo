@@ -39,6 +39,7 @@ class _TwoEvents extends DemoEventRepository {
       start: '10:00',
       end: '11:00',
       speakers: const [],
+      isLive: true,
     ),
   ];
 }
