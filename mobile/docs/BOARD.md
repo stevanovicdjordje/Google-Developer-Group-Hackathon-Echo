@@ -37,6 +37,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-28 | Echo: catch-up preview, neutral ended pill, paywall doc icon, share icon + computed read time, shots `echo-qa-own`/`echo-selected`, shots.sh `USE_ECHO_API` default false. Kept: live line untinted (frame tints only the selected line), share still copies (no share_plus) | `a9dcf10` |
 | M-29 | Session (header row + bookmark, AI TRACK, Open Echo, pinned Map), Start tagline, My events (Happening now, Live · Day 1, leave menu only on past cards), Profile one "For organizers" row + sheet, Onboarding "1 of 3" | `fc3410d` |
 | M-32 | `/e/devfest|devsummit/...` redirect to `/e/<DEMO_EVENT_ID>/...` (path + query kept; no-op by default); live: Echo transcript + map on `/e/devfest` | `37e3170` |
 | M-26b | App on real Echo: `/e/<backend id>/session/s1/echo` shows the server transcript; app sends `language` per echo 0.3.1; no model name in the UI. Bug: `/e/devfest/...` ignores `DEMO_EVENT_ID` → M-32 | verification |
