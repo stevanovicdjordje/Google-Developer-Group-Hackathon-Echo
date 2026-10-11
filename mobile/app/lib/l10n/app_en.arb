@@ -114,17 +114,21 @@
     }
   },
   "profileTalkSummaries": "Talk summaries",
-  "profileUnlockedCount": "{count, plural, =1{1 unlocked} other{{count} unlocked}}",
-  "@profileUnlockedCount": {
+  "profilePremium": "Premium",
+  "profileForOrganizers": "For organizers",
+  "profileCreateEvent": "Create event",
+  "profileEditVenueMap": "Edit venue map",
+  "agendaEventDay": "{event} · Day {day}",
+  "@agendaEventDay": {
     "placeholders": {
-      "count": {
+      "event": {
+        "type": "String"
+      },
+      "day": {
         "type": "int"
       }
     }
   },
-  "profileForOrganizers": "For organizers",
-  "profileCreateEvent": "Create event",
-  "profileEditVenueMap": "Edit venue map",
   "agendaAllStages": "All stages",
   "agendaLiveEchoOn": "Live now · Echo on",
   "agendaLiveNow": "Live now",
@@ -192,7 +196,14 @@
   "allowMeetingSpotsSubtitle": "Agree on a place to meet. Never your live location.",
   "onboardingPrivacyNote": "Your profile only ever goes to the AI to find matches, and only while \"Show me in Find\" is on.",
   "myEventsNow": "Happening now",
-  "myEventsLiveDay": "Live · Day 1",
+  "myEventsLiveDay": "Live · Day {day}",
+  "@myEventsLiveDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "myEventsPast": "Past",
   "myEventsEmpty": "Open an event link to join your first event.",
   "leaveEvent": "Leave event",

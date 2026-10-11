@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
 import 'app_state.dart' show profileProvider;
 import 'demo_data.dart' as demo;
+import 'demo_ids.dart';
 import 'echo_api_repository.dart';
 import 'echo_models.dart';
 import 'find_api_repository.dart';
@@ -199,12 +200,10 @@ abstract interface class OrganizerRepository {
 Future<void> _think([int ms = 900]) =>
     Future<void>.delayed(Duration(milliseconds: ms));
 
-/// Event ID the demo used before the rename to DevFest. Old QR codes and
-/// links still point at it, so it resolves to the demo event.
-const _legacyDemoEventId = 'devsummit';
-
+/// Old QR codes and links use the event ID from before the rename to DevFest
+/// (`demoEventAliases`); they resolve to the demo event.
 String _canonicalEventId(String eventId) =>
-    eventId == _legacyDemoEventId ? demoEventId : eventId;
+    demoEventAliases.contains(eventId) ? demoEventId : eventId;
 
 /// Lowercases only the first letter so acronyms and names survive
 /// ("on-device ML", "senior Go engineers").
@@ -515,7 +514,24 @@ class DemoOrganizerRepository implements OrganizerRepository {
       dates: demo.demoEventDates,
       venue: demo.demoEventVenue,
       stages: demo.stages,
-      sessions: demo.sessions.where((s) => !s.isBreak).toList(),
+      // One session comes back without a stage ("room missing in the PDF"),
+      // so the review shows a flagged row.
+      sessions: [
+        for (final s in demo.sessions.where((s) => !s.isBreak))
+          s.id == demo.organizerFlaggedSessionId
+              ? Session(
+                  id: s.id,
+                  title: s.title,
+                  stage: '',
+                  start: s.start,
+                  end: s.end,
+                  speakers: s.speakers,
+                  description: s.description,
+                  track: s.track,
+                  isLive: s.isLive,
+                )
+              : s,
+      ],
       speakers: demo.speakers,
     );
   }

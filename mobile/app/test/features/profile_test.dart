@@ -35,6 +35,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Premium'), findsOneWidget);
     expect(find.text('Create event'), findsNothing);
     await tester.tap(find.text('For organizers'));
     await tester.pumpAndSettle();

@@ -39,6 +39,7 @@ void main() {
 
     // Agenda → session → Echo
     expect(find.text('All stages'), findsOneWidget);
+    expect(find.text('DevFest Belgrade 2026 · Day 1'), findsOneWidget);
     await tester.tap(
       find.text('On-device AI: when the model lives in your pocket'),
     );
