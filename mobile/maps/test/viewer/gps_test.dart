@@ -64,6 +64,16 @@ class FakeLocation implements LocationSource {
   }
 }
 
+/// A source that says whether it may start without a prompt.
+class QuietFakeLocation extends FakeLocation implements QuietLocationSource {
+  QuietFakeLocation({this.allowed = true});
+
+  bool allowed;
+
+  @override
+  Future<bool> allowedWithoutPrompt() async => allowed;
+}
+
 /// (300, 600) → up to the hall at (300, 200): 20 m.
 const upRoute = {
   'publishedVersion': 1,
@@ -82,8 +92,12 @@ const upRoute = {
 };
 
 class Harness {
+  Harness({FakeLocation? location, this.locateOnOpen = false})
+    : location = location ?? FakeLocation();
+
   final repo = FakeRepository();
-  final location = FakeLocation();
+  final FakeLocation location;
+  final bool locateOnOpen;
   final requests = <Map<String, dynamic>>[];
 
   /// Off = the app's Map tab is offstage.
@@ -126,6 +140,7 @@ class Harness {
           initialFeatureId: featureId,
           highlightFeatureId: highlightId,
           highlightLabel: highlightLabel,
+          locateOnOpen: locateOnOpen,
         ),
       ),
     ),
@@ -353,5 +368,72 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Tražim GPS signal…'), findsNothing);
+  });
+
+  group('locateOnOpen (mobile#20)', () {
+    const denied =
+        'Lokacija nije dozvoljena. Skenirajte QR kod ili izaberite mesto na mapi.';
+
+    testWidgets('starts without a tap when allowed, and again when back on '
+        'screen', (tester) async {
+      final h = Harness(location: QuietFakeLocation(), locateOnOpen: true);
+      await h.start(tester);
+      expect(h.location.watching, 1);
+      await h.gps(tester, fixAt(300, 600));
+      expect(find.text('Vi ste ovde'), findsOneWidget);
+
+      h.tickers.value = false;
+      await tester.pumpAndSettle();
+      expect(h.location.controller.hasListener, isFalse);
+      h.tickers.value = true;
+      await tester.pumpAndSettle();
+      expect(h.location.watching, 2);
+      await h.gps(tester, fixAt(300, 600));
+      expect(find.text('Vi ste ovde'), findsOneWidget);
+    });
+
+    testWidgets('stays idle when it would need a prompt', (tester) async {
+      final h = Harness(
+        location: QuietFakeLocation(allowed: false),
+        locateOnOpen: true,
+      );
+      await h.start(tester);
+      expect(h.location.watching, 0);
+      expect(find.text('Tražim GPS signal…'), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('never starts a source that can\'t tell', (tester) async {
+      final h = Harness(locateOnOpen: true);
+      await h.start(tester);
+      expect(h.location.watching, 0);
+    });
+
+    testWidgets('off by default', (tester) async {
+      final h = Harness(location: QuietFakeLocation());
+      await h.start(tester);
+      expect(h.location.watching, 0);
+    });
+
+    testWidgets('an error stays silent and leaves the button idle', (
+      tester,
+    ) async {
+      final h = Harness(location: QuietFakeLocation(), locateOnOpen: true);
+      await h.start(tester);
+      h.location.controller.addError(
+        const LocationUnavailable(LocationProblem.denied),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(denied), findsNothing);
+      expect(find.text('Tražim GPS signal…'), findsNothing);
+      // A tap afterwards is a normal start with the usual messages.
+      await tester.tap(find.byTooltip('Moja lokacija'));
+      await tester.pumpAndSettle();
+      h.location.controller.addError(
+        const LocationUnavailable(LocationProblem.denied),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(denied), findsOneWidget);
+    });
   });
 }

@@ -33,9 +33,18 @@ class MapViewerScreen extends ConsumerWidget {
     this.highlightLabel,
     this.featureSheetBuilder,
     this.previewRouteOnSelect = true,
+    this.locateOnOpen = false,
   });
 
   final String eventId;
+
+  /// Shows "You are here" on open without a tap, but only when that needs no
+  /// question: a [QuietLocationSource] that is already allowed (the
+  /// `DEMO_LOCATION` source, or permission already granted). Never prompts;
+  /// stays silent if it can't. Runs again when the map comes back on screen.
+  /// Doesn't move the camera when the map opens on a place, QR marker or
+  /// highlight.
+  final bool locateOnOpen;
 
   /// Lets the app supply the details sheet of a selected place (null from the
   /// builder = the map's default sheet).
@@ -72,6 +81,7 @@ class MapViewerScreen extends ConsumerWidget {
         highlightLabel: highlightLabel,
         featureSheetBuilder: featureSheetBuilder,
         previewRouteOnSelect: previewRouteOnSelect,
+        locateOnOpen: locateOnOpen,
       ),
       loading: () => _Message(
         title: l10n.mapLoading,
@@ -184,6 +194,7 @@ class _Viewer extends ConsumerStatefulWidget {
     this.highlightLabel,
     this.featureSheetBuilder,
     this.previewRouteOnSelect = true,
+    this.locateOnOpen = false,
   });
 
   final PublishedEvent event;
@@ -194,6 +205,7 @@ class _Viewer extends ConsumerStatefulWidget {
   final String? highlightLabel;
   final MapFeatureSheetBuilder? featureSheetBuilder;
   final bool previewRouteOnSelect;
+  final bool locateOnOpen;
 
   @override
   ConsumerState<_Viewer> createState() => _ViewerState();
@@ -229,6 +241,10 @@ class _ViewerState extends ConsumerState<_Viewer> {
   /// Live GPS (only after the attendee taps "Moja lokacija"). Kept in
   /// memory only; never stored or logged.
   StreamSubscription<GpsFix>? _gpsSub;
+
+  /// GPS was started by [_Viewer.locateOnOpen]: errors stay silent.
+  bool _gpsQuiet = false;
+  bool _onScreen = false;
   GpsFix? _gps;
   bool _gpsOn = false;
   bool _centerOnNextFix = false;
@@ -304,6 +320,27 @@ class _ViewerState extends ConsumerState<_Viewer> {
     // Read it every time so this runs again when the tab is hidden.
     final onScreen = TickerMode.valuesOf(context).enabled;
     if (_gpsOn && !onScreen) _stopGps();
+    if (onScreen && !_onScreen && widget.locateOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _locateQuietly());
+    }
+    _onScreen = onScreen;
+  }
+
+  /// [_Viewer.locateOnOpen]: starts GPS like the button, if no prompt is needed.
+  Future<void> _locateQuietly() async {
+    if (!mounted || _gpsOn) return;
+    final source = ref.read(locationSourceProvider);
+    if (source is! QuietLocationSource) return;
+    if (!await source.allowedWithoutPrompt()) return;
+    if (!mounted || _gpsOn || !_onScreen) return;
+    setState(() {
+      _gpsOn = true;
+      _gpsQuiet = true;
+      _gps = null;
+      // Keep a place the map opened on (QR marker, feature, highlight) in view.
+      _centerOnNextFix = widget.initialFeatureId == null;
+    });
+    _gpsSub = source.watch().listen(_onFix, onError: _onGpsError);
   }
 
   @override
@@ -565,6 +602,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
     }
     setState(() {
       _gpsOn = true;
+      _gpsQuiet = false;
       _gps = null;
       _centerOnNextFix = true;
     });
@@ -579,6 +617,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
     _gpsSub = null;
     setState(() {
       _gpsOn = false;
+      _gpsQuiet = false;
       _gps = null;
     });
   }
@@ -592,7 +631,9 @@ class _ViewerState extends ConsumerState<_Viewer> {
       if (mounted) setState(() => _gps = null);
       return;
     }
+    final quiet = _gpsQuiet;
     _stopGps();
+    if (quiet) return; // started on its own: no message, the button stays idle
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(switch (problem) {

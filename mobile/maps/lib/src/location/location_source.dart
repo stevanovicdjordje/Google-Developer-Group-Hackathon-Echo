@@ -36,7 +36,28 @@ abstract class LocationSource {
   Stream<GpsFix> watch();
 }
 
-class GeolocatorLocationSource implements LocationSource {
+/// A source that can tell whether [LocationSource.watch] would start without
+/// asking the user anything (no permission prompt, location service on).
+/// Used by `MapViewerScreen(locateOnOpen: true)`; other sources never start
+/// on their own.
+abstract interface class QuietLocationSource implements LocationSource {
+  Future<bool> allowedWithoutPrompt();
+}
+
+class GeolocatorLocationSource implements QuietLocationSource {
+  /// Only checks; never calls `requestPermission()`.
+  @override
+  Future<bool> allowedWithoutPrompt() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) return false;
+      final p = await Geolocator.checkPermission();
+      return p == LocationPermission.whileInUse ||
+          p == LocationPermission.always;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Stream<GpsFix> watch() async* {
     if (!await Geolocator.isLocationServiceEnabled()) {
@@ -81,7 +102,7 @@ class GeolocatorLocationSource implements LocationSource {
 /// `--dart-define=DEMO_LOCATION=<lat>,<lng>` stands still there;
 /// `<lat>,<lng>;<lat>,<lng>;…` walks along the points at [walkSpeed] and
 /// stays at the last one. Needs no location permission.
-class DemoLocationSource implements LocationSource {
+class DemoLocationSource implements QuietLocationSource {
   DemoLocationSource(
     this.path, {
     this.accuracyMeters = 5,
@@ -109,6 +130,10 @@ class DemoLocationSource implements LocationSource {
     }
     return DemoLocationSource(path);
   }
+
+  /// A pretend position never needs a permission.
+  @override
+  Future<bool> allowedWithoutPrompt() async => true;
 
   /// Where the walk is after [seconds].
   LatLngDeg positionAt(double seconds) {

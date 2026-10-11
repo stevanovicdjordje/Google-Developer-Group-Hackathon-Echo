@@ -9,6 +9,7 @@ export 'src/editor/qr_screen.dart' show mapsLinkBaseProvider;
 export 'src/location/location_source.dart'
     show
         LocationSource,
+        QuietLocationSource,
         GpsFix,
         LocationUnavailable,
         LocationProblem,
