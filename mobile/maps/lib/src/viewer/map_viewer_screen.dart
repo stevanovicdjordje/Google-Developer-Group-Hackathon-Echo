@@ -82,6 +82,8 @@ class MapViewerScreen extends ConsumerWidget {
       ),
       error: (e, _) => _Message(
         title: e is EventNotFound ? l10n.mapNotFound : l10n.mapUnavailable,
+        hint: e is EventNotFound ? l10n.mapNotFoundHint : null,
+        icon: e is EventNotFound ? Icons.map_outlined : Icons.cloud_off,
         child: e is EventNotFound
             ? null
             : FilledButton.icon(
@@ -98,32 +100,69 @@ class MapViewerScreen extends ConsumerWidget {
 }
 
 class _Message extends StatelessWidget {
-  const _Message({required this.title, this.child});
+  const _Message({required this.title, this.hint, this.icon, this.child});
 
   final String title;
+  final String? hint;
+  final IconData? icon;
   final Widget? child;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(),
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 34,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: icon == null
+                      ? theme.textTheme.titleMedium
+                      : theme.textTheme.headlineSmall,
+                ),
+                if (hint != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    hint!,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                ?child,
+              ],
             ),
-            const SizedBox(height: 16),
-            ?child,
-          ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// At most one re-route per this long while following the GPS.
@@ -169,6 +208,9 @@ class _ViewerState extends ConsumerState<_Viewer> {
   Feature? _pendingFocus;
   SearchFilter _filter = SearchFilter.all;
   String? _category;
+
+  /// A quick chip (Sponsors, Food…) opened the result list without a query.
+  bool _browsing = false;
   Timer? _searchDebounce;
 
   /// The route being shown, and where it goes.
@@ -755,6 +797,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
   }
 
   void _openResult(Feature f) {
+    _browsing = false;
     _reportSearch();
     _searchFocus.unfocus();
     _focus(f);
@@ -796,7 +839,7 @@ class _ViewerState extends ConsumerState<_Viewer> {
     final searching =
         !routing &&
         !picking &&
-        (_searchFocus.hasFocus || _searchCtrl.text.isNotEmpty);
+        (_browsing || _searchFocus.hasFocus || _searchCtrl.text.isNotEmpty);
     final here = _here;
     final fix = _planFix;
     final highlight = widget.highlightLabel == null
@@ -901,6 +944,11 @@ class _ViewerState extends ConsumerState<_Viewer> {
                       onFilter: (f) => setState(() => _filter = f),
                       onCategory: (c) => setState(() => _category = c),
                       onOpen: _openResult,
+                      onClose: () => setState(() {
+                        _browsing = false;
+                        _filter = SearchFilter.all;
+                      }),
+                      quickChips: searching ? null : _quickChips(floor),
                     ),
                   ),
                 if (!searching)
@@ -914,7 +962,9 @@ class _ViewerState extends ConsumerState<_Viewer> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            if (_map.floors.length > 1)
+                            // While routing the search bar (and its floor
+                            // chips) is hidden, so the floors sit here.
+                            if (routing && _map.floors.length > 1)
                               Flexible(child: _floorChips(floor)),
                             const Spacer(),
                             _fabs(l10n, floor),
@@ -947,45 +997,132 @@ class _ViewerState extends ConsumerState<_Viewer> {
     );
   }
 
-  Widget _fabs(MapsLocalizations l10n, Floor floor) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      if (_anyGeoref) ...[
+  Widget _fabs(MapsLocalizations l10n, Floor floor) {
+    final scheme = Theme.of(context).colorScheme;
+    Widget fab(String tag, String tooltip, IconData icon, VoidCallback onTap) =>
         FloatingActionButton.small(
-          heroTag: 'gps',
-          tooltip: l10n.gpsMyLocation,
-          onPressed: _onMyLocation,
-          child: Icon(
-            !_gpsOn
-                ? Icons.location_searching
-                : (_planFix?.usable ?? false)
-                ? Icons.my_location
-                : Icons.gps_not_fixed,
+          heroTag: tag,
+          tooltip: tooltip,
+          onPressed: onTap,
+          elevation: 2,
+          backgroundColor: scheme.surface,
+          foregroundColor: scheme.onSurface,
+          child: Icon(icon, size: 22),
+        );
+    final proj = PlanProjection(floor.width, floor.height);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_anyGeoref) ...[
+          FloatingActionButton.small(
+            heroTag: 'gps',
+            tooltip: l10n.gpsMyLocation,
+            onPressed: _onMyLocation,
+            elevation: 2,
+            backgroundColor: _gpsOn ? scheme.primary : scheme.surface,
+            foregroundColor: _gpsOn ? scheme.onPrimary : scheme.onSurface,
+            child: Icon(
+              !_gpsOn
+                  ? Icons.location_searching
+                  : (_planFix?.usable ?? false)
+                  ? Icons.my_location
+                  : Icons.gps_not_fixed,
+              size: 22,
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        fab(
+          'legend',
+          l10n.legend,
+          Icons.help_outline,
+          () => showDialog<void>(
+            context: context,
+            builder: (_) => const _Legend(),
           ),
         ),
-        const SizedBox(height: 12),
-      ],
-      FloatingActionButton.small(
-        heroTag: 'legend',
-        tooltip: l10n.legend,
-        onPressed: () =>
-            showDialog<void>(context: context, builder: (_) => const _Legend()),
-        child: const Icon(Icons.help_outline),
-      ),
-      const SizedBox(height: 12),
-      FloatingActionButton(
-        heroTag: 'fit',
-        tooltip: l10n.fitPlan,
-        onPressed: () => _controller.fitCamera(
-          PlanProjection(
-            floor.width,
-            floor.height,
-          ).fit(PlanProjection(floor.width, floor.height).bounds),
+        const SizedBox(height: 10),
+        fab(
+          'fit',
+          l10n.fitPlan,
+          Icons.fit_screen,
+          () => _controller.fitCamera(
+            proj.fit(proj.bounds, padding: planFitPadding),
+          ),
         ),
-        child: const Icon(Icons.fit_screen),
+      ],
+    );
+  }
+
+  /// Floors and quick filters under the search bar (Map.dc.html).
+  List<Widget> _quickChips(Floor floor) {
+    final l10n = _l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final hasSponsors = _map.features.any(
+      (f) => f.type != FeatureType.marker && f.sponsorTier != SponsorTier.none,
+    );
+    final hasFood = _map.features.any(
+      (f) => f.type == FeatureType.poi && f.poiKind == 'food',
+    );
+    Widget chip(String label, {required bool selected, VoidCallback? onTap}) =>
+        ChoiceChip(
+          label: Text(label),
+          selected: selected,
+          showCheckmark: false,
+          selectedColor: scheme.inverseSurface,
+          labelStyle: TextStyle(
+            color: selected ? scheme.onInverseSurface : scheme.onSurface,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          ),
+          backgroundColor: scheme.surface,
+          side: BorderSide.none,
+          shape: const StadiumBorder(),
+          elevation: 1,
+          visualDensity: VisualDensity.compact,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+          onSelected: (_) => onTap?.call(),
+        );
+    void browse(SearchFilter f) => setState(() {
+      _filter = f;
+      _category = null;
+      _browsing = true;
+    });
+    return [
+      for (final f in _map.floors)
+        chip(
+          f.name,
+          selected: f.id == floor.id,
+          onTap: () => setState(() {
+            _floorId = f.id;
+            _pendingFocus = null;
+          }),
+        ),
+      if (hasSponsors)
+        chip(
+          l10n.filterSponsors,
+          selected: false,
+          onTap: () => browse(SearchFilter.sponsors),
+        ),
+      if (hasFood)
+        chip(
+          l10n.filterFood,
+          selected: false,
+          onTap: () => browse(SearchFilter.food),
+        ),
+      chip(
+        l10n.filterRooms,
+        selected: false,
+        onTap: () => browse(SearchFilter.rooms),
       ),
-    ],
-  );
+      chip(
+        l10n.filterStands,
+        selected: false,
+        onTap: () => browse(SearchFilter.stands),
+      ),
+    ];
+  }
 
   Widget _floorChips(Floor floor) => Card(
     child: Padding(
@@ -1019,6 +1156,8 @@ class _SearchPanel extends StatelessWidget {
     required this.onFilter,
     required this.onCategory,
     required this.onOpen,
+    required this.onClose,
+    this.quickChips,
   });
 
   final TextEditingController controller;
@@ -1030,10 +1169,15 @@ class _SearchPanel extends StatelessWidget {
   final ValueChanged<SearchFilter> onFilter;
   final ValueChanged<String?> onCategory;
   final ValueChanged<Feature> onOpen;
+  final VoidCallback onClose;
+
+  /// Shown under the search bar while it is closed (floors, quick filters).
+  final List<Widget>? quickChips;
 
   @override
   Widget build(BuildContext context) {
     final l10n = MapsLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
     final search = FeatureSearch(
       map.features,
       labelOf: (f) => kindLabel(l10n, f),
@@ -1044,9 +1188,12 @@ class _SearchPanel extends StatelessWidget {
     final floorNames = {for (final f in map.floors) f.id: f.name};
     final categories = search.categories;
 
-    return Card(
-      elevation: 4,
+    final card = Card(
+      elevation: 3,
+      shadowColor: scheme.shadow.withValues(alpha: 0.25),
       clipBehavior: Clip.antiAlias,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1054,7 +1201,7 @@ class _SearchPanel extends StatelessWidget {
             controller: controller,
             focusNode: focusNode,
             textInputAction: TextInputAction.search,
-            style: const TextStyle(fontSize: 18),
+            style: const TextStyle(fontSize: 16),
             decoration: InputDecoration(
               hintText: l10n.searchHint,
               prefixIcon: const Icon(Icons.search),
@@ -1066,11 +1213,13 @@ class _SearchPanel extends StatelessWidget {
                         controller.clear();
                         focusNode.unfocus();
                         onCategory(null);
+                        onClose();
                       },
                     )
                   : null,
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              filled: false,
+              contentPadding: const EdgeInsets.symmetric(vertical: 15),
             ),
             onSubmitted: (_) {
               if (results.isNotEmpty) onOpen(results.first);
@@ -1088,6 +1237,10 @@ class _SearchPanel extends StatelessWidget {
                     (SearchFilter.rooms, l10n.filterRooms),
                     (SearchFilter.stands, l10n.filterStands),
                     (SearchFilter.pois, l10n.filterPois),
+                    if (filter == SearchFilter.sponsors)
+                      (SearchFilter.sponsors, l10n.filterSponsors),
+                    if (filter == SearchFilter.food)
+                      (SearchFilter.food, l10n.filterFood),
                   ])
                     Padding(
                       padding: const EdgeInsets.only(right: 6),
@@ -1150,6 +1303,26 @@ class _SearchPanel extends StatelessWidget {
           ],
         ],
       ),
+    );
+    final chips = quickChips;
+    if (chips == null || chips.isEmpty) return card;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        card,
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 40,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            itemCount: chips.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, i) => chips[i],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -11,6 +11,10 @@ import 'providers.dart';
 /// Room for the search bar on top and the details sheet at the bottom.
 const _focusPadding = EdgeInsets.fromLTRB(48, 120, 48, 260);
 
+/// Whole-plan fit: edge to edge across the width, clear of the search bar and
+/// chips on top and the buttons at the bottom.
+const planFitPadding = EdgeInsets.fromLTRB(8, 132, 8, 96);
+
 /// Interactive floor plan of one floor: image, rooms, stands, POIs, labels.
 /// Zoom and pan; rotation is disabled.
 class VenueMapView extends ConsumerWidget {
@@ -60,7 +64,7 @@ class VenueMapView extends ConsumerWidget {
         crs: const CrsSimple(),
         initialCameraFit: initialFocus != null
             ? proj.fit(initialFocus!, padding: _focusPadding, maxScale: 2)
-            : proj.fit(proj.bounds),
+            : proj.fit(proj.bounds, padding: planFitPadding),
         minZoom: proj.minZoom,
         maxZoom: proj.maxZoom,
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,

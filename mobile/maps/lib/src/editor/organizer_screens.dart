@@ -80,23 +80,29 @@ class _SignInScreenState extends State<_SignInScreen> {
   Widget build(BuildContext context) {
     final l10n = MapsLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.signInTitle)),
+      appBar: AppBar(),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
           child: ListView(
             shrinkWrap: true,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
             children: [
+              Text(
+                l10n.signInTitle,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 24),
               TextField(
                 controller: _email,
-                decoration: InputDecoration(labelText: l10n.email),
+                decoration: _signInField(context, l10n.email),
                 keyboardType: TextInputType.emailAddress,
                 autofillHints: const [AutofillHints.email],
               ),
+              const SizedBox(height: 14),
               TextField(
                 controller: _password,
-                decoration: InputDecoration(labelText: l10n.password),
+                decoration: _signInField(context, l10n.password),
                 obscureText: true,
                 autofillHints: const [AutofillHints.password],
                 onSubmitted: (_) => _submit(),
@@ -114,6 +120,12 @@ class _SignInScreenState extends State<_SignInScreen> {
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: _busy ? null : _submit,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
                 child: Text(l10n.signIn),
               ),
               const SizedBox(height: 8),
@@ -327,3 +339,16 @@ class _NewEventDialogState extends ConsumerState<_NewEventDialog> {
     );
   }
 }
+
+/// Sign-in input: 54 high, radius 16 (design tokens).
+InputDecoration _signInField(BuildContext context, String label) =>
+    InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+    );

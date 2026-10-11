@@ -110,6 +110,12 @@ abstract class MapsLocalizations {
   /// **'Događaj nije pronađen ili još nije objavljen.'**
   String get mapNotFound;
 
+  /// No description provided for @mapNotFoundHint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Proverite link ili QR kod. Ako ste organizator, objavite mapu u editoru.'**
+  String get mapNotFoundHint;
+
   /// No description provided for @mapUnavailable.
   ///
   /// In sr, this message translates to:
@@ -175,6 +181,18 @@ abstract class MapsLocalizations {
   /// In sr, this message translates to:
   /// **'Ostalo'**
   String get filterPois;
+
+  /// No description provided for @filterSponsors.
+  ///
+  /// In sr, this message translates to:
+  /// **'Sponzori'**
+  String get filterSponsors;
+
+  /// No description provided for @filterFood.
+  ///
+  /// In sr, this message translates to:
+  /// **'Hrana'**
+  String get filterFood;
 
   /// No description provided for @typeRoom.
   ///

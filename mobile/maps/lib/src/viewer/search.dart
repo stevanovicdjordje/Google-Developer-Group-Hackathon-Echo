@@ -45,13 +45,16 @@ String normalizeSearch(String s) {
 }
 
 /// Filter by feature kind in the search UI.
-enum SearchFilter { all, rooms, stands, pois }
+enum SearchFilter { all, rooms, stands, pois, sponsors, food }
 
 bool _passes(Feature f, SearchFilter filter) => switch (filter) {
   SearchFilter.all => f.type != FeatureType.marker,
   SearchFilter.rooms => f.type == FeatureType.room,
   SearchFilter.stands => f.type == FeatureType.stand,
   SearchFilter.pois => f.type == FeatureType.poi,
+  SearchFilter.sponsors =>
+    f.type != FeatureType.marker && f.sponsorTier != SponsorTier.none,
+  SearchFilter.food => f.type == FeatureType.poi && f.poiKind == 'food',
 };
 
 /// Client-side search over the published features (no server, no LLM).

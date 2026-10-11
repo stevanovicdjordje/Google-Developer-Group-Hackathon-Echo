@@ -138,4 +138,51 @@ void main() {
     );
     expect(find.text('Pokušaj ponovo'), findsOneWidget);
   });
+
+  testWidgets('quick chips: floors and Sponsors under the search bar', (
+    tester,
+  ) async {
+    final repo = FakeRepository();
+    await tester.pumpWidget(app(repo));
+    await tester.pump();
+    repo.controller.add(
+      PublishedEvent(id: 'e', name: 'Eho Demo Expo', map: demoMap),
+    );
+    await tester.pumpAndSettle();
+
+    // No food POI in the fixture, so no Food chip.
+    expect(find.widgetWithText(ChoiceChip, 'Prizemlje'), findsOneWidget);
+    expect(find.widgetWithText(ChoiceChip, 'Sponzori'), findsOneWidget);
+    expect(find.widgetWithText(ChoiceChip, 'Hrana'), findsNothing);
+
+    // The test font makes chips wide; tap the chip's visible left part.
+    final sponsors = find.widgetWithText(ChoiceChip, 'Sponzori');
+    await tester.tapAt(tester.getTopLeft(sponsors) + const Offset(16, 16));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(ListTile, 'Neuro Lab'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Čačak Dev'), findsNothing);
+
+    // Closing goes back to the plain map with the chips.
+    await tester.tap(find.byTooltip('Obriši pretragu'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNothing);
+    expect(find.widgetWithText(ChoiceChip, 'Sponzori'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Sprat 1'));
+    await tester.pumpAndSettle();
+    expect(find.text('Glavna sala'), findsNothing); // ground-floor room
+  });
+
+  testWidgets('a missing event explains what to do', (tester) async {
+    final repo = FakeRepository();
+    await tester.pumpWidget(app(repo));
+    repo.controller.addError(const EventNotFound());
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Događaj nije pronađen ili još nije objavljen.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Proverite link ili QR kod'), findsOneWidget);
+    expect(find.byIcon(Icons.map_outlined), findsOneWidget);
+  });
 }

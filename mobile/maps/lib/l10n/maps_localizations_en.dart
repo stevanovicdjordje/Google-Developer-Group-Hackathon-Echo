@@ -16,6 +16,10 @@ class MapsLocalizationsEn extends MapsLocalizations {
   String get mapNotFound => 'Event not found or not published yet.';
 
   @override
+  String get mapNotFoundHint =>
+      'Check the link or QR code. If you are the organizer, publish the map in the editor.';
+
+  @override
   String get mapUnavailable =>
       'The server is not reachable right now. Check your connection and try again.';
 
@@ -50,6 +54,12 @@ class MapsLocalizationsEn extends MapsLocalizations {
 
   @override
   String get filterPois => 'Other';
+
+  @override
+  String get filterSponsors => 'Sponsors';
+
+  @override
+  String get filterFood => 'Food';
 
   @override
   String get typeRoom => 'Room';

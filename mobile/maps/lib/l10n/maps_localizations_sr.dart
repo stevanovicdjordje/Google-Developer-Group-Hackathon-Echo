@@ -16,6 +16,10 @@ class MapsLocalizationsSr extends MapsLocalizations {
   String get mapNotFound => 'Događaj nije pronađen ili još nije objavljen.';
 
   @override
+  String get mapNotFoundHint =>
+      'Proverite link ili QR kod. Ako ste organizator, objavite mapu u editoru.';
+
+  @override
   String get mapUnavailable =>
       'Server trenutno nije dostupan. Proverite internet vezu i pokušajte ponovo.';
 
@@ -50,6 +54,12 @@ class MapsLocalizationsSr extends MapsLocalizations {
 
   @override
   String get filterPois => 'Ostalo';
+
+  @override
+  String get filterSponsors => 'Sponzori';
+
+  @override
+  String get filterFood => 'Hrana';
 
   @override
   String get typeRoom => 'Sala';
