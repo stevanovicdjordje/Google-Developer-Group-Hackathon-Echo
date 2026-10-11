@@ -10,7 +10,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-40 | Echo: on an ended talk the "Jump to live" pill shows when opened at the top — hide it or relabel "Jump to end" (l10n) | S | dev | `features/echo/`, l10n | from M-38 |
 | M-38 | Echo screen: the "Full talk summary / Premium" banner overlaps/clips the top transcript line on ended talks (V-4a echo.png) | S | dev | `features/echo/` | |
 | M-34 | Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 
@@ -32,6 +31,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-40 | Echo pill "Jump to end" on ended talks, "Jump to live" on live | `ac3fcfc` |
 | M-39 | Find `profileRequired` → "Complete profile" (onboarding, retries on return); rate-limit countdown; no auto-retry; shots force demo except new `find-live` (server people seen: Ana Petrović, Sara Uzorić…) | `9077791` |
 | M-38 | Ended Echo talk opens at the top (first line fully under the banner); live talks still follow the edge | `f4204fb` |
 | B-1 | Echo Gemini timeouts: `gemini-3.8-flash`/`3.7-flash` hung on Google's side; Echo now `AI_MODEL=gemini-3-flash-preview` (ask en 4.5 s / sr 2.4 s), translate stays Gemma (other @Ilij4n session) | `3bfd0b7` |
