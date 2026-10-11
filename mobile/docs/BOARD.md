@@ -21,15 +21,18 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| V-7 | verifier (sonnet, medium) | 2026-10-11 07:10 | none | Galaxy on `devfest`, DEMO_LOCATION 44.799820,20.400025; integration_test + live smoke incl. organizer upload/publish |
-| M-45 | dev | done | `worktree-agent-a9e7c0bf446ba3a50` (3dce367, contains M-52) | **review**: merge after V-7, then add `ref.watch(contactSpotSyncProvider((eventId, p.id)))` in Messages (find_screens.dart ~855) + APP_GUIDE Find paragraph. 188 tests |
-| M-53 | dev (sonnet, medium) | done | `worktree-agent-a2fb66de4c8319100` (45434e3) | **review**: merge after V-7. Shots `echo-answer`, `echo-jump-live`, `messages-spot-picker`; APP_GUIDE shot list to update on merge |
-| M-52 | dev | done 07:2x | `worktree-agent-a4a6f09c231d68cfe` (09d3beb) | **review**: merge after V-7 finishes (V-7 uses the main checkout). 181/181. No count tile (there's none in the design). Warnings via `organizerWarningsProvider`. Follow-up: dev shots with issues/warnings |
+| M-54 | opus | 07:36 | worktree | integration_test 0/6 on the Galaxy (host 6/6): flow 1 path `/e/devfest?at=m1` vs `/map?at=m1`, tab labels "Profile"/"Find" not found, "Meet at Glavna sala" not found. Files: test/flows/**, integration_test/** |
+| M-55 | dev | 07:36 | worktree | Agenda: no empty stage chip / leading "·" for sessions without a room; review Publish with flagged rows → confirm dialog. Files: agenda_screens.dart, organizer_screens.dart, ARB |
+| M-56 | dev | 07:36 | worktree | Events live: hide demo-only events (AI Meetup Novi Sad) from My events, no server leave for them. Files: events_api_repository.dart, app_state.dart, repositories.dart, demo_ids.dart |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| V-7 | Galaxy A55 on local `devfest`: live smoke PASS (join, agenda 7 sessions, My events/leave, Echo ask ~6 s + translate sr, map you-are-here/route, Find server people + search ~4 s + contact + spot, organizer upload → draft ~5 s → publish → attendee agenda, M-46 status bar/keyboard). No exceptions, no 4xx/5xx. Found: integration_test 0/6 on device (→ M-54), empty stage after publishing a flagged row (→ M-55), demo-only event in My events with live API (→ M-56). Echo ENDED vs agenda LIVE: replay finished (re-run replay before the video) | verification |
+| M-45 | Other person's meeting spot: `FindRepository.listContacts` → `Contact.meetingSpot`, `MeetingSpotNotifier.loadFromContacts` (server wins), Messages watches `contactSpotSyncProvider` | `3dce367` + `f1adf62` |
+| M-53 | Dev shots `echo-answer`, `echo-jump-live`, `messages-spot-picker` (optional hooks in EchoScreen/MessagesScreen) | `45434e3` |
+| M-52 | Events draft `issues` → review flags (server message on the row, general "To check" block), publish `warnings` on published screen (`organizerWarningsProvider`); demo extract flags s3 via an issue | `09d3beb` |
 | M-51 | Local stack restart: maps API :8080 (new code) on the old 127.0.0.1 emulators, `make seed` → `devfest` (DEMO_LOCATION entrance 44.799820,20.400025), Echo replay `devfest` (live, speed 2), Find :8083 + 20 attendees, Events :8084 + 7-session agenda; logs in the session scratchpad | ops |
 | M-50 | Join errors: notFound → "This event isn't available yet" + Back to start; offline/rate-limited → "Can't reach Eho right now" + Try again; else generic + Try again (`eventSummaryProvider` no auto-retry) | `4794abf` |
 | M-13 | Events 0.1.0 wired (`data/events_api_repository.dart`): join, agenda, My events (server merged on top of saved), leave, organizer upload with bytes → AI draft → background saves → publish into `devfest`; demo fallback on healthz fail / demo-id 404. `devfest` keynote `s1` stays live (demo script). `phone_android.sh` reverses 8084. Not e2e yet | `2867aa3` |
