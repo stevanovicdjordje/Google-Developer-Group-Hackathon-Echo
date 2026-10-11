@@ -1,0 +1,4 @@
+data/
+eho-web
+.env
+*.db

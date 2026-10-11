@@ -1,0 +1,42 @@
+{{define "content"}}
+{{$d := .Data}}
+<section class="card narrow">
+  <h1>{{t "profile.title"}}</h1>
+  <form method="post" action="/me/profile" novalidate>
+    {{template "csrf" .CSRF}}
+    <label>{{t "step1.title"}}
+      <select name="language">
+        {{range $d.Languages}}<option value="{{.}}" {{if eq ($.Form.Get "language") .}}selected{{end}}>{{t (printf "lang.%s" .)}}</option>{{end}}
+      </select>
+      {{template "ferr" (index .Errors "language")}}
+    </label>
+
+    <fieldset>
+      <legend>{{t "step2.title"}}</legend>
+      <p class="hint">{{t "step2.help"}}</p>
+      {{template "ferr" (index .Errors "interests")}}
+      {{$sel := index .Form "interests"}}
+      <div class="choices">
+        {{range $d.Topics}}<label class="choice"><input type="checkbox" name="interests" value="{{.}}" {{if has $sel .}}checked{{end}}> {{t (printf "topic.%s" .)}}</label>{{end}}
+      </div>
+      <label>{{t "step2.custom"}}<input type="text" name="custom" value="{{.Form.Get "custom"}}"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>{{t "step3.title"}}</legend>
+      {{template "ferr" (index .Errors "goal")}}
+      <div class="choices">
+        {{range $d.Goals}}<label class="choice"><input type="radio" name="goal" value="{{.}}" {{if eq ($.Form.Get "goal") (printf "%s" .)}}checked{{end}}> {{t (printf "goal.%s" .)}}</label>{{end}}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>{{t "step4.title"}}</legend>
+      <p class="hint">{{t "step4.help"}}</p>
+      <label class="choice"><input type="checkbox" name="visible" value="on" {{if eq (.Form.Get "visible") "on"}}checked{{end}}> {{t "step4.visible"}}</label>
+    </fieldset>
+
+    <div class="actions"><button class="btn btn-primary" type="submit">{{t "profile.save"}}</button></div>
+  </form>
+</section>
+{{end}}

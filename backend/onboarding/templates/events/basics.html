@@ -1,0 +1,58 @@
+{{define "content"}}
+{{$d := .Data}}
+<div class="page-head">
+  <h1>{{if $d.Event.ID}}{{$d.Event.Title}}{{else}}{{t "wizard.new_title"}}{{end}}</h1>
+</div>
+{{template "wizard" $d}}
+
+<section class="card">
+  <h2>{{t "wizard.step.basics"}}</h2>
+  <form method="post" action="{{if $d.Event.ID}}/org/events/{{$d.Event.ID}}/edit{{else}}/org/events/new{{end}}" novalidate>
+    {{template "csrf" .CSRF}}
+    <label>{{t "event.title"}}
+      <input type="text" name="title" value="{{.Form.Get "title"}}" maxlength="150" required>
+      {{template "ferr" (index .Errors "title")}}
+    </label>
+    <label>{{t "event.description"}} <span class="muted">{{t "field.optional"}}</span>
+      <textarea name="description" rows="5" maxlength="5000">{{.Form.Get "description"}}</textarea>
+      {{template "ferr" (index .Errors "description")}}
+    </label>
+    <div class="grid-2">
+      <label>{{t "event.starts_at"}}
+        <input type="datetime-local" name="starts_at" value="{{.Form.Get "starts_at"}}">
+        {{template "ferr" (index .Errors "starts_at")}}
+      </label>
+      <label>{{t "event.ends_at"}}
+        <input type="datetime-local" name="ends_at" value="{{.Form.Get "ends_at"}}">
+        {{template "ferr" (index .Errors "ends_at")}}
+      </label>
+    </div>
+    <label>{{t "event.address"}}
+      <input type="text" name="address" value="{{.Form.Get "address"}}" maxlength="300">
+      {{template "ferr" (index .Errors "address")}}
+    </label>
+    <div class="grid-2">
+      <label>{{t "event.lat"}} <span class="muted">{{t "field.optional"}}</span>
+        <input type="text" inputmode="decimal" name="lat" value="{{.Form.Get "lat"}}" placeholder="44.8125">
+        {{template "ferr" (index .Errors "lat")}}
+      </label>
+      <label>{{t "event.lng"}} <span class="muted">{{t "field.optional"}}</span>
+        <input type="text" inputmode="decimal" name="lng" value="{{.Form.Get "lng"}}" placeholder="20.4612">
+        {{template "ferr" (index .Errors "lng")}}
+      </label>
+    </div>
+    <p class="hint">{{t "event.coords_hint"}}</p>
+    <div class="actions">
+      <button class="btn" type="submit" name="action" value="draft">{{t "wizard.save_draft"}}</button>
+      <button class="btn btn-primary" type="submit" name="action" value="next">{{t "wizard.save_next"}}</button>
+    </div>
+  </form>
+</section>
+
+{{if $d.MapEmbed}}
+<section class="card">
+  <h2>{{t "event.location"}}</h2>
+  <iframe class="map-embed" src="{{$d.MapEmbed}}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="{{t "event.location"}}"></iframe>
+</section>
+{{end}}
+{{end}}

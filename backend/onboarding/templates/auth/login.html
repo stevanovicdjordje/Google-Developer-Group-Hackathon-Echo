@@ -1,0 +1,20 @@
+{{define "content"}}
+<section class="card narrow">
+  <h1>{{t "login.title"}}</h1>
+  {{with index .Errors "_form"}}<p class="alert" role="alert">{{t .}}</p>{{end}}
+  <form method="post" action="/login" novalidate>
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    <input type="hidden" name="next" value="{{.Form.Get "next"}}">
+    <label>{{t "field.email"}}
+      <input type="email" name="email" value="{{.Form.Get "email"}}" autocomplete="email" required autofocus>
+    </label>
+    <label>{{t "field.password"}}
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button class="btn btn-primary" type="submit">{{t "login.submit"}}</button>
+  </form>
+  <p class="muted">{{t "login.no_account"}}
+    <a href="/register/participant">{{t "login.register_participant"}}</a> ·
+    <a href="/register/organizer">{{t "login.register_organizer"}}</a></p>
+</section>
+{{end}}
