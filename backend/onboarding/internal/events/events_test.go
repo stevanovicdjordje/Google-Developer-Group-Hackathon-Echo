@@ -1,6 +1,7 @@
 package events
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -11,6 +12,10 @@ func at(h int) time.Time         { return t0.Add(time.Duration(h) * time.Hour) }
 func ptr(t time.Time) *time.Time { return &t }
 
 func TestEventStatus(t *testing.T) {
+	// An event whose map was published in the app counts as published.
+	if (Event{StartsAt: ptr(at(0)), EndsAt: ptr(at(8)), MapVersion: 1}).Status(at(1)) != StatusOngoing {
+		t.Error("map-published event must not be a draft")
+	}
 	published := ptr(at(-48))
 	ev := Event{StartsAt: ptr(at(0)), EndsAt: ptr(at(8)), PublishedAt: published}
 	cases := []struct {
@@ -37,20 +42,21 @@ func TestEventStatus(t *testing.T) {
 	}
 }
 
-func sess(id, zone string, from, to int) Session {
-	return Session{ID: id, ZoneID: zone, Title: id, StartsAt: at(from), EndsAt: at(to)}
+func sess(id, stage string, from, to int) Session {
+	return Session{ID: id, Stage: stage, Title: id, StartsAt: at(from), EndsAt: at(to)}
 }
 
 func TestOverlaps(t *testing.T) {
 	got := Overlaps([]Session{
-		sess("a", "hall1", 0, 2),
-		sess("b", "hall1", 1, 3),  // overlaps a
+		sess("a", "Hall1", 0, 2),
+		sess("b", "hall1", 1, 3),  // overlaps a (stage names compare case-insensitively)
 		sess("c", "hall1", 3, 4),  // back-to-back with b: fine
 		sess("d", "hall2", 0, 2),  // other hall: fine
 		sess("e", "", 0, 5),       // no hall: never conflicts
 		sess("f", "hall2", 5, 10), // long session...
 		sess("g", "hall2", 7, 8),  // ...fully containing g
 		sess("h", "hall2", 9, 11), // overlaps f's tail, not g
+		{ID: "x", Stage: "hall1", IsBreak: true, StartsAt: at(0), EndsAt: at(4)}, // breaks never conflict
 	})
 	want := map[string]bool{"a": true, "b": true, "f": true, "g": true, "h": true}
 	if len(got) != len(want) {
@@ -65,25 +71,85 @@ func TestOverlaps(t *testing.T) {
 
 func TestBuildSchedule(t *testing.T) {
 	loc := time.UTC
-	zones := []Zone{{ID: "h1", Name: "Sala A", Kind: ZoneHall}, {ID: "h2", Name: "Sala B", Kind: ZoneHall}}
 	days := BuildSchedule([]Session{
-		sess("a", "h1", 0, 1),
-		sess("b", "h2", 0, 1),
+		sess("a", "Sala A", 0, 1),
+		sess("b", "Sala B", 0, 1),
 		sess("c", "", 2, 3),
-		sess("d", "h1", 24, 25), // next day, only hall A
-	}, zones, loc)
+		sess("d", "Sala A", 24, 25), // next day, only hall A
+		sess("e", "Bina", 2, 3),     // not in the stage list: added after
+	}, []string{"Sala B", "Sala A"}, loc)
 	if len(days) != 2 {
 		t.Fatalf("days = %d, want 2", len(days))
 	}
 	d1 := days[0]
-	if len(d1.Columns) != 3 || d1.Columns[2].Zone != nil {
-		t.Fatalf("day 1 columns: %+v", d1.Columns)
+	names := []string{}
+	for _, c := range d1.Columns {
+		names = append(names, c.Name)
 	}
-	if len(d1.Rows) != 2 || len(d1.Rows[0].Cells[0]) != 1 || len(d1.Rows[0].Cells[1]) != 1 || len(d1.Rows[1].Cells[2]) != 1 {
+	if got := strings.Join(names, "|"); got != "Sala B|Sala A|Bina|" {
+		t.Fatalf("day 1 columns: %q", got)
+	}
+	if len(d1.Rows) != 2 || len(d1.Rows[0].Cells[0]) != 1 || len(d1.Rows[0].Cells[1]) != 1 || len(d1.Rows[1].Cells[3]) != 1 {
 		t.Fatalf("day 1 rows: %+v", d1.Rows)
 	}
-	if len(days[1].Columns) != 1 || days[1].Columns[0].Zone.ID != "h1" {
+	if len(days[1].Columns) != 1 || days[1].Columns[0].Name != "Sala A" {
 		t.Fatalf("day 2 columns: %+v", days[1].Columns)
+	}
+}
+
+func TestAgendaRoundTrip(t *testing.T) {
+	loc, _ := time.LoadLocation("Europe/Belgrade")
+	var a Agenda
+	start := time.Date(2026, 10, 11, 10, 0, 0, 0, loc)
+	a.Add(Session{Title: "Uvod", Stage: "Glavna sala", Speaker: "Ana Demić", Tags: []string{"ai", "go"},
+		StartsAt: start, EndsAt: start.Add(45 * time.Minute)}, loc)
+	a.Add(Session{Title: "Panel", Stage: "glavna sala", Speaker: "ana demić",
+		StartsAt: start.Add(time.Hour), EndsAt: start.Add(2 * time.Hour)}, loc)
+	if len(a.Stages) != 1 || len(a.Speakers) != 1 {
+		t.Fatalf("stages %v speakers %v: names must be matched case-insensitively", a.Stages, a.Speakers)
+	}
+	it := a.Sessions[0]
+	if it.Day != "2026-10-11" || it.Start != "10:00" || it.End != "10:45" || it.Track != "ai, go" {
+		t.Fatalf("agenda item: %+v", it)
+	}
+	list := a.SessionList(loc)
+	if len(list) != 2 || !list[0].StartsAt.Equal(start) || list[0].Speaker != "Ana Demić" || len(list[0].Tags) != 2 {
+		t.Fatalf("session list: %+v", list)
+	}
+	if !a.Remove(it.ID) || a.Remove(it.ID) || len(a.Sessions) != 1 {
+		t.Fatal("remove")
+	}
+}
+
+func TestPlanView(t *testing.T) {
+	m := Map{
+		Floors: []Floor{{ID: "f2", Name: "Sprat", Order: 1, Width: 800, Height: 600}, {ID: "f1", Name: "Prizemlje", Width: 1200, Height: 800}},
+		Features: []Feature{
+			{ID: "r1", Type: "room", FloorID: "f1", Name: "Sala A", Geometry: Geometry{Kind: "rect", Coords: []Point{{100, 200}, {50, 100}}}},
+			{ID: "s1", Type: "stand", FloorID: "f1", Name: "Štand", Geometry: Geometry{Kind: "polygon", Coords: []Point{{0, 0}, {10, 0}, {10, 10}}}},
+			{ID: "p1", Type: "poi", FloorID: "f2", Name: "WC", Geometry: Geometry{Kind: "point", Coords: []Point{{5, 5}}}},
+			{ID: "m1", Type: "marker", FloorID: "f1", Name: "QR", Geometry: Geometry{Kind: "point", Coords: []Point{{1, 1}}}},
+		},
+	}
+	pv := NewPlanView("ev", m, "/x?zone=", "r1")
+	if len(pv.Floors) != 2 || pv.Floors[0].Floor.ID != "f1" {
+		t.Fatalf("floors not ordered: %+v", pv.Floors)
+	}
+	sh := pv.Floors[0].Shapes
+	if len(sh) != 2 {
+		t.Fatalf("markers must be hidden: %+v", sh)
+	}
+	if r := sh[0]; r.X != 50 || r.Y != 100 || r.W != 50 || r.H != 100 || r.CX != 75 || r.ShowLabel {
+		t.Fatalf("rect normalized wrong: %+v", r)
+	}
+	if sh[1].Points != "0.0,0.0 10.0,0.0 10.0,10.0" || sh[1].ShowLabel {
+		t.Fatalf("polygon points %q", sh[1].Points)
+	}
+	if pv.Floors[0].ImageURL != "/events/ev/floors/f1/image" {
+		t.Fatalf("image url %q", pv.Floors[0].ImageURL)
+	}
+	if got := m.RoomNames(); len(got) != 1 || got[0] != "Sala A" {
+		t.Fatalf("rooms %v", got)
 	}
 }
 
@@ -144,44 +210,35 @@ func TestApplyBasics(t *testing.T) {
 	}
 }
 
-func TestParseZone(t *testing.T) {
-	if _, errs := ParseZone(ZoneInput{Name: "Sala A", Kind: "hall", X: "10", Y: "10", W: "30", H: "20"}); errs != nil {
-		t.Fatal(errs)
-	}
-	bad := []ZoneInput{
-		{Name: "", Kind: "hall", X: "0", Y: "0", W: "1", H: "1"},
-		{Name: "x", Kind: "castle", X: "0", Y: "0", W: "1", H: "1"},
-		{Name: "x", Kind: "hall", X: "80", Y: "0", W: "30", H: "10"}, // sticks out
-		{Name: "x", Kind: "hall", X: "0", Y: "0", W: "0", H: "10"},
-		{Name: "x", Kind: "hall", X: "abc", Y: "0", W: "5", H: "10"},
-	}
-	for i, in := range bad {
-		if _, errs := ParseZone(in); errs == nil {
-			t.Errorf("case %d: expected error", i)
-		}
-	}
-}
-
 func TestParseSession(t *testing.T) {
 	loc := time.UTC
 	ev := Event{ID: "e", StartsAt: ptr(at(0)), EndsAt: ptr(at(8))}
-	halls := []Zone{{ID: "h1", Kind: ZoneHall}, {ID: "b1", Kind: "booth"}}
-	ok := SessionInput{Title: "Uvod", ZoneID: "h1", StartsAt: "2026-10-10T10:00", EndsAt: "2026-10-10T11:00", Tags: "AI, ai, Cloud"}
-	s, errs := ParseSession(ok, ev, halls, loc)
+	ok := SessionInput{Title: "Uvod", Stage: "Sala A", StartsAt: "2026-10-10T10:00", EndsAt: "2026-10-10T11:00", Tags: "AI, ai, Cloud"}
+	s, errs := ParseSession(ok, ev, loc)
 	if errs != nil {
 		t.Fatal(errs)
 	}
-	if len(s.Tags) != 2 || s.Tags[0] != "ai" {
-		t.Fatalf("tags = %v", s.Tags)
+	if len(s.Tags) != 2 || s.Tags[0] != "ai" || s.Stage != "Sala A" {
+		t.Fatalf("got %+v", s)
 	}
-	booth := ok
-	booth.ZoneID = "b1"
-	if _, errs := ParseSession(booth, ev, halls, loc); errs["zone_id"] == "" {
-		t.Fatal("sessions may only be placed in halls")
+	newStage := ok
+	newStage.StageNew = "  Nova   sala "
+	if s, _ := ParseSession(newStage, ev, loc); s.Stage != "Nova sala" {
+		t.Fatalf("a new hall name overrides the selection: %q", s.Stage)
 	}
 	outside := ok
 	outside.EndsAt = "2026-10-10T19:00"
-	if _, errs := ParseSession(outside, ev, halls, loc); errs["starts_at"] != "err.session_outside" {
+	if _, errs := ParseSession(outside, ev, loc); errs["starts_at"] != "err.session_outside" {
 		t.Fatalf("got %v", errs)
+	}
+	overnight := ok
+	overnight.StartsAt, overnight.EndsAt = "2026-10-10T23:00", "2026-10-11T01:00"
+	if _, errs := ParseSession(overnight, Event{}, loc); errs["ends_at"] != "err.session_midnight" {
+		t.Fatalf("got %v", errs)
+	}
+	longTags := ok
+	longTags.Tags = "jedan dugacak tag, drugi dugacak tag, treci"
+	if _, errs := ParseSession(longTags, ev, loc); errs["tags"] == "" {
+		t.Fatal("track must fit in 40 characters")
 	}
 }

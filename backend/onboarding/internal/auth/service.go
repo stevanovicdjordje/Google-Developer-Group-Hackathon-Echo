@@ -2,20 +2,13 @@ package auth
 
 import (
 	"context"
-	"crypto/sha256"
-	"database/sql"
-	"encoding/hex"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
-	"github.com/Ilij4n/eho/backend/onboarding/internal/id"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/users"
 )
-
-var ErrInvalidCredentials = errors.New("auth: invalid credentials")
-
-const SessionTTL = 14 * 24 * time.Hour
 
 type OrganizerInput struct {
 	FullName, Email, Password, PasswordConfirm, OrgName, Website string
@@ -26,16 +19,16 @@ type ParticipantInput struct {
 }
 
 type Service struct {
+	id    Identity
 	users users.Repository
-	db    *sql.DB
 	now   func() time.Time
 }
 
-func NewService(repo users.Repository, db *sql.DB) *Service {
-	return &Service{users: repo, db: db, now: time.Now}
+func NewService(identity Identity, repo users.Repository) *Service {
+	return &Service{id: identity, users: repo, now: time.Now}
 }
 
-func (s *Service) RegisterOrganizer(in OrganizerInput) (users.User, error) {
+func (s *Service) RegisterOrganizer(ctx context.Context, in OrganizerInput) (users.User, error) {
 	f := FieldErrors{}
 	in.FullName = strings.TrimSpace(in.FullName)
 	in.OrgName = strings.TrimSpace(in.OrgName)
@@ -53,24 +46,22 @@ func (s *Service) RegisterOrganizer(in OrganizerInput) (users.User, error) {
 	if !f.Empty() {
 		return users.User{}, f
 	}
-	hash, err := HashPassword(in.Password)
+	uid, err := s.id.SignUp(ctx, in.Email, in.Password, in.FullName, users.RoleOrganizer)
+	if errors.Is(err, users.ErrEmailTaken) {
+		return users.User{}, FieldErrors{"email": "err.email_taken"}
+	}
 	if err != nil {
 		return users.User{}, err
 	}
-	now := s.now().UTC()
-	u := users.User{ID: id.New(), Email: in.Email, FullName: in.FullName,
-		Role: users.RoleOrganizer, PasswordHash: hash, CreatedAt: now}
-	org := users.Organization{ID: id.New(), OwnerID: u.ID, Name: in.OrgName, Website: site, CreatedAt: now}
-	if err := s.users.CreateOrganizer(u, org); err != nil {
-		if errors.Is(err, users.ErrEmailTaken) {
-			return users.User{}, FieldErrors{"email": "err.email_taken"}
-		}
-		return users.User{}, err
+	org := users.Organization{OwnerUID: uid, Name: in.OrgName, Website: site, CreatedAt: s.now().UTC()}
+	if err := s.users.SaveOrganization(ctx, org); err != nil {
+		// The account exists; the organization can be re-entered later.
+		log.Printf("auth: save organization for %s: %v", uid, err)
 	}
-	return u, nil
+	return users.User{ID: uid, Email: in.Email, FullName: in.FullName, Role: users.RoleOrganizer}, nil
 }
 
-func (s *Service) RegisterParticipant(in ParticipantInput) (users.User, error) {
+func (s *Service) RegisterParticipant(ctx context.Context, in ParticipantInput) (users.User, error) {
 	f := FieldErrors{}
 	in.FullName = strings.TrimSpace(in.FullName)
 	in.Email = NormalizeEmail(in.Email)
@@ -82,74 +73,32 @@ func (s *Service) RegisterParticipant(in ParticipantInput) (users.User, error) {
 	if !f.Empty() {
 		return users.User{}, f
 	}
-	hash, err := HashPassword(in.Password)
-	if err != nil {
-		return users.User{}, err
-	}
-	u := users.User{ID: id.New(), Email: in.Email, FullName: in.FullName,
-		Role: users.RoleParticipant, PasswordHash: hash, CreatedAt: s.now().UTC()}
-	if err := s.users.CreateParticipant(u); err != nil {
-		if errors.Is(err, users.ErrEmailTaken) {
-			return users.User{}, FieldErrors{"email": "err.email_taken"}
-		}
-		return users.User{}, err
-	}
-	return u, nil
-}
-
-// Login checks credentials. It returns ErrInvalidCredentials for both an
-// unknown email and a wrong password.
-func (s *Service) Login(email, password string) (users.User, error) {
-	u, err := s.users.GetByEmail(NormalizeEmail(email))
-	if errors.Is(err, users.ErrNotFound) {
-		CheckPassword(dummyHash, password)
-		return users.User{}, ErrInvalidCredentials
+	uid, err := s.id.SignUp(ctx, in.Email, in.Password, in.FullName, users.RoleParticipant)
+	if errors.Is(err, users.ErrEmailTaken) {
+		return users.User{}, FieldErrors{"email": "err.email_taken"}
 	}
 	if err != nil {
 		return users.User{}, err
 	}
-	if !CheckPassword(u.PasswordHash, password) {
-		return users.User{}, ErrInvalidCredentials
-	}
-	return u, nil
-}
-
-func hashToken(token string) string {
-	sum := sha256.Sum256([]byte(token))
-	return hex.EncodeToString(sum[:])
-}
-
-// CreateSession stores a new session and returns the opaque cookie token.
-func (s *Service) CreateSession(ctx context.Context, userID string) (string, time.Time, error) {
-	token := id.Token(32)
-	now := s.now().UTC()
-	exp := now.Add(SessionTTL)
-	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO auth_sessions (token_hash, user_id, created_at, expires_at) VALUES (?,?,?,?)`,
-		hashToken(token), userID, now.Unix(), exp.Unix())
-	return token, exp, err
-}
-
-// UserForSession resolves a cookie token to its user; expired sessions are removed.
-func (s *Service) UserForSession(ctx context.Context, token string) (users.User, error) {
-	var userID string
-	var exp int64
-	err := s.db.QueryRowContext(ctx,
-		`SELECT user_id, expires_at FROM auth_sessions WHERE token_hash = ?`, hashToken(token)).Scan(&userID, &exp)
-	if errors.Is(err, sql.ErrNoRows) {
-		return users.User{}, users.ErrNotFound
-	}
-	if err != nil {
+	if err := s.users.CreateProfile(ctx, uid, s.now().UTC()); err != nil {
 		return users.User{}, err
 	}
-	if s.now().Unix() >= exp {
-		_ = s.DestroySession(ctx, token)
-		return users.User{}, users.ErrNotFound
-	}
-	return s.users.GetByID(userID)
+	return users.User{ID: uid, Email: in.Email, FullName: in.FullName, Role: users.RoleParticipant}, nil
 }
 
-func (s *Service) DestroySession(ctx context.Context, token string) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM auth_sessions WHERE token_hash = ?`, hashToken(token))
-	return err
+// StartSession checks the password and returns a session cookie value.
+func (s *Service) StartSession(ctx context.Context, email, password string) (string, time.Time, error) {
+	idToken, err := s.id.SignIn(ctx, NormalizeEmail(email), password)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	cookie, err := s.id.NewSession(ctx, idToken, SessionTTL)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return cookie, s.now().Add(SessionTTL), nil
+}
+
+func (s *Service) Verify(ctx context.Context, cookie string) (Claims, error) {
+	return s.id.VerifySession(ctx, cookie)
 }

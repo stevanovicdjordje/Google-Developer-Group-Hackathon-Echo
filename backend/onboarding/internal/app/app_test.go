@@ -1,20 +1,17 @@
 package app_test
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/Ilij4n/eho/backend/onboarding/internal/app"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/config"
-	"github.com/Ilij4n/eho/backend/onboarding/internal/db"
 )
 
 type client struct {
@@ -25,18 +22,20 @@ type client struct {
 
 func newServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	conn, err := db.Open(context.Background(), filepath.Join(t.TempDir(), "test.db"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { conn.Close() })
-	h, err := app.New(config.Config{}, conn)
+	srv, _ := newServerDeps(t)
+	return srv
+}
+
+func newServerDeps(t *testing.T) (*httptest.Server, app.Deps) {
+	t.Helper()
+	deps := app.MemDeps()
+	h, err := app.New(config.Config{Timezone: "UTC", BaseURL: "http://eho.test", AppURL: "http://app.test"}, deps)
 	if err != nil {
 		t.Fatal(err)
 	}
 	srv := httptest.NewServer(h)
 	t.Cleanup(srv.Close)
-	return srv
+	return srv, deps
 }
 
 func newClient(t *testing.T, srv *httptest.Server) *client {

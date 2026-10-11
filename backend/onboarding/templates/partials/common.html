@@ -16,18 +16,29 @@
 </nav>
 {{end}}
 
-{{/* Floor plan with zones, rendered as SVG on the server. Expects events.PlanView. */}}
+{{/* Published venue map (from the map editor), drawn as SVG on the server. Expects events.PlanView. */}}
 {{define "venue_svg"}}
-{{$lb := .LinkBase}}{{$sel := .Selected}}{{$fs := .FontSize}}
-<svg class="plan" viewBox="0 0 {{.Map.Width}} {{.Map.Height}}" role="img" aria-label="{{t "venue.plan_alt"}}">
-  <image href="/events/{{.EventID}}/plan" x="0" y="0" width="{{.Map.Width}}" height="{{.Map.Height}}"></image>
-  {{range .Zones}}
-    {{if $lb}}<a href="{{$lb}}{{.ID}}">{{end}}
-      <rect class="zone zone-{{.Kind}}{{if eq .ID $sel}} selected{{end}}" x="{{num .PX}}" y="{{num .PY}}" width="{{num .PW}}" height="{{num .PH}}" rx="6"><title>{{.Name}}</title></rect>
-      <text class="zone-label" x="{{num .CX}}" y="{{num .CY}}" font-size="{{num $fs}}" text-anchor="middle" dominant-baseline="middle">{{.Name}}</text>
-    {{if $lb}}</a>{{end}}
-  {{end}}
-</svg>
+{{$lb := .LinkBase}}{{$sel := .Selected}}{{$many := gt (len .Floors) 1}}
+{{range .Floors}}{{$fs := .FontSize}}
+<figure class="floor">
+  {{if $many}}<figcaption>{{.Floor.Name}}</figcaption>{{end}}
+  <svg class="plan" viewBox="0 0 {{.Floor.Width}} {{.Floor.Height}}" role="img" aria-label="{{t "venue.plan_alt"}}">
+    <image href="{{.ImageURL}}" x="0" y="0" width="{{.Floor.Width}}" height="{{.Floor.Height}}"></image>
+    {{range .Shapes}}
+      {{if $lb}}<a href="{{$lb}}{{.FeatureID}}">{{end}}
+      {{if eq .Kind "rect"}}
+        <rect class="zone zone-{{.Type}}{{if eq .FeatureID $sel}} selected{{end}}" x="{{num .X}}" y="{{num .Y}}" width="{{num .W}}" height="{{num .H}}" rx="6"><title>{{.Name}}</title></rect>
+      {{else if eq .Kind "polygon"}}
+        <polygon class="zone zone-{{.Type}}{{if eq .FeatureID $sel}} selected{{end}}" points="{{.Points}}"><title>{{.Name}}</title></polygon>
+      {{else}}
+        <circle class="zone zone-{{.Type}}{{if eq .FeatureID $sel}} selected{{end}}" cx="{{num .CX}}" cy="{{num .CY}}" r="{{num .R}}"><title>{{.Name}}</title></circle>
+      {{end}}
+      {{if .ShowLabel}}<text class="zone-label" x="{{num .CX}}" y="{{num .CY}}" font-size="{{num $fs}}" text-anchor="middle" dominant-baseline="middle">{{.Name}}</text>{{end}}
+      {{if $lb}}</a>{{end}}
+    {{end}}
+  </svg>
+</figure>
+{{end}}
 {{end}}
 
 {{/* Time table per day and hall. Expects the events schedule data. */}}
@@ -36,7 +47,7 @@
   <h3 class="day">{{weekday .Date}}, {{day .Date}}</h3>
   <div class="table-wrap">
     <table class="schedule">
-      <thead><tr><th scope="col">{{t "schedule.time"}}</th>{{range .Columns}}<th scope="col">{{if .Zone}}{{.Zone.Name}}{{else}}{{t "schedule.no_hall"}}{{end}}</th>{{end}}</tr></thead>
+      <thead><tr><th scope="col">{{t "schedule.time"}}</th>{{range .Columns}}<th scope="col">{{if .Name}}{{.Name}}{{else}}{{t "schedule.no_hall"}}{{end}}</th>{{end}}</tr></thead>
       <tbody>
         {{range .Rows}}
         <tr>
@@ -44,7 +55,7 @@
           {{range .Cells}}
           <td>
             {{range .}}
-            <div class="slot{{if .Conflict}} conflict{{end}}">
+            <div class="slot{{if .Conflict}} conflict{{end}}{{if .IsBreak}} break{{end}}">
               <strong>{{.Title}}</strong>
               <span class="muted">{{clock .StartsAt}}–{{clock .EndsAt}}</span>
               {{with .Speaker}}<span>{{.}}</span>{{end}}

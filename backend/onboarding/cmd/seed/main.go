@@ -1,28 +1,32 @@
-// Command seed fills the database with clearly fake demo data: one organizer,
-// 20 participants and three events (finished with reviews, ongoing, upcoming),
-// each with a generated floor plan, zones, a schedule and invitations.
+// Command seed fills the Firebase emulators with clearly fake demo data for
+// the onboarding module. Run backend/maps `make seed` (map of the "devfest"
+// event) and backend/events `make seed` (its agenda) first; this adds:
+//
+//   - the organizer role and organization for the shared demo organizer
+//     organizer@eho.test (created if missing),
+//   - 20 participants ucesnik01..20@eho.test with finished onboarding,
+//   - a finished event with invitations and 13 reviews, an upcoming
+//     two-day event, and invitations to devfest (ongoing today).
+//
+// Re-running replaces this command's data (fixed IDs). It refuses to run
+// outside the emulators.
 package main
 
 import (
 	"context"
-	"errors"
-	"flag"
 	"fmt"
-	"image"
-	"image/color"
-	"image/draw"
-	"image/png"
 	"log"
 	"math/rand/v2"
 	"os"
-	"path/filepath"
 	"time"
 
+	"cloud.google.com/go/firestore"
+	fbauth "firebase.google.com/go/v4/auth"
+
 	"github.com/Ilij4n/eho/backend/onboarding/internal/app"
-	"github.com/Ilij4n/eho/backend/onboarding/internal/auth"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/config"
-	"github.com/Ilij4n/eho/backend/onboarding/internal/db"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/events"
+	"github.com/Ilij4n/eho/backend/onboarding/internal/fb"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/id"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/invitations"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/reviews"
@@ -30,8 +34,11 @@ import (
 )
 
 const (
-	orgEmail     = "organizator@eho.demo"
-	demoPassword = "demo-lozinka"
+	orgEmail     = "organizer@eho.test" // same demo organizer as backend/maps
+	demoPassword = "eho-demo-123"
+	summitID     = "onb-summit"
+	startupID    = "onb-startup"
+	devfestID    = "devfest"
 )
 
 var names = []string{
@@ -42,298 +49,257 @@ var names = []string{
 }
 
 func main() {
-	reset := flag.Bool("reset", false, "delete the database and uploaded plans before seeding")
-	flag.Parse()
-	cfg := config.Load()
-	if *reset {
-		for _, p := range []string{cfg.DBPath, cfg.DBPath + "-wal", cfg.DBPath + "-shm"} {
-			if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
-				log.Fatal(err)
-			}
-		}
-		_ = os.RemoveAll(filepath.Join(cfg.UploadDir, "venue"))
+	if os.Getenv("FIRESTORE_EMULATOR_HOST") == "" || os.Getenv("FIREBASE_AUTH_EMULATOR_HOST") == "" {
+		log.Fatal("seed works only against the Firebase emulators (set FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST, or use scripts/dev.sh)")
 	}
 	ctx := context.Background()
-	conn, err := db.Open(ctx, cfg.DBPath)
+	cfg := config.Load()
+	c, err := fb.New(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
-
-	s := &seeder{
-		users:   users.NewSQLiteRepo(conn),
-		events:  events.NewSQLiteRepo(conn),
-		invs:    invitations.NewSQLiteRepo(conn),
-		reviews: reviews.NewSQLiteRepo(conn),
-		cfg:     cfg,
-		loc:     app.Location(cfg),
-		rnd:     rand.New(rand.NewPCG(2026, 10)),
-		now:     time.Now().UTC(),
-	}
-	if _, err := s.users.GetByEmail(orgEmail); err == nil {
-		log.Fatalf("demo data already present in %s (run with -reset to recreate it)", cfg.DBPath)
-	}
-	authSvc := auth.NewService(s.users, conn)
-	if err := s.run(authSvc); err != nil {
+	defer c.Close()
+	loc := app.Location(cfg)
+	s := &seeder{cfg: cfg, c: c, loc: loc, rnd: rand.New(rand.NewPCG(2026, 10)), now: time.Now().UTC(),
+		users: users.NewFirestoreRepo(c.Firestore), events: events.NewFirestoreRepo(c.Firestore, loc),
+		invs: invitations.NewFirestoreRepo(c.Firestore), reviews: reviews.NewFirestoreRepo(c.Firestore)}
+	if err := s.run(ctx); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf(`Demo data created in %s
-
-  Organizer:    %s / %s
-  Participants: ucesnik01@eho.demo … ucesnik20@eho.demo / %s
-
-Start the server and open %s
-`, cfg.DBPath, orgEmail, demoPassword, demoPassword, cfg.BaseURL)
 }
 
 type seeder struct {
-	users   *users.SQLiteRepo
-	events  *events.SQLiteRepo
-	invs    *invitations.SQLiteRepo
-	reviews *reviews.SQLiteRepo
 	cfg     config.Config
+	c       *fb.Clients
 	loc     *time.Location
 	rnd     *rand.Rand
 	now     time.Time
+	users   *users.FirestoreRepo
+	events  *events.FirestoreRepo
+	invs    *invitations.FirestoreRepo
+	reviews *reviews.FirestoreRepo
 
-	orgID        string
-	participants []users.User
+	orgUID       string
+	participants []participant
 }
 
-func (s *seeder) run(authSvc *auth.Service) error {
-	org, err := authSvc.RegisterOrganizer(auth.OrganizerInput{
-		FullName: "Olivera Organizović", Email: orgEmail, Password: demoPassword, PasswordConfirm: demoPassword,
-		OrgName: "Eho Demo Konferencije", Website: "eho.demo",
-	})
-	if err != nil {
-		return err
-	}
-	o, err := s.users.GetOrganizationByOwner(org.ID)
-	if err != nil {
-		return err
-	}
-	s.orgID = o.ID
+type participant struct{ uid, email, name string }
 
-	if err := s.seedParticipants(authSvc); err != nil {
+// account returns the user with this email, creating it if needed, and sets the role claim.
+func (s *seeder) account(ctx context.Context, email, name string, role users.Role) (string, error) {
+	u, err := s.c.Auth.GetUserByEmail(ctx, email)
+	if fbauth.IsUserNotFound(err) {
+		u, err = s.c.Auth.CreateUser(ctx, (&fbauth.UserToCreate{}).Email(email).Password(demoPassword).DisplayName(name))
+	}
+	if err != nil {
+		return "", fmt.Errorf("account %s: %w", email, err)
+	}
+	if err := s.c.Auth.SetCustomUserClaims(ctx, u.UID, map[string]any{"role": string(role)}); err != nil {
+		return "", err
+	}
+	return u.UID, nil
+}
+
+func (s *seeder) run(ctx context.Context) error {
+	var err error
+	if s.orgUID, err = s.account(ctx, orgEmail, "Olivera Organizović", users.RoleOrganizer); err != nil {
 		return err
 	}
+	if err := s.users.SaveOrganization(ctx, users.Organization{OwnerUID: s.orgUID, Name: "Eho Demo Konferencije",
+		Website: "https://eho.test", CreatedAt: s.now}); err != nil {
+		return err
+	}
+	if err := s.seedParticipants(ctx); err != nil {
+		return err
+	}
+	for _, evID := range []string{summitID, startupID, devfestID} {
+		if err := s.clear(ctx, evID); err != nil {
+			return err
+		}
+	}
 
-	// Event times are local wall-clock times in EHO_TIMEZONE.
 	today := time.Date(s.now.In(s.loc).Year(), s.now.In(s.loc).Month(), s.now.In(s.loc).Day(), 0, 0, 0, 0, s.loc)
 
-	finished, err := s.seedEvent("Eho Dev Summit 2026",
+	summitDay := today.AddDate(0, 0, -10)
+	if err := s.seedEvent(ctx, summitID, "Eho Dev Summit 2026",
 		"Godišnja konferencija o razvoju softvera: veb, cloud i veštačka inteligencija.",
-		"Bulevar Mihajla Pupina 10, Beograd", 44.8176, 20.4569,
-		today.AddDate(0, 0, -10).Add(9*time.Hour), today.AddDate(0, 0, -10).Add(18*time.Hour), 1)
-	if err != nil {
+		"Bulevar Mihajla Pupina 10, Beograd", 44.8176, 20.4569, summitDay.Add(9*time.Hour), summitDay.Add(18*time.Hour), 1); err != nil {
 		return err
 	}
-	if err := s.invite(finished, 0, 20, 16, 3); err != nil {
+	if err := s.invite(ctx, summitID, 0, 20, 16, 3); err != nil {
 		return err
 	}
-	if err := s.seedReviews(finished, 13); err != nil {
-		return err
-	}
-
-	start := s.now.Add(-2 * time.Hour).Truncate(time.Hour)
-	ongoing, err := s.seedEvent("AI meetup Beograd",
-		"Veče kratkih predavanja o primeni velikih jezičkih modela u praksi.",
-		"Kneza Mihaila 5, Beograd", 44.8170, 20.4573,
-		start, start.Add(8*time.Hour), 1)
-	if err != nil {
-		return err
-	}
-	if err := s.invite(ongoing, 0, 14, 11, 1); err != nil {
+	if err := s.seedReviews(ctx, summitID, 13); err != nil {
 		return err
 	}
 
-	upcoming, err := s.seedEvent("Startap vikend Novi Sad",
+	startDay := today.AddDate(0, 0, 14)
+	if err := s.seedEvent(ctx, startupID, "Startap vikend Novi Sad",
 		"Dva dana radionica, mentorstva i pitchinga za mlade timove.",
-		"Bulevar oslobođenja 30, Novi Sad", 45.2551, 19.8450,
-		today.AddDate(0, 0, 14).Add(10*time.Hour), today.AddDate(0, 0, 15).Add(18*time.Hour), 2)
-	if err != nil {
+		"Bulevar oslobođenja 30, Novi Sad", 45.2551, 19.8450, startDay.Add(10*time.Hour), startDay.AddDate(0, 0, 1).Add(18*time.Hour), 2); err != nil {
 		return err
 	}
-	return s.invite(upcoming, 0, 12, 6, 1)
+	if err := s.invite(ctx, startupID, 0, 12, 6, 1); err != nil {
+		return err
+	}
+
+	devfestNote := "devfest (backend/maps `make seed`) not found: run it first for the ongoing event with a venue map"
+	if dev, err := s.events.Get(ctx, devfestID); err == nil && dev.OwnerUID == s.orgUID {
+		if err := s.invite(ctx, devfestID, 0, 14, 12, 1); err != nil {
+			return err
+		}
+		devfestNote = "devfest: 14 participants invited (12 accepted)"
+	}
+
+	fmt.Printf(`Onboarding demo data created (Firebase emulators, project %s)
+
+  Organizer:    %s / %s   (same account as the map editor demo)
+  Participants: ucesnik01@eho.test … ucesnik20@eho.test / %s
+  Events:       %q (finished, 13 reviews), %q (upcoming), %s
+
+Open %s
+`, s.cfg.ProjectID, orgEmail, demoPassword, demoPassword, "Eho Dev Summit 2026", "Startap vikend Novi Sad", devfestNote, s.cfg.BaseURL)
+	return nil
 }
 
-func (s *seeder) seedParticipants(authSvc *auth.Service) error {
+func (s *seeder) seedParticipants(ctx context.Context) error {
 	for i, name := range names {
-		email := fmt.Sprintf("ucesnik%02d@eho.demo", i+1)
-		u, err := authSvc.RegisterParticipant(auth.ParticipantInput{
-			FullName: name, Email: email, Password: demoPassword, PasswordConfirm: demoPassword,
-		})
-		if err != nil {
-			return fmt.Errorf("participant %s: %w", email, err)
-		}
-		prof, err := s.users.GetProfile(u.ID)
+		email := fmt.Sprintf("ucesnik%02d@eho.test", i+1)
+		uid, err := s.account(ctx, email, name, users.RoleParticipant)
 		if err != nil {
 			return err
 		}
+		if err := s.users.CreateProfile(ctx, uid, s.now); err != nil {
+			return err
+		}
+		prof := users.Profile{UserID: uid, Visible: i%3 == 0, OnboardingStep: users.OnboardingSteps + 1}
 		perm := s.rnd.Perm(len(users.Topics))
 		for _, k := range perm[:3+s.rnd.IntN(3)] {
 			prof.Interests = append(prof.Interests, users.Topics[k])
 		}
 		prof.CaptionLanguage = []string{"sr", "sr", "en", "de"}[s.rnd.IntN(4)]
 		prof.Goal = users.Goals[s.rnd.IntN(len(users.Goals))]
-		prof.Visible = i%3 == 0
 		done := s.now
-		prof.CompletedAt, prof.OnboardingStep = &done, users.OnboardingSteps+1
-		if err := s.users.SaveProfile(prof); err != nil {
+		prof.CompletedAt = &done
+		if err := s.users.SaveProfile(ctx, prof); err != nil {
 			return err
 		}
-		if err := s.users.GrantConsent(u.ID, users.ConsentGDPR, users.GDPRConsentVersion); err != nil {
+		if err := s.users.GrantConsent(ctx, uid, users.ConsentGDPR, users.GDPRConsentVersion, s.now); err != nil {
 			return err
 		}
-		s.participants = append(s.participants, u)
+		s.participants = append(s.participants, participant{uid: uid, email: email, name: name})
 	}
 	return nil
 }
 
-type zoneSpec struct {
-	name       string
-	kind       events.ZoneKind
-	x, y, w, h float64
-}
-
-var layout = []zoneSpec{
-	{"Velika sala", "hall", 4, 6, 38, 42},
-	{"Sala Tesla", "hall", 46, 6, 24, 30},
-	{"Sala Pupin", "hall", 73, 6, 23, 30},
-	{"Štand Cloud", "booth", 46, 44, 12, 12},
-	{"Štand AI", "booth", 61, 44, 12, 12},
-	{"Štand Startapi", "booth", 76, 44, 12, 12},
-	{"Kafe i ručak", "food", 4, 56, 30, 22},
-	{"Info pult", "info", 40, 64, 16, 12},
-	{"Toaleti", "toilet", 80, 64, 16, 14},
-	{"Glavni ulaz", "entrance", 40, 86, 20, 10},
+// clear removes what an earlier run created for this event. For devfest only
+// the invitations and memberships are removed (the event belongs to the map seed).
+func (s *seeder) clear(ctx context.Context, evID string) error {
+	fs := s.c.Firestore
+	del := func(refs []*firestore.DocumentRef) error {
+		for _, r := range refs {
+			if _, err := r.Delete(ctx); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	invs, err := fs.Collection("invitations").Where("eventId", "==", evID).Documents(ctx).GetAll()
+	if err != nil {
+		return err
+	}
+	for _, snap := range invs {
+		if uid, _ := snap.Data()["userId"].(string); uid != "" {
+			if _, err := fs.Collection("members").Doc(uid).Collection("events").Doc(evID).Delete(ctx); err != nil {
+				return err
+			}
+		}
+		if _, err := snap.Ref.Delete(ctx); err != nil {
+			return err
+		}
+	}
+	ev := fs.Collection("events").Doc(evID)
+	revs, err := ev.Collection("reviews").DocumentRefs(ctx).GetAll()
+	if err != nil {
+		return err
+	}
+	if err := del(revs); err != nil {
+		return err
+	}
+	if evID == devfestID {
+		return nil
+	}
+	return del([]*firestore.DocumentRef{ev.Collection("published").Doc("agenda"), ev.Collection("draft").Doc("map"), ev})
 }
 
 var talks = []struct {
-	title, speaker, tags string
-	hall                 int // index into the three halls
-	startMin, durMin     int // offset from the day's start
+	title, speaker, tags, stage string
+	startMin, durMin            int
+	isBreak                     bool
 }{
-	{"Otvaranje i keynote: Budućnost eventa", "Ana Demić", "ai, eventi", 0, 0, 60},
-	{"Go u produkciji", "Marko Testić", "go, backend", 1, 75, 45},
-	{"Gemma na ivici mreže", "Jelena Primerić", "ai, gemma", 0, 75, 45},
-	{"Dizajn pristupačnih interfejsa", "Mina Fiktović", "dizajn, ux", 2, 75, 45},
-	{"Cloud Run bez tajni", "Stefan Lažić", "cloud", 1, 150, 45},
-	{"Panel: AI i privatnost", "Ivana Fiktić", "ai, privatnost", 0, 150, 60},
-	{"Radionica: od ideje do MVP-a", "Filip Probović", "startup", 2, 150, 90},
-	{"Zatvaranje i networking", "Olivera Organizović", "networking", 0, 300, 45},
+	{"Registracija i kafa", "", "", "Glavna sala", -45, 45, true},
+	{"Otvaranje i keynote: Budućnost eventa", "Ana Demić", "ai, eventi", "Glavna sala", 0, 60, false},
+	{"Go u produkciji", "Marko Testić", "go, backend", "Sala A", 75, 45, false},
+	{"Gemma na ivici mreže", "Jelena Primerić", "ai, gemma", "Glavna sala", 75, 45, false},
+	{"Dizajn pristupačnih interfejsa", "Mina Fiktović", "dizajn, ux", "Sala B", 75, 45, false},
+	{"Cloud Run bez tajni", "Stefan Lažić", "cloud", "Sala A", 150, 45, false},
+	{"Panel: AI i privatnost", "Ivana Fiktić", "ai, privatnost", "Glavna sala", 150, 60, false},
+	{"Radionica: od ideje do MVP-a", "Filip Probović", "startup", "Sala B", 150, 90, false},
+	{"Zatvaranje i networking", "Olivera Organizović", "networking", "Glavna sala", 300, 45, false},
 }
 
-func (s *seeder) seedEvent(title, desc, addr string, lat, lng float64, start, end time.Time, days int) (events.Event, error) {
-	pub := s.now.Add(-30 * 24 * time.Hour)
+func (s *seeder) seedEvent(ctx context.Context, evID, title, desc, addr string, lat, lng float64, start, end time.Time, days int) error {
+	created := s.now.Add(-30 * 24 * time.Hour)
 	st, en := start.UTC(), end.UTC()
-	ev := events.Event{ID: id.New(), OrganizationID: s.orgID, Title: title, Description: desc,
-		StartsAt: &st, EndsAt: &en, Address: addr, Lat: &lat, Lng: &lng, PublishedAt: &pub,
-		CreatedAt: pub, UpdatedAt: pub}
-	if err := s.events.Create(ev); err != nil {
-		return ev, err
+	ev := events.Event{ID: evID, OwnerUID: s.orgUID, Title: title, Description: desc, Address: addr,
+		StartsAt: &st, EndsAt: &en, Lat: &lat, Lng: &lng, PublishedAt: &created, CreatedAt: created, UpdatedAt: created}
+	if err := s.events.Create(ctx, ev); err != nil {
+		return err
 	}
-	var halls []events.Zone
-	for _, z := range layout {
-		zone := events.Zone{ID: id.New(), EventID: ev.ID, Name: z.name, Kind: z.kind, X: z.x, Y: z.y, W: z.w, H: z.h, Created: pub}
-		if err := s.events.CreateZone(zone); err != nil {
-			return ev, err
-		}
-		if z.kind == events.ZoneHall {
-			halls = append(halls, zone)
-		}
-		pub = pub.Add(time.Second) // keep a stable display order
-	}
-	if err := s.writePlan(ev.ID); err != nil {
-		return ev, err
-	}
+	var a events.Agenda
 	for d := 0; d < days; d++ {
-		dayStart := start.AddDate(0, 0, d)
+		dayStart := time.Date(start.Year(), start.Month(), start.Day()+d, start.Hour(), start.Minute(), 0, 0, s.loc)
 		for _, tk := range talks {
 			from := dayStart.Add(time.Duration(tk.startMin) * time.Minute)
 			to := from.Add(time.Duration(tk.durMin) * time.Minute)
-			if to.After(end) {
+			if from.Before(start) || to.After(end) {
 				continue
 			}
-			tags, _ := events.ParseTags(tk.tags)
 			title := tk.title
 			if days > 1 {
 				title = fmt.Sprintf("%s (dan %d)", tk.title, d+1)
 			}
-			if err := s.events.CreateSession(events.Session{ID: id.New(), EventID: ev.ID, ZoneID: halls[tk.hall].ID,
-				Title: title, Speaker: tk.speaker, StartsAt: from.UTC(), EndsAt: to.UTC(), Tags: tags}); err != nil {
-				return ev, err
+			tags, _ := events.ParseTags(tk.tags)
+			a.Add(events.Session{Title: title, Stage: tk.stage, Speaker: tk.speaker, Tags: tags,
+				StartsAt: from, EndsAt: to}, s.loc)
+			if tk.isBreak {
+				a.Sessions[len(a.Sessions)-1].IsBreak = true
 			}
 		}
 	}
-	return ev, nil
-}
-
-// writePlan draws a simple floor plan (walls and rooms) as a PNG.
-func (s *seeder) writePlan(eventID string) error {
-	const w, h = 1200, 800
-	img := image.NewRGBA(image.Rect(0, 0, w, h))
-	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{250, 250, 247, 255}}, image.Point{}, draw.Src)
-	wall := color.RGBA{70, 78, 92, 255}
-	room := color.RGBA{232, 234, 238, 255}
-	rect := func(x0, y0, x1, y1 int, c color.Color) {
-		draw.Draw(img, image.Rect(x0, y0, x1, y1), &image.Uniform{c}, image.Point{}, draw.Src)
-	}
-	outline := func(x0, y0, x1, y1, t int) {
-		rect(x0, y0, x1, y0+t, wall)
-		rect(x0, y1-t, x1, y1, wall)
-		rect(x0, y0, x0+t, y1, wall)
-		rect(x1-t, y0, x1, y1, wall)
-	}
-	outline(10, 10, w-10, h-10, 8)
-	for _, z := range layout {
-		x0, y0 := int(z.x/100*w), int(z.y/100*h)
-		x1, y1 := int((z.x+z.w)/100*w), int((z.y+z.h)/100*h)
-		rect(x0, y0, x1, y1, room)
-		outline(x0, y0, x1, y1, 3)
-	}
-	// Door gap at the main entrance.
-	rect(int(0.42*w), h-18, int(0.58*w), h-10, color.RGBA{250, 250, 247, 255})
-
-	dir := filepath.Join(s.cfg.UploadDir, "venue")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
-	name := eventID + "-seed.png"
-	f, err := os.Create(filepath.Join(dir, name))
-	if err != nil {
-		return err
-	}
-	if err := png.Encode(f, img); err != nil {
-		f.Close()
-		return err
-	}
-	if err := f.Close(); err != nil {
-		return err
-	}
-	return s.events.SaveVenueMap(events.VenueMap{EventID: eventID, FileName: name, ContentType: "image/png",
-		Width: w, Height: h, UploadedAt: s.now})
+	a.PublishedAt = created
+	return s.events.SaveAgenda(ctx, evID, a)
 }
 
 // invite invites participants[from:to]; the first `accepted` accept, the
 // next `declined` decline, the rest stay unanswered.
-func (s *seeder) invite(ev events.Event, from, to, accepted, declined int) error {
-	sent := ev.StartsAt.Add(-21 * 24 * time.Hour)
-	for i, u := range s.participants[from:to] {
-		inv := invitations.Invitation{ID: id.New(), EventID: ev.ID, Email: u.Email, Token: id.Token(24),
+func (s *seeder) invite(ctx context.Context, evID string, from, to, accepted, declined int) error {
+	sent := s.now.Add(-20 * 24 * time.Hour)
+	for i, p := range s.participants[from:to] {
+		inv := invitations.Invitation{EventID: evID, Email: p.email, Token: id.Token(24),
 			Status: invitations.StatusSent, ExpiresAt: sent.Add(invitations.TTL), CreatedAt: sent}
-		if err := s.invs.Create(inv); err != nil {
+		if err := s.invs.Create(ctx, inv); err != nil {
 			return err
 		}
+		inv.ID = invitations.DocID(evID, p.email)
 		resp := sent.Add(time.Duration(1+i) * 6 * time.Hour)
 		switch {
 		case i < accepted:
-			err := s.invs.Respond(inv.ID, u.ID, invitations.StatusAccepted, resp)
-			if err != nil {
+			if err := s.invs.Respond(ctx, inv, p.uid, invitations.StatusAccepted, resp); err != nil {
 				return err
 			}
 		case i < accepted+declined:
-			if err := s.invs.Respond(inv.ID, u.ID, invitations.StatusDeclined, resp); err != nil {
+			if err := s.invs.Respond(ctx, inv, p.uid, invitations.StatusDeclined, resp); err != nil {
 				return err
 			}
 		}
@@ -360,14 +326,24 @@ var neutral = []string{
 	"",
 }
 
-func (s *seeder) seedReviews(ev events.Event, n int) error {
-	sessions, err := s.events.ListSessions(ev.ID)
+func (s *seeder) seedReviews(ctx context.Context, evID string, n int) error {
+	a, err := s.events.GetAgenda(ctx, evID)
 	if err != nil {
 		return err
 	}
+	ev, err := s.events.Get(ctx, evID)
+	if err != nil {
+		return err
+	}
+	var sessions []events.Session
+	for _, se := range a.SessionList(s.loc) {
+		if !se.IsBreak {
+			sessions = append(sessions, se)
+		}
+	}
 	ratings := []int{5, 4, 5, 4, 2, 5, 4, 3, 5, 4, 1, 4, 5}
 	for i := 0; i < n && i < len(ratings); i++ {
-		u := s.participants[i]
+		p := s.participants[i]
 		r := ratings[i]
 		var comment string
 		switch {
@@ -379,22 +355,25 @@ func (s *seeder) seedReviews(ev events.Event, n int) error {
 			comment = neutral[s.rnd.IntN(len(neutral))]
 		}
 		sr := map[string]int{}
-		for j, sess := range sessions {
+		for _, se := range sessions {
 			if s.rnd.IntN(3) == 0 {
 				continue
 			}
 			base := r
-			if j == 5 { // the panel is the weak spot in the demo data
+			switch {
+			case se.Title == "Panel: AI i privatnost": // the weak spot in the demo data
 				base = 2
-			} else if j == 0 && base < 5 {
+			case se.Title == "Otvaranje i keynote: Budućnost eventa" && base < 5:
 				base++
 			}
-			v := base + s.rnd.IntN(3) - 1
-			sr[sess.ID] = min(5, max(1, v))
+			sr[se.ID] = min(5, max(1, base+s.rnd.IntN(3)-1))
 		}
 		at := ev.EndsAt.Add(time.Duration(2+i) * time.Hour)
-		if err := s.reviews.Save(reviews.Review{ID: id.New(), EventID: ev.ID, UserID: u.ID, Rating: r,
-			Comment: comment, Anonymous: i%4 == 1, SessionRatings: sr, CreatedAt: at, UpdatedAt: at}); err != nil {
+		if err := s.reviews.Save(ctx, reviews.WithAuthor{
+			Review: reviews.Review{ID: p.uid, EventID: evID, UserID: p.uid, Rating: r, Comment: comment,
+				Anonymous: i%4 == 1, SessionRatings: sr, CreatedAt: at, UpdatedAt: at},
+			AuthorName: p.name, AuthorEmail: p.email,
+		}); err != nil {
 			return err
 		}
 	}

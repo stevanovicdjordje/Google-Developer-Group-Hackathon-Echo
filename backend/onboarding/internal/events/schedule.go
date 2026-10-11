@@ -2,21 +2,23 @@ package events
 
 import (
 	"sort"
+	"strings"
 	"time"
 )
 
 // Overlaps returns the IDs of sessions that overlap in time with another
-// session in the same hall. Sessions without a hall never conflict.
-// Back-to-back sessions (one ends exactly when the next starts) are fine.
+// session on the same stage (hall). Sessions without a stage and breaks never
+// conflict. Back-to-back sessions (one ends exactly when the next starts) are fine.
 func Overlaps(sessions []Session) map[string]bool {
 	out := map[string]bool{}
-	byZone := map[string][]Session{}
+	byStage := map[string][]Session{}
 	for _, s := range sessions {
-		if s.ZoneID != "" {
-			byZone[s.ZoneID] = append(byZone[s.ZoneID], s)
+		if s.Stage != "" && !s.IsBreak {
+			k := strings.ToLower(s.Stage)
+			byStage[k] = append(byStage[k], s)
 		}
 	}
-	for _, list := range byZone {
+	for _, list := range byStage {
 		sort.Slice(list, func(i, j int) bool { return list[i].StartsAt.Before(list[j].StartsAt) })
 		// Sweep: compare each session with the latest-ending one seen so far.
 		var maxEnd time.Time
@@ -34,9 +36,9 @@ func Overlaps(sessions []Session) map[string]bool {
 	return out
 }
 
-// Column is one hall in the schedule grid; Zone is nil for "no hall".
+// Column is one hall in the schedule grid; Name "" is "no hall".
 type Column struct {
-	Zone *Zone
+	Name string
 }
 
 // Row is one start time on a day; Cells has one entry per column.
@@ -57,14 +59,11 @@ type Day struct {
 }
 
 // BuildSchedule lays sessions out as a time table per day (in loc) with one
-// column per hall. Halls with no sessions that day are omitted; a "no hall"
-// column is added only when needed.
-func BuildSchedule(sessions []Session, zones []Zone, loc *time.Location) []Day {
+// column per stage, in the order of stages (then any others alphabetically).
+// Stages with no sessions that day are omitted; a "no hall" column is added
+// only when needed.
+func BuildSchedule(sessions []Session, stages []string, loc *time.Location) []Day {
 	conflicts := Overlaps(sessions)
-	zoneByID := map[string]*Zone{}
-	for i := range zones {
-		zoneByID[zones[i].ID] = &zones[i]
-	}
 	sorted := append([]Session(nil), sessions...)
 	sort.SliceStable(sorted, func(i, j int) bool { return sorted[i].StartsAt.Before(sorted[j].StartsAt) })
 
@@ -83,23 +82,39 @@ func BuildSchedule(sessions []Session, zones []Zone, loc *time.Location) []Day {
 	var days []Day
 	for _, k := range order {
 		list := byDay[k]
-		// Columns: halls in zone order, then "no hall" (also for unknown zone IDs).
-		used := map[string]bool{}
+		used := map[string]string{} // lower -> display name
 		needNone := false
 		for _, s := range list {
-			if zoneByID[s.ZoneID] != nil {
-				used[s.ZoneID] = true
-			} else {
+			if s.Stage == "" {
 				needNone = true
+			} else if _, ok := used[strings.ToLower(s.Stage)]; !ok {
+				used[strings.ToLower(s.Stage)] = s.Stage
 			}
 		}
 		var cols []Column
 		colIndex := map[string]int{}
-		for i := range zones {
-			if used[zones[i].ID] {
-				colIndex[zones[i].ID] = len(cols)
-				cols = append(cols, Column{Zone: &zones[i]})
+		add := func(name string) {
+			key := strings.ToLower(name)
+			if _, done := colIndex[key]; done {
+				return
 			}
+			if _, ok := used[key]; ok {
+				colIndex[key] = len(cols)
+				cols = append(cols, Column{Name: used[key]})
+			}
+		}
+		for _, st := range stages {
+			add(st)
+		}
+		var rest []string
+		for key, name := range used {
+			if _, ok := colIndex[key]; !ok {
+				rest = append(rest, name)
+			}
+		}
+		sort.Strings(rest)
+		for _, st := range rest {
+			add(st)
 		}
 		noneIdx := -1
 		if needNone {
@@ -111,9 +126,9 @@ func BuildSchedule(sessions []Session, zones []Zone, loc *time.Location) []Day {
 			if len(rows) == 0 || !rows[len(rows)-1].Start.Equal(s.StartsAt) {
 				rows = append(rows, Row{Start: s.StartsAt, Cells: make([][]ScheduledSession, len(cols))})
 			}
-			idx, ok := colIndex[s.ZoneID]
-			if !ok {
-				idx = noneIdx
+			idx := noneIdx
+			if s.Stage != "" {
+				idx = colIndex[strings.ToLower(s.Stage)]
 			}
 			r := &rows[len(rows)-1]
 			r.Cells[idx] = append(r.Cells[idx], ScheduledSession{Session: s, Conflict: conflicts[s.ID]})

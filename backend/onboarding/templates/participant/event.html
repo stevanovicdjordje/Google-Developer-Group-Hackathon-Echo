@@ -21,23 +21,27 @@
 </section>
 {{end}}
 
-{{if $d.HasMap}}
 <section class="card">
   <h2>{{t "venue.plan"}}</h2>
-  <p class="hint">{{t "participant.map_hint"}}</p>
-  <div class="plan-wrap">{{template "venue_svg" $d.Plan}}</div>
-  {{with $d.Zone}}
-    <div class="zone-detail" id="zone">
-      <h3>{{.Name}} <span class="zone-chip zone-{{.Kind}}">{{t (printf "zone.%s" .Kind)}}</span></h3>
-      {{if $d.ZoneSess}}
-        <ul class="plain">{{range $d.ZoneSess}}<li><strong>{{clock .StartsAt}}–{{clock .EndsAt}}</strong> {{.Title}}{{with .Speaker}} · {{.}}{{end}}</li>{{end}}</ul>
-      {{else}}
-        <p class="muted">{{t "participant.zone_no_sessions"}}</p>
-      {{end}}
-    </div>
+  {{if $d.HasMap}}
+    <p class="hint">{{t "participant.map_hint"}}</p>
+    <div class="plan-wrap">{{template "venue_svg" $d.Plan}}</div>
+    {{with $d.Zone}}
+      <div class="zone-detail" id="zone">
+        <h3>{{.Name}} <span class="zone-chip zone-{{.Type}}">{{t (printf "feature.%s" .Type)}}</span></h3>
+        {{with .Description}}<p>{{.}}</p>{{end}}
+        {{if $d.ZoneSess}}
+          <ul class="plain">{{range $d.ZoneSess}}<li><strong>{{clock .StartsAt}}–{{clock .EndsAt}}</strong> {{.Title}}{{with .Speaker}} · {{.}}{{end}}</li>{{end}}</ul>
+        {{else}}
+          <p class="muted">{{t "participant.zone_no_sessions"}}</p>
+        {{end}}
+      </div>
+    {{end}}
+  {{else}}
+    <p class="muted">{{t "venue.not_published_participant"}}</p>
   {{end}}
+  <div class="actions"><a class="btn" href="{{$d.AppLink}}" target="_blank" rel="noopener">{{t "participant.open_app"}}</a></div>
 </section>
-{{end}}
 
 <section class="card">
   <h2>{{t "wizard.step.schedule"}}</h2>

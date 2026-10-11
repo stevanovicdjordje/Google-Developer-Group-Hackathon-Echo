@@ -17,7 +17,7 @@ const sessionCookie = "eho_session"
 // SignupHook lets the invitations domain bind an invitation to a participant
 // who registered from an invitation link, without auth importing it.
 type SignupHook interface {
-	InviteEmail(token string) (string, bool)
+	InviteEmail(ctx context.Context, token string) (string, bool)
 	AcceptAfterSignup(ctx context.Context, token, userID string) error
 }
 
@@ -48,22 +48,23 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 func (h *Handlers) LoadPrincipal(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if c, err := r.Cookie(sessionCookie); err == nil && c.Value != "" {
-			u, err := h.svc.UserForSession(r.Context(), c.Value)
+			claims, err := h.svc.Verify(r.Context(), c.Value)
 			switch {
 			case err == nil:
-				p := &httpx.Principal{UserID: u.ID, Name: u.FullName, Role: string(u.Role), Onboarded: true}
-				if u.Role == users.RoleParticipant {
-					if prof, err := h.users.GetProfile(u.ID); err == nil {
-						p.Onboarded = prof.Completed()
-					} else {
-						p.Onboarded = false
-					}
+				p := &httpx.Principal{UserID: claims.UID, Name: claims.Name, Email: claims.Email,
+					Role: string(claims.Role), Onboarded: true}
+				if p.Name == "" {
+					p.Name = claims.Email
+				}
+				if claims.Role == users.RoleParticipant {
+					prof, err := h.users.GetProfile(r.Context(), claims.UID)
+					p.Onboarded = err == nil && prof.Completed()
 				}
 				r = r.WithContext(httpx.WithPrincipal(r.Context(), p))
-			case errors.Is(err, users.ErrNotFound):
+			case errors.Is(err, ErrInvalidSession):
 				h.clearCookie(w)
 			default:
-				log.Printf("auth: session lookup: %v", err)
+				log.Printf("auth: session check: %v", err)
 			}
 		}
 		next.ServeHTTP(w, r)
@@ -92,13 +93,13 @@ func (h *Handlers) landing(w http.ResponseWriter, r *http.Request) {
 	h.view.Page(w, r, http.StatusOK, "landing", httpx.View{Title: "landing.title"})
 }
 
-func (h *Handlers) setSession(w http.ResponseWriter, r *http.Request, userID string) error {
-	token, exp, err := h.svc.CreateSession(r.Context(), userID)
+func (h *Handlers) setSession(w http.ResponseWriter, r *http.Request, email, password string) error {
+	value, exp, err := h.svc.StartSession(r.Context(), email, password)
 	if err != nil {
 		return err
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name: sessionCookie, Value: token, Path: "/", Expires: exp,
+		Name: sessionCookie, Value: value, Path: "/", Expires: exp,
 		HttpOnly: true, Secure: h.secure, SameSite: http.SameSiteLaxMode,
 	})
 	return nil
@@ -126,32 +127,27 @@ func (h *Handlers) loginForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) loginSubmit(w http.ResponseWriter, r *http.Request) {
-	u, err := h.svc.Login(r.PostFormValue("email"), r.PostFormValue("password"))
-	if err != nil {
-		if errors.Is(err, ErrInvalidCredentials) {
-			form := url.Values{"email": {r.PostFormValue("email")}, "next": {r.PostFormValue("next")}}
-			h.view.Page(w, r, http.StatusUnauthorized, "auth/login", httpx.View{
-				Title: "login.title", Form: form, Errors: map[string]string{"_form": "err.credentials"}})
-			return
+	err := h.setSession(w, r, r.PostFormValue("email"), r.PostFormValue("password"))
+	if errors.Is(err, ErrInvalidCredentials) || errors.Is(err, ErrTooManyAttempts) {
+		key := "err.credentials"
+		if errors.Is(err, ErrTooManyAttempts) {
+			key = "err.too_many_attempts"
 		}
+		form := url.Values{"email": {r.PostFormValue("email")}, "next": {r.PostFormValue("next")}}
+		h.view.Page(w, r, http.StatusUnauthorized, "auth/login", httpx.View{
+			Title: "login.title", Form: form, Errors: map[string]string{"_form": key}})
+		return
+	}
+	if err != nil {
 		h.fail(w, r, err)
 		return
 	}
-	if err := h.setSession(w, r, u.ID); err != nil {
-		h.fail(w, r, err)
-		return
-	}
-	dest := "/"
-	if u.Role == users.RoleOrganizer || r.PostFormValue("next") != "" {
-		dest = httpx.SafeNext(r.PostFormValue("next"), "/")
-	}
-	http.Redirect(w, r, dest, http.StatusSeeOther)
+	http.Redirect(w, r, httpx.SafeNext(r.PostFormValue("next"), "/"), http.StatusSeeOther)
 }
 
 func (h *Handlers) logout(w http.ResponseWriter, r *http.Request) {
-	if c, err := r.Cookie(sessionCookie); err == nil {
-		_ = h.svc.DestroySession(r.Context(), c.Value)
-	}
+	// The session cookie is only dropped here; revoking refresh tokens would
+	// also sign the user out of the Flutter app.
 	h.clearCookie(w)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -166,11 +162,11 @@ func (h *Handlers) organizerSubmit(w http.ResponseWriter, r *http.Request) {
 		Password: r.PostFormValue("password"), PasswordConfirm: r.PostFormValue("password_confirm"),
 		OrgName: r.PostFormValue("org_name"), Website: r.PostFormValue("website"),
 	}
-	u, err := h.svc.RegisterOrganizer(in)
+	_, err := h.svc.RegisterOrganizer(r.Context(), in)
 	if h.formError(w, r, err, "auth/register_organizer", "reg.organizer.title") {
 		return
 	}
-	if err := h.setSession(w, r, u.ID); err != nil {
+	if err := h.setSession(w, r, in.Email, in.Password); err != nil {
 		h.fail(w, r, err)
 		return
 	}
@@ -180,7 +176,7 @@ func (h *Handlers) organizerSubmit(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) participantForm(w http.ResponseWriter, r *http.Request) {
 	form := url.Values{}
 	if tok := r.URL.Query().Get("invite"); tok != "" && h.Signup != nil {
-		if email, ok := h.Signup.InviteEmail(tok); ok {
+		if email, ok := h.Signup.InviteEmail(r.Context(), tok); ok {
 			form.Set("invite", tok)
 			form.Set("email", email)
 		}
@@ -193,11 +189,11 @@ func (h *Handlers) participantSubmit(w http.ResponseWriter, r *http.Request) {
 		FullName: r.PostFormValue("full_name"), Email: r.PostFormValue("email"),
 		Password: r.PostFormValue("password"), PasswordConfirm: r.PostFormValue("password_confirm"),
 	}
-	u, err := h.svc.RegisterParticipant(in)
+	u, err := h.svc.RegisterParticipant(r.Context(), in)
 	if h.formError(w, r, err, "auth/register_participant", "reg.participant.title") {
 		return
 	}
-	if err := h.setSession(w, r, u.ID); err != nil {
+	if err := h.setSession(w, r, in.Email, in.Password); err != nil {
 		h.fail(w, r, err)
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/Ilij4n/eho/backend/onboarding/internal/events"
@@ -19,12 +20,7 @@ type myEventsData struct {
 
 func (h *Handlers) myEvents(w http.ResponseWriter, r *http.Request) {
 	p := httpx.PrincipalFrom(r.Context())
-	u, err := h.Users.GetByID(p.UserID)
-	if err != nil {
-		h.Fail(w, r, err)
-		return
-	}
-	invs, err := h.Repo.ListForParticipant(u.ID, u.Email)
+	invs, err := h.Repo.ListForParticipant(r.Context(), p.UserID, p.Email)
 	if err != nil {
 		h.Fail(w, r, err)
 		return
@@ -32,7 +28,10 @@ func (h *Handlers) myEvents(w http.ResponseWriter, r *http.Request) {
 	now := h.Now()
 	d := myEventsData{Now: now}
 	for _, inv := range invs {
-		ev, err := h.Events.Get(inv.EventID)
+		ev, err := h.Events.Get(r.Context(), inv.EventID)
+		if errors.Is(err, events.ErrNotFound) {
+			continue // the event was deleted in the map editor
+		}
 		if err != nil {
 			h.Fail(w, r, err)
 			return
@@ -62,23 +61,24 @@ type myEventData struct {
 	Event    events.Event
 	Status   events.Status
 	MapEmbed string
+	AppLink  string
 	HasMap   bool
 	Plan     events.PlanView
-	Zone     *events.Zone
+	Zone     *events.Feature
 	ZoneSess []events.Session
-	Schedule any
+	Schedule events.ScheduleData
 }
 
 func (h *Handlers) myEvent(w http.ResponseWriter, r *http.Request) {
 	p := httpx.PrincipalFrom(r.Context())
-	ev, err := h.Events.Get(r.PathValue("id"))
+	ev, err := h.Events.Get(r.Context(), r.PathValue("id"))
 	if err != nil && !errors.Is(err, events.ErrNotFound) {
 		h.Fail(w, r, err)
 		return
 	}
 	accepted := false
-	if err == nil && ev.PublishedAt != nil {
-		if accepted, err = h.Repo.HasAccepted(ev.ID, p.UserID); err != nil {
+	if err == nil && ev.Published() {
+		if accepted, err = h.Repo.HasAccepted(r.Context(), ev.ID, p.UserID); err != nil {
 			h.Fail(w, r, err)
 			return
 		}
@@ -87,30 +87,27 @@ func (h *Handlers) myEvent(w http.ResponseWriter, r *http.Request) {
 		h.View.Error(w, r, http.StatusNotFound, "error.title")
 		return
 	}
-	sched, err := events.LoadSchedule(h.Events, ev, h.Loc)
+	sched, err := events.LoadSchedule(r.Context(), h.Events, ev, h.Loc)
 	if err != nil {
 		h.Fail(w, r, err)
 		return
 	}
-	zones, err := h.Events.ListZones(ev.ID)
+	m, err := h.Events.GetPublishedMap(r.Context(), ev.ID)
 	if err != nil {
 		h.Fail(w, r, err)
 		return
 	}
-	d := myEventData{Event: ev, Status: ev.Status(h.Now()), MapEmbed: events.MapEmbedURL(h.MapsKey, ev), Schedule: sched}
+	d := myEventData{Event: ev, Status: ev.Status(h.Now()), MapEmbed: events.MapEmbedURL(h.MapsKey, ev),
+		AppLink: strings.TrimRight(h.AppURL, "/") + "/e/" + ev.ID, Schedule: sched}
 	selected := r.URL.Query().Get("zone")
-	if m, err := h.Events.GetVenueMap(ev.ID); err == nil {
+	if !m.Empty() {
 		d.HasMap = true
-		d.Plan = events.NewPlanView(m, zones, "/me/events/"+ev.ID+"?zone=", selected)
+		d.Plan = events.NewPlanView(ev.ID, m, "/me/events/"+ev.ID+"?zone=", selected)
 	}
-	for i := range zones {
-		if zones[i].ID == selected {
-			d.Zone = &zones[i]
-		}
-	}
-	if d.Zone != nil {
+	if f, ok := m.Feature(selected); ok {
+		d.Zone = &f
 		for _, s := range sched.Sessions {
-			if s.ZoneID == d.Zone.ID {
+			if strings.EqualFold(s.Stage, f.Name) {
 				d.ZoneSess = append(d.ZoneSess, s)
 			}
 		}

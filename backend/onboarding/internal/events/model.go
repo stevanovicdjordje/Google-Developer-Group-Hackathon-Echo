@@ -1,8 +1,14 @@
-// Package events holds events, venue maps, zones and the session schedule.
+// Package events: the organizer's events, their agenda (schedule) and the
+// published venue map. Events are the shared events/{eventId} documents of
+// the Eho backend (backend/maps, backend/events), so an event created here
+// also appears in the map editor and the Flutter app, and vice versa.
 package events
 
 import (
+	"context"
+	"crypto/rand"
 	"errors"
+	"io"
 	"time"
 )
 
@@ -27,28 +33,35 @@ func ParseStatus(s string) (Status, bool) {
 	return "", false
 }
 
-var (
-	ErrNotFound = errors.New("events: not found")
-)
+var ErrNotFound = errors.New("events: not found")
 
 type Event struct {
-	ID             string
-	OrganizationID string
-	Title          string
-	Description    string
-	StartsAt       *time.Time
-	EndsAt         *time.Time
-	Address        string
-	Lat, Lng       *float64
-	PublishedAt    *time.Time
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID          string
+	OwnerUID    string
+	Title       string // shared field "name"
+	Description string
+	// StartsAt/EndsAt are exact times. Events created elsewhere only have
+	// startDate/endDate; then they span those whole days.
+	StartsAt *time.Time
+	EndsAt   *time.Time
+	Address  string
+	Lat, Lng *float64
+	// PublishedAt is set when the organizer publishes the event here.
+	PublishedAt *time.Time
+	// MapVersion is the venue map's publishedVersion (>0: the map is
+	// published and attendees already see the event in the app).
+	MapVersion int
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
+
+// Published reports whether attendees can see the event.
+func (e Event) Published() bool { return e.PublishedAt != nil || e.MapVersion > 0 }
 
 // Status derives the lifecycle: draft until published, then upcoming /
 // ongoing / finished from the event dates.
 func (e Event) Status(now time.Time) Status {
-	if e.PublishedAt == nil || e.StartsAt == nil || e.EndsAt == nil {
+	if !e.Published() || e.StartsAt == nil || e.EndsAt == nil {
 		return StatusDraft
 	}
 	switch {
@@ -78,67 +91,50 @@ type Summary struct {
 	Stats
 }
 
-type ZoneKind string
-
-var ZoneKinds = []ZoneKind{"hall", "booth", "entrance", "toilet", "food", "info", "other"}
-
-const ZoneHall ZoneKind = "hall"
-
-func (k ZoneKind) Valid() bool {
-	for _, x := range ZoneKinds {
-		if x == k {
-			return true
-		}
-	}
-	return false
-}
-
-// Zone is a rectangle on the floor plan, in percent of the image size.
-type Zone struct {
-	ID      string
-	EventID string
-	Name    string
-	Kind    ZoneKind
-	X, Y    float64
-	W, H    float64
-	Created time.Time
-}
-
-type VenueMap struct {
-	EventID     string
-	FileName    string
-	ContentType string
-	Width       int
-	Height      int
-	UploadedAt  time.Time
-}
-
+// Session is one agenda item with its times resolved to instants.
 type Session struct {
 	ID          string
-	EventID     string
-	ZoneID      string // "" when no hall is assigned
 	Title       string
+	Stage       string // hall / room name; matches a room on the venue map
+	Speaker     string // names joined with ", "
 	Description string
-	Speaker     string
 	StartsAt    time.Time
 	EndsAt      time.Time
-	Tags        []string
+	Tags        []string // the agenda's "track", split on commas
+	IsBreak     bool
+}
+
+// NewID returns a random 16-character [a-z0-9] ID, the same format the
+// other backend services use for events.
+func NewID() string {
+	const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	for i := range b {
+		b[i] = alphabet[int(b[i])%len(alphabet)]
+	}
+	return string(b)
 }
 
 type Repository interface {
-	Create(e Event) error
-	Update(e Event) error
-	Get(id string) (Event, error)
-	ListByOrganization(orgID string) ([]Summary, error)
-	StatsFor(eventID string) (Stats, error)
+	Create(ctx context.Context, e Event) error
+	Update(ctx context.Context, e Event) error
+	Get(ctx context.Context, id string) (Event, error)
+	ListByOwner(ctx context.Context, uid string) ([]Event, error)
 
-	GetVenueMap(eventID string) (VenueMap, error)
-	SaveVenueMap(m VenueMap) error
-	ListZones(eventID string) ([]Zone, error)
-	CreateZone(z Zone) error
-	DeleteZone(eventID, zoneID string) error
+	// GetAgenda returns the published agenda, or an empty one.
+	GetAgenda(ctx context.Context, eventID string) (Agenda, error)
+	SaveAgenda(ctx context.Context, eventID string, a Agenda) error
+	// GetPublishedMap returns the published venue map, or an empty one.
+	GetPublishedMap(ctx context.Context, eventID string) (Map, error)
+}
 
-	ListSessions(eventID string) ([]Session, error)
-	CreateSession(s Session) error
-	DeleteSession(eventID, sessionID string) error
+// Images reads floor-plan images (Cloud Storage).
+type Images interface {
+	FloorImage(ctx context.Context, path string) (io.ReadCloser, string, error)
+}
+
+// StatsSource counts invitations and reviews for an event.
+type StatsSource interface {
+	EventStats(ctx context.Context, eventID string) (Stats, error)
 }

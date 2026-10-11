@@ -47,13 +47,13 @@ func ApplyBasics(e *Event, in BasicsInput, loc *time.Location) Errors {
 	title := strings.TrimSpace(in.Title)
 	desc := strings.TrimSpace(in.Description)
 	addr := strings.TrimSpace(in.Address)
-	if n := runeLen(title); n < 3 || n > 150 {
+	if n := runeLen(title); n < 3 || n > 120 {
 		errs.add("title", "err.event_title")
 	}
 	if runeLen(desc) > 5000 {
 		errs.add("description", "err.too_long")
 	}
-	if runeLen(addr) > 300 {
+	if runeLen(addr) > 200 {
 		errs.add("address", "err.too_long")
 	}
 
@@ -99,7 +99,7 @@ func ApplyBasics(e *Event, in BasicsInput, loc *time.Location) Errors {
 		}
 	}
 
-	if e.PublishedAt != nil {
+	if e.Published() {
 		if starts == nil || ends == nil {
 			errs.add("starts_at", "err.publish_dates")
 		}
@@ -129,43 +129,8 @@ func PublishProblems(e Event, now time.Time) []string {
 	return out
 }
 
-type ZoneInput struct {
-	Name, Kind, X, Y, W, H string
-}
-
-// ParseZone validates a zone; coordinates are percentages of the plan image
-// and the rectangle must stay inside it.
-func ParseZone(in ZoneInput) (Zone, Errors) {
-	errs := Errors{}
-	z := Zone{Name: strings.TrimSpace(in.Name), Kind: ZoneKind(in.Kind)}
-	if n := runeLen(z.Name); n < 1 || n > 80 {
-		errs.add("name", "err.zone_name")
-	}
-	if !z.Kind.Valid() {
-		errs.add("kind", "err.zone_kind")
-	}
-	vals := []*float64{&z.X, &z.Y, &z.W, &z.H}
-	for i, raw := range []string{in.X, in.Y, in.W, in.H} {
-		f, ok := parseFloat(raw)
-		if !ok || f < 0 || f > 100 {
-			errs.add("geometry", "err.zone_geometry")
-			continue
-		}
-		*vals[i] = f
-	}
-	if _, bad := errs["geometry"]; !bad {
-		if z.W <= 0 || z.H <= 0 || z.X >= 100 || z.Y >= 100 || z.X+z.W > 100 || z.Y+z.H > 100 {
-			errs.add("geometry", "err.zone_geometry")
-		}
-	}
-	if len(errs) > 0 {
-		return Zone{}, errs
-	}
-	return z, nil
-}
-
 type SessionInput struct {
-	Title, Description, Speaker, ZoneID, StartsAt, EndsAt, Tags string
+	Title, Description, Speaker, Stage, StageNew, StartsAt, EndsAt, Tags string
 }
 
 // ParseTags splits a comma-separated tag list (lowercased, deduplicated).
@@ -186,33 +151,28 @@ func ParseTags(raw string) ([]string, bool) {
 	return out, len(out) <= 8
 }
 
-// ParseSession validates a session. The hall must be one of halls (zones of
-// kind "hall" of the same event); the time must fall inside the event.
-func ParseSession(in SessionInput, ev Event, halls []Zone, loc *time.Location) (Session, Errors) {
+// ParseSession validates a session. The hall is either one of the offered
+// stages or a new name; the session must fit in one day (the agenda stores a
+// day plus start/end clock times) and inside the event.
+func ParseSession(in SessionInput, ev Event, loc *time.Location) (Session, Errors) {
 	errs := Errors{}
 	s := Session{
-		EventID:     ev.ID,
 		Title:       strings.TrimSpace(in.Title),
 		Description: strings.TrimSpace(in.Description),
 		Speaker:     strings.TrimSpace(in.Speaker),
+		Stage:       strings.Join(strings.Fields(in.Stage), " "),
 	}
-	if n := runeLen(s.Title); n < 1 || n > 150 {
+	if n := strings.Join(strings.Fields(in.StageNew), " "); n != "" {
+		s.Stage = n
+	}
+	if n := runeLen(s.Title); n < 1 || n > 160 {
 		errs.add("title", "err.session_title")
 	}
-	if runeLen(s.Speaker) > 120 || runeLen(s.Description) > 2000 {
-		errs.add("description", "err.too_long")
+	if runeLen(s.Stage) > MaxStage {
+		errs.add("stage", "err.session_stage")
 	}
-	if in.ZoneID != "" {
-		found := false
-		for _, h := range halls {
-			if h.ID == in.ZoneID && h.Kind == ZoneHall {
-				found = true
-			}
-		}
-		if !found {
-			errs.add("zone_id", "err.session_zone")
-		}
-		s.ZoneID = in.ZoneID
+	if runeLen(s.Speaker) > 80 || runeLen(s.Description) > 600 {
+		errs.add("description", "err.too_long")
 	}
 	st, ok1 := ParseLocal(in.StartsAt, loc)
 	en, ok2 := ParseLocal(in.EndsAt, loc)
@@ -223,12 +183,14 @@ func ParseSession(in SessionInput, ev Event, halls []Zone, loc *time.Location) (
 		errs.add("ends_at", "err.datetime")
 	case !en.After(st):
 		errs.add("ends_at", "err.end_before_start")
+	case st.In(loc).Format(dayLayout) != en.In(loc).Format(dayLayout):
+		errs.add("ends_at", "err.session_midnight")
 	case ev.StartsAt != nil && ev.EndsAt != nil && (st.Before(*ev.StartsAt) || en.After(*ev.EndsAt)):
 		errs.add("starts_at", "err.session_outside")
 	}
 	s.StartsAt, s.EndsAt = st, en
 	tags, ok := ParseTags(in.Tags)
-	if !ok {
+	if !ok || runeLen(strings.Join(tags, ", ")) > MaxTrack {
 		errs.add("tags", "err.tags")
 	}
 	s.Tags = tags

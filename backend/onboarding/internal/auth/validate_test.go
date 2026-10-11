@@ -42,7 +42,7 @@ func TestCheckPassword(t *testing.T) {
 		pw, confirm, field, key string
 	}{
 		{"short", "short", "password", "err.password_short"},
-		{string(make([]byte, 73)), "", "password", "err.password_long"},
+		{string(make([]byte, 129)), "", "password", "err.password_long"},
 		{"longenough", "different", "password_confirm", "err.password_mismatch"},
 		{"longenough", "longenough", "", ""},
 	}
@@ -58,15 +58,5 @@ func TestCheckPassword(t *testing.T) {
 		if f[c.field] != c.key {
 			t.Errorf("pw=%q: got %v, want %s=%s", c.pw, f, c.field, c.key)
 		}
-	}
-}
-
-func TestPasswordHash(t *testing.T) {
-	h, err := HashPassword("tajna-lozinka")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !CheckPassword(h, "tajna-lozinka") || CheckPassword(h, "pogresna") {
-		t.Fatal("bcrypt round-trip failed")
 	}
 }

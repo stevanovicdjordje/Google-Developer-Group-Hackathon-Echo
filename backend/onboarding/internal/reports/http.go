@@ -1,6 +1,7 @@
 package reports
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"regexp"
@@ -33,28 +34,26 @@ type pageData struct {
 	Print    bool
 }
 
-func (h *Handlers) build(ev events.Event) (Report, []reviews.WithAuthor, []events.Session, error) {
-	invs, err := h.Invitations.ListByEvent(ev.ID)
+func (h *Handlers) build(ctx context.Context, ev events.Event) (Report, []reviews.WithAuthor, []events.Session, error) {
+	invs, err := h.Invitations.ListByEvent(ctx, ev.ID)
 	if err != nil {
 		return Report{}, nil, nil, err
 	}
-	revs, err := h.Reviews.ListByEvent(ev.ID)
+	revs, err := h.Reviews.ListByEvent(ctx, ev.ID)
 	if err != nil {
 		return Report{}, nil, nil, err
 	}
-	sessions, err := h.Events.ListSessions(ev.ID)
+	agenda, err := h.Events.GetAgenda(ctx, ev.ID)
 	if err != nil {
 		return Report{}, nil, nil, err
 	}
-	zones, err := h.Events.ListZones(ev.ID)
-	if err != nil {
-		return Report{}, nil, nil, err
+	var sessions []events.Session
+	for _, s := range agenda.SessionList(h.Loc) {
+		if !s.IsBreak {
+			sessions = append(sessions, s)
+		}
 	}
-	names := map[string]string{}
-	for _, z := range zones {
-		names[z.ID] = z.Name
-	}
-	rep := Compute(Input{Event: ev, Invitations: invs, Reviews: revs, Sessions: sessions, ZoneNames: names, Now: h.Now()})
+	rep := Compute(Input{Event: ev, Invitations: invs, Reviews: revs, Sessions: sessions, Now: h.Now()})
 	return rep, revs, sessions, nil
 }
 
@@ -68,7 +67,7 @@ func (h *Handlers) page(w http.ResponseWriter, r *http.Request) {
 			Data: pageData{Report: Report{Event: ev}, NotReady: true}})
 		return
 	}
-	rep, _, _, err := h.build(ev)
+	rep, _, _, err := h.build(r.Context(), ev)
 	if err != nil {
 		h.Fail(w, r, err)
 		return
@@ -97,7 +96,7 @@ func (h *Handlers) csv(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/org/events/"+ev.ID+"/report", http.StatusSeeOther)
 		return
 	}
-	_, revs, sessions, err := h.build(ev)
+	_, revs, sessions, err := h.build(r.Context(), ev)
 	if err != nil {
 		h.Fail(w, r, err)
 		return

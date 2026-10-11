@@ -44,7 +44,7 @@ type stepData struct {
 
 func (h *OnboardingHandlers) profile(w http.ResponseWriter, r *http.Request) (Profile, bool) {
 	p := httpx.PrincipalFrom(r.Context())
-	prof, err := h.repo.GetProfile(p.UserID)
+	prof, err := h.repo.GetProfile(r.Context(), p.UserID)
 	if err != nil {
 		log.Printf("onboarding: load profile: %v", err)
 		h.view.Error(w, r, http.StatusInternalServerError, "error.title")
@@ -161,7 +161,7 @@ func (h *OnboardingHandlers) submit(w http.ResponseWriter, r *http.Request) {
 		consented = true
 	}
 	if consented {
-		if err := h.repo.GrantConsent(prof.UserID, ConsentGDPR, GDPRConsentVersion); err != nil {
+		if err := h.repo.GrantConsent(r.Context(), prof.UserID, ConsentGDPR, GDPRConsentVersion, h.now().UTC()); err != nil {
 			h.internal(w, r, err)
 			return
 		}
@@ -171,7 +171,7 @@ func (h *OnboardingHandlers) submit(w http.ResponseWriter, r *http.Request) {
 	} else if n >= prof.OnboardingStep {
 		prof.OnboardingStep = n + 1
 	}
-	if err := h.repo.SaveProfile(prof); err != nil {
+	if err := h.repo.SaveProfile(r.Context(), prof); err != nil {
 		h.internal(w, r, err)
 		return
 	}
@@ -253,7 +253,7 @@ func (h *OnboardingHandlers) profileSubmit(w http.ResponseWriter, r *http.Reques
 	}
 	prof.CaptionLanguage, prof.Interests, prof.CustomInterests, prof.Goal = lang, all, custom, goal
 	prof.Visible = r.PostFormValue("visible") == "on"
-	if err := h.repo.SaveProfile(prof); err != nil {
+	if err := h.repo.SaveProfile(r.Context(), prof); err != nil {
 		h.internal(w, r, err)
 		return
 	}

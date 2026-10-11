@@ -1,37 +1,32 @@
 package events
 
 import (
-	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"image"
-	_ "image/jpeg"
-	_ "image/png"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Ilij4n/eho/backend/onboarding/internal/httpx"
-	"github.com/Ilij4n/eho/backend/onboarding/internal/id"
-	"github.com/Ilij4n/eho/backend/onboarding/internal/users"
 )
-
-const MaxPlanBytes = 10 << 20
 
 // Handlers serve the organizer event list and the creation wizard.
 type Handlers struct {
 	Access
-	Loc       *time.Location
-	UploadDir string
-	MapsKey   string
-	Now       func() time.Time
-	// CanViewPlan decides who may load a floor-plan image (owner organizer
-	// or a participant with an accepted invitation). Set by the app.
-	CanViewPlan func(p *httpx.Principal, ev Event) bool
+	Images  Images
+	Stats   StatsSource
+	Loc     *time.Location
+	MapsKey string
+	// AppURL is the Flutter app: the organizer map editor lives there.
+	AppURL string
+	Now    func() time.Time
+	// CanViewPlan decides who may load floor-plan images (owner organizer or
+	// a participant with an accepted invitation). Set by the app.
+	CanViewPlan func(ctx context.Context, p *httpx.Principal, ev Event) bool
 }
 
 func (h *Handlers) Register(mux *http.ServeMux, organizerOnly func(http.Handler) http.Handler) {
@@ -43,15 +38,12 @@ func (h *Handlers) Register(mux *http.ServeMux, organizerOnly func(http.Handler)
 	org("GET /org/events/{id}/edit", h.editForm)
 	org("POST /org/events/{id}/edit", h.update)
 	org("GET /org/events/{id}/venue", h.venue)
-	org("POST /org/events/{id}/venue/plan", h.uploadPlan)
-	org("POST /org/events/{id}/zones", h.addZone)
-	org("POST /org/events/{id}/zones/{zid}/delete", h.deleteZone)
 	org("GET /org/events/{id}/schedule", h.schedule)
 	org("POST /org/events/{id}/sessions", h.addSession)
 	org("POST /org/events/{id}/sessions/{sid}/delete", h.deleteSession)
 	org("GET /org/events/{id}/publish", h.publishForm)
 	org("POST /org/events/{id}/publish", h.publish)
-	mux.HandleFunc("GET /events/{id}/plan", h.planImage)
+	mux.HandleFunc("GET /events/{id}/floors/{floor}/image", h.floorImage)
 }
 
 // ---- list ----
@@ -67,15 +59,19 @@ type listData struct {
 
 func (h *Handlers) list(w http.ResponseWriter, r *http.Request) {
 	p := httpx.PrincipalFrom(r.Context())
-	org, err := h.Users.GetOrganizationByOwner(p.UserID)
+	evs, err := h.Events.ListByOwner(r.Context(), p.UserID)
 	if err != nil {
 		h.Fail(w, r, err)
 		return
 	}
-	all, err := h.Events.ListByOrganization(org.ID)
-	if err != nil {
-		h.Fail(w, r, err)
-		return
+	all := make([]Summary, 0, len(evs))
+	for _, ev := range evs {
+		st, err := h.Stats.EventStats(r.Context(), ev.ID)
+		if err != nil {
+			h.Fail(w, r, err)
+			return
+		}
+		all = append(all, Summary{Event: ev, Stats: st})
 	}
 	now := h.Now()
 	q := r.URL.Query().Get("q")
@@ -130,19 +126,14 @@ func (h *Handlers) newForm(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) create(w http.ResponseWriter, r *http.Request) {
 	p := httpx.PrincipalFrom(r.Context())
-	org, err := h.Users.GetOrganizationByOwner(p.UserID)
-	if err != nil {
-		h.Fail(w, r, err)
-		return
-	}
 	now := h.Now().UTC()
-	ev := Event{ID: id.New(), OrganizationID: org.ID, CreatedAt: now, UpdatedAt: now}
+	ev := Event{ID: NewID(), OwnerUID: p.UserID, CreatedAt: now, UpdatedAt: now}
 	if errs := ApplyBasics(&ev, basicsInput(r), h.Loc); errs != nil {
 		h.View.Page(w, r, http.StatusUnprocessableEntity, "events/basics", httpx.View{
 			Title: "wizard.new_title", Form: r.PostForm, Errors: errs, Data: wizardData{Step: "basics", Now: now}})
 		return
 	}
-	if err := h.Events.Create(ev); err != nil {
+	if err := h.Events.Create(r.Context(), ev); err != nil {
 		h.Fail(w, r, err)
 		return
 	}
@@ -206,204 +197,112 @@ func (h *Handlers) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ev.UpdatedAt = h.Now().UTC()
-	if err := h.Events.Update(ev); err != nil {
+	if err := h.Events.Update(r.Context(), ev); err != nil {
 		h.Fail(w, r, err)
 		return
 	}
 	h.afterSave(w, r, ev, "venue")
 }
 
-// ---- wizard: step 2, venue map and zones ----
+// ---- wizard: step 2, venue map (edited in the Flutter app) ----
 
 type venueData struct {
-	HasMap bool
-	Plan   PlanView
-	Zones  []Zone
-	Kinds  []ZoneKind
-}
-
-func (h *Handlers) renderVenue(w http.ResponseWriter, r *http.Request, status int, ev Event, form url.Values, errs Errors) {
-	zones, err := h.Events.ListZones(ev.ID)
-	if err != nil {
-		h.Fail(w, r, err)
-		return
-	}
-	vd := venueData{Zones: zones, Kinds: ZoneKinds}
-	if m, err := h.Events.GetVenueMap(ev.ID); err == nil {
-		vd.HasMap, vd.Plan = true, NewPlanView(m, zones, "", "")
-	} else if !errors.Is(err, ErrNotFound) {
-		h.Fail(w, r, err)
-		return
-	}
-	h.View.Page(w, r, status, "events/venue", httpx.View{
-		Title: "wizard.venue", Form: form, Errors: errs,
-		Data: wizardData{Event: ev, Step: "venue", Now: h.Now(), Extra: vd}})
+	HasMap    bool
+	Plan      PlanView
+	Rooms     []string
+	EditorURL string
 }
 
 func (h *Handlers) venue(w http.ResponseWriter, r *http.Request) {
-	if ev, ok := h.editable(w, r); ok {
-		h.renderVenue(w, r, http.StatusOK, ev, nil, nil)
-	}
-}
-
-func (h *Handlers) uploadPlan(w http.ResponseWriter, r *http.Request) {
 	ev, ok := h.editable(w, r)
 	if !ok {
 		return
 	}
-	bad := func(key string) {
-		h.renderVenue(w, r, http.StatusUnprocessableEntity, ev, nil, Errors{"plan": key})
-	}
-	file, hdr, err := r.FormFile("plan")
+	m, err := h.Events.GetPublishedMap(r.Context(), ev.ID)
 	if err != nil {
-		bad("err.plan_missing")
-		return
-	}
-	defer file.Close()
-	if hdr.Size > MaxPlanBytes {
-		bad("err.plan_size")
-		return
-	}
-	data, err := io.ReadAll(io.LimitReader(file, MaxPlanBytes+1))
-	if err != nil || len(data) > MaxPlanBytes {
-		bad("err.plan_size")
-		return
-	}
-	// Trust the bytes, not the client's file name or Content-Type.
-	ctype := http.DetectContentType(data)
-	ext := map[string]string{"image/png": ".png", "image/jpeg": ".jpg"}[ctype]
-	if ext == "" {
-		bad("err.plan_type")
-		return
-	}
-	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
-	if err != nil || cfg.Width < 50 || cfg.Height < 50 || cfg.Width > 10000 || cfg.Height > 10000 {
-		bad("err.plan_type")
-		return
-	}
-	dir := filepath.Join(h.UploadDir, "venue")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
 		h.Fail(w, r, err)
 		return
 	}
-	name := ev.ID + "-" + id.Token(6) + ext
-	if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
-		h.Fail(w, r, err)
-		return
+	vd := venueData{HasMap: !m.Empty(), Rooms: m.RoomNames(), EditorURL: strings.TrimRight(h.AppURL, "/") + "/organizer"}
+	if vd.HasMap {
+		vd.Plan = NewPlanView(ev.ID, m, "", "")
 	}
-	old, oldErr := h.Events.GetVenueMap(ev.ID)
-	if err := h.Events.SaveVenueMap(VenueMap{EventID: ev.ID, FileName: name, ContentType: ctype,
-		Width: cfg.Width, Height: cfg.Height, UploadedAt: h.Now().UTC()}); err != nil {
-		h.Fail(w, r, err)
-		return
-	}
-	if oldErr == nil && old.FileName != name {
-		_ = os.Remove(filepath.Join(dir, filepath.Base(old.FileName)))
-	}
-	http.Redirect(w, r, "/org/events/"+ev.ID+"/venue?ok=saved", http.StatusSeeOther)
+	h.View.Page(w, r, http.StatusOK, "events/venue", httpx.View{
+		Title: "wizard.venue", Data: wizardData{Event: ev, Step: "venue", Now: h.Now(), Extra: vd}})
 }
 
-func (h *Handlers) addZone(w http.ResponseWriter, r *http.Request) {
-	ev, ok := h.editable(w, r)
-	if !ok {
-		return
-	}
-	z, errs := ParseZone(ZoneInput{Name: r.PostFormValue("name"), Kind: r.PostFormValue("kind"),
-		X: r.PostFormValue("x"), Y: r.PostFormValue("y"), W: r.PostFormValue("w"), H: r.PostFormValue("h")})
-	if errs != nil {
-		h.renderVenue(w, r, http.StatusUnprocessableEntity, ev, r.PostForm, errs)
-		return
-	}
-	z.ID, z.EventID, z.Created = id.New(), ev.ID, h.Now().UTC()
-	if err := h.Events.CreateZone(z); err != nil {
-		h.Fail(w, r, err)
-		return
-	}
-	http.Redirect(w, r, "/org/events/"+ev.ID+"/venue?ok=saved", http.StatusSeeOther)
-}
-
-func (h *Handlers) deleteZone(w http.ResponseWriter, r *http.Request) {
-	ev, ok := h.editable(w, r)
-	if !ok {
-		return
-	}
-	if err := h.Events.DeleteZone(ev.ID, r.PathValue("zid")); err != nil {
-		h.Fail(w, r, err)
-		return
-	}
-	http.Redirect(w, r, "/org/events/"+ev.ID+"/venue?ok=deleted", http.StatusSeeOther)
-}
-
-// planImage serves the floor plan to whoever CanViewPlan allows. Files are
-// never exposed as public static assets.
-func (h *Handlers) planImage(w http.ResponseWriter, r *http.Request) {
+// floorImage proxies a floor-plan image from Storage to whoever CanViewPlan
+// allows. Images are never public.
+func (h *Handlers) floorImage(w http.ResponseWriter, r *http.Request) {
 	p := httpx.PrincipalFrom(r.Context())
 	if p == nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	ev, err := h.Events.Get(r.PathValue("id"))
-	if err != nil || h.CanViewPlan == nil || !h.CanViewPlan(p, ev) {
+	ev, err := h.Events.Get(r.Context(), r.PathValue("id"))
+	if err != nil || h.CanViewPlan == nil || !h.CanViewPlan(r.Context(), p, ev) {
 		http.NotFound(w, r)
 		return
 	}
-	m, err := h.Events.GetVenueMap(ev.ID)
+	m, err := h.Events.GetPublishedMap(r.Context(), ev.ID)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	f, err := os.Open(filepath.Join(h.UploadDir, "venue", filepath.Base(m.FileName)))
-	if err != nil {
-		log.Printf("plan image %s: %v", ev.ID, err)
+	floor, ok := m.Floor(r.PathValue("floor"))
+	if !ok || floor.ImagePath == "" {
 		http.NotFound(w, r)
 		return
 	}
-	defer f.Close()
-	w.Header().Set("Content-Type", m.ContentType)
+	rd, ctype, err := h.Images.FloorImage(r.Context(), floor.ImagePath)
+	if err != nil {
+		if !errors.Is(err, ErrNotFound) {
+			log.Printf("floor image %s/%s: %v", ev.ID, floor.ID, err)
+		}
+		http.NotFound(w, r)
+		return
+	}
+	defer rd.Close()
+	if !strings.HasPrefix(ctype, "image/") {
+		ctype = "image/png"
+	}
+	w.Header().Set("Content-Type", ctype)
 	w.Header().Set("Cache-Control", "private, max-age=300")
-	http.ServeContent(w, r, "", m.UploadedAt, f)
+	_, _ = io.Copy(w, rd)
 }
 
-// ---- wizard: step 3, schedule ----
+// ---- wizard: step 3, schedule (the shared agenda) ----
 
-type scheduleData struct {
+type ScheduleData struct {
 	Days      []Day
 	Sessions  []Session
-	Halls     []Zone
+	Stages    []string // offered halls: agenda stages + map rooms
 	Conflicts map[string]bool
-	ZoneNames map[string]string
 }
 
-func halls(zones []Zone) []Zone {
-	var out []Zone
-	for _, z := range zones {
-		if z.Kind == ZoneHall {
-			out = append(out, z)
+// LoadSchedule reads the agenda and the map's room names.
+func LoadSchedule(ctx context.Context, repo Repository, ev Event, loc *time.Location) (ScheduleData, error) {
+	a, err := repo.GetAgenda(ctx, ev.ID)
+	if err != nil {
+		return ScheduleData{}, err
+	}
+	m, err := repo.GetPublishedMap(ctx, ev.ID)
+	if err != nil {
+		return ScheduleData{}, err
+	}
+	stages := append([]string(nil), a.Stages...)
+	for _, room := range m.RoomNames() {
+		if !containsFold(stages, room) {
+			stages = append(stages, room)
 		}
 	}
-	return out
-}
-
-// LoadSchedule returns the schedule view data for an event.
-func LoadSchedule(repo Repository, ev Event, loc *time.Location) (scheduleData, error) {
-	zones, err := repo.ListZones(ev.ID)
-	if err != nil {
-		return scheduleData{}, err
-	}
-	sessions, err := repo.ListSessions(ev.ID)
-	if err != nil {
-		return scheduleData{}, err
-	}
-	names := map[string]string{}
-	for _, z := range zones {
-		names[z.ID] = z.Name
-	}
-	return scheduleData{Days: BuildSchedule(sessions, halls(zones), loc), Sessions: sessions,
-		Halls: halls(zones), Conflicts: Overlaps(sessions), ZoneNames: names}, nil
+	sessions := a.SessionList(loc)
+	return ScheduleData{Days: BuildSchedule(sessions, stages, loc), Sessions: sessions,
+		Stages: stages, Conflicts: Overlaps(sessions)}, nil
 }
 
 func (h *Handlers) renderSchedule(w http.ResponseWriter, r *http.Request, status int, ev Event, form url.Values, errs Errors) {
-	sd, err := LoadSchedule(h.Events, ev, h.Loc)
+	sd, err := LoadSchedule(r.Context(), h.Events, ev, h.Loc)
 	if err != nil {
 		h.Fail(w, r, err)
 		return
@@ -428,22 +327,23 @@ func (h *Handlers) addSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	zones, err := h.Events.ListZones(ev.ID)
-	if err != nil {
-		h.Fail(w, r, err)
-		return
-	}
 	s, errs := ParseSession(SessionInput{
 		Title: r.PostFormValue("title"), Description: r.PostFormValue("description"),
-		Speaker: r.PostFormValue("speaker"), ZoneID: r.PostFormValue("zone_id"),
+		Speaker: r.PostFormValue("speaker"), Stage: r.PostFormValue("stage"), StageNew: r.PostFormValue("stage_new"),
 		StartsAt: r.PostFormValue("starts_at"), EndsAt: r.PostFormValue("ends_at"), Tags: r.PostFormValue("tags"),
-	}, ev, halls(zones), h.Loc)
+	}, ev, h.Loc)
 	if errs != nil {
 		h.renderSchedule(w, r, http.StatusUnprocessableEntity, ev, r.PostForm, errs)
 		return
 	}
-	s.ID = id.New()
-	if err := h.Events.CreateSession(s); err != nil {
+	a, err := h.Events.GetAgenda(r.Context(), ev.ID)
+	if err != nil {
+		h.Fail(w, r, err)
+		return
+	}
+	a.Add(s, h.Loc)
+	a.PublishedAt = h.Now().UTC()
+	if err := h.Events.SaveAgenda(r.Context(), ev.ID, a); err != nil {
 		h.Fail(w, r, err)
 		return
 	}
@@ -455,9 +355,17 @@ func (h *Handlers) deleteSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if err := h.Events.DeleteSession(ev.ID, r.PathValue("sid")); err != nil {
+	a, err := h.Events.GetAgenda(r.Context(), ev.ID)
+	if err != nil {
 		h.Fail(w, r, err)
 		return
+	}
+	if a.Remove(r.PathValue("sid")) {
+		a.PublishedAt = h.Now().UTC()
+		if err := h.Events.SaveAgenda(r.Context(), ev.ID, a); err != nil {
+			h.Fail(w, r, err)
+			return
+		}
 	}
 	http.Redirect(w, r, "/org/events/"+ev.ID+"/schedule?ok=deleted", http.StatusSeeOther)
 }
@@ -467,29 +375,28 @@ func (h *Handlers) deleteSession(w http.ResponseWriter, r *http.Request) {
 type publishData struct {
 	Problems  []string
 	Stats     Stats
-	Zones     int
+	Rooms     int
 	Sessions  int
 	Conflicts int
 	HasMap    bool
 	Published bool
 }
 
-func (h *Handlers) publishData(ev Event) (publishData, error) {
+func (h *Handlers) publishData(ctx context.Context, ev Event) (publishData, error) {
 	pd := publishData{Problems: PublishProblems(ev, h.Now()), Published: ev.PublishedAt != nil}
 	var err error
-	if pd.Stats, err = h.Events.StatsFor(ev.ID); err != nil {
+	if pd.Stats, err = h.Stats.EventStats(ctx, ev.ID); err != nil {
 		return pd, err
 	}
-	zones, err := h.Events.ListZones(ev.ID)
+	sd, err := LoadSchedule(ctx, h.Events, ev, h.Loc)
 	if err != nil {
 		return pd, err
 	}
-	sessions, err := h.Events.ListSessions(ev.ID)
+	m, err := h.Events.GetPublishedMap(ctx, ev.ID)
 	if err != nil {
 		return pd, err
 	}
-	_, mapErr := h.Events.GetVenueMap(ev.ID)
-	pd.Zones, pd.Sessions, pd.Conflicts, pd.HasMap = len(zones), len(sessions), len(Overlaps(sessions)), mapErr == nil
+	pd.Rooms, pd.Sessions, pd.Conflicts, pd.HasMap = len(m.RoomNames()), len(sd.Sessions), len(sd.Conflicts), !m.Empty()
 	return pd, nil
 }
 
@@ -498,7 +405,7 @@ func (h *Handlers) publishForm(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	pd, err := h.publishData(ev)
+	pd, err := h.publishData(r.Context(), ev)
 	if err != nil {
 		h.Fail(w, r, err)
 		return
@@ -523,18 +430,9 @@ func (h *Handlers) publish(w http.ResponseWriter, r *http.Request) {
 	}
 	now := h.Now().UTC()
 	ev.PublishedAt, ev.UpdatedAt = &now, now
-	if err := h.Events.Update(ev); err != nil {
+	if err := h.Events.Update(r.Context(), ev); err != nil {
 		h.Fail(w, r, err)
 		return
 	}
 	http.Redirect(w, r, "/org/events?ok=published", http.StatusSeeOther)
-}
-
-// IsOrganizerOf reports whether p owns ev (used by plan access checks).
-func IsOrganizerOf(repo users.Repository, p *httpx.Principal, ev Event) bool {
-	if p == nil || p.Role != string(users.RoleOrganizer) {
-		return false
-	}
-	org, err := repo.GetOrganizationByOwner(p.UserID)
-	return err == nil && org.ID == ev.OrganizationID
 }

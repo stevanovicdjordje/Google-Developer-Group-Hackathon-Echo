@@ -2,6 +2,7 @@
 package reviews
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -94,8 +95,10 @@ func Parse(in Input, sessions []events.Session) (Review, map[string]string) {
 }
 
 type Repository interface {
-	Get(eventID, userID string) (Review, error)
-	// Save inserts or replaces the user's review for the event.
-	Save(r Review) error
-	ListByEvent(eventID string) ([]WithAuthor, error)
+	Get(ctx context.Context, eventID, userID string) (Review, error)
+	// Save inserts or replaces the user's review for the event (keeping the
+	// original CreatedAt). The author is stored for the organizer report;
+	// it is hidden there when the review is anonymous.
+	Save(ctx context.Context, r WithAuthor) error
+	ListByEvent(ctx context.Context, eventID string) ([]WithAuthor, error)
 }

@@ -12,7 +12,7 @@
   </dl>
   <ul class="checklist">
     <li class="{{if $p.HasMap}}ok{{else}}todo{{end}}">{{t "publish.map"}}</li>
-    <li class="{{if $p.Zones}}ok{{else}}todo{{end}}">{{t "publish.zones" $p.Zones}}</li>
+    <li class="{{if $p.Rooms}}ok{{else}}todo{{end}}">{{t "publish.rooms" $p.Rooms}}</li>
     <li class="{{if $p.Sessions}}ok{{else}}todo{{end}}">{{t "publish.sessions" $p.Sessions}}</li>
     <li class="{{if $p.Conflicts}}todo{{else}}ok{{end}}">{{t "publish.conflicts" $p.Conflicts}}</li>
     <li class="{{if $p.Stats.Invited}}ok{{else}}todo{{end}}">{{t "publish.invitations" $p.Stats.Invited}}</li>

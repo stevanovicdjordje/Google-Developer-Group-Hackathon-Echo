@@ -1,172 +1,176 @@
 # backend/onboarding — Eho onboarding module
 
-Server-rendered Go web app for the part of Eho that happens around an event:
-organizer and participant registration, participant onboarding, event
-management (wizard with venue map, zones and schedule), invitations,
-participant panel, reviews and the post-event report ("ukupan utisak").
+Server-rendered Go web app for the part of Eho around an event: organizer and
+participant registration, participant onboarding, the organizer's event list
+and wizard, invitations, the participant panel, reviews and the post-event
+report ("ukupan utisak").
 
-It is a **separate Go module** inside `backend/` (own `go.mod`, `cmd/`,
-`internal/`). It does not import or modify the main backend API in
-`backend/cmd/api` / `backend/internal`, and it does not implement anything from
-`contracts/openapi.yaml` yet: it serves HTML, not JSON.
+It runs on the **same Firebase project as the rest of Eho** (Firebase Auth,
+Firestore, Storage; locally the emulators from `backend/maps`):
 
-- Everything is Go: `net/http` (Go 1.22+ route patterns) + `html/template`.
-- No JavaScript at all (the CSP is `script-src 'none'`). Interaction is plain
-  HTML forms and links; charts and the floor plan are SVG generated on the server.
-- One hand-written CSS file (`static/app.css`), no build step.
-- UI text is Serbian (Latin script), kept in `internal/i18n/sr.go`.
+- **Same accounts** as the Flutter app and the other services. Organizers and
+  participants sign in with email/password; the role is a custom claim
+  (`role: organizer | participant`). Accounts without the claim follow the
+  team rule (`team-auth`): anonymous = attendee, email/password = organizer.
+- **Same events.** An event here is the shared `events/{eventId}` document
+  (`backend/maps`, `backend/events`): events created in the map editor show up
+  in the organizer's list, and events created here can be opened in the map
+  editor (a `draft/map` is created with them).
+- **Same agenda.** The schedule step edits `events/{id}/published/agenda` in
+  the `backend/events` format, so sessions appear in the app, Echo and Q&A.
+- **Same venue map.** The map is made in the Flutter map editor; this module
+  draws the published map (floors from Storage, rooms, stands, POIs) as SVG and
+  offers its rooms as halls for sessions.
+
+It is a separate Go module (own `go.mod`, `cmd/`, `internal/`) and doesn't
+import the other services. UI: `net/http` + `html/template`, one CSS file,
+**no JavaScript** (CSP `script-src 'none'`); texts in Serbian (Latin),
+in `internal/i18n/sr.go`.
 
 ## Run locally
 
-Requirements: Go 1.26+ (the toolchain version comes from `go.mod`). No C compiler
-needed: SQLite is `modernc.org/sqlite` (pure Go).
+Requirements: Go 1.26+, Java 21 and the Firebase CLI (the emulators), as for
+`backend/maps`. On macOS: `brew install firebase-cli openjdk@21` (the script
+finds Homebrew's Java even if it isn't on `PATH`).
 
 ```bash
 cd backend/onboarding
-go run ./cmd/seed -reset       # optional: demo data (see below)
-go run ./cmd/eho-web           # http://localhost:8080
+make dev     # emulators + map API (:8080) if not running, then this app on :8090
+make seed    # in a second terminal: map + agenda (devfest) and onboarding demo data
 ```
 
-The database (`./data/eho.db`) and uploaded floor plans (`./data/uploads/`)
-are created on first start. Migrations run automatically. `data/` is git-ignored.
+Open **http://localhost:8090**. Emulator UI: http://localhost:4000.
+Emulator data persists in `backend/maps/firebase/.emulator-data/`.
 
-### Demo data
+| Who | Login | Password |
+| --- | --- | --- |
+| Organizer (same as the map editor demo) | `organizer@eho.test` | `eho-demo-123` |
+| Participants | `ucesnik01@eho.test` … `ucesnik20@eho.test` | `eho-demo-123` |
 
-`go run ./cmd/seed -reset` deletes the local DB and uploads, then creates
-clearly fake data:
+Demo events: "DevFest Belgrade 2026" (`devfest`, today, with the map and agenda
+from `backend/maps` / `backend/events`; 14 participants invited), "Eho Dev
+Summit 2026" (finished 10 days ago, 13 reviews: open its report) and "Startap
+vikend Novi Sad" (in 14 days). `make seed` can be re-run; it replaces its own data.
 
-| What | Details |
-| --- | --- |
-| Organizer | `organizator@eho.demo` / `demo-lozinka` |
-| Participants | `ucesnik01@eho.demo` … `ucesnik20@eho.demo` / `demo-lozinka` (onboarding done) |
-| Finished event | "Eho Dev Summit 2026", 10 days ago: 20 invited, 16 accepted, 13 reviews with comments and session ratings |
-| Ongoing event | "AI meetup Beograd", started 2 hours ago |
-| Upcoming event | "Startap vikend Novi Sad", in 14 days, two days of sessions |
-
-Each event has a generated floor plan with 10 zones (3 halls, booths, food,
-info desk, toilets, entrance) and a schedule. Without `-reset` the command
-refuses to run on a database that already has the demo organizer.
-
-Good demo path: log in as the organizer → list → "Izveštaj" on the finished
-event. Then log in as `ucesnik01@eho.demo` → the ongoing event → click a hall
-on the floor plan.
+To see the attendee side in the Flutter app as well: `mobile/scripts/dev_all.sh`
+(needs Flutter). Event links in this app point to `EHO_APP_URL`.
 
 ### Tests
 
 ```bash
-go vet ./...
-go test ./...
+make test            # unit + HTTP tests, in memory (no emulators needed)
+make test-emulator   # the main HTTP flow against the running emulators
+make vet
 ```
 
-Unit tests cover event status transitions, session overlap detection and the
-schedule grid, invitation status and response rules, review rules, report
-computation, the statistical summarizer, CSV export (including formula
-injection), validation and i18n key coverage. HTTP tests (`internal/app`) run
-the full flow against a real SQLite file: registration, roles and ownership
-isolation, CSRF, onboarding, event wizard incl. plan upload, invitations
-(register-from-invite), publishing, review and report/CSV.
+Unit tests: event status, overlap detection and the schedule grid, agenda
+conversion, the SVG map view, invitation status and response rules, review
+rules, report computation, the statistical summarizer, CSV export (formula
+injection), validation, i18n key coverage. HTTP tests run the full flow with
+in-memory implementations of the same interfaces (registration, roles,
+ownership isolation, CSRF, onboarding, wizard, invitations, register-from-
+invite, publishing, review, report, CSV). `TestAgainstEmulators` repeats the
+main flow against real Firebase emulators and also reads the `devfest` event,
+its map and floor image.
 
-## Configuration (environment variables)
+## Configuration
 
 See `.env.example`. Nothing secret is committed.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `PORT` | `8080` | HTTP port (Cloud Run sets it) |
-| `EHO_DB_PATH` | `./data/eho.db` | SQLite file |
-| `EHO_UPLOAD_DIR` | `./data/uploads` | Floor-plan images (served only to authorized users) |
-| `EHO_COOKIE_SECURE` | `false` | Set `true` behind HTTPS so cookies get `Secure` |
-| `EHO_BASE_URL` | `http://localhost:8080` | Used to build invitation links |
-| `EHO_TIMEZONE` | `Europe/Belgrade` | Time zone for entering/showing event times (stored as UTC) |
-| `GOOGLE_MAPS_API_KEY` | empty | Optional Maps **Embed** API key. Without it, pages show the address only. Restrict the key by HTTP referrer. |
+| `PORT` | `8090` | HTTP port (`backend/maps` uses 8080) |
+| `EHO_BASE_URL` | `http://localhost:8090` | Builds invitation links |
+| `EHO_APP_URL` | `http://localhost:5000` | Flutter app: map editor (`/organizer`) and event links (`/e/{id}`) |
+| `EHO_COOKIE_SECURE` | `false` | `true` behind HTTPS |
+| `EHO_TIMEZONE` | `Europe/Belgrade` | Entering/showing times; agenda days and clock times are local |
+| `FIREBASE_PROJECT_ID` | `demo-eho` | Shared Firebase project |
+| `FIREBASE_API_KEY` | (any value with the emulator) | Web API key, for the email/password check |
+| `STORAGE_BUCKET` | `<project>.appspot.com` | Floor-plan images (same default as `backend/maps`) |
+| `FIRESTORE_EMULATOR_HOST`, `FIREBASE_AUTH_EMULATOR_HOST`, `STORAGE_EMULATOR_HOST` | set by `scripts/dev.sh` | Emulators |
+| `GOOGLE_MAPS_API_KEY` | empty | Optional Maps Embed key; without it only the address is shown |
 
-## Docker / Cloud Run
+## Deploy (Cloud Run)
 
-```bash
-docker build -t eho-onboarding backend/onboarding
-docker run -p 8080:8080 -v eho-data:/data eho-onboarding
-docker run --rm -v eho-data:/data --entrypoint /app/eho-seed eho-onboarding -reset
-```
-
-The image is static (distroless, non-root) and reads `PORT`. Caveat for Cloud
-Run: the container file system is ephemeral, so SQLite and uploads don't
-survive restarts or scale-out. That's fine for a demo instance with
-`max-instances=1`; for real use, add a Firestore/Cloud Storage implementation
-behind the existing repository interfaces (see below). The Dockerfile has not
-been built in CI yet.
+`Dockerfile` builds a static distroless image. On Cloud Run set
+`FIREBASE_PROJECT_ID`, `FIREBASE_API_KEY`, `EHO_BASE_URL`, `EHO_APP_URL` and
+`EHO_COOKIE_SECURE=true`; credentials come from the service account (needs
+Firebase Auth admin, Firestore and Storage read access). Not deployed yet; the
+image has not been built in CI.
 
 ## Architecture
 
 ```
-cmd/eho-web     HTTP server (graceful shutdown)
-cmd/seed        demo data
+cmd/eho-web     HTTP server
+cmd/seed        demo data (emulators only)
+scripts/        dev.sh (emulators + app), seed.sh (all seeds)
 internal/
-  app           wiring: repositories → handlers → middleware chain
+  app           wiring: Deps (Firebase or in-memory) → handlers → middleware
+  fb            Firebase clients (Auth, Firestore, Storage)
   config        env vars
-  db            SQLite open + embedded migrations (db/migrations/*.sql)
-  httpx         principal in context, CSRF, role guards, security headers, renderer
-  i18n          UI text catalog (sr); templates reference keys only
-  id            random IDs and tokens
-  auth          registration, login, sessions, bcrypt
-  users         users, organizations, participant profile + onboarding, profile settings
-  events        events, status, venue map + zones, schedule + overlap check, organizer wizard
+  httpx         principal, CSRF, role guards, security headers, renderer
+  i18n          UI text catalog (sr)
+  auth          Identity (Firebase / in-memory), registration, login, session cookies
+  users         organizer organizations, participant profile + onboarding
+  events        shared events, agenda, published map view, wizard
   invitations   invitations, public /i/{token} flow, participant panel
-  mail          Sender interface; LogSender logs links
+  mail          Sender interface; LogSender logs the links
   reviews       reviews + per-session ratings
-  reports       report computation, FeedbackSummarizer, CSV export
-templates/      html/template pages + partials
-static/         app.css
+  reports       report, FeedbackSummarizer, CSV export
+templates/, static/
 ```
 
-### Data model
+### Firestore data
 
-`users` (role: organizer / participant; `admin` reserved), `organizations`,
-`participant_profiles` (caption language, goal, networking visibility opt-in,
-onboarding progress), `participant_interests` (one row per topic, flag for
-free-text topics), `consents` (GDPR, versioned), `auth_sessions`, `events`,
-`venue_maps`, `zones` (rectangles in % of the plan), `sessions`,
-`session_tags`, `invitations`, `reviews`, `session_ratings`.
+| Path | Written by | Contents |
+| --- | --- | --- |
+| `events/{eventId}` | shared | `name, startDate, endDate, address, ownerUid, publishedVersion, createdAt, updatedAt`; this module adds `description, startsAt, endsAt, lat, lng, listedAt` (field-level updates, so nobody overwrites the others' fields) |
+| `events/{id}/published/agenda` | shared with `backend/events` | stages, speakers, sessions (`day`, `start`, `end`, `stage`, …) |
+| `events/{id}/published/map/*` | `backend/maps` (read here) | floors, features |
+| `events/{id}/reviews/{uid}` | this module | rating, comment, anonymous, sessionRatings, author |
+| `invitations/{eventId}_{hash(email)}` | this module | eventId, email, token, status, userId, expiresAt, … |
+| `members/{uid}/events/{eventId}` | shared with `backend/events` | added when an invitation is accepted ("My events" in the app) |
+| `organizers/{uid}`, `participants/{uid}` | this module | organization; onboarding profile, interests, goal, visibility opt-in, consents |
 
-Interests, session tags, goals and the visibility opt-in are stored as
-separate structured rows so that AI matching (Gemma / EmbeddingGemma) can use
-them later without a schema change. Only participants who opted in may ever
-be matched.
+All writes use the Admin SDK. The project rules (`backend/maps/firebase`)
+deny clients everything not listed there, so reviews, invitations and profiles
+are not readable from the app.
 
 ### Rules worth knowing
 
-- **Event status:** `draft` until published; then `published` (upcoming) /
-  `ongoing` / `finished` are computed from the dates, never stored. Finished
-  events are read-only; their page redirects to the report.
-- **Invitations:** `sent` / `accepted` / `declined` are stored; `expired` is
-  derived (30-day TTL or event finished). Accepting needs a participant account;
-  registering from an invitation link binds and accepts it automatically. Once
-  bound to an account, only that account can change the answer. Declining works
+- **Event status:** draft until published here (`listedAt`) or until its map
+  is published in the editor (`publishedVersion > 0`); then upcoming / ongoing /
+  finished from the times. Events created in the app only have dates and span
+  whole days. Finished events are read-only (the page opens the report).
+- **Invitations:** `sent / accepted / declined` stored, `expired` derived (30
+  days or event over). Registering from an invitation link accepts it. Once
+  bound to an account only that account can change the answer; declining works
   without an account.
-- **Reviews:** only participants with an accepted invitation, only after the
-  event ends, one per participant per event (editable). "Anonymous" hides the
-  author from the organizer in the report and the CSV.
-- **Access control** is server-side: role middleware (organizer vs.
-  participant routes) plus ownership checks on every event route; another
-  organizer's event returns 404. Floor plans are served only to the owner and
-  to participants who accepted.
-- **Security:** bcrypt passwords, opaque session token in an HttpOnly
-  SameSite=Lax cookie (only its SHA-256 is stored), double-submit CSRF token on
-  every form plus `Sec-Fetch-Site` check, CSP without scripts, open-redirect
-  protection, upload type sniffing + size limit, CSV formula-injection guard.
+- **Reviews:** accepted invitation + event finished; one per participant
+  (editable); anonymous hides the author in the report and CSV.
+- **Access control** is server-side: role middleware and `ownerUid` checks;
+  another organizer's event is a 404. Floor images are proxied only to the owner
+  and to participants who accepted.
+- **Security:** Firebase session cookie (HttpOnly, SameSite=Lax), CSRF token on
+  every form + `Sec-Fetch-Site` check, CSP without scripts, open-redirect
+  protection, CSV formula-injection guard.
 
 ### Extension points
 
 | Interface | Now | Later |
 | --- | --- | --- |
-| `users.Repository`, `events.Repository`, `invitations.Repository`, `reviews.Repository` | SQLite | Firestore |
-| `mail.Sender` | `LogSender` (link in log + shown to the organizer) | real email provider |
-| `reports.FeedbackSummarizer` | `StatSummarizer` (statistics + keyword counts, no AI) | Gemma-backed summary; its output is treated as untrusted text and only rendered escaped |
-| `i18n` catalogs | `sr` | add `en` and a locale switch |
+| `auth.Identity` | Firebase Auth | — |
+| `*.Repository` | Firestore (+ in-memory for tests) | — |
+| `mail.Sender` | `LogSender` (link in log + shown to the organizer) | real email |
+| `reports.FeedbackSummarizer` | `StatSummarizer` (statistics, no AI) | Gemma; output treated as untrusted text, only rendered escaped |
+| `i18n` catalogs | `sr` | `en` + locale switch |
 
 ## Known limitations
 
-- Sessions and zones can be added and deleted, not edited in place.
-- No account deletion UI yet (privacy rules ask for it).
-- Auth is local to this module; it is not yet reconciled with the team's
-  Firebase Auth plan (`docs/decisions/team-auth.md`).
-- Mail is not sent; links are logged and shown to the organizer.
+- Sessions can be added and deleted here, not edited in place (or edit them via
+  the import flow in `backend/events`).
+- The map can't be edited here (by design: one map editor).
+- `backend/maps` treats every non-anonymous account as an organizer; until it
+  also checks the `role` claim, a participant account could create events in the
+  map editor.
+- No account deletion UI yet. Mail is not sent.

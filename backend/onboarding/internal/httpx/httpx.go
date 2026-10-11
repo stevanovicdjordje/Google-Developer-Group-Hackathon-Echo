@@ -18,6 +18,7 @@ import (
 type Principal struct {
 	UserID    string
 	Name      string
+	Email     string
 	Role      string
 	Onboarded bool // participants: onboarding finished
 }

@@ -50,8 +50,8 @@ func TestTemplateKeysExist(t *testing.T) {
 	for _, st := range events.Statuses {
 		dynamic = append(dynamic, "status."+string(st), "group."+string(st))
 	}
-	for _, k := range events.ZoneKinds {
-		dynamic = append(dynamic, "zone."+string(k))
+	for _, k := range []string{"room", "stand", "poi"} {
+		dynamic = append(dynamic, "feature."+k)
 	}
 	for _, st := range invitations.Statuses {
 		dynamic = append(dynamic, "inv.status."+string(st))

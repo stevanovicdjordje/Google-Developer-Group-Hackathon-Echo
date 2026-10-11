@@ -39,9 +39,9 @@ func fixture() Input {
 			rv("r2", 4, "Organizacija odlična, hrana slaba", true, map[string]int{"s1": 4}),
 			rv("r3", 2, "", false, map[string]int{"s2": 1}),
 		},
-		Sessions:  []events.Session{{ID: "s1", Title: "Keynote"}, {ID: "s2", Title: "Panel"}, {ID: "s3", Title: "Radionica"}},
-		ZoneNames: map[string]string{},
-		Now:       now,
+		Sessions: []events.Session{{ID: "s1", Title: "Keynote"}, {ID: "s2", Title: "Panel"}, {ID: "s3", Title: "Radionica"},
+			{ID: "b", Title: "Pauza", IsBreak: true}},
+		Now: now,
 	}
 }
 
@@ -104,7 +104,7 @@ func TestWriteCSV(t *testing.T) {
 	in := fixture()
 	in.Reviews[0].Comment = "=HYPERLINK(\"http://evil\")"
 	var buf bytes.Buffer
-	if err := WriteCSV(&buf, in.Reviews, in.Sessions, time.UTC); err != nil {
+	if err := WriteCSV(&buf, in.Reviews, in.Sessions[:3], time.UTC); err != nil {
 		t.Fatal(err)
 	}
 	rows, err := csv.NewReader(&buf).ReadAll()

@@ -1,4 +1,2 @@
-data/
-eho-web
 .env
-*.db
+eho-web

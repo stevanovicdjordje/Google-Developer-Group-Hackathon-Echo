@@ -1,6 +1,7 @@
 package reviews
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -8,12 +9,11 @@ import (
 
 	"github.com/Ilij4n/eho/backend/onboarding/internal/events"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/httpx"
-	"github.com/Ilij4n/eho/backend/onboarding/internal/id"
 )
 
 // AcceptanceChecker reports whether a participant accepted the invitation.
 type AcceptanceChecker interface {
-	HasAccepted(eventID, userID string) (bool, error)
+	HasAccepted(ctx context.Context, eventID, userID string) (bool, error)
 }
 
 type Handlers struct {
@@ -21,6 +21,7 @@ type Handlers struct {
 	Events      events.Repository
 	Invitations AcceptanceChecker
 	View        *httpx.Renderer
+	Loc         *time.Location
 	Now         func() time.Time
 }
 
@@ -41,12 +42,12 @@ type formData struct {
 // ok=false means the response is written.
 func (h *Handlers) load(w http.ResponseWriter, r *http.Request) (events.Event, []events.Session, bool) {
 	p := httpx.PrincipalFrom(r.Context())
-	ev, err := h.Events.Get(r.PathValue("id"))
+	ev, err := h.Events.Get(r.Context(), r.PathValue("id"))
 	if err != nil {
 		h.View.Error(w, r, http.StatusNotFound, "error.title")
 		return ev, nil, false
 	}
-	accepted, err := h.Invitations.HasAccepted(ev.ID, p.UserID)
+	accepted, err := h.Invitations.HasAccepted(r.Context(), ev.ID, p.UserID)
 	if err != nil {
 		h.View.Error(w, r, http.StatusInternalServerError, "error.title")
 		return ev, nil, false
@@ -60,7 +61,8 @@ func (h *Handlers) load(w http.ResponseWriter, r *http.Request) (events.Event, [
 			Data: formData{Event: ev, Problem: "review.not_finished"}})
 		return ev, nil, false
 	}
-	sessions, err := h.Events.ListSessions(ev.ID)
+	agenda, err := h.Events.GetAgenda(r.Context(), ev.ID)
+	sessions := agenda.SessionList(h.Loc)
 	if err != nil {
 		h.View.Error(w, r, http.StatusInternalServerError, "error.title")
 		return ev, nil, false
@@ -76,7 +78,7 @@ func (h *Handlers) form(w http.ResponseWriter, r *http.Request) {
 	p := httpx.PrincipalFrom(r.Context())
 	form := map[string][]string{}
 	existing := false
-	if rv, err := h.Repo.Get(ev.ID, p.UserID); err == nil {
+	if rv, err := h.Repo.Get(r.Context(), ev.ID, p.UserID); err == nil {
 		existing = true
 		form["rating"] = []string{strconv.Itoa(rv.Rating)}
 		form["comment"] = []string{rv.Comment}
@@ -112,8 +114,8 @@ func (h *Handlers) submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now := h.Now().UTC()
-	rv.ID, rv.EventID, rv.UserID, rv.CreatedAt, rv.UpdatedAt = id.New(), ev.ID, p.UserID, now, now
-	if err := h.Repo.Save(rv); err != nil {
+	rv.ID, rv.EventID, rv.UserID, rv.CreatedAt, rv.UpdatedAt = p.UserID, ev.ID, p.UserID, now, now
+	if err := h.Repo.Save(r.Context(), WithAuthor{Review: rv, AuthorName: p.Name, AuthorEmail: p.Email}); err != nil {
 		h.View.Error(w, r, http.StatusInternalServerError, "error.title")
 		return
 	}

@@ -2,6 +2,7 @@
 package users
 
 import (
+	"context"
 	"errors"
 	"time"
 )
@@ -45,18 +46,19 @@ var (
 	ErrEmailTaken = errors.New("users: email already registered")
 )
 
+// User is an account as this module sees it. Accounts live in Firebase Auth
+// (shared with the Flutter app and the other services); the role is a
+// custom claim.
 type User struct {
-	ID           string
-	Email        string
-	FullName     string
-	Role         Role
-	PasswordHash string
-	CreatedAt    time.Time
+	ID       string // Firebase UID
+	Email    string
+	FullName string
+	Role     Role
 }
 
+// Organization is the organizer's company, stored as organizers/{uid}.
 type Organization struct {
-	ID        string
-	OwnerID   string
+	OwnerUID  string
 	Name      string
 	Website   string
 	CreatedAt time.Time
@@ -84,16 +86,14 @@ const (
 
 func (p Profile) Completed() bool { return p.CompletedAt != nil }
 
-// Repository is the persistence boundary; SQLite is the first implementation.
+// Repository is the persistence boundary: Firestore, or memory in tests.
 type Repository interface {
-	CreateOrganizer(u User, org Organization) error
-	CreateParticipant(u User) error
-	GetByID(id string) (User, error)
-	GetByEmail(email string) (User, error)
-	GetOrganizationByOwner(ownerID string) (Organization, error)
+	SaveOrganization(ctx context.Context, o Organization) error
+	GetOrganization(ctx context.Context, ownerUID string) (Organization, error)
 
-	GetProfile(userID string) (Profile, error)
-	SaveProfile(p Profile) error
-	GrantConsent(userID, kind, version string) error
-	HasConsent(userID, kind string) (bool, error)
+	// CreateProfile starts an empty participant profile at onboarding step 1.
+	CreateProfile(ctx context.Context, uid string, now time.Time) error
+	GetProfile(ctx context.Context, uid string) (Profile, error)
+	SaveProfile(ctx context.Context, p Profile) error
+	GrantConsent(ctx context.Context, uid, kind, version string, at time.Time) error
 }

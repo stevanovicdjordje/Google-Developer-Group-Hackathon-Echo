@@ -3,6 +3,7 @@
 package invitations
 
 import (
+	"context"
 	"errors"
 	"regexp"
 	"strings"
@@ -113,12 +114,16 @@ type Row struct {
 }
 
 type Repository interface {
-	Create(inv Invitation) error
-	ListByEvent(eventID string) ([]Invitation, error)
-	GetByToken(token string) (Invitation, error)
-	Respond(id, userID string, st Status, at time.Time) error
-	HasAccepted(eventID, userID string) (bool, error)
+	// Create returns ErrDuplicate when the email is already invited to the event.
+	Create(ctx context.Context, inv Invitation) error
+	ListByEvent(ctx context.Context, eventID string) ([]Invitation, error)
+	GetByToken(ctx context.Context, token string) (Invitation, error)
+	// Respond stores the answer. Accepting also adds the event to the user's
+	// "My events" in the app (members/{uid}/events/{eventId}); declining
+	// removes it.
+	Respond(ctx context.Context, inv Invitation, userID string, st Status, at time.Time) error
+	HasAccepted(ctx context.Context, eventID, userID string) (bool, error)
 	// ListForParticipant returns invitations bound to userID plus unbound
 	// ones sent to email.
-	ListForParticipant(userID, email string) ([]Invitation, error)
+	ListForParticipant(ctx context.Context, userID, email string) ([]Invitation, error)
 }

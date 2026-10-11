@@ -7,6 +7,7 @@
   <h2>{{t "wizard.step.schedule"}}</h2>
   {{if $s.Conflicts}}<p class="alert" role="alert">⚠ {{t "schedule.conflict_summary"}}</p>{{end}}
   {{template "schedule" $s}}
+  <p class="hint">{{t "schedule.shared_note"}}</p>
 </section>
 
 {{if $s.Sessions}}
@@ -20,7 +21,7 @@
         <tr class="{{if index $s.Conflicts .ID}}row-conflict{{end}}">
           <td>{{.Title}}{{if index $s.Conflicts .ID}} <span class="warn">⚠</span>{{end}}</td>
           <td>{{day .StartsAt}} {{clock .StartsAt}}–{{clock .EndsAt}}</td>
-          <td>{{with index $s.ZoneNames .ZoneID}}{{.}}{{else}}—{{end}}</td>
+          <td>{{with .Stage}}{{.}}{{else}}—{{end}}</td>
           <td>{{.Speaker}}</td>
           <td>
             <form method="post" action="/org/events/{{$id}}/sessions/{{.ID}}/delete" class="inline">
@@ -38,26 +39,31 @@
 
 <section class="card">
   <h2>{{t "schedule.add"}}</h2>
-  {{if not $s.Halls}}<p class="hint">{{t "schedule.no_halls_hint"}}</p>{{end}}
+  {{if not $s.Stages}}<p class="hint">{{t "schedule.no_halls_hint"}}</p>{{end}}
   <form method="post" action="/org/events/{{$id}}/sessions" novalidate>
     {{template "csrf" .CSRF}}
     <div class="grid-2">
       <label>{{t "session.title"}}
-        <input type="text" name="title" value="{{.Form.Get "title"}}" maxlength="150" required>
+        <input type="text" name="title" value="{{.Form.Get "title"}}" maxlength="160" required>
         {{template "ferr" (index .Errors "title")}}
       </label>
       <label>{{t "session.speaker"}} <span class="muted">{{t "field.optional"}}</span>
-        <input type="text" name="speaker" value="{{.Form.Get "speaker"}}" maxlength="120">
+        <input type="text" name="speaker" value="{{.Form.Get "speaker"}}" maxlength="80">
       </label>
     </div>
-    <div class="grid-3">
+    <div class="grid-2">
       <label>{{t "session.zone"}}
-        <select name="zone_id">
+        <select name="stage">
           <option value="">{{t "schedule.no_hall"}}</option>
-          {{range $s.Halls}}<option value="{{.ID}}" {{if eq ($.Form.Get "zone_id") .ID}}selected{{end}}>{{.Name}}</option>{{end}}
+          {{range $s.Stages}}<option value="{{.}}" {{if eq ($.Form.Get "stage") .}}selected{{end}}>{{.}}</option>{{end}}
         </select>
-        {{template "ferr" (index .Errors "zone_id")}}
+        {{template "ferr" (index .Errors "stage")}}
       </label>
+      <label>{{t "schedule.stage_new"}} <span class="muted">{{t "field.optional"}}</span>
+        <input type="text" name="stage_new" value="{{.Form.Get "stage_new"}}" maxlength="80">
+      </label>
+    </div>
+    <div class="grid-2">
       <label>{{t "session.starts_at"}}
         <input type="datetime-local" name="starts_at" value="{{.Form.Get "starts_at"}}" required>
         {{template "ferr" (index .Errors "starts_at")}}
@@ -72,7 +78,7 @@
       {{template "ferr" (index .Errors "tags")}}
     </label>
     <label>{{t "session.description"}} <span class="muted">{{t "field.optional"}}</span>
-      <textarea name="description" rows="3" maxlength="2000">{{.Form.Get "description"}}</textarea>
+      <textarea name="description" rows="3" maxlength="600">{{.Form.Get "description"}}</textarea>
       {{template "ferr" (index .Errors "description")}}
     </label>
     <div class="actions"><button class="btn" type="submit">{{t "schedule.add"}}</button></div>

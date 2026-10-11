@@ -21,7 +21,9 @@ type Handlers struct {
 	BaseURL string
 	Loc     *time.Location
 	MapsKey string
-	Now     func() time.Time
+	// AppURL is the Flutter app; participants open the event there too.
+	AppURL string
+	Now    func() time.Time
 }
 
 func (h *Handlers) Register(mux *http.ServeMux, organizerOnly, participantOnly func(http.Handler) http.Handler) {
@@ -68,7 +70,7 @@ type orgData struct {
 }
 
 func (h *Handlers) renderOrg(w http.ResponseWriter, r *http.Request, status int, ev events.Event, res *addResult, form map[string][]string) {
-	all, err := h.Repo.ListByEvent(ev.ID)
+	all, err := h.Repo.ListByEvent(r.Context(), ev.ID)
 	if err != nil {
 		h.Fail(w, r, err)
 		return
@@ -117,7 +119,7 @@ func (h *Handlers) orgAdd(w http.ResponseWriter, r *http.Request) {
 	for _, email := range valid {
 		inv := Invitation{ID: id.New(), EventID: ev.ID, Email: email, Token: id.Token(24),
 			Status: StatusSent, ExpiresAt: now.Add(TTL).UTC(), CreatedAt: now.UTC()}
-		switch err := h.Repo.Create(inv); {
+		switch err := h.Repo.Create(r.Context(), inv); {
 		case errors.Is(err, ErrDuplicate):
 			res.Duplicates++
 			continue
@@ -162,7 +164,7 @@ func problemKey(err error) string {
 }
 
 func (h *Handlers) load(w http.ResponseWriter, r *http.Request) (Invitation, events.Event, bool) {
-	inv, err := h.Repo.GetByToken(r.PathValue("token"))
+	inv, err := h.Repo.GetByToken(r.Context(), r.PathValue("token"))
 	if errors.Is(err, ErrNotFound) {
 		h.View.Error(w, r, http.StatusNotFound, "error.title")
 		return Invitation{}, events.Event{}, false
@@ -171,7 +173,7 @@ func (h *Handlers) load(w http.ResponseWriter, r *http.Request) (Invitation, eve
 		h.Fail(w, r, err)
 		return Invitation{}, events.Event{}, false
 	}
-	ev, err := h.Events.Get(inv.EventID)
+	ev, err := h.Events.Get(r.Context(), inv.EventID)
 	if err != nil {
 		h.Fail(w, r, err)
 		return Invitation{}, events.Event{}, false
@@ -213,7 +215,7 @@ func (h *Handlers) accept(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/i/"+inv.Token, http.StatusSeeOther)
 		return
 	}
-	if err := h.Repo.Respond(inv.ID, p.UserID, StatusAccepted, now.UTC()); err != nil {
+	if err := h.Repo.Respond(r.Context(), inv, p.UserID, StatusAccepted, now.UTC()); err != nil {
 		h.Fail(w, r, err)
 		return
 	}
@@ -236,7 +238,7 @@ func (h *Handlers) decline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := CheckRespond(inv, ev, userID, now); err == nil {
-		if err := h.Repo.Respond(inv.ID, userID, StatusDeclined, now.UTC()); err != nil {
+		if err := h.Repo.Respond(r.Context(), inv, userID, StatusDeclined, now.UTC()); err != nil {
 			h.Fail(w, r, err)
 			return
 		}
@@ -253,20 +255,20 @@ type SignupHook struct {
 	Now    func() time.Time
 }
 
-func (s SignupHook) InviteEmail(token string) (string, bool) {
-	inv, err := s.Repo.GetByToken(token)
+func (s SignupHook) InviteEmail(ctx context.Context, token string) (string, bool) {
+	inv, err := s.Repo.GetByToken(ctx, token)
 	if err != nil {
 		return "", false
 	}
 	return inv.Email, true
 }
 
-func (s SignupHook) AcceptAfterSignup(_ context.Context, token, userID string) error {
-	inv, err := s.Repo.GetByToken(token)
+func (s SignupHook) AcceptAfterSignup(ctx context.Context, token, userID string) error {
+	inv, err := s.Repo.GetByToken(ctx, token)
 	if err != nil {
 		return err
 	}
-	ev, err := s.Events.Get(inv.EventID)
+	ev, err := s.Events.Get(ctx, inv.EventID)
 	if err != nil {
 		return err
 	}
@@ -274,20 +276,20 @@ func (s SignupHook) AcceptAfterSignup(_ context.Context, token, userID string) e
 	if err := CheckRespond(inv, ev, userID, now); err != nil {
 		return err
 	}
-	return s.Repo.Respond(inv.ID, userID, StatusAccepted, now.UTC())
+	return s.Repo.Respond(ctx, inv, userID, StatusAccepted, now.UTC())
 }
 
 // CanViewPlan: the owning organizer, or a participant who accepted an
 // invitation to a published event.
-func CanViewPlan(repo Repository, usersRepo users.Repository) func(*httpx.Principal, events.Event) bool {
-	return func(p *httpx.Principal, ev events.Event) bool {
-		if events.IsOrganizerOf(usersRepo, p, ev) {
+func CanViewPlan(repo Repository) func(context.Context, *httpx.Principal, events.Event) bool {
+	return func(ctx context.Context, p *httpx.Principal, ev events.Event) bool {
+		if events.IsOrganizerOf(p, ev) {
 			return true
 		}
-		if p.Role != string(users.RoleParticipant) || ev.PublishedAt == nil {
+		if p.Role != string(users.RoleParticipant) || !ev.Published() {
 			return false
 		}
-		ok, err := repo.HasAccepted(ev.ID, p.UserID)
+		ok, err := repo.HasAccepted(ctx, ev.ID, p.UserID)
 		return err == nil && ok
 	}
 }

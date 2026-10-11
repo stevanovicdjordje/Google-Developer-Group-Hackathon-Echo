@@ -51,7 +51,6 @@ type Input struct {
 	Invitations []invitations.Invitation
 	Reviews     []reviews.WithAuthor
 	Sessions    []events.Session
-	ZoneNames   map[string]string
 	Now         time.Time
 }
 
@@ -109,7 +108,10 @@ func Compute(in Input) Report {
 		}
 	}
 	for _, s := range in.Sessions {
-		rep.Sessions = append(rep.Sessions, SessionScore{Session: s, ZoneName: in.ZoneNames[s.ZoneID],
+		if s.IsBreak {
+			continue
+		}
+		rep.Sessions = append(rep.Sessions, SessionScore{Session: s, ZoneName: s.Stage,
 			Count: sessCount[s.ID], Avg: ratio(sessSum[s.ID], sessCount[s.ID])})
 	}
 	sort.SliceStable(rep.Sessions, func(i, j int) bool {

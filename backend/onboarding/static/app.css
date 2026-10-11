@@ -200,17 +200,17 @@ thead th { font-size: .85rem; color: var(--c-muted); font-weight: 600; }
 .plan-wrap { margin: 8px 0 16px; border: 1px solid var(--c-border); border-radius: 8px; overflow: hidden; background: #fafbfd; }
 .plan { display: block; width: 100%; height: auto; }
 .zone { fill: rgba(59, 91, 219, .18); stroke: var(--c-primary); stroke-width: 3; }
-.zone-hall { fill: rgba(59, 91, 219, .20); stroke: #3b5bdb; }
-.zone-booth { fill: rgba(43, 138, 62, .20); stroke: #2b8a3e; }
-.zone-entrance { fill: rgba(179, 92, 0, .20); stroke: #b35c00; }
-.zone-toilet { fill: rgba(102, 102, 153, .20); stroke: #666699; }
-.zone-food { fill: rgba(201, 42, 42, .18); stroke: #c92a2a; }
-.zone-info, .zone-other { fill: rgba(94, 106, 128, .18); stroke: #5e6a80; }
+.zone-room { fill: rgba(59, 91, 219, .20); stroke: #3b5bdb; }
+.zone-stand { fill: rgba(43, 138, 62, .20); stroke: #2b8a3e; }
+.zone-poi { fill: rgba(179, 92, 0, .55); stroke: #b35c00; }
 a .zone:hover, .zone.selected { fill-opacity: .9; stroke-width: 6; }
 .zone-label { fill: #1d2433; font-weight: 700; pointer-events: none; paint-order: stroke; stroke: rgba(255,255,255,.85); stroke-width: 4px; }
 .zone-chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .8rem; border: 1px solid currentColor; }
-span.zone-hall { color: #3b5bdb; } span.zone-booth { color: #2b8a3e; } span.zone-entrance { color: #b35c00; }
-span.zone-toilet { color: #666699; } span.zone-food { color: #c92a2a; } span.zone-info, span.zone-other { color: #5e6a80; }
+span.zone-room { color: #3b5bdb; } span.zone-stand { color: #2b8a3e; } span.zone-poi { color: #b35c00; }
+.floor { margin: 0; }
+.floor + .floor { border-top: 1px solid var(--c-border); }
+.floor figcaption { padding: 8px 12px; font-weight: 600; }
+.slot.break { background: var(--c-bg); border-left-color: var(--c-border); }
 .zone-detail { padding-top: 8px; }
 .map-embed { width: 100%; height: 320px; border: 0; border-radius: 8px; }
 

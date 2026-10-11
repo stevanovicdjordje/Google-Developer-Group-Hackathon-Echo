@@ -1,4 +1,5 @@
-// Command eho-web runs the Eho server-rendered web app.
+// Command eho-web runs the Eho onboarding web app (server-rendered) against
+// Firebase Auth, Firestore and Storage, or their local emulators.
 package main
 
 import (
@@ -6,13 +7,14 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/Ilij4n/eho/backend/onboarding/internal/app"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/config"
-	"github.com/Ilij4n/eho/backend/onboarding/internal/db"
+	"github.com/Ilij4n/eho/backend/onboarding/internal/fb"
 )
 
 func main() {
@@ -20,13 +22,16 @@ func main() {
 	defer stop()
 
 	cfg := config.Load()
-	conn, err := db.Open(ctx, cfg.DBPath)
-	if err != nil {
-		log.Fatalf("db: %v", err)
+	if cfg.APIKey == "" {
+		log.Fatal("FIREBASE_API_KEY is required outside the emulator (the project's Web API key)")
 	}
-	defer conn.Close()
+	clients, err := fb.New(ctx, cfg)
+	if err != nil {
+		log.Fatalf("firebase: %v", err)
+	}
+	defer clients.Close()
 
-	handler, err := app.New(cfg, conn)
+	handler, err := app.New(cfg, app.FirebaseDeps(cfg, clients))
 	if err != nil {
 		log.Fatalf("app: %v", err)
 	}
@@ -39,7 +44,8 @@ func main() {
 		IdleTimeout:       120 * time.Second,
 	}
 	go func() {
-		log.Printf("eho-web listening on :%s", cfg.Port)
+		log.Printf("eho-web listening on :%s (project %s, firestore emulator %q, auth emulator %q)",
+			cfg.Port, cfg.ProjectID, os.Getenv("FIRESTORE_EMULATOR_HOST"), cfg.AuthEmulator)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %v", err)
 		}

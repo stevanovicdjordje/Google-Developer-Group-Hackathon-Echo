@@ -21,6 +21,11 @@ func (f FieldErrors) Add(field, key string) {
 
 func (f FieldErrors) Empty() bool { return len(f) == 0 }
 
+const (
+	MinPasswordLen = 8
+	MaxPasswordLen = 128
+)
+
 func NormalizeEmail(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
 
 func ValidEmail(s string) bool {
