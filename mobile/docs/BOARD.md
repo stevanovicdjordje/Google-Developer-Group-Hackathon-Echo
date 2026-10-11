@@ -10,7 +10,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-61 | Organizer: resume an open draft after an app restart via Events `getDraft` | M | dev | `data/events_api_repository.dart`, organizer screens | Low demo value; after M-60 (repositories.dart) |
 
 ## Blocked
 
@@ -23,6 +22,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| M-61 | dev (sonnet) | 2026-10-11 09:20 | worktree | Organizer resumes an open draft after restart via Events `getDraft` |
 
 ## Done
 
