@@ -11,8 +11,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
 | M-38 | Echo screen: the "Full talk summary / Premium" banner overlaps/clips the top transcript line on ended talks (V-4a echo.png) | S | dev | `features/echo/` | |
-| B-1 | **Echo backend:** Gemini path (`AI_MODEL=gemini-3.8-flash`) times out (20 s, `context deadline exceeded`) for ask/catch-up/summary/grouping since the model split; translate (Gemma) answered from cache. Owner: Echo maintainer (team-echo-holder → @Ilij4n's other session). App shows friendly "AI busy" | — | other session | `backend/echo` | Reported 2026-10-11 |
-| M-26 | Echo on real AI — API part verified: Gemini (`gemini-3.8-flash`) for ask/catch-up/summary, Gemma (`gemma-4-26b-a4b-it`) for translate (echo 0.3.1, `efb51cc`); ask en/sr, catch-up sr, translate sr OK on the replayed keynote. App-side check = M-26b | S | verifier | none | Emulator data isn't persisted: re-seeded, event `ik6vmvjr7wlektj6`, keynote replayed `-instant`. Key only in git-ignored `backend/echo/.env`. |
 | M-34 | Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 
 ## Blocked
@@ -33,6 +31,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| B-1 | Echo Gemini timeouts: `gemini-3.8-flash`/`3.7-flash` hung on Google's side; Echo now `AI_MODEL=gemini-3-flash-preview` (ask en 4.5 s / sr 2.4 s), translate stays Gemma (other @Ilij4n session) | `3bfd0b7` |
+| M-26 | Echo on real AI end to end: Gemini (`gemini-3-flash-preview`) for ask/catch-up/summary/grouping, Gemma for translate; app sends `language` per 0.3.1, shows no model name | verification + `3bfd0b7` |
 | M-37 | Find e2e (API): profile → joinFind → recs → search → person → contact (auto-accept) → meeting spot "Info pult" all 200 and parse-compatible with `find_api_repository.dart`; 429 not reproducible. App: fresh profile dead-ends on "Finish your profile" + Try again → M-39 | verification |
 | V-4b | Tap-through flow tests `test/flows/` (deep link→join→onboarding→agenda; Echo ask/translate/Q&A/paywall/summary; map stage sheet + spot banner; Find→person→contact→messages→spot; organizer upload→review→publish). All pass on demo data; no app bugs. Live map pins/route not covered | `c9ad750` |
 | V-4a | Live flows on web vs local backends: join, agenda, session, Echo transcript, map + you-are-here, stand sheet (400 seats, 1 min / 52 m, NOW, Start route, Open Echo), Find (demo), messages, organizer, published all OK. Echo API: translate sr (Gemma) OK, questions/votes OK; ask/catch-up/summary 502 (B-1). App↔contract: no mismatch | verification |
