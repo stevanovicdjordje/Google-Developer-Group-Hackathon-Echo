@@ -434,6 +434,41 @@ class OrganizerReviewScreen extends ConsumerStatefulWidget {
 class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
   bool _publishing = false;
 
+  /// On the first flagged row, so "Review" can bring it into view.
+  final _firstFlaggedKey = GlobalKey();
+
+  /// Publish; with rows still flagged (`flagged` > 0) ask first. The contract
+  /// lets issues through, so this only nudges.
+  Future<void> _confirmAndPublish(EventDraft draft, int flagged) async {
+    if (flagged > 0) {
+      final l10n = AppLocalizations.of(context);
+      final publishAnyway = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.orgPublishFlaggedTitle(flagged)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.orgPublishReview),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.orgPublishAnyway),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (publishAnyway != true) {
+        // Keep the first flagged row visible (only when it is built).
+        final target = _firstFlaggedKey.currentContext;
+        if (target != null && target.mounted) Scrollable.ensureVisible(target);
+        return;
+      }
+    }
+    await _publish(draft);
+  }
+
   Future<void> _publish(EventDraft draft) async {
     setState(() => _publishing = true);
     final PublishedLink link;
@@ -515,6 +550,13 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
         general.add(i);
       }
     }
+    // Rows to check: flagged by the server or without a room, plus the
+    // general issues.
+    bool isFlagged(Session s) =>
+        bySession.containsKey(s.id) || s.stage.trim().isEmpty;
+    final firstFlagged = draft.sessions.indexWhere(isFlagged);
+    final flaggedCount =
+        draft.sessions.where(isFlagged).length + general.length;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -580,6 +622,7 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
                     itemBuilder: (_, i) {
                       final s = draft.sessions[i];
                       return _SessionRow(
+                        key: i == firstFlagged ? _firstFlaggedKey : null,
                         session: s,
                         issue: bySession[s.id],
                         onEdit: () => _edit(draft, s),
@@ -590,7 +633,9 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
               ),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: _publishing ? null : () => _publish(draft),
+                onPressed: _publishing
+                    ? null
+                    : () => _confirmAndPublish(draft, flaggedCount),
                 child: _publishing
                     ? SizedBox.square(
                         dimension: 22,
@@ -699,7 +744,12 @@ class _ToCheckBlock extends StatelessWidget {
 /// its message) or the AI could not place on a stage is flagged (tinted row,
 /// live-colored hint and edit button).
 class _SessionRow extends StatelessWidget {
-  const _SessionRow({required this.session, required this.onEdit, this.issue});
+  const _SessionRow({
+    super.key,
+    required this.session,
+    required this.onEdit,
+    this.issue,
+  });
 
   final Session session;
   final VoidCallback onEdit;

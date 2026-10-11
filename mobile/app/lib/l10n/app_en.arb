@@ -468,6 +468,16 @@
   "orgSessions": "Sessions",
   "orgEditSession": "Edit session",
   "orgPublish": "Publish & get join link",
+  "orgPublishFlaggedTitle": "{count, plural, =1{1 session still needs a check} other{{count} sessions still need a check}}",
+  "@orgPublishFlaggedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orgPublishAnyway": "Publish anyway",
+  "orgPublishReview": "Review",
   "orgTitleRequired": "Title is required",
   "orgEndAfterStart": "End must be after start",
   "orgTitleLabel": "Title",

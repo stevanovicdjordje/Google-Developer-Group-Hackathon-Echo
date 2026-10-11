@@ -650,6 +650,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orgPublish => 'Publish & get join link';
 
   @override
+  String orgPublishFlaggedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions still need a check',
+      one: '1 session still needs a check',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get orgPublishAnyway => 'Publish anyway';
+
+  @override
+  String get orgPublishReview => 'Review';
+
+  @override
   String get orgTitleRequired => 'Title is required';
 
   @override
