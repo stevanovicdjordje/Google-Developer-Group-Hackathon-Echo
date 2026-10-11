@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 03:33 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 03:57 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -44,12 +44,13 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 | maps: published venue (Firestore realtime) | on real API (via `eho_maps`) |
 | echo 0.3.1 (no model name shown in the app): transcript (Firestore), `getCatchUp`, `ask`, `listQuestions`, `submitQuestion`, vote/unvote, `getSummary` (0.3.0 structured `summary`), `translateTranscript`, `mergedCount`/merged submit, `language` on catch-up/ask/summary | verified e2e (transcript, catch-up, questions in the app; ask/translate/submit/unvote via curl; UI paths by widget tests) |
 | maps: `getRoute`, `/o` editor | verified e2e (via `eho_maps`) |
-| find 0.1.0 (`contracts/find/openapi.yaml`: profile + consents, joinFind, recommendations, search, person, contacts, meeting spot) | on demo data; wiring next (M-23), service not running yet |
+| find 0.1.1: `putMyProfile` (after onboarding, consents as set), `joinFind`, `getRecommendations`, `searchPeople`, `getPerson`, `requestContact`, `putMeetingSpot`, `findHealthz` (`USE_FIND_API`, `FIND_API_BASE_URL` default `http://localhost:8083`; demo fallback when healthz fails) | on fixtures (contract examples, mapping tests); not e2e yet, service not running. Not used yet: `getMyProfile`, `deleteMyProfile` (no UI), `leaveFind`, `listContacts`, `acceptContact`, `deleteMeetingSpot` |
 | API-1…3, API-12…14 (join, agenda, organizer; `docs/api-needs.md`) | on demo data (no backend owner) |
 
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 03:57 · INFO · for: feature:find · The app consumes find 0.1.1 (M-23): profile + consents, joinFind, recommendations, search, person, contact request, meeting spot, with a demo fallback while the service is down. Questions in `mobile#13`.
 - 2026-10-11 03:33 · INFO · for: feature:find, feature:maps, feature:echo · Seen: find 0.1.0 (wiring = M-23, after the current Find screen polish), mobile#8 (map detail sheet = M-19, in progress), mobile#10 (1)/#11 rename, Echo 0.3.1 split models (app shows no model name; no change needed).
 - 2026-10-11 03:03 · ACTION · for: feature:maps · maps#3 done: real Firebase via `--dart-define=USE_EMULATORS=false` + `FIREBASE_*` (see `mobile/README.md`). Your deploy script should also pass `API_BASE_URL` and `ECHO_API_BASE_URL`.
 - 2026-10-11 03:00 · ACTION · for: feature:maps (@Vertiglo), feature:find · **`feature:find` passes to @Vertiglo** (`docs/decisions/team-find-holder.md`): @MilosBG03 is away and nothing was built yet. See request `mobile#12`. The DevFest rename must change the map seed **and** the Echo replay in one push (the replay finds the event by name); the decision allows that.
@@ -77,6 +78,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
+| mobile#13 | feature:find | Questions from wiring 0.1.1 (no blocker): (1) should `MeetingSpot` carry a `time` ("HH:mm")? The app keeps it on the device for now; (2) could `requestContact` say when the target is a seeded person that auto-accepts? The app shows whatever `contactState` comes back. FYI: recommendations reload when the attendee toggles a consent; tell us if that risks your rate limit. Please announce when `backend/find` runs locally so we can verify end to end. | open | 2026-10-11 |
 | mobile#1 | product | Venue map is agreed by the team as an MVP feature (human @Vertiglo, 2026-10-10): floor plan image with rooms/stands/POIs, server-side routing, live GPS dot with accuracy circle and QR/manual "you are here" fallback, organizer stats (search, views, route targets, QR scans; never GPS coordinates). Please update `docs/MVP.md` / `docs/PRODUCT.md` (currently "candidate, no real-time indoor positioning") and add a location section to `docs/DATA_PRIVACY.md`: position is sent to the backend only to compute a route, never stored, logged or shown to others. | open | 2026-10-10 |
 | mobile#2 | integration | Record `team-auth`: Firebase Auth. Organizers use email/password, attendees anonymous sign-in; clients send `Authorization: Bearer <Firebase ID token>`; backend verifies and checks `ownerUid` for organizer operations. (Agreed by @Vertiglo's team, 2026-10-10.) | open | 2026-10-10 |
 | mobile#4 | integration | Adopt **feature scopes**: register for a feature (`feature:<name>`) instead of whole modules. Full text and exact hook/rules changes: [`mobile/docs/proposal-feature-scopes.md`](docs/proposal-feature-scopes.md). | open | 2026-10-10 |
