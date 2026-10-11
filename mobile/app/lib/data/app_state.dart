@@ -7,6 +7,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'demo_data.dart' as demo;
+import 'demo_ids.dart';
 import 'local_store.dart';
 import 'models.dart';
 import 'repositories.dart' show demoEventId;
@@ -32,9 +33,9 @@ final profileProvider = NotifierProvider<ProfileNotifier, Profile>(
   ProfileNotifier.new,
 );
 
-/// Event ID the demo used before the rename to DevFest. Same value as the
-/// routing alias in `repositories.dart` (`_legacyDemoEventId`, private there).
-const _legacyDemoEventId = 'devsummit';
+/// The demo event id the joined-events migration maps aliases to. Overridable
+/// so tests can simulate a `DEMO_EVENT_ID` build.
+final demoEventIdProvider = Provider<String>((ref) => demoEventId);
 
 /// Events the user joined via links, newest first. Seeded with one past event.
 class JoinedEventsNotifier extends Notifier<List<EventSummary>> {
@@ -48,16 +49,18 @@ class JoinedEventsNotifier extends Notifier<List<EventSummary>> {
       ];
     });
     if (saved == null) return const [demo.pastEvent];
-    // Joined before the rename: `devsummit` becomes the current demo event
-    // (`devfest`), without a duplicate when both were saved. Saved once.
+    // Saved demo aliases (`devfest`, legacy `devsummit`) become the current
+    // demo event id: `devfest` by default, the backend id with DEMO_EVENT_ID,
+    // so `/e/<backend id>/...` counts as joined. No duplicates. Saved once.
+    final demoId = ref.read(demoEventIdProvider);
     final seen = <String>{};
     final migrated = <EventSummary>[];
     var changed = false;
     for (final e in saved) {
-      final legacy = e.id == _legacyDemoEventId;
+      final legacy = demoEventAliases.contains(e.id) && e.id != demoId;
       final fixed = legacy
-          ? const EventSummary(
-              id: demoEventId,
+          ? EventSummary(
+              id: demoId,
               name: demo.demoEventName,
               dates: demo.demoEventDates,
               venue: demo.demoEventVenue,

@@ -8,9 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-ProviderContainer _container(SharedPreferences prefs) {
+ProviderContainer _container(SharedPreferences prefs, {String? demoId}) {
   final c = ProviderContainer(
-    overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      if (demoId != null) demoEventIdProvider.overrideWithValue(demoId),
+    ],
   );
   addTearDown(c.dispose);
   return c;
@@ -121,6 +124,43 @@ void main() {
     expect(only.id, 'devfest');
     expect(only.name, demo.demoEventName);
   });
+
+  test(
+    'with a backend DEMO_EVENT_ID, saved demo aliases become that id',
+    () async {
+      Map<String, Object> ev(String id, {bool past = false}) => {
+        'id': id,
+        'name': 'Event $id',
+        'dates': 'Oct 1',
+        'venue': 'Hall',
+        'isPast': past,
+      };
+      const real = 'ik6vmvjr7wlektj6';
+      SharedPreferences.setMockInitialValues({
+        'eho.joinedEvents': jsonEncode([
+          ev('devfest'),
+          ev('devsummit'),
+          ev(demo.pastEvent.id, past: true),
+        ]),
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final a = _container(prefs, demoId: real);
+      expect(a.read(joinedEventsProvider).map((e) => e.id), [
+        real,
+        demo.pastEvent.id,
+      ]);
+      expect(a.read(joinedEventsProvider.notifier).isJoined(real), isTrue);
+      final saved = jsonDecode(prefs.getString('eho.joinedEvents')!) as List;
+      expect(saved.map((e) => (e as Map)['id']), [real, demo.pastEvent.id]);
+
+      // An already-saved backend id next to an alias: one entry.
+      SharedPreferences.setMockInitialValues({
+        'eho.joinedEvents': jsonEncode([ev(real), ev('devfest')]),
+      });
+      final b = _container(await SharedPreferences.getInstance(), demoId: real);
+      expect(b.read(joinedEventsProvider).map((e) => e.id), [real]);
+    },
+  );
 
   test('corrupt saved data is ignored and cleared', () async {
     SharedPreferences.setMockInitialValues({
