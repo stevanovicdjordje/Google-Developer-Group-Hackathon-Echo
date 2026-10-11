@@ -270,6 +270,14 @@
       }
     }
   },
+  "personDetailsAccepted": "You're connected. {name} can see your details.",
+  "@personDetailsAccepted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "personAccepted": "{name} accepted · Message",
   "@personAccepted": {
     "placeholders": {

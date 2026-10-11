@@ -290,6 +290,7 @@ class _SearchField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              autofocus: false,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => onSubmit(),
               decoration: InputDecoration(
@@ -794,7 +795,9 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
                   ],
                   const SizedBox(height: 12),
                   Text(
-                    l10n.personDetailsNote(firstName),
+                    state == ContactState.accepted
+                        ? l10n.personDetailsAccepted(firstName)
+                        : l10n.personDetailsNote(firstName),
                     textAlign: TextAlign.center,
                     style: t.labelMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
@@ -1022,16 +1025,34 @@ class MessagesScreen extends ConsumerWidget {
     final place = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
-      builder: (context) => ListView(
-        shrinkWrap: true,
-        children: [
-          for (final pl in places)
-            ListTile(
-              leading: const Icon(Icons.place_outlined),
-              title: Text(pl),
-              onTap: () => Navigator.pop(context, pl),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Text(
+                AppLocalizations.of(context).messagesSuggestSpot,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
-        ],
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.only(bottom: 8),
+                children: [
+                  for (final pl in places)
+                    ListTile(
+                      leading: const Icon(Icons.place_outlined),
+                      title: Text(pl),
+                      onTap: () => Navigator.pop(context, pl),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
     if (place == null) return;

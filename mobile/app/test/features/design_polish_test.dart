@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:eho/app.dart';
 import 'package:eho/data/app_state.dart';
 import 'package:eho/data/models.dart';
-import 'package:eho_maps/eho_maps.dart' show MapViewerScreen;
+import 'package:eho_maps/eho_maps.dart'
+    show MapViewerScreen, mapsSignedInProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -95,10 +98,14 @@ void main() {
     container.read(contactsProvider.notifier).set('p3', ContactState.accepted);
     await tester.pumpAndSettle();
     expect(find.text('Teodora accepted · Message'), findsOneWidget);
-    // The privacy note stays in every state, like the design.
+    // Once accepted the note says so instead of "only after ... accepts".
+    expect(
+      find.text("You're connected. Teodora can see your details."),
+      findsOneWidget,
+    );
     expect(
       find.text('Your details are shared only after Teodora accepts.'),
-      findsOneWidget,
+      findsNothing,
     );
 
     container.read(contactsProvider.notifier).set('p3', ContactState.accepted);
@@ -119,5 +126,64 @@ void main() {
       '/e/devfest/map?spot=1',
     );
     expect(find.byType(MapViewerScreen), findsOneWidget);
+  });
+
+  testWidgets('spot picker sheet has a title and clears the bottom inset', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    // A gesture-navigation bar: 24 logical px of bottom padding.
+    tester.view.padding = const FakeViewPadding(bottom: 60);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        // The map never loads (no Firebase here): the sheet lists demo places.
+        overrides: [
+          mapsSignedInProvider.overrideWith(
+            (ref) => Completer<String>().future,
+          ),
+        ],
+        child: EhoApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(Scaffold).first),
+    );
+    container.read(joinedEventsProvider.notifier).add(_event);
+    container.read(contactsProvider.notifier).set('p3', ContactState.accepted);
+    GoRouter.of(tester.element(find.byType(Scaffold).first))
+        .go('/e/devfest/messages/p3');
+    await settle(tester);
+    await tester.tap(find.byTooltip('Suggest a meeting spot'));
+    await settle(tester);
+    // The title is a Text (the tooltip is not).
+    expect(find.text('Suggest a meeting spot'), findsOneWidget);
+    final last = find.widgetWithText(ListTile, 'Hrana i piće');
+    expect(last, findsOneWidget);
+    final screenBottom =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    expect(tester.getBottomLeft(last).dy, lessThanOrEqualTo(screenBottom - 24));
+  });
+
+  testWidgets('Find search field does not autofocus', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(ProviderScope(child: EhoApp()));
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(Scaffold).first),
+    );
+    container.read(joinedEventsProvider.notifier).add(_event);
+    GoRouter.of(tester.element(find.byType(Scaffold).first))
+        .go('/e/devfest/find');
+    await settle(tester);
+    expect(tester.widget<TextField>(find.byType(TextField)).autofocus, false);
+    expect(
+      FocusManager.instance.primaryFocus?.context?.widget,
+      isNot(isA<EditableText>()),
+    );
   });
 }
