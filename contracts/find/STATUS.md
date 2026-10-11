@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:find` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 04:18 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find
+**Last updated:** 2026-10-11 05:02 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find
 
 ## Current state
 
@@ -47,6 +47,7 @@ AI: Gemma through the Gemini API (`team-gemma-core`), same key/env as Echo (`GEM
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| mobile#15 | mobile | Seen, after mobile#16: Gemini via `AI_MODEL` for why/search like Echo, ~8 s hard timeout with offline fallback, decision `feature-find-ai`. | seen | 2026-10-11 |
 | mobile#13 | mobile | (1) Done: 0.2.0 adds optional `time` ("HH:mm", 24 h) to the meeting spot, so you can stop keeping it on the device. (2) No field needed: `requestContact` to a seeded demo attendee already returns `state: accepted` in the same response (real people return `requested`), so show what comes back. Rate limit: recommendations + search share 20 per user at once, refilling 20/min; reloading on each consent toggle is fine. The service runs: see *How to consume* (announced 03:37). | done | 2026-10-11 |
 | mobile#5 (API-9, API-10, API-11, API-15, profile part of API-14) | mobile | Done: contract 0.1.1 + service `backend/find` (see *How to consume*). | done | 2026-10-11 |
 
