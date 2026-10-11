@@ -47,7 +47,7 @@ flutter analyze
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080   # app only
 ```
 
-Build-time settings (`--dart-define`): `DEMO_EVENT_ID` (event ID used by the demo, default `devfest`; set it to the ID printed by `backend/maps` `make seed` so the Map tab shows the real venue), `API_BASE_URL` (default `http://localhost:8080`), `USE_EMULATORS` (default `true`: emulators and the `demo-eho` project), `EMULATOR_HOST` (default `localhost`; use `10.0.2.2` on the Android emulator).
+Build-time settings (`--dart-define`): `DEMO_EVENT_ID` (event ID used by the demo, default `devfest`; set it to the ID printed by `backend/maps` `make seed` so the Map tab shows the real venue), `API_BASE_URL` (default `http://localhost:8080`), `USE_EMULATORS` (default `true`: emulators and the `demo-eho` project), `EMULATOR_HOST` (default `localhost`; use `10.0.2.2` on the Android emulator), `DEMO_LOCATION` (pretend GPS, `<lat>,<lng>` or several separated by `;` to walk; values from `make seed` in `backend/maps`).
 
 Real Firebase project (deploy): with `USE_EMULATORS=false` the app reads the project's web config from `FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID` (required) and `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET` (optional) and connects to no emulator. These are public client config, but never commit real values. If a required one is missing, Firebase init fails with a message naming it and the app continues without Firebase.
 

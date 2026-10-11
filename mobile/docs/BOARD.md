@@ -24,12 +24,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
 | M-43 | dev | 2026-10-11 session 4 | worktree | find 0.2.0 meeting `time` |
-| M-44 | dev | 2026-10-11 session 4 | worktree | `DEMO_LOCATION` in phone script + docs |
+| V-6 | verifier (sonnet, medium) | 2026-10-11 session 4 | — (Galaxy) | Real-device visual pass vs design |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-44 | `DEMO_LOCATION` pretend GPS: `phone_android.sh` and `shots.sh` forward the env var; APP_GUIDE *Run on phones* + README | `4a3abcc` |
 | M-41/42 | `mobile/scripts/phone_android.sh` (adb reverse, `fwd6.py` IPv6→IPv4 for emulators, `EMULATOR_HOST=0.0.0.0`) verified on the Galaxy; onboarding unfocuses the keyboard between steps | `c726924` |
 | V-5 | Galaxy A55: integration_test of all 5 flows pass (`integration_test/`, keep screen on: `adb shell svc power stayon usb`); live smoke OK (Echo ask ~3 s, translate progressive 4–8 s, stage sheet + route, Find server people, contact auto-accept, meeting spot). Found: Android emulator host + IPv6 `adb reverse` (→ M-41), onboarding keyboard (→ M-42), you-are-here label clipped at plan edge (→ mobile#18), agenda s1 LIVE vs Echo ENDED (replay with `-instant`; for the video replay without it) | `8d783d2` |
 | M-40 | Echo pill "Jump to end" on ended talks, "Jump to live" on live | `ac3fcfc` |
