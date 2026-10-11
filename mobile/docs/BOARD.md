@@ -10,7 +10,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-62 | Dev shot `echo-qa` should show the Q&A sheet without an own question (now identical to `echo-qa-own`) | S | dev | `features/dev/dev_shot_routes.dart` | From V-9; low priority |
 
 ## Blocked
 
@@ -28,6 +27,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-62 | Dev shot `echo-qa` without the own-question card (`echo-qa-own` keeps it). 227 tests | `cfb507c` |
 | V-9 | Web regression on main (225 tests, 24 dev shots + join/agenda/map/find live): no regressions; M-57 dot on open confirmed; minor: map "Sala A" label slightly under the filter chips (eho_maps), `echo-qa` = `echo-qa-own` (→ M-62) | verification |
 | M-61 | Organizer resumes an open draft after restart (`getDraft`; only the id is stored, `eho.organizerDraftId`; cleared on publish / 404 / any failure). 225 tests. Not tried on the live Events API | `8304de3` |
 | M-59 | Dev shots `organizer-review-issues` (row issues + "To check") and `organizer-published-warnings`. Batch after M-57/59/60: analyze clean, 214/214 tests | `e34cf1d` |
