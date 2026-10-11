@@ -3,20 +3,20 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 01:15 · **Owner:** @Vertiglo · **Scopes held:** feature:maps
+**Last updated:** 2026-10-11 02:50 · **Owner:** @Vertiglo · **Scopes held:** feature:maps
 
 ## Current state
 
 The venue map: `mobile/maps/` (Flutter package `eho_maps`), `backend/maps/` (Go service), `contracts/maps/` (this folder).
 Phases 1–4 done: API + publish, attendee viewer (`/e/{eventId}`), organizer editor (`/o`, `/o/e/{eventId}`).
-Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract 0.2.0) and the attendee viewer draws them ("Prikaži put", from the scanned QR marker or a picked start, multi-floor banner). Phase 6 (location) done: organizers tie a floor to GPS with 3 points; attendees get a GPS dot with accuracy, the route starts there and follows them (re-route, "Stigli ste"), with QR / tap-on-map as fallback. Phase 7 (stats) done: the viewer reports searches (incl. ones without results), opened details, route targets and QR scans in batches (contract 0.3.0, never positions); organizers see them per day at `/o/e/{eventId}/stats` (chart icon in the editor). Next: phase 8 (polish + deploy). Details and the exact stop point: [`PLAN.md`](PLAN.md) → "Where we stopped".
+Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract 0.2.0) and the attendee viewer draws them ("Prikaži put", from the scanned QR marker or a picked start, multi-floor banner). Phase 6 (location) done: organizers tie a floor to GPS with 3 points; attendees get a GPS dot with accuracy, the route starts there and follows them (re-route, "Stigli ste"), with QR / tap-on-map as fallback. Phase 7 (stats) done: the viewer reports searches (incl. ones without results), opened details, route targets and QR scans in batches (contract 0.3.0, never positions); organizers see them per day at `/o/e/{eventId}/stats` (chart icon in the editor). Phase 8: code done (security-rule tests, QR signs page `/o/e/{eventId}/qr` with an A4 print sheet, deploy script for Cloud Run + Firebase Hosting); not deployed yet, waits for a real Firebase project. Details and the exact stop point: [`PLAN.md`](PLAN.md) → "Where we stopped".
 
 ## How to consume / run (interface for teammates)
 
 | Item | Value |
 | --- | --- |
 | Run locally | `cd backend/maps && make dev` (emulators + API on `http://localhost:8080`), then `make seed` (prints the demo event's links) |
-| Routes the app gets from `mapsRoutes()` | `/e/{eventId}` (`?at={markerId}`), `/e/{eventId}/stand/{featureId}` (any feature, rooms too), `/o`, `/o/e/{eventId}`, `/o/e/{eventId}/stats` (child of the `/o` route the app already mounts) |
+| Routes the app gets from `mapsRoutes()` | `/e/{eventId}` (`?at={markerId}`), `/e/{eventId}/stand/{featureId}` (any feature, rooms too), `/o`, `/o/e/{eventId}`, `/o/e/{eventId}/stats`, `/o/e/{eventId}/qr` (children of the `/o` route the app already mounts) |
 | App integration | `MapsLocalizations.delegate` in the app; optional `mapsApiBaseUrlProvider` override (default `http://localhost:8080`) |
 | Organizer demo login | `organizer@eho.test` / `eho-demo-123` (emulator only). On web with emulators every page load starts signed out |
 | Contract | [`openapi.yaml`](openapi.yaml) 0.3.0, [`realtime.md`](realtime.md), [`CHANGELOG.md`](CHANGELOG.md) |
@@ -35,6 +35,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 02:50 · INFO · for: mobile · Map editor has a QR signs page (`/o/e/{eventId}/qr`, under the `/o` route you mount). `eho_maps` now depends on `qr`, `qr_flutter`, `web`; your `pubspec.lock` already has them, `flutter analyze` in `mobile/app` is clean. Nothing to change.
 - 2026-10-11 01:15 · INFO · for: all · Map contract 0.3.0 (additive): `recordStats` + `getStats`. The map viewer in the Map tab now reports, in batches, what attendees search/open/route to and QR scans (no positions, no user IDs stored). Organizers: Profile → Edit venue map → event → chart icon (`/o/e/{id}/stats`, already covered by the `/o` route you mount). Nothing to change in `mobile/app`.
 - 2026-10-11 00:48 · INFO · for: mobile · `MapViewerScreen` has `highlightFeatureId` + `highlightLabel` for the meeting spot (mobile#6). The viewer stops GPS while its tab is offstage (`TickerMode` off); the attendee taps "Moja lokacija" again when back.
 - 2026-10-11 00:45 · ACTION · for: mobile · The map viewer has "Moja lokacija" (GPS dot, route from GPS). It uses `geolocator` (the version your lock already has, so no lock change). On web it works as is; Android/iOS need the location permission entries, see maps#2.
