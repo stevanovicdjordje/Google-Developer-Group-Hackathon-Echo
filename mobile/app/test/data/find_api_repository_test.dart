@@ -37,19 +37,20 @@ http.Response _json(Object? body, [int status = 200, Map<String, String>? h]) =>
 /// Records every call to the repository the notifiers push to.
 class _RecordingFind extends DemoFindRepository {
   final saved = <Profile>[];
-  final spots = <(String, String, String)>[];
+  final spots = <(String, String, String, String?)>[];
 
   @override
   Future<void> saveProfile(Profile profile) async => saved.add(profile);
 
   @override
-  Future<String> setMeetingSpot(
+  Future<({String place, String? time})> setMeetingSpot(
     String eventId,
     String personId,
-    String place,
-  ) async {
-    spots.add((eventId, personId, place));
-    return 'Info pult';
+    String place, {
+    String? time,
+  }) async {
+    spots.add((eventId, personId, place, time));
+    return (place: 'Info pult', time: time);
   }
 }
 
@@ -160,12 +161,69 @@ void main() {
     expect(states, [ContactState.requested]);
   });
 
-  test('meeting spot sends the place and returns the stored one', () async {
+  test('meeting spot sends place and time as in the 0.2.0 fixture', () async {
     final r = repo();
-    final place = await r.setMeetingSpot('ev', 'k7Qm2xLp', 'info pult');
+    final spot = await r.setMeetingSpot(
+      'ev',
+      'k7Qm2xLp',
+      'Info pult',
+      time: '15:20',
+    );
     expect(calls().last, 'PUT /v1/events/ev/contacts/k7Qm2xLp/meeting-spot');
+    expect(
+      jsonDecode(requests.last.body),
+      _fixture('meeting-spot.request.json'),
+    );
+    expect(spot.place, 'Info pult');
+    expect(spot.time, '15:20');
+  });
+
+  test('meeting spot without a time omits the key', () async {
+    final r = repo((req) async {
+      if (req.method == 'PUT' && req.url.path.endsWith('/meeting-spot')) {
+        final c = Map<String, Object?>.from(
+          _fixture('meeting-spot.response.json') as Map,
+        );
+        c['meetingSpot'] = {
+          'place': 'Info pult',
+          'setByMe': true,
+          'updatedAt': '2026-10-11T09:25:00Z',
+        };
+        return _json(c);
+      }
+      return service(req);
+    });
+    final spot = await r.setMeetingSpot('ev', 'k7Qm2xLp', 'info pult');
     expect(jsonDecode(requests.last.body), {'place': 'info pult'});
-    expect(place, 'Info pult'); // the map's spelling, from the fixture
+    expect(spot.place, 'Info pult'); // the map's spelling, from the response
+    expect(spot.time, isNull);
+  });
+
+  test('meeting time is zero-padded; an invalid one is not sent', () {
+    Object? body(String? t) => FindApiRepository.meetingSpotRequest('A', t);
+    expect(body('9:05'), {'place': 'A', 'time': '09:05'});
+    expect(body('00:00'), {'place': 'A', 'time': '00:00'});
+    for (final bad in [null, '', '24:00', '12:60', '1530', 'noon']) {
+      expect(body(bad), {'place': 'A'}, reason: '$bad');
+    }
+  });
+
+  test('meeting spot parsing reads the time and ignores a bad one', () {
+    final ok = FindApiRepository.parseMeetingSpot(
+      _fixture('meeting-spot.response.json'),
+    );
+    expect(ok?.place, 'Info pult');
+    expect(ok?.time, '15:20');
+    for (final bad in ['25:00', '9:05', 1520, null]) {
+      final c = {
+        'meetingSpot': {'place': 'Info pult', 'time': bad},
+      };
+      final spot = FindApiRepository.parseMeetingSpot(c);
+      expect(spot?.place, 'Info pult');
+      expect(spot?.time, isNull, reason: '$bad');
+    }
+    expect(FindApiRepository.parseMeetingSpot({'state': 'accepted'}), isNull);
+    expect(FindApiRepository.parseMeetingSpot('x'), isNull);
   });
 
   test('without onboarding the profile is never sent', () async {
@@ -343,7 +401,7 @@ void main() {
             );
         expect(c.read(meetingSpotProvider)?.place, 'info pult');
         await pumpEventQueue();
-        expect(find.spots, [('ev', 'p3', 'info pult')]);
+        expect(find.spots, [('ev', 'p3', 'info pult', '15:20')]);
         final spot = c.read(meetingSpotProvider)!;
         expect(spot.place, 'Info pult');
         expect(spot.time, '15:20');
