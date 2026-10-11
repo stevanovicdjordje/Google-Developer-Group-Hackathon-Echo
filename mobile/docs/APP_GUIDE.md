@@ -47,7 +47,7 @@ mobile/
 | `/e/:eventId/{agenda,map,find,profile}` | Tabs inside `EventShell` (a `StatefulShellRoute.indexedStack`: each tab is a branch kept alive, so state survives tab switches; tab index from URL; branch `initialLocation`s are `/e/_/<tab>` placeholders that are never opened. Navigate tabs with `context.go('/e/{id}/<tab>')`, never `goBranch`. Tab root pages get `key: ValueKey(eventId)` so switching events never shows another event's state) | `features/event/event_shell.dart` + per-tab folders |
 | `/e/:eventId/map/stand/:standId` | Map tab focused on a feature | `features/map/map_tab.dart` |
 | `/e/:eventId/stand/:standId` | redirect → `/map/stand/…` (link format from `team-event-join`) | |
-| `/e/:eventId/find/person/:personId?why=` | Person + contact | `features/find/find_screens.dart` |
+| `/e/:eventId/find/person/:personId?why=` | Person + contact (full screen: `EventShell` hides the bottom nav on this route) | `features/find/find_screens.dart` |
 | `/e/:eventId/session/:sessionId` (+ `/echo`) | Session detail, Echo | `features/agenda/`, `features/echo/echo_screen.dart` |
 | `/e/:eventId/messages/:personId` | Messages (MOCK) + meeting spot | `features/find/find_screens.dart` |
 | `/dev` | Backend/auth status (dev only) | `features/dev/` |

@@ -59,6 +59,11 @@ class _EventShellState extends State<EventShell> {
 
   @override
   Widget build(BuildContext context) {
+    // The person page is full screen in the design (no bottom navigation).
+    final segments = Uri.parse(widget.location).pathSegments;
+    if (segments.length > 3 && segments[3] == 'person') {
+      return Scaffold(body: widget.child);
+    }
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     // Design: 1 px divider on top of the bar, same line icon whether selected

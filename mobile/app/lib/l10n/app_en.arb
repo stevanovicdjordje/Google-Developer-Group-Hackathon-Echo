@@ -153,27 +153,16 @@
     }
   },
   "findTitle": "Find people",
-  "findSearchHint": "Describe who you want to meet…",
-  "findResultsFor": "Results for \"{query}\"",
-  "@findResultsFor": {
-    "placeholders": {
-      "query": {
-        "type": "String"
-      }
-    }
-  },
+  "findSearchHint": "Describe who you want to meet",
   "findSearching": "Searching attendees…",
   "findRecommended": "Recommended for you",
   "findFromInterests": "from your interests",
   "findTopMatch": "Top match",
-  "findResultsCaption": "{count, plural, =1{1 person at {event} fits} other{{count} people at {event} fit}} · only people who opted in",
+  "findResultsCaption": "{count, plural, =1{1 person here fits} other{{count} people here fit}} · only people who opted in",
   "@findResultsCaption": {
     "placeholders": {
       "count": {
         "type": "int"
-      },
-      "event": {
-        "type": "String"
       }
     }
   },
@@ -214,11 +203,33 @@
       }
     }
   },
+  "messagesSpotWhen": "{time} · {floor}",
+  "@messagesSpotWhen": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "floor": {
+        "type": "String"
+      }
+    }
+  },
   "messagesSuggestSpot": "Suggest a meeting spot",
   "messagesMatchedOn": "Matched on {topics}",
   "@messagesMatchedOn": {
     "placeholders": {
       "topics": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesTopicsTwo": "{first} and {second}",
+  "@messagesTopicsTwo": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
         "type": "String"
       }
     }

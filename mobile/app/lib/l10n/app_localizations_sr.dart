@@ -268,12 +268,7 @@ class AppLocalizationsSr extends AppLocalizations {
   String get findTitle => 'Pronađi ljude';
 
   @override
-  String get findSearchHint => 'Opiši koga želiš da upoznaš…';
-
-  @override
-  String findResultsFor(String query) {
-    return 'Rezultati za „$query”';
-  }
+  String get findSearchHint => 'Opiši koga želiš da upoznaš';
 
   @override
   String get findSearching => 'Pretražujem posetioce…';
@@ -288,13 +283,13 @@ class AppLocalizationsSr extends AppLocalizations {
   String get findTopMatch => 'Najbolje poklapanje';
 
   @override
-  String findResultsCaption(int count, String event) {
+  String findResultsCaption(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count osoba na događaju $event odgovara',
-      few: '$count osobe na događaju $event odgovaraju',
-      one: '$count osoba na događaju $event odgovara',
+      other: '$count osoba ovde odgovara',
+      few: '$count osobe ovde odgovaraju',
+      one: '$count osoba ovde odgovara',
     );
     return '$_temp0 · samo osobe koje su pristale';
   }
@@ -336,11 +331,21 @@ class AppLocalizationsSr extends AppLocalizations {
   }
 
   @override
+  String messagesSpotWhen(String time, String floor) {
+    return '$time · $floor';
+  }
+
+  @override
   String get messagesSuggestSpot => 'Predloži mesto sastanka';
 
   @override
   String messagesMatchedOn(String topics) {
     return 'Poklapanje: $topics';
+  }
+
+  @override
+  String messagesTopicsTwo(String first, String second) {
+    return '$first i $second';
   }
 
   @override

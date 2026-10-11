@@ -263,12 +263,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get findTitle => 'Find people';
 
   @override
-  String get findSearchHint => 'Describe who you want to meet…';
-
-  @override
-  String findResultsFor(String query) {
-    return 'Results for \"$query\"';
-  }
+  String get findSearchHint => 'Describe who you want to meet';
 
   @override
   String get findSearching => 'Searching attendees…';
@@ -283,12 +278,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get findTopMatch => 'Top match';
 
   @override
-  String findResultsCaption(int count, String event) {
+  String findResultsCaption(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count people at $event fit',
-      one: '1 person at $event fits',
+      other: '$count people here fit',
+      one: '1 person here fits',
     );
     return '$_temp0 · only people who opted in';
   }
@@ -330,11 +325,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String messagesSpotWhen(String time, String floor) {
+    return '$time · $floor';
+  }
+
+  @override
   String get messagesSuggestSpot => 'Suggest a meeting spot';
 
   @override
   String messagesMatchedOn(String topics) {
     return 'Matched on $topics';
+  }
+
+  @override
+  String messagesTopicsTwo(String first, String second) {
+    return '$first and $second';
   }
 
   @override

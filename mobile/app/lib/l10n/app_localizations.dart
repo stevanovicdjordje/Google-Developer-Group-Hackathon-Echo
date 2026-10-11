@@ -527,14 +527,8 @@ abstract class AppLocalizations {
   /// No description provided for @findSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Describe who you want to meet…'**
+  /// **'Describe who you want to meet'**
   String get findSearchHint;
-
-  /// No description provided for @findResultsFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Results for \"{query}\"'**
-  String findResultsFor(String query);
 
   /// No description provided for @findSearching.
   ///
@@ -563,8 +557,8 @@ abstract class AppLocalizations {
   /// No description provided for @findResultsCaption.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 person at {event} fits} other{{count} people at {event} fit}} · only people who opted in'**
-  String findResultsCaption(int count, String event);
+  /// **'{count, plural, =1{1 person here fits} other{{count} people here fit}} · only people who opted in'**
+  String findResultsCaption(int count);
 
   /// No description provided for @findThinking.
   ///
@@ -620,6 +614,12 @@ abstract class AppLocalizations {
   /// **'Meet at {place}'**
   String messagesMeetAt(String place);
 
+  /// No description provided for @messagesSpotWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · {floor}'**
+  String messagesSpotWhen(String time, String floor);
+
   /// No description provided for @messagesSuggestSpot.
   ///
   /// In en, this message translates to:
@@ -631,6 +631,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Matched on {topics}'**
   String messagesMatchedOn(String topics);
+
+  /// No description provided for @messagesTopicsTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {second}'**
+  String messagesTopicsTwo(String first, String second);
 
   /// No description provided for @messagesAcceptedPill.
   ///

@@ -200,7 +200,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'android');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
-    expect(find.text('Results for "android"'), findsOneWidget);
+    expect(find.textContaining('people here fit'), findsOneWidget);
     await tester.tap(find.text('Ana Petrović').first);
     await tester.pumpAndSettle();
     expect(location(), '/e/event-a/find/person/p1');
@@ -217,7 +217,7 @@ void main() {
     );
     await tapTab('Find');
     expect(location(), '/e/event-b/find');
-    expect(find.text('Results for "android"'), findsNothing);
+    expect(find.textContaining('people here fit'), findsNothing);
     expect(find.text('Recommended for you'), findsOneWidget);
     await tapTab('Agenda');
     expect(find.text('Talk of event-b'), findsOneWidget);
@@ -237,7 +237,7 @@ void main() {
 
     await go('/e/event-b/find');
     expect(location(), '/e/event-b/find');
-    expect(find.text('Results for "android"'), findsNothing);
+    expect(find.textContaining('people here fit'), findsNothing);
     expect(find.text('Recommended for you'), findsOneWidget);
     await tapTab('Agenda');
     expect(location(), '/e/event-b/agenda');

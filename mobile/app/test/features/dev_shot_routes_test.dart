@@ -20,7 +20,7 @@ void main() {
     'person-pending': 'Request sent · waiting for Ana',
     'person-connected': 'Ana accepted · Message',
     'messages-spot': 'Ana Petrović',
-    'find-results': 'Results for "On-device ML on Android"',
+    'find-results': 'Speaker · ML Engineer, Lumen Labs',
     'myevents-live': 'LIVE NOW',
     'organizer-review': 'Review your event',
     'organizer-published': 'PUBLISHED',

@@ -240,11 +240,21 @@ const keynoteDefaultAnswerSr =
     'Na osnovu dosadašnjeg predavanja: Marina glavna poenta je da modeli na uređaju smanjuju trošak i čuvaju privatnost, '
     'a glavni kompromisi su baterija i veličina modela, rešeni grupisanjem i kvantizacijom.';
 
-/// (id, text, votes, mergedCount)
+/// (id, text, votes, mergedCount, mine, voted). Like the design: the second
+/// one is the user's own and already voted for.
 const keynoteQuestions = [
-  ('q1', 'Which model did you use for the hybrid router?', 14, 3),
-  ('q2', 'How do you update on-device models without app releases?', 9, 0),
-  ('q3', 'Does quantization hurt Serbian language quality?', 6, 0),
+  ('q1', 'Which model did you use for the hybrid router?', 14, 3, false, false),
+  ('q2', 'How do you update on-device models without app releases?', 9, 0, true, true),
+  ('q3', 'Does quantization hurt Serbian language quality?', 6, 0, false, false),
+  ('q4', 'What battery hit do you see on older phones?', 4, 0, false, false),
+  ('q5', 'How do you test the small model against the cloud one?', 3, 1, false, false),
+  ('q6', 'What happens to a hard question when the phone is offline?', 3, 0, false, false),
+  ('q7', 'Do you run inference on the GPU or the NPU?', 2, 0, false, false),
+  ('q8', 'How big is the app download with the model inside?', 2, 0, false, false),
+  ('q9', 'Did users notice any quality drop after quantization?', 2, 0, false, false),
+  ('q10', 'Which phones are too old to run the model at all?', 2, 0, false, false),
+  ('q11', 'Any tips for testing on-device models in CI?', 2, 0, false, false),
+  ('q12', 'Would you do it on-device again for a brand new app?', 2, 0, false, false),
 ];
 
 /// A demo question mentioning this is merged into the first one, like the
@@ -277,11 +287,82 @@ const people = [
   Person(id: 'p10', name: 'Vuk Tomić', headline: 'CTO, Mreža', interests: ['Startups', 'Backend', 'Hiring'], lookingFor: 'Mobile engineers to hire'),
   Person(id: 'p11', name: 'Katarina Božić', headline: 'Speech tech PhD student', interests: ['AI / ML', 'Data'], lookingFor: 'Teams building transcription'),
   Person(id: 'p12', name: 'Aleksa Kovačević', headline: 'Junior Android dev', interests: ['Mobile'], lookingFor: 'A mentor in mobile AI'),
+  // The keynote speaker, findable like the attendees (search only).
+  Person(id: 'p13', name: 'Mara Ilić', headline: 'Speaker · ML Engineer, Lumen Labs', interests: ['AI / ML', 'Mobile'], lookingFor: 'Questions about on-device AI after the keynote'),
 ];
+
+/// People who are speakers: they show up in search results, not in
+/// "Recommended for you".
+const speakerPersonIds = {'p13'};
+
+/// Hand-written "why you should meet" lines, as the AI would write them
+/// (`Match.why` in `contracts/find`).
+const fitLines = <String, String>{
+  'p1': 'You both care about mobile and AI. Ana is looking for people who shipped on-device ML, which is exactly your project.',
+  'p2': 'Building a parking app and looking for a technical co-founder. Worth a coffee if you have ever thought about starting something.',
+  'p3': "Works on speech models and wants industry partners. Good fit if you're building transcription.",
+  'p4': 'Leads the backend team at Nebo Cloud and is hiring senior Go engineers.',
+  'p5': 'Runs product at Kvadrat and wants designers who are curious about AI products.',
+  'p6': 'Builds iOS and Flutter apps for clients and is always up for an interesting side project.',
+  'p7': 'Runs data pipelines at Orbita and wants to swap notes on running LLMs on a budget.',
+  'p8': 'Works on security and wants to hear how teams keep their AI features safe.',
+  'p9': 'Looking for mobile devs to prototype AI features with.',
+  'p10': "Hiring mobile engineers for Mreža. Good to know if you're open to a move.",
+  'p11': 'Researches speech tech and wants to meet teams building transcription.',
+  'p12': 'Junior Android dev looking for a mentor in mobile AI. You could help a lot.',
+  'p13': "Gave today's keynote on on-device AI. Open to questions after 15:00.",
+};
+
+/// Tie-break order for "Recommended for you" (people with the same number of
+/// shared interests): the design shows Ana, Teodora, Nina first.
+const recommendationOrder = ['p1', 'p3', 'p9', 'p11', 'p12', 'p2', 'p6', 'p7', 'p10', 'p4', 'p5', 'p8'];
+
+/// Canned AI search results: a prompt containing any of the keywords gets
+/// these people, in this order, with this copy. Other prompts fall back to
+/// keyword matching with [fitLines].
+const demoSearches = <(List<String>, List<(String, String)>)>[
+  (
+    ['on-device', 'android', 'ml', 'model'],
+    [
+      ('p1', 'Shipped a quantized on-device model in a banking app last year. Looking to compare notes with others who did the same.'),
+      ('p11', 'Runs small speech models on phones for her research. Wants to meet teams building transcription.'),
+      ('p13', "Gave today's keynote on on-device AI. Open to questions after 15:00."),
+    ],
+  ),
+  (
+    ['co-founder', 'cofounder', 'founder', 'startup'],
+    [
+      ('p2', 'Building ParkIt and looking for a technical co-founder. He has paying pilots and needs someone to own the app.'),
+      ('p10', 'Started Mreža two years ago and is happy to talk about finding a co-founder, and about hiring.'),
+    ],
+  ),
+  (
+    ['design', 'designer', 'ux'],
+    [
+      ('p9', 'Designs AI features at Talas AI and wants mobile devs to prototype them with.'),
+      ('p5', 'Product manager at Kvadrat, looking for designers who are curious about AI products.'),
+      ('p6', 'Freelances in iOS and Flutter with a strong eye for design. Open to side projects.'),
+    ],
+  ),
+  (
+    ['hire', 'hiring', 'job', 'recruit'],
+    [
+      ('p10', 'Hiring mobile engineers for Mreža right now.'),
+      ('p4', 'Hiring senior Go engineers for the backend team at Nebo Cloud.'),
+    ],
+  ),
+];
+
+/// Floor the demo places are on when the venue map isn't loaded (the seeded
+/// map has a single ground floor).
+const demoFloorName = 'Ground floor';
+
+/// Meeting time agreed in [demoMessages].
+const demoMeetingTime = '15:20';
 
 /// Hardcoded conversation for the mock Messages screen (see docs/MVP.md).
 const demoMessages = [
-  (false, 'Hi! Saw your request — I\'d love to compare notes on on-device ML.'),
-  (true, 'Great! I\'m working on a hybrid router like the one from the keynote.'),
+  (false, 'Hi! Saw your request. I\'d love to compare notes on on-device ML.'),
+  (true, 'Great! I\'m building a hybrid router like the one from the keynote.'),
   (false, 'Nice. I\'m free after the panel, around 15:20?'),
 ];

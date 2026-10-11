@@ -243,8 +243,16 @@ class DemoEchoRepository implements EchoRepository {
   ) async {
     await _think(300);
     return [
-      for (final (id, text, votes, merged) in demo.keynoteQuestions)
-        SpeakerQuestion(id: id, text: text, votes: votes, mergedCount: merged),
+      for (final (id, text, votes, merged, mine, voted)
+          in demo.keynoteQuestions)
+        SpeakerQuestion(
+          id: id,
+          text: text,
+          votes: votes,
+          mergedCount: merged,
+          mine: mine,
+          voted: voted,
+        ),
     ];
   }
 
@@ -258,7 +266,7 @@ class DemoEchoRepository implements EchoRepository {
   ) async {
     await _think(400);
     if (text.toLowerCase().contains(demo.keynoteMergeKeyword)) {
-      final (id, original, votes, merged) = demo.keynoteQuestions.first;
+      final (id, original, votes, merged, _, _) = demo.keynoteQuestions.first;
       return QuestionSubmission(
         SpeakerQuestion(
           id: id,
@@ -338,31 +346,55 @@ class DemoEchoRepository implements EchoRepository {
 }
 
 class DemoFindRepository implements FindRepository {
+  /// Most shared interests first, ties in [demo.recommendationOrder]; the
+  /// reasons are the hand-written [demo.fitLines]. Speakers are left out.
   @override
   Future<List<PersonMatch>> recommendations(String eventId, Profile me) async {
     await _think(1500);
     final mine = me.interests.toSet();
-    final scored = [
-      for (final p in demo.people)
-        (p, p.interests.where(mine.contains).length),
-    ]..sort((a, b) => b.$2.compareTo(a.$2));
+    int rank(String id) {
+      final i = demo.recommendationOrder.indexOf(id);
+      return i < 0 ? demo.recommendationOrder.length : i;
+    }
+
+    final scored =
+        [
+          for (final p in demo.people)
+            if (!demo.speakerPersonIds.contains(p.id))
+              (p, p.interests.where(mine.contains).length),
+        ]..sort((a, b) {
+          final byScore = b.$2.compareTo(a.$2);
+          return byScore != 0
+              ? byScore
+              : rank(a.$1.id).compareTo(rank(b.$1.id));
+        });
     return [
-      for (final (p, score) in scored.take(5))
-        PersonMatch(
-          person: p,
-          why: score > 0
-              ? 'You both care about ${p.interests.where(mine.contains).join(' and ')}. '
-                    '${p.name.split(' ').first} is looking for: ${_lowerFirst(p.lookingFor)}.'
-              : '${p.name.split(' ').first} is looking for: ${_lowerFirst(p.lookingFor)}.',
-        ),
+      for (final (p, _) in scored.take(3)) PersonMatch(person: p, why: _fit(p)),
     ];
   }
 
+  /// A canned result set from [demo.demoSearches] when the prompt mentions
+  /// one of its keywords, otherwise people whose profile mentions the
+  /// prompt's words.
   @override
   Future<List<PersonMatch>> search(String eventId, String prompt) async {
     await _think(1700);
-    final words = prompt
-        .toLowerCase()
+    final text = prompt.toLowerCase();
+    for (final (keywords, results) in demo.demoSearches) {
+      if (keywords.any(
+        (k) =>
+            RegExp('(^|[^a-z])${RegExp.escape(k)}(\$|[^a-z])').hasMatch(text),
+      )) {
+        return [
+          for (final (id, why) in results)
+            PersonMatch(
+              person: demo.people.firstWhere((p) => p.id == id),
+              why: why,
+            ),
+        ];
+      }
+    }
+    final words = text
         .split(RegExp(r'[^a-zšđčćž0-9]+'))
         .where((w) => w.length > 2)
         .toSet();
@@ -380,14 +412,14 @@ class DemoFindRepository implements FindRepository {
         ),
     ]..sort((a, b) => b.$2.compareTo(a.$2));
     return [
-      for (final (p, score) in scored.where((s) => s.$2 > 0).take(4))
-        PersonMatch(
-          person: p,
-          why: '${p.headline}. Matches "$prompt" on $score '
-              '${score == 1 ? 'point' : 'points'}; looking for: ${_lowerFirst(p.lookingFor)}.',
-        ),
+      for (final (p, _) in scored.where((s) => s.$2 > 0).take(3))
+        PersonMatch(person: p, why: _fit(p)),
     ];
   }
+
+  String _fit(Person p) =>
+      demo.fitLines[p.id] ??
+      '${p.headline}. Looking for ${_lowerFirst(p.lookingFor)}.';
 
   @override
   Future<Person> person(String eventId, String personId) async =>
@@ -420,10 +452,7 @@ class DemoOrganizerRepository implements OrganizerRepository {
   @override
   Future<PublishedLink> publish(EventDraft draft) async {
     await _think(1000);
-    return PublishedLink(
-      eventId: demoEventId,
-      url: '$linkBase/e/$demoEventId',
-    );
+    return PublishedLink(eventId: demoEventId, url: '$linkBase/e/$demoEventId');
   }
 }
 

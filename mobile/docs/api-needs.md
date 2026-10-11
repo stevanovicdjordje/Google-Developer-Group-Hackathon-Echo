@@ -38,7 +38,7 @@ Auth for all of them: `Authorization: Bearer <Firebase ID token>` (`team-auth`).
 | API-12 | Organizer → Build with AI | `OrganizerRepository.extract` | `POST /v1/organizer/drafts` (multipart files) | → `{name, dates, venue, stages[], sessions[], speakers[]}` extracted by AI from unstructured files (PDF, DOCX, XLSX, images). Precomputing the result for the demo files is OK if the model is slow. |
 | API-13 | Organizer → Publish | `OrganizerRepository.publish` | `POST /v1/organizer/drafts/{id}/publish` | → `{eventId, url}`. Should create/publish the event in the same place `contracts/maps` publishes the venue, so the join link and the Map tab use one `eventId`. |
 | API-14 | My events, Profile | (client state today) | `GET /v1/me/events`, `PUT /v1/me/profile` | Joined events; profile + consent switches `{name, headline, interests, lookingFor, visibleInFind, allowContact, shareMeetingSpot}` |
-| API-15 | Messages → meeting spot | (client state today) | `PUT /v1/events/{e}/contacts/{personId}/meeting-spot` | `{place}` (a feature name from the venue map). Messages themselves stay **mocked** (`docs/MVP.md`). |
+| API-15 | Messages → meeting spot | (client state today) | `PUT /v1/events/{e}/contacts/{personId}/meeting-spot` | `{place}` (a feature name from the venue map). Messages themselves stay **mocked** (`docs/MVP.md`). The app's `MeetingSpot` also keeps `time` ("HH:mm") and `floor` (map floor name) for the card's "15:20 · Ground floor" line; both are app-only (the floor comes from the published map; a meeting time is not in `contracts/find` 0.1.0, ask if it should be). |
 
 ## AI notes
 
