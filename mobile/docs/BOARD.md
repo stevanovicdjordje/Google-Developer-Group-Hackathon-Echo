@@ -29,12 +29,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | M-29 | dev | 03:26 | worktree | Agenda/session + Start/My events/Profile/Onboarding copy (V-3 #4, #8) |
 | M-30 | opus | 03:26 | worktree | Find/Person/Messages + demo data (V-3 #5, #6) |
 | M-19 | dev | resumed | worktree | map detail sheet (mobile#8 done) |
-| M-26b | verifier | 03:26 | — | app-side Echo on Gemma check |
+| M-32 | dev | now | worktree | `/e/devfest/...` → `/e/<DEMO_EVENT_ID>/...` redirect (found by M-26b) |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-26b | App on real Echo: `/e/<backend id>/session/s1/echo` shows the server transcript; app sends `language` per echo 0.3.1; no model name in the UI. Bug: `/e/devfest/...` ignores `DEMO_EVENT_ID` → M-32 | verification |
 | V-3 | Every state vs design: no errors/overflow; all match or minor gaps → M-28…M-31. Screenshots/renders in the session scratchpad (not kept) | verification |
 | M-24 | `/dev/shot/<state>` (14 states + index) behind `DEV_ROUTES` (default on); `EchoScreen.startTranslated`, `FindScreen.initialPrompt` hooks. Not covered: Echo AI-answer card, Jump-to-live, organizer edit sheet, spot-picker sheet | `8b358ea` |
 | M-25 | Saved `devsummit` joined event migrates to `devfest` (deduped, written back once); session "Echo is on" card only when `Session.isLive`. Follow-up: export the legacy id from repositories.dart; a `hasEcho` flag if past talks with transcripts should show it | `600a12c` |
