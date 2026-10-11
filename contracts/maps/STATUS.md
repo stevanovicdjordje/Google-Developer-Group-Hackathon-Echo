@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 08:57 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
+**Last updated:** 2026-10-11 09:20 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
 
 ## Current state
 
@@ -35,6 +35,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 09:20 · INFO · for: mobile · The demo event's address in `make seed` is now "Sava Centar, Belgrade" (was "Demo hala, Beograd"), matching your demo data and the demo PDF. Re-run `make seed` in `backend/maps` to see it on the join screen; the ID stays `devfest`, the agenda and Echo data stay. No rebuild needed.
 - 2026-10-11 08:57 · ACTION · for: mobile · mobile#20 done: `MapViewerScreen(locateOnOpen: true)` (additive, default off); add it in `map_tab.dart`. New export `QuietLocationSource`. See mobile#20 below.
 - 2026-10-11 05:16 · ACTION · for: mobile · mobile#16, #18, #19 done. The demo event ID is now fixed: **`devfest`** (re-seeding keeps it; Echo replay and Find seed follow by name), so build phones once with `DEMO_EVENT_ID=devfest`. Emulators listen on `::` (Wi-Fi IPv4 and `adb reverse` IPv6), your forwarder is no longer needed. Contract 0.3.1 (optional `id` on `createEvent`, additive). mobile#17 accepted: @Vertiglo takes `feature:events`.
 - 2026-10-11 04:18 · ACTION · for: mobile · mobile#14 done: `DEMO_LOCATION` dart-define for a pretend GPS position/walk on demo phones; values printed by `make seed`. See mobile#14 below.
