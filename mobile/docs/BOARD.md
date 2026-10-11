@@ -27,6 +27,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-58 | Join button spinner while joining (Semantics label); a failed join resets the button | `35debc8` |
 | M-54 | integration_test 6/6 on the Galaxy again: on device `pumpAndSettle` returned before the demo join's 400 ms delay (Join shows no spinner), so flows continued from the Join screen. Harness `pumpUntil`/`waitForJoin` in `test/flows/flow_helpers.dart` | `d06d23c` |
 | M-55 | Agenda: sessions without a stage → no empty chip, no stray "·", no "Show on map"; review Publish with flagged rows/issues → "Publish anyway" / "Review" dialog | `9e44929` |
 | M-56 | Events live: demo-only events (`demoOnlyEventIds`) the server doesn't list are dropped from My events (not persisted), no server `leave` for them; `EventRepository.isLive`. Briefly visible at start until `listMyEvents` returns | `5dc6d80` |
