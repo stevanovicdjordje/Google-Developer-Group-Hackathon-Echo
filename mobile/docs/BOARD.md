@@ -10,8 +10,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| V-3 | Verifier: screenshot every `/dev/shot/<state>` (+ main routes) and compare with `mobile/docs/design/` v1+v2; gaps → tasks | M | verifier | none | Next after M-24 |
 | M-26 | Echo on real Gemma — API part verified 2026-10-11: `/healthz` → `gemma-4-26b-a4b-it`; ask (en 2 s, sr via body `language`), catch-up `?language=sr`, translate sr (50 lines, 13 s) all answer from Gemma on the replayed keynote. Left: app-side look (build with `DEMO_EVENT_ID=ik6vmvjr7wlektj6`, Echo route shows server transcript) after V-3 | S | verifier | none | Emulator data was not persisted: re-seeded, event now `ik6vmvjr7wlektj6`, keynote replayed `-instant`. Key lives only in git-ignored `backend/echo/.env`. |
+| M-31 | Organizer polish (V-3 #7): "✦ Extracted from 3 files" overline, flag "Designing for crowded rooms" (seed), short link display `eho.app/e/<id>`, "Copy"; shot routes for upload files-chosen + progress | S | dev | `features/organizer/`, `data/demo_data.dart`, `features/dev/` | After M-30 (demo_data) and M-28 (dev shots) |
 | M-23 | Wire `FindRepository` to the Find API (API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, profile/consent) | M | opus | `data/` | Blocked on `contracts/find/openapi.yaml` (feature:find → @Vertiglo, `mobile#12`, `team-find-holder`). Keep demo data until then. |
 | M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
 
@@ -26,12 +26,16 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| — | | | | |
+| M-28 | dev | 03:26 | worktree | Echo polish (V-3 #1–3, #9 echo part) + shots.sh USE_ECHO_API |
+| M-29 | dev | 03:26 | worktree | Agenda/session + Start/My events/Profile/Onboarding copy (V-3 #4, #8) |
+| M-30 | opus | 03:26 | worktree | Find/Person/Messages + demo data (V-3 #5, #6) |
+| M-26b | verifier | 03:26 | — | app-side Echo on Gemma check |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| V-3 | Every state vs design: no errors/overflow; all match or minor gaps → M-28…M-31. Screenshots/renders in the session scratchpad (not kept) | verification |
 | M-24 | `/dev/shot/<state>` (14 states + index) behind `DEV_ROUTES` (default on); `EchoScreen.startTranslated`, `FindScreen.initialPrompt` hooks. Not covered: Echo AI-answer card, Jump-to-live, organizer edit sheet, spot-picker sheet | `8b358ea` |
 | M-25 | Saved `devsummit` joined event migrates to `devfest` (deduped, written back once); session "Echo is on" card only when `Session.isLive`. Follow-up: export the legacy id from repositories.dart; a `hasEcho` flag if past talks with transcripts should show it | `600a12c` |
 | M-22 | maps#3: `USE_EMULATORS=false` builds take `FIREBASE_API_KEY`/`APP_ID`/`PROJECT_ID` (+ optional sender id, auth domain, storage bucket) from `--dart-define` | `c192f2a` |
