@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 import '../config.dart';
 import 'clear_auth_session_stub.dart'
@@ -10,13 +11,22 @@ import 'clear_auth_session_stub.dart'
 /// Options for the local `demo-eho` emulator project. Not secrets: demo
 /// projects only work against the emulators. A real project is configured
 /// with `--dart-define=FIREBASE_*` (see [realFirebaseOptions]).
-const _demoOptions = FirebaseOptions(
-  apiKey: 'demo-api-key',
-  appId: '1:000000000000:web:0000000000000000000000',
+///
+/// The native iOS SDK validates the option formats at startup and aborts on
+/// a web app id or a short API key, so iOS gets correctly shaped (still fake)
+/// values; the emulators accept anything.
+FirebaseOptions get _demoOptions => FirebaseOptions(
+  apiKey: _isIOS ? 'Ademo-key-for-local-emulators-only00000' : 'demo-api-key',
+  appId: _isIOS
+      ? '1:000000000000:ios:0000000000000000000000'
+      : '1:000000000000:web:0000000000000000000000',
   messagingSenderId: '000000000000',
   projectId: 'demo-eho',
   storageBucket: 'demo-eho.appspot.com',
+  iosBundleId: 'rs.eho.eho',
 );
+
+bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
 // Ports must match backend/firebase/firebase.json.
 const _authPort = 9099;
