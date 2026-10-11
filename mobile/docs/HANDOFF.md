@@ -2,11 +2,11 @@
 
 Rewritten by the orchestrator at the end of every session. The next orchestrator reads this right after syncing (`mobile/docs/WORKFLOW.md` §1).
 
-**Last session:** 2026-10-11 ~01:30, second orchestrator session (@Ilij4n). Ran batch 1 (M-1…M-8), M-9 + M-15 (maps follow-ups), M-11 (English UI), M-12 (live map verified), M-16 (QR flow through join).
+**Last session:** 2026-10-11, second orchestrator session (@Ilij4n): batch 1 (M-1…M-9, M-11, M-12, M-15, M-16), Echo on the real API (M-18, M-21), the full design pass (M-10a–g, M-20), DevFest rename (M-17).
 
 ## State in one paragraph
 
-The whole demo flow from `docs/MVP.md` runs in `mobile/app` on demo data. Batch 1 added: state persisted across reloads (shared_preferences), tabs keep state (`StatefulShellRoute.indexedStack`, keyed by eventId), organizer session edit sheet, Echo "Ask about this" + "Jump to live", emulator banner hidden on web, Profile → For organizers (`/organizer`, map editor `/o` mounted from `eho_maps`), meeting spot shown as a labelled pin on the map (M-9), location permissions for native GPS (M-15), English UI with all strings in ARB (M-11, `product-ui-language`), QR `?at=` kept through join (M-16). Map tab verified against the live `backend/maps` (M-12). 20/20 tests. `flutter analyze` clean, 18/18 tests, verifier screenshots of 10 routes all OK. The venue map still hasn't been seen against a live backend on this machine. `feature:echo` (@MilosBG03) now owns the Echo server + contract (API-4…8, translation); the Echo screens stay with mobile and will switch to their API via `EchoRepository` once `contracts/echo/openapi.yaml` lands. Join/agenda/Find/organizer endpoints (rest of `mobile#5`) still have no backend owner.
+The whole demo flow runs in `mobile/app` in the human's design (`mobile/docs/design/`, v1 + v2; theme tokens + bundled fonts in `core/theme.dart`, shared widgets in `core/ui/`), English UI with every string in ARB. Demo event: "DevFest Belgrade 2026" (`devfest`; old `devsummit` links alias). Echo runs on the real Echo API (feature:echo, contract 0.3.0: Firestore transcript, catch-up, ask, Q&A with votes + merged questions, structured summary with time links, Serbian via `language=sr`), demo data as fallback. The Map tab runs on the live maps backend (seeded event `v7y6hpytx3iyhhvd`): plan, `?at=` dot, routes, meeting-spot highlight. `flutter analyze` clean, 60/60 tests. Join/agenda/Find/organizer still on demo data: no backend owner (`mobile#5`).
 
 ## In flight
 
@@ -14,20 +14,19 @@ Nothing. No worker branches open. The maps emulators + API may still be running 
 
 ## Next up
 
-- M-10 design pass as soon as the human has a design (opus; touches `core/theme.dart` + all screens: no parallel screen work).
-- Wire `EchoRepository` to `contracts/echo/openapi.yaml` when feature:echo publishes it.
-- M-17 demo-event naming, together with the demo-video script.
+- M-19 map detail sheet when feature:maps answers `mobile#8`; apply their `mobile#10` polish when it lands (nothing for mobile to do unless the API changes).
+- After feature:echo renames the replay event (`mobile#11`) and maps renames the seed (`mobile#10`): re-seed (`make seed`), re-run `make replay`, rebuild with the new `DEMO_EVENT_ID`, and do a full demo run-through with a verifier (Echo overlays, meeting spot pin, QR flow).
+- Before the video: run Echo with `GEMINI_API_KEY` on the Echo service (otherwise answers are extractive and English).
 
 ## Waiting on the human (ask only if a ready task depends on it)
 
-- Design (M-10): the human runs `/design-login` and makes the design himself. **Don't ask him about it again.** He wants it to build on the existing navigation skeleton.
+- Design: done and applied. If he re-exports the canvas into `mobile/docs/design/`, treat it as a new version (diff frames, add tasks).
 - 🧭 Who owns the backend (stevanovicdjordje or the 4th teammate)? Not mobile's call, but blocks M-13.
 
 ## Waiting on teammates
 
 - `mobile#5` (backend endpoints): no backend holder registered yet.
-- `mobile#7` (feature:maps: English map screens for the video): open.
-- feature:echo contract (`contracts/echo/openapi.yaml`): watch for it at each sync, then add a task to wire `EchoRepository` to it.
+- `mobile#8` (maps: route to the selected stage + app-provided sheet content → M-19), `mobile#10` (maps: DevFest seed name, map chrome + `/o` polish), `mobile#11` (echo: DevFest replay name): open.
 
 ## Human preferences (important)
 
