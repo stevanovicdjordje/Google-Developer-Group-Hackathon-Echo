@@ -11,9 +11,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
 | M-26 | Echo on real AI — API part verified: Gemini (`gemini-3.8-flash`) for ask/catch-up/summary, Gemma (`gemma-4-26b-a4b-it`) for translate (echo 0.3.1, `efb51cc`); ask en/sr, catch-up sr, translate sr OK on the replayed keynote. App-side check = M-26b | S | verifier | none | Emulator data isn't persisted: re-seeded, event `ik6vmvjr7wlektj6`, keynote replayed `-instant`. Key only in git-ignored `backend/echo/.env`. |
-| M-31 | Shot-route fixes from M-30 (`_personWhy` → `demo.fitLines['p1']`; `_Spot` = Info pult + `demoMeetingTime`/`demoFloorName`; `_openQuestions` uses seeded questions as-is) + Organizer polish (V-3 #7): "✦ Extracted from 3 files" overline, flag "Designing for crowded rooms" (seed), short link display `eho.app/e/<id>`, "Copy"; shot routes for upload files-chosen + progress | S | dev | `features/organizer/`, `data/demo_data.dart`, `features/dev/` | After M-30 (demo_data) and M-28 (dev shots) |
 | M-34 | Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
-| M-35 | Small follow-ups: repositories.dart `_legacyDemoEventId` → `demoEventAliases`; from M-29: Agenda subtitle "<event> · Day N" (day of the selected/today's day) instead of dates; "Live · Day N" computed; Profile "Talk summaries" shows "Premium" badge like the frame; past-event "N summaries unlocked" needs event-attributable unlocked summaries (data/) | S | dev | `features/agenda/`, `features/join/`, `features/profile/`, maybe `data/app_state.dart` | After M-30/M-33 if data/ needed |
+| M-35 | Small follow-ups: `DemoOrganizerRepository.extract` should flag `organizerFlaggedSessionId` (s3) so the real demo flow shows the flagged row; `shots.sh` forward `LINK_BASE`; repositories.dart `_legacyDemoEventId` → `demoEventAliases`; from M-29: Agenda subtitle "<event> · Day N" (day of the selected/today's day) instead of dates; "Live · Day N" computed; Profile "Talk summaries" shows "Premium" badge like the frame; past-event "N summaries unlocked" needs event-attributable unlocked summaries (data/) | S | dev | `features/agenda/`, `features/join/`, `features/profile/`, maybe `data/app_state.dart` | After M-30/M-33 if data/ needed |
 | M-23 | Wire `FindRepository` to the Find API (API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, profile/consent) | M | opus | `data/` | Unblocked: find 0.1.0 (`106f9c2`), service `backend/find` :8083 not running yet → build against fixtures, keep demo fallback. Run after M-30 (same files). |
 
 ## Blocked
@@ -28,12 +27,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
 | M-23 | opus | 03:46 | worktree | Find API wiring (data/, config) |
-| M-31 | dev | 03:46 | worktree | organizer + shot fixes |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-31 | Organizer: "✦ Extracted from N files", short join link (`LINK_BASE` define, else host), "Copy", upload shots `organizer-upload-files`/`-progress`; dev shots use new demo data (fit line, Info pult 15:20, seeded questions) | `64be061` |
 | M-33 | Stand links keep `?at=` → map `markerId`; `data/demo_ids.dart` `demoEventAliases`; saved `devfest`/`devsummit` joins migrate to `DEMO_EVENT_ID` (`demoEventIdProvider`). Left: repositories.dart private `_legacyDemoEventId` → use `demoEventAliases` (M-35) | `96e428c` |
 | M-30 | Find/Person/Messages: natural fit lines + canned prompt results (Mara as speaker), top-3 recs, caption one line, Person without bottom nav (`event_shell.dart`), Messages "Matched on …" + spot "15:20 · Ground floor" (`MeetingSpot.time/floor`, app-only), 12 Echo demo questions | `59d3507` |
 | M-19 | Map stage sheet (MapDetail v2): room + capacity + floor, walk time from route, NOW/NEXT session → session page, Start route, Open Echo (live only); non-stage places keep the default sheet. Live shots of Glavna sala / Sala A / Info pult | `66c037b` |
