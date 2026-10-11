@@ -23,12 +23,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | --- | --- | --- | --- | --- |
 | M-54 | opus | 07:36 | worktree | integration_test 0/6 on the Galaxy (host 6/6): flow 1 path `/e/devfest?at=m1` vs `/map?at=m1`, tab labels "Profile"/"Find" not found, "Meet at Glavna sala" not found. Files: test/flows/**, integration_test/** |
 | M-55 | dev | 07:36 | worktree | Agenda: no empty stage chip / leading "·" for sessions without a room; review Publish with flagged rows → confirm dialog. Files: agenda_screens.dart, organizer_screens.dart, ARB |
-| M-56 | dev | 07:36 | worktree | Events live: hide demo-only events (AI Meetup Novi Sad) from My events, no server leave for them. Files: events_api_repository.dart, app_state.dart, repositories.dart, demo_ids.dart |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-56 | Events live: demo-only events (`demoOnlyEventIds`) the server doesn't list are dropped from My events (not persisted), no server `leave` for them; `EventRepository.isLive`. Briefly visible at start until `listMyEvents` returns | `5dc6d80` |
 | V-7 | Galaxy A55 on local `devfest`: live smoke PASS (join, agenda 7 sessions, My events/leave, Echo ask ~6 s + translate sr, map you-are-here/route, Find server people + search ~4 s + contact + spot, organizer upload → draft ~5 s → publish → attendee agenda, M-46 status bar/keyboard). No exceptions, no 4xx/5xx. Found: integration_test 0/6 on device (→ M-54), empty stage after publishing a flagged row (→ M-55), demo-only event in My events with live API (→ M-56). Echo ENDED vs agenda LIVE: replay finished (re-run replay before the video) | verification |
 | M-45 | Other person's meeting spot: `FindRepository.listContacts` → `Contact.meetingSpot`, `MeetingSpotNotifier.loadFromContacts` (server wins), Messages watches `contactSpotSyncProvider` | `3dce367` + `f1adf62` |
 | M-53 | Dev shots `echo-answer`, `echo-jump-live`, `messages-spot-picker` (optional hooks in EchoScreen/MessagesScreen) | `45434e3` |
