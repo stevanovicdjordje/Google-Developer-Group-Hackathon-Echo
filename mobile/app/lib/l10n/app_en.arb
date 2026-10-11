@@ -226,6 +226,13 @@
   },
   "findThinking": "Finding your best matches…",
   "findNoMatches": "No one matches yet. Try describing it differently.",
+  "findErrorOffline": "Find can't be reached. Check your connection and try again.",
+  "findErrorRateLimited": "Too many requests. Wait a few seconds and try again.",
+  "findErrorAiBusy": "Couldn't find matches right now. Try again in a moment.",
+  "findErrorNotFound": "This person is no longer visible in Find.",
+  "findErrorNotAllowed": "This person doesn't accept contact requests.",
+  "findErrorProfileRequired": "Finish your profile to use Find.",
+  "findErrorFailed": "Something went wrong in Find. Try again.",
   "personWhyMeet": "Why you should meet",
   "personSendRequest": "Send contact request",
   "personRequestSent": "Request sent · waiting…",
@@ -247,6 +254,14 @@
   },
   "personAccepted": "{name} accepted · Message",
   "@personAccepted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "personNotAccepting": "{name} doesn't accept contact requests.",
+  "@personNotAccepting": {
     "placeholders": {
       "name": {
         "type": "String"

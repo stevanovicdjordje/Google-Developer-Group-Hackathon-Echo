@@ -19,23 +19,26 @@ const _teodora = Person(
 /// contact state, and failures on demand.
 class _ServiceLike extends DemoFindRepository {
   bool failRecommendations = true;
+  FindErrorKind failKind = FindErrorKind.offline;
+  int recommendationCalls = 0;
+  PersonDetail? detail;
 
   @override
   Future<List<PersonMatch>> recommendations(String eventId, Profile me) async {
-    if (failRecommendations) {
-      throw const FindException(FindErrorKind.offline, 'down');
-    }
+    recommendationCalls++;
+    if (failRecommendations) throw FindException(failKind, 'down');
     return const [PersonMatch(person: _teodora, why: 'Speech models.')];
   }
 
   @override
   Future<PersonDetail?> person(String eventId, String personId) async =>
-      personId == _teodora.id
-      ? const PersonDetail(
-          person: _teodora,
-          contactState: ContactState.accepted,
-        )
-      : null;
+      detail ??
+      (personId == _teodora.id
+          ? const PersonDetail(
+              person: _teodora,
+              contactState: ContactState.accepted,
+            )
+          : null);
 }
 
 Widget _app(Widget home, FindRepository repo) => ProviderScope(
@@ -78,15 +81,124 @@ void main() {
     await tester.pumpWidget(_app(const FindScreen(eventId: 'ev'), repo));
     await tester.pumpAndSettle();
     expect(
-      find.text(
-        'The server is not reachable right now. Check your connection and '
-        'try again.',
-      ),
+      find.text("Find can't be reached. Check your connection and try again."),
       findsOneWidget,
     );
     repo.failRecommendations = false;
     await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
     expect(find.text('Teodora Nikolić'), findsOneWidget);
+  });
+
+  testWidgets('Find explains a rate limit in its own words', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    final repo = _ServiceLike()..failKind = FindErrorKind.rateLimited;
+    await tester.pumpWidget(_app(const FindScreen(eventId: 'ev'), repo));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Too many requests. Wait a few seconds and try again.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Person hints that someone does not accept contact requests', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    final repo = _ServiceLike()
+      ..failRecommendations = false
+      ..detail = const PersonDetail(
+        person: _teodora,
+        contactState: ContactState.none,
+        allowContact: false,
+      );
+    await tester.pumpWidget(
+      _app(
+        const PersonScreen(eventId: 'ev', personId: 'k7Qm2xLp', why: 'x'),
+        repo,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text("Teodora doesn't accept contact requests."), findsOne);
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Send contact request'),
+    );
+    expect(button.onPressed, isNull);
+
+    // With contact allowed there is no hint.
+    repo.detail = const PersonDetail(
+      person: _teodora,
+      contactState: ContactState.none,
+    );
+    final c = ProviderScope.containerOf(
+      tester.element(find.byType(PersonScreen)),
+    );
+    c.invalidate(personDetailProvider(('ev', 'k7Qm2xLp')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining("doesn't accept"), findsNothing);
+  });
+
+  group('recommendations reload', () {
+    Future<(ProviderContainer, _ServiceLike)> setUp(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.5;
+      addTearDown(tester.view.reset);
+      final repo = _ServiceLike()..failRecommendations = false;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            findRepositoryProvider.overrideWithValue(repo),
+            findReloadDelayProvider.overrideWithValue(
+              const Duration(seconds: 2),
+            ),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const FindScreen(eventId: 'ev'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final c = ProviderScope.containerOf(
+        tester.element(find.byType(FindScreen)),
+      );
+      return (c, repo);
+    }
+
+    testWidgets('a burst of ranking edits reloads once, after the delay', (
+      tester,
+    ) async {
+      final (c, repo) = await setUp(tester);
+      expect(repo.recommendationCalls, 1);
+      final p = c.read(profileProvider);
+      for (var i = 0; i < 4; i++) {
+        c
+            .read(profileProvider.notifier)
+            .save(p.copyWith(visibleInFind: i.isEven, interests: ['a$i']));
+        await tester.pump(const Duration(milliseconds: 500));
+      }
+      expect(repo.recommendationCalls, 1);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(repo.recommendationCalls, 2);
+    });
+
+    testWidgets('toggling contact and meeting-spot consents does not reload', (
+      tester,
+    ) async {
+      final (c, repo) = await setUp(tester);
+      final p = c.read(profileProvider);
+      c
+          .read(profileProvider.notifier)
+          .save(p.copyWith(allowContact: true, shareMeetingSpot: true));
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(repo.recommendationCalls, 1);
+    });
   });
 }

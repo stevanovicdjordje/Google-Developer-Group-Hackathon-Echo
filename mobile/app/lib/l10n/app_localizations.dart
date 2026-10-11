@@ -638,6 +638,48 @@ abstract class AppLocalizations {
   /// **'No one matches yet. Try describing it differently.'**
   String get findNoMatches;
 
+  /// No description provided for @findErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Find can\'t be reached. Check your connection and try again.'**
+  String get findErrorOffline;
+
+  /// No description provided for @findErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Wait a few seconds and try again.'**
+  String get findErrorRateLimited;
+
+  /// No description provided for @findErrorAiBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find matches right now. Try again in a moment.'**
+  String get findErrorAiBusy;
+
+  /// No description provided for @findErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This person is no longer visible in Find.'**
+  String get findErrorNotFound;
+
+  /// No description provided for @findErrorNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This person doesn\'t accept contact requests.'**
+  String get findErrorNotAllowed;
+
+  /// No description provided for @findErrorProfileRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish your profile to use Find.'**
+  String get findErrorProfileRequired;
+
+  /// No description provided for @findErrorFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong in Find. Try again.'**
+  String get findErrorFailed;
+
   /// No description provided for @personWhyMeet.
   ///
   /// In en, this message translates to:
@@ -673,6 +715,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} accepted · Message'**
   String personAccepted(String name);
+
+  /// No description provided for @personNotAccepting.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} doesn\'t accept contact requests.'**
+  String personNotAccepting(String name);
 
   /// No description provided for @messagesMeetAt.
   ///

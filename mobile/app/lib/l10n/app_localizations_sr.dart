@@ -347,6 +347,32 @@ class AppLocalizationsSr extends AppLocalizations {
       'Još niko ne odgovara. Pokušaj da opišeš drugačije.';
 
   @override
+  String get findErrorOffline =>
+      'Find trenutno nije dostupan. Proveri internet vezu i pokušaj ponovo.';
+
+  @override
+  String get findErrorRateLimited =>
+      'Previše zahteva. Sačekaj nekoliko sekundi i pokušaj ponovo.';
+
+  @override
+  String get findErrorAiBusy =>
+      'Trenutno ne mogu da pronađem poklapanja. Pokušaj ponovo za trenutak.';
+
+  @override
+  String get findErrorNotFound => 'Ova osoba više nije vidljiva u Find-u.';
+
+  @override
+  String get findErrorNotAllowed => 'Ova osoba ne prima zahteve za kontakt.';
+
+  @override
+  String get findErrorProfileRequired =>
+      'Dovrši profil da bi koristio/la Find.';
+
+  @override
+  String get findErrorFailed =>
+      'Nešto je pošlo naopako u Find-u. Pokušaj ponovo.';
+
+  @override
   String get personWhyMeet => 'Zašto da se upoznate';
 
   @override
@@ -368,6 +394,11 @@ class AppLocalizationsSr extends AppLocalizations {
   @override
   String personAccepted(String name) {
     return '$name je prihvatio/la · Poruka';
+  }
+
+  @override
+  String personNotAccepting(String name) {
+    return '$name ne prima zahteve za kontakt.';
   }
 
   @override
