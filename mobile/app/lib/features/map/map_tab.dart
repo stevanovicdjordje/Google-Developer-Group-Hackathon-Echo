@@ -65,6 +65,9 @@ class _MapTabState extends ConsumerState<MapTab> {
             initialFeatureId: widget.featureId,
             markerId: widget.markerId,
             featureSheetBuilder: _featureSheet,
+            // Shows "you are here" on open when that needs no prompt
+            // (`DEMO_LOCATION`, or permission already granted).
+            locateOnOpen: true,
             highlightFeatureId: spot == null ? null : spotId,
             highlightLabel: spot == null || spotId == null
                 ? null
