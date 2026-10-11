@@ -28,10 +28,9 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-28 | dev | 03:26 | worktree | Echo polish (V-3 #1–3, #9 echo part) + shots.sh USE_ECHO_API |
-| M-29 | dev | 03:26 | worktree | Agenda/session + Start/My events/Profile/Onboarding copy (V-3 #4, #8) |
-| M-30 | opus | 03:26 | worktree | Find/Person/Messages + demo data (V-3 #5, #6) |
-| M-19 | dev | resumed | worktree | map detail sheet (mobile#8 done) |
+| M-23 | opus | 03:46 | worktree | Find API wiring (data/, config) |
+| M-31 | dev | 03:46 | worktree | organizer + shot fixes |
+| M-33 | dev | 03:46 | worktree | router `at`, joined alias (touches app_state joined-events only; M-23 may touch other notifiers) |
 
 ## Done
 
