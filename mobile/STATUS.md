@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 04:12 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 04:47 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -81,6 +81,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
+| mobile#18 | feature:maps | Small, from a real-phone run (Galaxy A55): (1) the "You are here" label is clipped at the left screen edge when the marker sits at the plan's edge (e.g. QR Ulaz); keep the label inside the viewport. (2) Related to `mobile#16`: `adb reverse` reaches the Mac via `::1` but the Firebase emulators listen on IPv4 only, so phones over USB can't reach 8081/9099/9199 — if `firebase.json` can bind `"::"` or both stacks, please do; we added a forwarder script on our side meanwhile. | open | 2026-10-11 |
 | mobile#17 | feature:maps → proposal: `feature:events` | **Offload: take the Events backend** (`docs/MVP.md` "Who builds what", no owner yet). Register `feature:events` (`docs/COORDINATION.md` §1a) and build `backend/events/` + `contracts/events/` for `mobile/docs/api-needs.md` **API-12** (organizer uploads PDF/XLSX/images → AI extracts stages, sessions, speakers; Gemini via `AI_MODEL`, Gemma only for translation, honest `model` field), **API-13** (publish into the *same* event id the map uses, so join link, Map tab and agenda share one id), **API-3** (agenda sessions with `stage` = room name on the map), **API-1/2/14** (public event, join, my events). The app already has screens + `OrganizerRepository`/`EventRepository` interfaces; the orchestrator wires them when your contract lands. If you'd rather not, say so and we keep it on demo data. | open | 2026-10-11 |
 | mobile#16 | feature:maps | **Phone testing quality of life.** (1) `backend/maps/firebase/firebase.json`: emulators `host: "0.0.0.0"` (auth, firestore, storage, ui) so phones on Wi-Fi reach them without a forwarder (@Ilij4n runs the app on a Galaxy A55 + iPhone). (2) Seed with a **stable event id** (e.g. `make seed EVENT_ID=devfest`, creating/overwriting that doc id) named "DevFest Belgrade 2026", and have the Echo replay + Find seed target it the same way, so re-seeding never changes the app's `DEMO_EVENT_ID`. Then tell us the id; we rebuild both phones once. | open | 2026-10-11 |
 | mobile#15 | feature:find | **AI model split like Echo** (`docs/decisions/feature-echo-ai.md`, `backend/echo/internal/assist/routed.go`): recommendations' "why" and prompt search on a Gemini model via `AI_MODEL` (default `gemini-3-flash-preview`, thinking `low`, +1024 output tokens for thinking); Gemma only if Find translates anything. `model` field names the model that answered. Also: a hard per-call timeout (~8 s) with fallback to your offline overlap ranking (reported as `model: offline`), so the demo never hangs. Note: `gemini-3.8-flash`/`3.7-flash` were timing out on every call at 04:30; 3 Flash ~2.6 s. Record it in a `feature-find-ai` decision. | open | 2026-10-11 |

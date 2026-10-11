@@ -23,13 +23,14 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| V-5 | dev (sonnet, medium) | now | worktree | Galaxy A55 (`RZCX511WWLF`): integration_test of 5 flows + live adb smoke (one device worker at a time; iPhone off-limits) |
+| M-41/42 | dev (sonnet, medium) | now | worktree | `scripts/phone_android.sh` + fwd6.py + firebase_init host; onboarding keyboard unfocus (uses the Galaxy) |
 | M-38 | dev (sonnet, medium) | now | worktree | Echo banner overlap |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| V-5 | Galaxy A55: integration_test of all 5 flows pass (`integration_test/`, keep screen on: `adb shell svc power stayon usb`); live smoke OK (Echo ask ~3 s, translate progressive 4–8 s, stage sheet + route, Find server people, contact auto-accept, meeting spot). Found: Android emulator host + IPv6 `adb reverse` (→ M-41), onboarding keyboard (→ M-42), you-are-here label clipped at plan edge (→ mobile#18), agenda s1 LIVE vs Echo ENDED (replay with `-instant`; for the video replay without it) | `8d783d2` |
 | M-40 | Echo pill "Jump to end" on ended talks, "Jump to live" on live | `ac3fcfc` |
 | M-39 | Find `profileRequired` → "Complete profile" (onboarding, retries on return); rate-limit countdown; no auto-retry; shots force demo except new `find-live` (server people seen: Ana Petrović, Sara Uzorić…) | `9077791` |
 | M-38 | Ended Echo talk opens at the top (first line fully under the banner); live talks still follow the edge | `f4204fb` |
