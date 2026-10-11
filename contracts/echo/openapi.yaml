@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Eho Echo API
-  version: 0.3.0
+  version: 0.3.1
   summary: Talk companion (transcript AI, translation, audience Q&A).
   description: |
     Contract between the app's Echo screens (`mobile/app/lib/features/echo`,
@@ -50,7 +50,10 @@ paths:
                   status: { type: string, const: ok }
                   model:
                     type: string
-                    description: AI model in use, or `offline`.
+                    description: AI model behind Ask, Catch up, Summary and question grouping, or `offline`.
+                  translationModel:
+                    type: string
+                    description: AI model behind Translate (may differ from `model`), or `offline`.
   /v1/events/{eventId}/sessions/{sessionId}/ask:
     parameters:
       - $ref: "#/components/parameters/eventId"

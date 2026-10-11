@@ -2,9 +2,9 @@
 
 - **ID:** `feature-echo-ai`
 - **Status:** accepted
-- **Writer:** `feature:echo` holder · @MilosBG03
+- **Writer:** `feature:echo` holder · @MilosBG03 (maintained by @Ilij4n while he is away, `team-echo-holder`)
 - **Affects:** feature:echo (backend/echo); clients only through latency and the `model` field
-- **Created:** 2026-10-11 · **Decided:** 2026-10-11
+- **Created:** 2026-10-11 · **Decided:** 2026-10-11 · **Revised:** 2026-10-11 (per-feature models)
 
 ## Context
 
@@ -21,7 +21,13 @@ covers Echo.
 
 ## Decision
 
-**Gemma via the Gemini API for all four Echo features**, default model `gemma-4-26b-a4b-it` with thinking off
+**Revised 2026-10-11 (@Ilij4n): a Gemini model for Ask, Catch up, Summary and question grouping; Gemma stays on Translation.** Configured by `AI_MODEL` (currently `gemini-3.8-flash`, thinking `low`) and `GEMMA_MODEL` (`gemma-4-26b-a4b-it`) via `assist.Routed`; the API's `model` field reports the model that actually produced each answer (`/healthz` also reports `translationModel`). `AI_MODEL` empty falls back to Gemma for everything.
+
+- Measured 2026-10-11 on the demo keynote (45 lines): Gemini 3.8 Flash gave more precise answers with consistent timestamps and better Serbian at similar latency (Ask 2–5 s, Catch up 2 s, Summary 2.6 s vs Gemma 5.8 s); translation is unchanged (Gemma, ~1.8 s).
+- `gemini-3.1-pro-preview` was the first choice, but the current key is free tier and gets HTTP 429 on every Pro call. With a billed key, set `AI_MODEL=gemini-3.1-pro-preview` (no code change).
+- Gemini 3 models always think and spend output tokens on it, so their calls get +1024 tokens of budget (`OutputPad`); the visible answer is still capped.
+
+Original decision (superseded above for everything but translation): **Gemma via the Gemini API for all four Echo features**, default model `gemma-4-26b-a4b-it` with thinking off
 (`GEMMA_MODEL`, `GEMMA_THINKING=minimal`, so another Gemma can be swapped in without code changes). One adapter (`backend/echo/internal/assist`, `Model` interface)
 so the model or provider can change later. It makes Echo the clearest "meaningful use of Gemma" in the demo, needs no
 hosting, and the transcript is short enough for Gemma's context.

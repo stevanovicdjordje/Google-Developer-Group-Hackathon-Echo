@@ -2,6 +2,15 @@
 
 Echo feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## 0.3.1 — 2026-10-11
+- **Impact:** additive
+- **Affected:** backend/echo (implements); mobile (no action)
+- **Requested by:** @Ilij4n (per-feature models, `feature-echo-ai` revised; maintained per `team-echo-holder`)
+- **Changes:**
+  - ADDED optional `translationModel` on `/healthz`. `model` on AI responses keeps naming the model that produced
+    them: Gemini (`AI_MODEL`) for Ask/Catch up/Summary, Gemma for Translate.
+- **Consumer action:** none.
+
 ## 0.3.0 — 2026-10-11
 - **Impact:** additive
 - **Affected:** backend/echo (implements), mobile (consumes)

@@ -303,13 +303,13 @@ func (s *server) translate(w http.ResponseWriter, r *http.Request, p auth.Princi
 		Lines     []translatedLine `json:"lines"`
 		NextIndex int              `json:"nextIndex"`
 		Model     string           `json:"model"`
-	}{Language: lang, Lines: []translatedLine{}, NextIndex: from + len(window), Model: s.ai.Model()}
+	}{Language: lang, Lines: []translatedLine{}, NextIndex: from + len(window), Model: assist.TranslationModel(s.ai)}
 	if len(window) == 0 {
 		writeJSON(w, http.StatusOK, resp)
 		return
 	}
 
-	cacheLang := s.ai.Model() + "_" + assist.PromptVersion + "_" + lang
+	cacheLang := assist.TranslationModel(s.ai) + "_" + assist.PromptVersion + "_" + lang
 	have, err := s.store.GetTranslations(r.Context(), eventID, sessionID, cacheLang)
 	if err != nil {
 		s.respondErr(w, r, err)

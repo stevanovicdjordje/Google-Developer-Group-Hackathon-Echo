@@ -21,6 +21,10 @@ import (
 	"github.com/Ilij4n/eho/backend/echo/internal/store"
 )
 
+// geminiThinkingPad leaves room for Gemini 3 thinking tokens on top of each
+// call's answer budget (see assist.Gemini.OutputPad).
+const geminiThinkingPad = 1024
+
 func main() {
 	if err := run(); err != nil {
 		slog.Error("fatal", "err", err)
@@ -57,7 +61,14 @@ func run() error {
 
 	var ai assist.Assistant = assist.Offline{}
 	if cfg.GeminiAPIKey != "" {
-		ai = assist.LLM{M: &assist.Gemini{APIKey: cfg.GeminiAPIKey, Model: cfg.Model, Thinking: cfg.Thinking, Timeout: cfg.AITimeout}}
+		gemma := assist.LLM{M: &assist.Gemini{APIKey: cfg.GeminiAPIKey, Model: cfg.Model, Thinking: cfg.Thinking, Timeout: cfg.AITimeout}}
+		ai = gemma
+		if cfg.AIModel != "" {
+			// Gemini for Ask/Catch up/Summary/grouping, Gemma for translation.
+			main := assist.LLM{M: &assist.Gemini{APIKey: cfg.GeminiAPIKey, Model: cfg.AIModel, Thinking: cfg.AIThinking,
+				OutputPad: geminiThinkingPad, Timeout: cfg.AITimeout}}
+			ai = assist.Routed{Main: main, Translator: gemma}
+		}
 	} else {
 		log.Warn("GEMINI_API_KEY is not set: using the offline assistant (quotes the transcript, no real AI)")
 	}
@@ -79,7 +90,7 @@ func run() error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Info("listening", "addr", srv.Addr, "project", cfg.ProjectID, "model", ai.Model(),
+		log.Info("listening", "addr", srv.Addr, "project", cfg.ProjectID, "model", ai.Model(), "translationModel", assist.TranslationModel(ai),
 			"firestoreEmulator", os.Getenv("FIRESTORE_EMULATOR_HOST"),
 			"authEmulator", os.Getenv("FIREBASE_AUTH_EMULATOR_HOST"))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

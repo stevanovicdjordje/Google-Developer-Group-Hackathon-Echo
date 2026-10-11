@@ -34,8 +34,8 @@
 | Echo: transcript | **Build, faked input** | A pre-recorded transcript is replayed as if live. Live speech-to-text is a stretch goal. | — |
 | Echo: translation | **Build** | — | ✅ Gemma |
 | Echo: Q&A | **Build** | — | optional: group similar questions |
-| Echo: Ask the talk | **Build** | — | ✅ answers from the transcript |
-| Talk summary (paid) | **Build** | **Mock** "unlock" button, no real payment | ✅ summary |
+| Echo: Ask the talk | **Build** | — | ✅ Gemini (`feature-echo-ai`) |
+| Talk summary (paid) | **Build** | **Mock** "unlock" button, no real payment | ✅ Gemini (`feature-echo-ai`) |
 | Find: recommendations | **Build** | ~20 fake attendee profiles | ✅ ranking + "why" |
 | Find: prompt search | **Build** | Same fake profiles | ✅ |
 | Contact a match (request → accept) | **Build** | — | — |

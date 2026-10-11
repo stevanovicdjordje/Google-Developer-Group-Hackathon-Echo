@@ -29,9 +29,13 @@ type Gemini struct {
 	// Thinking is sent as thinkingConfig.thinkingLevel when set. Gemma 4 thinks
 	// by default, which costs seconds and tokens; "minimal" turns it off.
 	Thinking string
-	BaseURL  string
-	Timeout  time.Duration
-	HTTP     *http.Client
+	// OutputPad is added to every call's token budget. Gemini 3 models spend
+	// output tokens on thinking first, so short budgets would otherwise come
+	// back empty. The visible answer is still capped by the prompt and CleanText.
+	OutputPad int
+	BaseURL   string
+	Timeout   time.Duration
+	HTTP      *http.Client
 }
 
 const defaultGeminiBaseURL = "https://generativelanguage.googleapis.com/v1beta"
@@ -96,7 +100,7 @@ func (g *Gemini) Generate(ctx context.Context, prompt string, maxTokens int) (st
 	var body geminiRequest
 	body.Contents = []geminiContent{{Role: "user", Parts: []geminiPart{{Text: prompt}}}}
 	body.GenerationConfig.Temperature = 0.2
-	body.GenerationConfig.MaxOutputTokens = maxTokens
+	body.GenerationConfig.MaxOutputTokens = maxTokens + g.OutputPad
 	if g.Thinking != "" {
 		body.GenerationConfig.ThinkingConfig = &thinkingConfig{ThinkingLevel: g.Thinking}
 	}

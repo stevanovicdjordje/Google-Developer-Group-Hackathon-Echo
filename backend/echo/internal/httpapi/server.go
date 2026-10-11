@@ -74,5 +74,5 @@ func NewHandler(opts Options) http.Handler {
 }
 
 func (s *server) handleHealthz(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "model": s.ai.Model()})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "model": s.ai.Model(), "translationModel": assist.TranslationModel(s.ai)})
 }

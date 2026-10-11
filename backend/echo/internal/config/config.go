@@ -25,6 +25,12 @@ type Config struct {
 	Model string
 	// Thinking is the Gemma thinking level ("minimal" = off); empty sends none.
 	Thinking string
+	// AIModel, when set, is the Gemini model for Ask, Catch up, Summary and
+	// question grouping; Translate stays on Model (Gemma). Empty = Model for all.
+	AIModel string
+	// AIThinking is the thinking level sent with AIModel (Gemini 3 can't turn
+	// thinking off; "low" is the fastest).
+	AIThinking string
 	// AITimeout bounds one model call.
 	AITimeout time.Duration
 	// LogLevel is one of debug, info, warn, error.
@@ -42,6 +48,8 @@ func Load() (Config, error) {
 		GeminiAPIKey:    strings.TrimSpace(os.Getenv("GEMINI_API_KEY")),
 		Model:           getenv("GEMMA_MODEL", "gemma-4-26b-a4b-it"),
 		Thinking:        getenv("GEMMA_THINKING", "minimal"),
+		AIModel:         strings.TrimSpace(os.Getenv("AI_MODEL")),
+		AIThinking:      getenv("AI_THINKING", "low"),
 		AITimeout:       20 * time.Second,
 		LogLevel:        getenv("LOG_LEVEL", "info"),
 		ShutdownTimeout: 10 * time.Second,
