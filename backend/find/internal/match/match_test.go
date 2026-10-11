@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 	"unicode/utf8"
 )
 
@@ -255,5 +256,46 @@ func TestGeminiCapsCandidates(t *testing.T) {
 func TestCleanWhy(t *testing.T) {
 	if got := CleanWhy("  **Bold**\tand\n`code` "); got != "Bold and code" {
 		t.Fatalf("%q", got)
+	}
+}
+
+// A slow model hits the hard timeout and the request gets the offline ranking.
+func TestGeminiTimeoutFallsBackToOffline(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+		case <-time.After(2 * time.Second):
+		}
+	}))
+	t.Cleanup(srv.Close)
+	g := &Gemini{APIKey: "key", ModelName: "gemini-test", BaseURL: srv.URL, Timeout: 100 * time.Millisecond,
+		Log: slog.New(slog.NewTextHandler(io.Discard, nil))}
+	start := time.Now()
+	r, err := g.Search(context.Background(), "mobile", people, 8)
+	if err != nil || r.Model != OfflineModel {
+		t.Fatal(r, err)
+	}
+	if d := time.Since(start); d > time.Second {
+		t.Fatalf("took %v", d)
+	}
+}
+
+func TestGeminiOutputPad(t *testing.T) {
+	var got int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req geminiRequest
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		got = req.GenerationConfig.MaxOutputTokens
+		_ = json.NewEncoder(w).Encode(map[string]any{"candidates": []any{map[string]any{
+			"content": map[string]any{"parts": []any{map[string]any{"text": `[{"c":"c1","why":"Fits."}]`}}},
+		}}})
+	}))
+	t.Cleanup(srv.Close)
+	g := &Gemini{APIKey: "key", ModelName: "gemini-test", BaseURL: srv.URL, OutputPad: 1024}
+	if _, err := g.Recommend(context.Background(), ana, people, 1); err != nil {
+		t.Fatal(err)
+	}
+	if got != 120+90+1024 {
+		t.Fatalf("maxOutputTokens = %d", got)
 	}
 }

@@ -57,7 +57,8 @@ func run() error {
 
 	var m match.Matcher = match.Offline{}
 	if cfg.GeminiAPIKey != "" {
-		m = &match.Gemini{APIKey: cfg.GeminiAPIKey, ModelName: cfg.Model, Thinking: cfg.Thinking, Timeout: cfg.AITimeout, Log: log}
+		m = &match.Gemini{APIKey: cfg.GeminiAPIKey, ModelName: cfg.Model, Thinking: cfg.Thinking,
+			OutputPad: cfg.OutputPad, Timeout: cfg.AITimeout, Log: log}
 	} else {
 		log.Warn("GEMINI_API_KEY is not set: using offline overlap ranking (no real AI)")
 	}

@@ -3,7 +3,8 @@
 People to meet at an event: profiles with consent switches, AI-ranked
 recommendations and prompt search, contact requests and an agreed meeting spot
 on the venue map. Implements [`contracts/find/openapi.yaml`](../../contracts/find/openapi.yaml)
-(0.1.0). Go, Firebase Auth ID tokens, Firestore, Gemma through the Gemini API.
+(0.1.0). Go, Firebase Auth ID tokens, Firestore, a Gemini model through the Gemini API
+([`feature-find-ai`](../../docs/decisions/feature-find-ai.md)).
 
 ## Run
 
@@ -28,14 +29,15 @@ requests at once, so the whole flow works in the demo.
 | `FIREBASE_PROJECT_ID` | (required) | `demo-eho` locally |
 | `ALLOWED_ORIGINS` | `http://localhost:*,http://127.0.0.1:*` | CORS; `:*` = any port |
 | `GEMINI_API_KEY` | empty | empty = offline overlap ranking (`model: offline`) |
-| `GEMMA_MODEL` | `gemma-4-26b-a4b-it` | |
-| `GEMMA_THINKING` | `minimal` | |
-| `AI_TIMEOUT_SECONDS` | `20` | one model call |
+| `AI_MODEL` | `gemini-3-flash-preview` | any Gemini API model; `gemma-*` also works |
+| `AI_THINKING` | `low` (`minimal` for `gemma-*`) | Gemini 3 calls get +1024 output tokens for thinking |
+| `AI_TIMEOUT_SECONDS` | `8` | one model call, retries included; then offline ranking |
 | `LOG_LEVEL` | `info` | |
 
 Recommendations and search share a per-user token bucket (burst 20, 20/min)
 → `429 rate_limited` with `Retry-After`. Any model failure or invalid output
-falls back to offline ranking for that request.
+falls back to offline ranking for that request (`model: offline`), so the
+demo never waits more than ~8 s.
 
 ## Data (Firestore, Admin SDK only; rules deny clients)
 

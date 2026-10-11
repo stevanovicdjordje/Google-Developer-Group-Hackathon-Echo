@@ -21,7 +21,8 @@ var ErrModel = errors.New("model call failed")
 // errInvalidOutput means the model answered but not with a usable ranking.
 var errInvalidOutput = errors.New("invalid model output")
 
-// Gemini ranks with a Gemma model through the Gemini API (generateContent).
+// Gemini ranks with a model on the Gemini API (generateContent): a Gemini
+// model by default, Gemma also works (docs/decisions/feature-find-ai.md).
 // It never fails a request: on any model error or invalid output it falls
 // back to Offline for that request and reports model "offline".
 type Gemini struct {
@@ -30,10 +31,15 @@ type Gemini struct {
 	// Thinking is sent as thinkingConfig.thinkingLevel when set. Gemma 4 thinks
 	// by default, which costs seconds and tokens; "minimal" turns it off.
 	Thinking string
-	BaseURL  string
-	Timeout  time.Duration
-	HTTP     *http.Client
-	Log      *slog.Logger
+	// OutputPad is added to every call's token budget. Gemini 3 models spend
+	// output tokens on thinking first, so short budgets would come back empty.
+	OutputPad int
+	BaseURL   string
+	// Timeout bounds one call including retries; the request then gets the
+	// offline ranking, so the demo never hangs.
+	Timeout time.Duration
+	HTTP    *http.Client
+	Log     *slog.Logger
 }
 
 var _ Matcher = (*Gemini)(nil)
@@ -41,7 +47,7 @@ var _ Matcher = (*Gemini)(nil)
 const defaultGeminiBaseURL = "https://generativelanguage.googleapis.com/v1beta"
 
 // retryBackoff is the wait before each retry of an HTTP 5xx, which the Gemini
-// API returns now and then for Gemma.
+// API returns now and then.
 var retryBackoff = []time.Duration{300 * time.Millisecond, time.Second}
 
 // Model implements Matcher.
@@ -290,7 +296,7 @@ type geminiResponse struct {
 }
 
 // Generate sends prompt to the model. Gemma on the Gemini API has no system
-// instruction, so the whole instruction is in the user turn.
+// instruction, so the whole instruction is in the user turn (for both).
 func (g *Gemini) Generate(ctx context.Context, prompt string, maxTokens int) (string, error) {
 	base := g.BaseURL
 	if base == "" {
@@ -309,7 +315,7 @@ func (g *Gemini) Generate(ctx context.Context, prompt string, maxTokens int) (st
 	var body geminiRequest
 	body.Contents = []geminiContent{{Role: "user", Parts: []geminiPart{{Text: prompt}}}}
 	body.GenerationConfig.Temperature = 0.2
-	body.GenerationConfig.MaxOutputTokens = maxTokens
+	body.GenerationConfig.MaxOutputTokens = maxTokens + g.OutputPad
 	if g.Thinking != "" {
 		body.GenerationConfig.ThinkingConfig = &thinkingConfig{ThinkingLevel: g.Thinking}
 	}

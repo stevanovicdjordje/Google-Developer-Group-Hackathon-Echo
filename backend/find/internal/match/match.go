@@ -1,5 +1,5 @@
 // Package match ranks attendees for recommendations and prompt search.
-// Gemini sends anonymised profiles to Gemma through the Gemini API; Offline
+// Gemini sends anonymised profiles to a model on the Gemini API; Offline
 // ranks by overlap and is the fallback whenever the model fails.
 package match
 

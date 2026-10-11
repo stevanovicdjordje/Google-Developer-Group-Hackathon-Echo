@@ -2,7 +2,7 @@
 # Runs the Find API on :8083 against the Firebase emulators.
 # The emulators (and the demo event) come from backend/maps: run `make dev` and `make seed` there first,
 # then `make seed` here for demo attendees.
-# Usage: backend/find/scripts/dev.sh   (GEMINI_API_KEY in backend/find/.env enables Gemma)
+# Usage: backend/find/scripts/dev.sh   (GEMINI_API_KEY in backend/find/.env enables the AI model)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

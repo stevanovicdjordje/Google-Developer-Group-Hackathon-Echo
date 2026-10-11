@@ -23,8 +23,10 @@ info:
     `personId` answer `404 not_found` for anyone who isn't visible, so hidden
     people can't be probed.
 
-    **AI.** Recommendations and prompt search are ranked by Gemma through the
-    Gemini API (`team-gemma-core`), behind a backend adapter. Only the visible
+    **AI.** Recommendations and prompt search are ranked by a Gemini model
+    through the Gemini API (`feature-find-ai`; default `gemini-3-flash-preview`),
+    behind a backend adapter. A model call is cut at 8 s; that request then
+    gets the offline ranking. Only the visible
     candidates' `headline`, `interests` and `lookingFor` are sent to the model,
     never names or user IDs. The model output is validated: only candidate IDs
     are accepted and `why` is plain text, cut to 240 characters. `model` names
