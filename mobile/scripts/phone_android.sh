@@ -2,6 +2,9 @@
 # Run the app on a USB Android phone against the local backends.
 # Usage: mobile/scripts/phone_android.sh [device-serial] [extra flutter run args]
 #   DEMO_EVENT_ID=<id> (default devfest) selects the seeded event.
+#   DEMO_LOCATION=<lat>,<lng>[;<lat>,<lng>...] pretends GPS (stand still, or walk
+#   along the points) for phones away from the fictional venue; copy the value from
+#   `make seed` in backend/maps. Unset = real GPS. Quote it: it contains ';'.
 # Needs the backends running (backend/maps, backend/echo, ... dev.sh).
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -26,8 +29,8 @@ FWD_PID=$!
 trap 'kill "$FWD_PID" 2>/dev/null || true' EXIT
 sleep 1
 
+DEFINES=(--dart-define=EMULATOR_HOST=0.0.0.0 --dart-define=DEMO_EVENT_ID="${DEMO_EVENT_ID:-devfest}")
+[[ -z "${DEMO_LOCATION:-}" ]] || DEFINES+=(--dart-define=DEMO_LOCATION="$DEMO_LOCATION")
+
 cd "$DIR/../app"
-flutter run -d "$SERIAL" \
-  --dart-define=EMULATOR_HOST=0.0.0.0 \
-  --dart-define=DEMO_EVENT_ID="${DEMO_EVENT_ID:-devfest}" \
-  "$@"
+flutter run -d "$SERIAL" "${DEFINES[@]}" "$@"
