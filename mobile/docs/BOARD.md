@@ -14,7 +14,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | B-1 | **Echo backend:** Gemini path (`AI_MODEL=gemini-3.8-flash`) times out (20 s, `context deadline exceeded`) for ask/catch-up/summary/grouping since the model split; translate (Gemma) answered from cache. Owner: Echo maintainer (team-echo-holder → @Ilij4n's other session). App shows friendly "AI busy" | — | other session | `backend/echo` | Reported 2026-10-11 |
 | M-26 | Echo on real AI — API part verified: Gemini (`gemini-3.8-flash`) for ask/catch-up/summary, Gemma (`gemma-4-26b-a4b-it`) for translate (echo 0.3.1, `efb51cc`); ask en/sr, catch-up sr, translate sr OK on the replayed keynote. App-side check = M-26b | S | verifier | none | Emulator data isn't persisted: re-seeded, event `ik6vmvjr7wlektj6`, keynote replayed `-instant`. Key only in git-ignored `backend/echo/.env`. |
 | M-34 | Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
-| M-37 | Find e2e: when feature:find announces `backend/find` on :8083 (with seed), run app against it (web + phones), verify recommendations/search/person/contact/meeting spot | S | verifier | none | Waiting on feature:find (`mobile#13`) |
 
 ## Blocked
 
@@ -27,6 +26,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| M-37 | verifier (sonnet, medium) | now | — | Find e2e vs local :8083 (offline ranking, 20 seeded attendees in `ik6vmvjr7wlektj6`) |
 | M-38 | dev (sonnet, medium) | now | worktree | Echo banner overlap |
 
 ## Done
