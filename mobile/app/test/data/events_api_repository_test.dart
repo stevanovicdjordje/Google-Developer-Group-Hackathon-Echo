@@ -229,6 +229,74 @@ void main() {
       expect(draft.sessions, hasLength(5));
       // The session the AI couldn't place is flagged in the review.
       expect(draft.sessions[1].stage, isEmpty);
+      // ... and the server says so in `issues`.
+      expect(draft.issues, hasLength(1));
+      expect(draft.issues.single.sessionId, 'd2');
+      expect(draft.issues.single.field, 'sessions[1].stage');
+      expect(draft.issues.single.message, 'No stage found for this session.');
+    });
+
+    test('issues and warnings: parsed, bad entries skipped', () {
+      final json = Map<String, Object?>.of(
+        _fixture('draft.response.json') as Map<String, Object?>,
+      );
+      json['issues'] = [
+        {'severity': 'warning', 'field': 'name', 'message': 'No event name.'},
+        {'sessionId': 'd3', 'field': 'sessions[2].end', 'message': '  '},
+        {'sessionId': 'd3', 'field': 'sessions[2].end'},
+        {'sessionId': 'bad id!', 'message': 'Odd id.'},
+        'nope',
+        null,
+        {'sessionId': 'd3', 'field': 'sessions[2].end', 'message': 'Overlaps.'},
+      ];
+      final draft = EventsApiRepository.parseDraft(json)!;
+      expect(
+        [for (final i in draft.issues) (i.sessionId, i.field, i.message)],
+        [
+          (null, 'name', 'No event name.'),
+          (null, '', 'Odd id.'),
+          ('d3', 'sessions[2].end', 'Overlaps.'),
+        ],
+      );
+      // Missing or malformed `issues` doesn't fail the draft.
+      json['issues'] = 'x';
+      expect(EventsApiRepository.parseDraft(json)!.issues, isEmpty);
+      json.remove('issues');
+      expect(EventsApiRepository.parseDraft(json)!.sessions, hasLength(5));
+
+      final link = EventsApiRepository.parsePublish({
+        'eventId': 'devfest',
+        'warnings': [
+          "Stage 'Sala C' isn't a room on the venue map.",
+          '',
+          42,
+          null,
+        ],
+      }, 'https://eho.app')!;
+      expect(link.warnings, ["Stage 'Sala C' isn't a room on the venue map."]);
+      expect(
+        EventsApiRepository.parsePublish(
+          _fixture('publish.response.json'),
+          'https://eho.app',
+        )!.warnings,
+        isEmpty,
+      );
+      expect(
+        EventsApiRepository.parsePublish({
+          'eventId': 'devfest',
+        }, 'https://eho.app')!.warnings,
+        isEmpty,
+      );
+    });
+
+    test('issues are never sent back', () async {
+      final draft = EventsApiRepository.parseDraft(
+        _fixture('draft.response.json'),
+      )!;
+      expect(draft.issues, isNotEmpty);
+      expect(EventsApiRepository.draftInput(draft), isNot(contains('issues')));
+      // Sessions edited locally keep their issues until the next save.
+      expect(draft.withSessions(draft.sessions).issues, draft.issues);
     });
 
     test('upload limits are checked before sending', () async {

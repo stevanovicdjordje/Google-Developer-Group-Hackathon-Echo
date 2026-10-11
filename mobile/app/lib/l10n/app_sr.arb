@@ -203,6 +203,8 @@
   "orgSessionsCount": "{count, plural, one{{count} predavanje} few{{count} predavanja} other{{count} predavanja}}",
   "orgSpeakersCount": "{count, plural, one{{count} predavač} few{{count} predavača} other{{count} predavača}}",
   "orgCheckRoomMissing": "Proveri: sala nedostaje u PDF-u",
+  "orgToCheck": "Proveri",
+  "orgPublishWarnings": "Proveri pre događaja",
   "orgSessions": "Predavanja",
   "orgEditSession": "Uredi predavanje",
   "orgPublish": "Objavi i dobij link",

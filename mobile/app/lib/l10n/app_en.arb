@@ -463,6 +463,8 @@
     }
   },
   "orgCheckRoomMissing": "Check: room missing in the PDF",
+  "orgToCheck": "To check",
+  "orgPublishWarnings": "Check before the event",
   "orgSessions": "Sessions",
   "orgEditSession": "Edit session",
   "orgPublish": "Publish & get join link",

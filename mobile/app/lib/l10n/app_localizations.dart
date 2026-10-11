@@ -1076,6 +1076,18 @@ abstract class AppLocalizations {
   /// **'Check: room missing in the PDF'**
   String get orgCheckRoomMissing;
 
+  /// No description provided for @orgToCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'To check'**
+  String get orgToCheck;
+
+  /// No description provided for @orgPublishWarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Check before the event'**
+  String get orgPublishWarnings;
+
   /// No description provided for @orgSessions.
   ///
   /// In en, this message translates to:

@@ -297,6 +297,25 @@ class UploadedFile {
   final Uint8List? bytes;
 }
 
+/// Something the server wants the organizer to check in a draft
+/// (`Issue` in `contracts/events`, e.g. a session without a stage).
+class DraftIssue {
+  const DraftIssue({
+    this.sessionId,
+    required this.field,
+    required this.message,
+  });
+
+  /// The session it is about; null for an issue about the event as a whole.
+  final String? sessionId;
+
+  /// Where it is, e.g. "sessions[3].stage".
+  final String field;
+
+  /// Short human-readable text, shown as is.
+  final String message;
+}
+
 /// What the AI extracted from the organizer's files, before publishing.
 class EventDraft {
   const EventDraft({
@@ -309,6 +328,7 @@ class EventDraft {
     this.id,
     this.startDate,
     this.endDate,
+    this.issues = const [],
   });
 
   final String name;
@@ -327,7 +347,11 @@ class EventDraft {
   final String? startDate;
   final String? endDate;
 
-  /// The same draft with [sessions] replaced.
+  /// What the server flagged (`Draft.issues`); recomputed on every save.
+  final List<DraftIssue> issues;
+
+  /// The same draft with [sessions] replaced. [issues] stay until the next
+  /// save returns fresh ones.
   EventDraft withSessions(List<Session> sessions) => EventDraft(
     name: name,
     dates: dates,
@@ -338,12 +362,34 @@ class EventDraft {
     id: id,
     startDate: startDate,
     endDate: endDate,
+    issues: issues,
+  );
+
+  /// The same draft with [issues] replaced.
+  EventDraft withIssues(List<DraftIssue> issues) => EventDraft(
+    name: name,
+    dates: dates,
+    venue: venue,
+    stages: stages,
+    sessions: sessions,
+    speakers: speakers,
+    id: id,
+    startDate: startDate,
+    endDate: endDate,
+    issues: issues,
   );
 }
 
 class PublishedLink {
-  const PublishedLink({required this.eventId, required this.url});
+  const PublishedLink({
+    required this.eventId,
+    required this.url,
+    this.warnings = const [],
+  });
 
   final String eventId;
   final String url;
+
+  /// Things worth checking before the event (`PublishResult.warnings`).
+  final List<String> warnings;
 }
