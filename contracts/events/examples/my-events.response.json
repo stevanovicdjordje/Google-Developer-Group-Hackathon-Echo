@@ -1,0 +1,26 @@
+{
+  "events": [
+    {
+      "id": "devfest",
+      "name": "DevFest Belgrade 2026",
+      "startDate": "2026-10-11",
+      "endDate": "2026-10-12",
+      "address": "Sava Centar, Belgrade",
+      "hasMap": true,
+      "hasAgenda": true,
+      "joinedAt": "2026-10-11T08:05:12Z",
+      "isPast": false
+    },
+    {
+      "id": "ai-meetup-ns-2026",
+      "name": "AI Meetup Novi Sad",
+      "startDate": "2026-09-18",
+      "endDate": "2026-09-18",
+      "address": "Startit Centar, Novi Sad",
+      "hasMap": false,
+      "hasAgenda": true,
+      "joinedAt": "2026-09-18T17:02:40Z",
+      "isPast": true
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "devfest",
+  "name": "DevFest Belgrade 2026",
+  "startDate": "2026-10-11",
+  "endDate": "2026-10-12",
+  "address": "Sava Centar, Belgrade",
+  "hasMap": true,
+  "hasAgenda": true
+}

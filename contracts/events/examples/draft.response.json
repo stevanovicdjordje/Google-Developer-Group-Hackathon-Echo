@@ -1,0 +1,164 @@
+{
+  "id": "k2v9q3m1x8a7b6c5",
+  "name": "DevFest Belgrade 2026",
+  "startDate": "2026-10-11",
+  "endDate": "2026-10-12",
+  "address": "Sava Centar, Belgrade",
+  "stages": [
+    "Glavna sala",
+    "Sala A",
+    "Sala B"
+  ],
+  "speakers": [
+    {
+      "id": "sp1",
+      "name": "Mara Ilić",
+      "title": "ML Engineer, Lumen Labs"
+    },
+    {
+      "id": "sp2",
+      "name": "Petar Vuković",
+      "title": "CTO, Orbita"
+    },
+    {
+      "id": "sp3",
+      "name": "Jana Kostić",
+      "title": "Product Designer, Kvadrat"
+    },
+    {
+      "id": "sp4",
+      "name": "Luka Marković",
+      "title": "Staff Engineer, Nebo Cloud"
+    },
+    {
+      "id": "sp5",
+      "name": "Sara Đorđević",
+      "title": "Founder, Talas AI"
+    },
+    {
+      "id": "sp6",
+      "name": "Nikola Pavlović",
+      "title": "Android GDE"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "d1",
+      "title": "On-device AI: when the model lives in your pocket",
+      "stage": "Glavna sala",
+      "day": "2026-10-11",
+      "start": "10:00",
+      "end": "10:45",
+      "track": "AI",
+      "description": "What changes in product design, cost and privacy when inference moves from the cloud to the phone.",
+      "isBreak": false,
+      "speakers": [
+        {
+          "id": "sp1",
+          "name": "Mara Ilić",
+          "title": "ML Engineer, Lumen Labs"
+        }
+      ]
+    },
+    {
+      "id": "d2",
+      "title": "Scaling event-driven backends on a startup budget",
+      "stage": "",
+      "day": "2026-10-11",
+      "start": "11:00",
+      "end": "11:40",
+      "track": "Backend",
+      "description": "Queues, idempotency and the boring tricks that keep costs flat.",
+      "isBreak": false,
+      "speakers": [
+        {
+          "id": "sp4",
+          "name": "Luka Marković",
+          "title": "Staff Engineer, Nebo Cloud"
+        }
+      ]
+    },
+    {
+      "id": "d3",
+      "title": "Designing for crowded rooms",
+      "stage": "Sala B",
+      "day": "2026-10-11",
+      "start": "11:00",
+      "end": "12:30",
+      "track": "Design",
+      "description": "Hands-on workshop: one-handed UX for people standing in a hallway.",
+      "isBreak": false,
+      "speakers": [
+        {
+          "id": "sp3",
+          "name": "Jana Kostić",
+          "title": "Product Designer, Kvadrat"
+        }
+      ]
+    },
+    {
+      "id": "d4",
+      "title": "Compose, Flutter, or both? A pragmatic take",
+      "stage": "Sala A",
+      "day": "2026-10-11",
+      "start": "13:30",
+      "end": "14:10",
+      "track": "Mobile",
+      "description": "Lessons from shipping the same app twice.",
+      "isBreak": false,
+      "speakers": [
+        {
+          "id": "sp6",
+          "name": "Nikola Pavlović",
+          "title": "Android GDE"
+        }
+      ]
+    },
+    {
+      "id": "d5",
+      "title": "From prototype to paying customers with LLMs",
+      "stage": "Glavna sala",
+      "day": "2026-10-11",
+      "start": "14:30",
+      "end": "15:15",
+      "track": "AI",
+      "description": "Panel: pricing, evaluation and what customers actually pay for.",
+      "isBreak": false,
+      "speakers": [
+        {
+          "id": "sp5",
+          "name": "Sara Đorđević",
+          "title": "Founder, Talas AI"
+        },
+        {
+          "id": "sp2",
+          "name": "Petar Vuković",
+          "title": "CTO, Orbita"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "sessionId": "d2",
+      "field": "sessions[1].stage",
+      "message": "No stage found for this session."
+    }
+  ],
+  "model": "gemini-3-flash-preview",
+  "sourceFiles": [
+    {
+      "name": "devfest-agenda.pdf",
+      "sizeBytes": 184320,
+      "type": "pdf"
+    },
+    {
+      "name": "speakers.xlsx",
+      "sizeBytes": 9216,
+      "type": "spreadsheet"
+    }
+  ],
+  "createdAt": "2026-10-11T05:41:02Z",
+  "updatedAt": "2026-10-11T05:41:02Z"
+}

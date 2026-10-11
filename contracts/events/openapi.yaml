@@ -1,0 +1,409 @@
+openapi: 3.1.0
+info:
+  title: Eho events API
+  version: 0.1.0
+  summary: Public event info, join, My events, agenda, organizer AI import + publish.
+  description: |
+    Contract between the Flutter app (`mobile/app`, `EventRepository` /
+    `OrganizerRepository`) and `backend/events` (feature:events). Covers
+    `mobile/docs/api-needs.md` API-1, API-2, API-3, API-12, API-13 and the
+    events part of API-14.
+
+    **One event ID.** Events are the same `events/{eventId}` documents the venue
+    map uses (`contracts/maps`), e.g. the demo event `devfest`. Publishing an
+    agenda goes into that ID, so the join link, the Map tab and the agenda share
+    it. An event is **public** once its venue map or its agenda is published.
+
+    **Auth.** Every `/v1` call needs `Authorization: Bearer <Firebase ID token>`
+    (`team-auth`). Attendees may be anonymous. `/v1/organizer/*` needs an
+    organizer account (not anonymous) and acts only on the caller's own drafts
+    and events (`ownerUid`).
+
+    **AI.** `createDraft` sends the uploaded files to a Gemini model
+    (`feature-events-ai`) and validates what comes back (rule 12): known shapes
+    only, times `HH:mm`, dates `YYYY-MM-DD`, lengths capped, speakers and stages
+    referenced by name. Spreadsheets/CSV with recognisable columns are also read
+    without a model (`model: "offline"`). `model` always names what produced the
+    draft. Uploaded files are not stored; only the extracted draft is.
+
+    **Errors** use one shape: `{code, message, details?}`.
+servers:
+  - url: http://localhost:8084
+    description: local (`cd backend/events && make dev`)
+security:
+  - firebaseIdToken: []
+tags:
+  - name: attendee
+  - name: organizer
+paths:
+  /healthz:
+    get:
+      operationId: eventsHealthz
+      summary: Liveness and the configured AI model.
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, model]
+                properties:
+                  status: { type: string, const: ok }
+                  model: { type: string, description: 'AI model for createDraft, or "offline" without a key.' }
+  /v1/events/{eventId}/public:
+    parameters: [{ $ref: "#/components/parameters/EventId" }]
+    get:
+      operationId: getPublicEvent
+      tags: [attendee]
+      summary: Event info for the join screen (API-1). Public events only.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicEvent" }
+              example: { $ref: "examples/public-event.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/events/{eventId}/join:
+    parameters: [{ $ref: "#/components/parameters/EventId" }]
+    post:
+      operationId: joinEvent
+      tags: [attendee]
+      summary: Join a public event (API-2); adds it to My events. Idempotent.
+      responses:
+        "204": { description: Joined (or already joined) }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: leaveEvent
+      tags: [attendee]
+      summary: Remove the event from My events. Idempotent.
+      responses:
+        "204": { description: Left }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+  /v1/me/events:
+    get:
+      operationId: listMyEvents
+      tags: [attendee]
+      summary: Events the caller joined, newest join first (API-14). Events that were deleted or unpublished are left out.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [events]
+                properties:
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/MyEvent" }
+              example: { $ref: "examples/my-events.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+  /v1/events/{eventId}/agenda:
+    parameters: [{ $ref: "#/components/parameters/EventId" }]
+    get:
+      operationId: getAgenda
+      tags: [attendee]
+      summary: The published agenda (API-3). `404` until one is published.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Agenda" }
+              example: { $ref: "examples/agenda.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/organizer/drafts:
+    post:
+      operationId: createDraft
+      tags: [organizer]
+      summary: Upload files; the AI extracts an event draft for review (API-12).
+      description: |
+        Synchronous: answers when extraction is done (Gemini: typically 5–30 s,
+        cut at 60 s → `503 ai_unavailable`). At most 10 files, 10 MiB each,
+        20 MiB together. Accepted: PDF, PNG, JPEG, WebP, XLSX, CSV, TXT, DOCX
+        (by content, not only the extension). Rate limited per user
+        (`429 rate_limited` + `Retry-After`).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files:
+                  type: array
+                  items: { type: string, format: binary }
+      responses:
+        "201":
+          description: Draft extracted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+              example: { $ref: "examples/draft.response.json" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/TooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedFile" }
+        "422": { $ref: "#/components/responses/NothingExtracted" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503": { $ref: "#/components/responses/AIUnavailable" }
+  /v1/organizer/drafts/{draftId}:
+    parameters: [{ $ref: "#/components/parameters/DraftId" }]
+    get:
+      operationId: getDraft
+      tags: [organizer]
+      summary: One of the caller's drafts.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      operationId: updateDraft
+      tags: [organizer]
+      summary: Save the organizer's edits from the review screen; issues are recomputed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DraftInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+  /v1/organizer/drafts/{draftId}/publish:
+    parameters: [{ $ref: "#/components/parameters/DraftId" }]
+    post:
+      operationId: publishDraft
+      tags: [organizer]
+      summary: Publish the draft's agenda and event info (API-13).
+      description: |
+        With `eventId`: into that existing event, which the caller must own
+        (e.g. the venue-map event `devfest`); its name, dates and address are
+        replaced by the draft's. Without: a new event is created for the caller
+        (its venue map can be drawn later in the map editor, same ID).
+        Sessions keep the ID of an already published session with the same
+        title, so links (Echo, Q&A) survive a re-publish. Issues don't block
+        publishing; `warnings` also lists stages that aren't a room on the
+        published venue map.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                eventId: { type: string }
+      responses:
+        "200":
+          description: Published
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublishResult" }
+              example: { $ref: "examples/publish.response.json" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+components:
+  securitySchemes:
+    firebaseIdToken:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+  parameters:
+    EventId:
+      name: eventId
+      in: path
+      required: true
+      schema: { type: string }
+    DraftId:
+      name: draftId
+      in: path
+      required: true
+      schema: { type: string }
+  responses:
+    BadRequest:
+      description: "`invalid_json`, `invalid_multipart` or `no_files`."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Unauthenticated:
+      description: "`unauthenticated`."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Forbidden:
+      description: "`organizer_account_required` (anonymous caller) or `forbidden` (not the owner)."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    NotFound:
+      description: "`not_found`."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    TooLarge:
+      description: "`too_large`: more than 10 files, a file over 10 MiB or over 20 MiB together."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    UnsupportedFile:
+      description: "`unsupported_file`; `details[].field` is the file name."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    NothingExtracted:
+      description: "`nothing_extracted`: no sessions found in the files."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    ValidationFailed:
+      description: "`validation_failed`, `details` = FieldError[]."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    RateLimited:
+      description: "`rate_limited`."
+      headers:
+        Retry-After: { schema: { type: integer }, description: seconds }
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    AIUnavailable:
+      description: "`ai_unavailable`: no AI key for files that need the model (PDF, images, free text), or the model failed or timed out."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: array
+          items: { $ref: "#/components/schemas/FieldError" }
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field: { type: string }
+        message: { type: string }
+    Date: { type: string, format: date, description: YYYY-MM-DD }
+    Time: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$", description: "HH:mm, 24 h, event local time" }
+    PublicEvent:
+      type: object
+      required: [id, name, startDate, endDate, address, hasMap, hasAgenda]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        startDate: { $ref: "#/components/schemas/Date" }
+        endDate: { $ref: "#/components/schemas/Date" }
+        address: { type: string }
+        hasMap: { type: boolean, description: The venue map is published. }
+        hasAgenda: { type: boolean, description: An agenda is published. }
+    MyEvent:
+      allOf:
+        - $ref: "#/components/schemas/PublicEvent"
+        - type: object
+          required: [joinedAt, isPast]
+          properties:
+            joinedAt: { type: string, format: date-time }
+            isPast: { type: boolean, description: "endDate is before today (Europe/Belgrade)." }
+    Speaker:
+      type: object
+      required: [id, name, title]
+      properties:
+        id: { type: string }
+        name: { type: string, maxLength: 80 }
+        title: { type: string, maxLength: 120, description: Role and company; may be empty. }
+    Session:
+      type: object
+      required: [id, title, stage, day, start, end, track, description, isBreak, speakers]
+      properties:
+        id: { type: string }
+        title: { type: string, maxLength: 160 }
+        stage: { type: string, maxLength: 80, description: "Stage/room name; matches a room name on the venue map. Empty = not known yet." }
+        day: { $ref: "#/components/schemas/Date" }
+        start: { $ref: "#/components/schemas/Time" }
+        end: { $ref: "#/components/schemas/Time" }
+        track: { type: string, maxLength: 40 }
+        description: { type: string, maxLength: 600 }
+        isBreak: { type: boolean, description: "Registration, coffee, lunch: no speakers, no Echo." }
+        speakers:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/Speaker" }
+    Agenda:
+      type: object
+      required: [eventId, stages, speakers, sessions, publishedAt]
+      properties:
+        eventId: { type: string }
+        stages: { type: array, items: { type: string } }
+        speakers: { type: array, items: { $ref: "#/components/schemas/Speaker" } }
+        sessions:
+          type: array
+          description: Sorted by day, start, stage.
+          items: { $ref: "#/components/schemas/Session" }
+        publishedAt: { type: string, format: date-time }
+    Issue:
+      type: object
+      required: [severity, field, message]
+      properties:
+        severity: { type: string, enum: [warning] }
+        sessionId: { type: string, description: "The session it is about, if any." }
+        field: { type: string, examples: ["sessions[3].stage"] }
+        message: { type: string }
+    DraftInput:
+      description: What the organizer sends back from the review screen; no other fields.
+      allOf: [{ $ref: "#/components/schemas/DraftFields" }]
+      unevaluatedProperties: false
+    DraftFields:
+      type: object
+      required: [name, startDate, endDate, address, stages, speakers, sessions]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        startDate: { $ref: "#/components/schemas/Date" }
+        endDate: { $ref: "#/components/schemas/Date" }
+        address: { type: string, maxLength: 200 }
+        stages: { type: array, maxItems: 30, items: { type: string, maxLength: 80 } }
+        speakers: { type: array, maxItems: 200, items: { $ref: "#/components/schemas/Speaker" } }
+        sessions:
+          type: array
+          maxItems: 300
+          description: "`speakers` of a session may be given as full objects; they are matched to `speakers` by `id`, else by name."
+          items: { $ref: "#/components/schemas/Session" }
+    SourceFile:
+      type: object
+      required: [name, sizeBytes, type]
+      properties:
+        name: { type: string }
+        sizeBytes: { type: integer }
+        type: { type: string, enum: [pdf, image, spreadsheet, csv, text, docx] }
+    Draft:
+      allOf:
+        - $ref: "#/components/schemas/DraftFields"
+        - type: object
+          required: [id, issues, model, sourceFiles, createdAt, updatedAt]
+          properties:
+            id: { type: string }
+            issues:
+              type: array
+              description: Things the organizer should check (missing stage, end before start, overlapping sessions on one stage, …).
+              items: { $ref: "#/components/schemas/Issue" }
+            model: { type: string, description: 'The model that extracted it, or "offline".' }
+            sourceFiles: { type: array, items: { $ref: "#/components/schemas/SourceFile" } }
+            publishedEventId: { type: string, description: Set after the first publish. }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+    PublishResult:
+      type: object
+      required: [eventId, joinPath, sessions, warnings, publishedAt]
+      properties:
+        eventId: { type: string }
+        joinPath: { type: string, description: 'Path of the join link, "/e/{eventId}"; the client puts its own origin in front.' }
+        sessions: { type: integer, description: Number of published sessions. }
+        warnings: { type: array, items: { $ref: "#/components/schemas/Issue" } }
+        publishedAt: { type: string, format: date-time }
