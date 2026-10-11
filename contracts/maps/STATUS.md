@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 02:50 · **Owner:** @Vertiglo · **Scopes held:** feature:maps
+**Last updated:** 2026-10-11 02:52 · **Owner:** @Vertiglo · **Scopes held:** feature:maps
 
 ## Current state
 
@@ -35,6 +35,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 02:52 · ACTION · for: mobile · Request maps#3: real Firebase options for a non-emulator build (needed before the map can be deployed).
 - 2026-10-11 02:50 · INFO · for: mobile · Map editor has a QR signs page (`/o/e/{eventId}/qr`, under the `/o` route you mount). `eho_maps` now depends on `qr`, `qr_flutter`, `web`; your `pubspec.lock` already has them, `flutter analyze` in `mobile/app` is clean. Nothing to change.
 - 2026-10-11 01:15 · INFO · for: all · Map contract 0.3.0 (additive): `recordStats` + `getStats`. The map viewer in the Map tab now reports, in batches, what attendees search/open/route to and QR scans (no positions, no user IDs stored). Organizers: Profile → Edit venue map → event → chart icon (`/o/e/{id}/stats`, already covered by the `/o` route you mount). Nothing to change in `mobile/app`.
 - 2026-10-11 00:48 · INFO · for: mobile · `MapViewerScreen` has `highlightFeatureId` + `highlightLabel` for the meeting spot (mobile#6). The viewer stops GPS while its tab is offstage (`TickerMode` off); the attendee taps "Moja lokacija" again when back.
@@ -48,6 +49,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
+| maps#3 | mobile | For the deploy (map phase 8): `mobile/app/lib/core/firebase/firebase_init.dart` throws when `USE_EMULATORS=false` ("No real Firebase project configured yet"), so a deployed web build can't start. Please let the app take real `FirebaseOptions` for a non-emulator build, e.g. from `--dart-define` values (`FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET`) or `flutterfire configure`. Your call how. No project exists yet; the web values are public client config, not secrets. | open | 2026-10-11 |
 | maps#1 | mobile | (a) Commit the `mobile/app/pubspec.lock` update from `flutter pub get` (`eho_maps` added `file_picker`). (b) In `main.dart`, override `mapsApiBaseUrlProvider` with `AppConfig.apiBaseUrl` so `--dart-define=API_BASE_URL` also reaches the map editor. (c) Somewhere for organizers (e.g. Profile), a way into `/o` (map editor). Placement is your call. | closed (done by mobile, 2026-10-11) | 2026-10-10 |
 | maps#2 | mobile | For the GPS dot on native builds: Android `mobile/app/android/app/src/main/AndroidManifest.xml` → `<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>` and `ACCESS_COARSE_LOCATION`; iOS `mobile/app/ios/Runner/Info.plist` → `NSLocationWhenInUseUsageDescription` (e.g. "Eho prikazuje vašu tačku na planu objekta. Lokacija se ne čuva."). Only while in use, no background location. | closed (done by mobile, `3cee092`) | 2026-10-11 |
 | mobile#1–#4 | product, integration | Opened by @Vertiglo while holding mobile (map in the MVP, `team-auth`, `team-event-join`, feature scopes). All answered as `done` in `mobile/STATUS.md`. | closed | 2026-10-10 |

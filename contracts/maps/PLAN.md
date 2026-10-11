@@ -52,7 +52,7 @@ Phases 1–7 done; phase 8 code done (per-phase details: git history and `STATUS
 - Tests (after merge to `main`): `go vet` + `go test ./...` pass, `make rules-test` passes on the emulators; `flutter test` 77/77,
   `flutter analyze` clean (`mobile/maps`, `mobile/app`).
 
-**Next:** the real deploy. It needs a Firebase project on the Blaze plan (billing) from @Vertiglo; then print the QR signs from
+**Next:** the real deploy. The app must first accept real Firebase options (request maps#3 to mobile). It needs a Firebase project on the Blaze plan (billing) from @Vertiglo; then print the QR signs from
 the deployed app so they point to the real URL. Open for @Vertiglo: `contracts/maps/KAKO-RADI.md` §9 (routing) and a GPS
 section (not committed by the agent unless asked).
 
