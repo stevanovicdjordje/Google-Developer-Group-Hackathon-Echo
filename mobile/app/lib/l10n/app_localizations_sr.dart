@@ -398,6 +398,11 @@ class AppLocalizationsSr extends AppLocalizations {
   }
 
   @override
+  String personDetailsAccepted(String name) {
+    return 'Povezani ste. $name može da vidi tvoje podatke.';
+  }
+
+  @override
   String personAccepted(String name) {
     return '$name je prihvatio/la · Poruka';
   }

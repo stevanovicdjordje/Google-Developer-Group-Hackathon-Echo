@@ -728,6 +728,12 @@ abstract class AppLocalizations {
   /// **'Your details are shared only after {name} accepts.'**
   String personDetailsNote(String name);
 
+  /// No description provided for @personDetailsAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re connected. {name} can see your details.'**
+  String personDetailsAccepted(String name);
+
   /// No description provided for @personAccepted.
   ///
   /// In en, this message translates to:

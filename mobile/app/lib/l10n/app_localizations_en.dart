@@ -392,6 +392,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String personDetailsAccepted(String name) {
+    return 'You\'re connected. $name can see your details.';
+  }
+
+  @override
   String personAccepted(String name) {
     return '$name accepted · Message';
   }

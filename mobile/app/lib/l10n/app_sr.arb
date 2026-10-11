@@ -145,6 +145,7 @@
   "personRequestSent": "Zahtev poslat · čeka se…",
   "personRequestSentTo": "Zahtev poslat · čeka se {name}",
   "personDetailsNote": "Tvoji podaci se dele tek kada {name} prihvati.",
+  "personDetailsAccepted": "Povezani ste. {name} može da vidi tvoje podatke.",
   "personAccepted": "{name} je prihvatio/la · Poruka",
   "personNotAccepting": "{name} ne prima zahteve za kontakt.",
   "messagesMeetAt": "Sastanak kod: {place}",
