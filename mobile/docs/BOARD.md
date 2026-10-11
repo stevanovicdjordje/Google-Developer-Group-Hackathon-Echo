@@ -25,7 +25,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| — | | | | |
+| V-4a | verifier (sonnet, medium) | 04:04 | — | live flow check vs running backends + Echo AI API table |
+| V-4b | dev (sonnet, medium) | 04:04 | worktree | tap-through flow tests `test/flows/` (bugs → skip + report) |
 
 ## Done
 
