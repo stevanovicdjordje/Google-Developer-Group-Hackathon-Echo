@@ -17,6 +17,42 @@ final recommendationsProvider =
       return ref.watch(findRepositoryProvider).recommendations(eventId, me);
     });
 
+/// One person at an event (`(eventId, personId)`); null when not visible.
+final personDetailProvider = FutureProvider.autoDispose
+    .family<PersonDetail?, (String, String)>(
+      (ref, key) => ref.watch(findRepositoryProvider).person(key.$1, key.$2),
+    );
+
+/// Friendly text for a failed Find call.
+String _findErrorText(AppLocalizations l10n, Object e) => switch (e) {
+  FindException(kind: FindErrorKind.offline) => l10n.backendUnavailable,
+  FindException(kind: FindErrorKind.rateLimited) => l10n.echoErrorRateLimited,
+  _ => l10n.echoErrorFailed,
+};
+
+/// Error text with "Try again".
+class _FindError extends StatelessWidget {
+  const _FindError(this.error, {required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Text(_findErrorText(l10n, error), textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          TextButton(onPressed: onRetry, child: Text(l10n.retry)),
+        ],
+      ),
+    );
+  }
+}
+
 /// Find tab: AI recommendations, or describe who you want to meet.
 class FindScreen extends ConsumerStatefulWidget {
   const FindScreen({super.key, required this.eventId, this.initialPrompt});
@@ -86,6 +122,8 @@ class _FindScreenState extends ConsumerState<FindScreen> {
                         snap.data!,
                         caption: l10n.findResultsCaption(snap.data!.length),
                       )
+                    : snap.hasError
+                    ? _FindError(snap.error!, onRetry: _run)
                     : _Thinking(l10n.findSearching),
               ),
             ] else ...[
@@ -97,7 +135,12 @@ class _FindScreenState extends ConsumerState<FindScreen> {
                   .watch(recommendationsProvider(widget.eventId))
                   .when(
                     loading: () => _Thinking(l10n.findThinking),
-                    error: (e, _) => Text('$e'),
+                    error: (e, _) => _FindError(
+                      e,
+                      onRetry: () => ref.invalidate(
+                        recommendationsProvider(widget.eventId),
+                      ),
+                    ),
                     data: (m) => _Matches(widget.eventId, m, recommended: true),
                   ),
             ],
@@ -433,19 +476,47 @@ class PersonScreen extends ConsumerStatefulWidget {
 class _PersonScreenState extends ConsumerState<PersonScreen> {
   Future<void> _contact() async {
     final contacts = ref.read(contactsProvider.notifier);
-    await ref
-        .read(findRepositoryProvider)
-        .requestContact(widget.eventId, widget.personId);
-    contacts.set(widget.personId, ContactState.requested);
-    // Demo: the other person accepts shortly after.
-    await Future<void>.delayed(const Duration(seconds: 2));
-    contacts.set(widget.personId, ContactState.accepted);
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    try {
+      // `requested`, then `accepted` once the person accepts.
+      await for (final s
+          in ref
+              .read(findRepositoryProvider)
+              .requestContact(widget.eventId, widget.personId)) {
+        contacts.set(widget.personId, s);
+      }
+    } on FindException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(_findErrorText(l10n, e))));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final p = demo.people.where((x) => x.id == widget.personId).firstOrNull;
+    final key = (widget.eventId, widget.personId);
+    // The server's contact state wins over the one saved in the app.
+    ref.listen(personDetailProvider(key), (_, next) {
+      final s = next.value?.contactState;
+      if (s != null && s != ref.read(contactsProvider)[widget.personId]) {
+        ref.read(contactsProvider.notifier).set(widget.personId, s);
+      }
+    });
+    final detail = ref.watch(personDetailProvider(key));
+    if (detail.hasError && !detail.hasValue) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: _FindError(
+          detail.error!,
+          onRetry: () => ref.invalidate(personDetailProvider(key)),
+        ),
+      );
+    }
+    if (!detail.hasValue) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final p = detail.value?.person;
     if (p == null) return Scaffold(appBar: AppBar());
+    final allowContact = detail.value?.allowContact ?? true;
     final state = ref.watch(contactsProvider)[p.id] ?? ContactState.none;
     final theme = Theme.of(context);
     final t = theme.textTheme;
@@ -584,7 +655,7 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
                     ContactState.none => FilledButton.icon(
                       icon: const Icon(Icons.person_add_alt),
                       label: Text(l10n.personSendRequest),
-                      onPressed: _contact,
+                      onPressed: allowContact ? _contact : null,
                     ),
                     ContactState.requested => OutlinedButton.icon(
                       icon: const Icon(Icons.schedule),
@@ -661,7 +732,22 @@ class MessagesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = demo.people.firstWhere((x) => x.id == personId);
+    final key = (eventId, personId);
+    final detail = ref.watch(personDetailProvider(key));
+    if (detail.hasError && !detail.hasValue) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: _FindError(
+          detail.error!,
+          onRetry: () => ref.invalidate(personDetailProvider(key)),
+        ),
+      );
+    }
+    if (!detail.hasValue) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final p = detail.value?.person;
+    if (p == null) return Scaffold(appBar: AppBar());
     final spot = ref.watch(meetingSpotProvider);
     final accepted = ref.watch(contactsProvider)[p.id] == ContactState.accepted;
     final myInterests = ref.watch(profileProvider).interests;
@@ -765,7 +851,7 @@ class MessagesScreen extends ConsumerWidget {
                       ),
                     ),
                     icon: const Icon(Icons.place_outlined),
-                    onPressed: () => _pickSpot(context, ref, p.name),
+                    onPressed: () => _pickSpot(context, ref, p),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -808,7 +894,7 @@ class MessagesScreen extends ConsumerWidget {
   Future<void> _pickSpot(
     BuildContext context,
     WidgetRef ref,
-    String personName,
+    Person person,
   ) async {
     final event = ref.read(publishedEventProvider(eventId)).value;
     final places = event == null
@@ -835,12 +921,14 @@ class MessagesScreen extends ConsumerWidget {
     if (place == null) return;
     ref
         .read(meetingSpotProvider.notifier)
-        .set(
+        .agree(
+          eventId,
           MeetingSpot(
-            personName: personName,
+            personName: person.name,
             place: place,
             time: demo.demoMeetingTime,
             floor: _floorOf(ref, place),
+            personId: person.id,
           ),
         );
   }
