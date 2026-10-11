@@ -237,6 +237,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _step = 0;
 
   void _next() {
+    // Close the keyboard on every step change so it never covers the consents.
+    FocusManager.instance.primaryFocus?.unfocus();
     if (_step < 2) {
       setState(() => _step++);
       _page.animateToPage(
@@ -264,6 +266,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _back() {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (_step == 0) {
       context.pop();
       return;
@@ -339,6 +342,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   ListView(
                     padding: pad,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     children: [
                       Text(l10n.onboardingWhoTitle, style: _title(t)),
                       const SizedBox(height: 10),
@@ -365,6 +370,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                   ListView(
                     padding: pad,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     children: [
                       Text(l10n.onboardingInterestsTitle, style: _title(t)),
                       const SizedBox(height: 10),
@@ -424,6 +431,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                   ListView(
                     padding: pad,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     children: [
                       Text(l10n.onboardingPrivacyTitle, style: _title(t)),
                       const SizedBox(height: 10),
@@ -723,7 +732,10 @@ class _LiveEventCard extends ConsumerWidget {
           if (live != null) ...[
             Align(
               alignment: Alignment.centerLeft,
-              child: LiveBadge(l10n.myEventsLiveDay(shownEventDay), onDark: true),
+              child: LiveBadge(
+                l10n.myEventsLiveDay(shownEventDay),
+                onDark: true,
+              ),
             ),
             const SizedBox(height: 12),
           ],
