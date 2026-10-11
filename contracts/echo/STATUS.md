@@ -3,9 +3,12 @@
 > **Single writer:** the `feature:echo` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 02:30 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo, feature:find
+**Last updated:** 2026-10-11 09:24 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo
 
 ## Current state
+
+**Back with @MilosBG03 (2026-10-11 09:24)** per `team-echo-holder`. The changes @Ilij4n's agents made meanwhile (per-feature models, contract 0.3.1) are kept as they are. `feature:find` stays with @Vertiglo (agreed per `team-find-holder`); this holder no longer claims it.
+Checked on return with a real key against the emulators (demo event `devfest`, 68-line keynote): all Echo tests pass; with `AI_MODEL=gemini-3-flash-preview` + Gemma translation, Ask 1.7–3.4 s, Catch up 2.6 s, Summary 2.5 s, 50-line translation backlog 12 s; with Gemma only (no `AI_MODEL`), Ask 0.9–2.1 s, Catch up 3 s, Summary 4.9 s. Both answer in Serbian, both say "The speaker hasn't covered that yet." off-topic. The summary's trade-off rows match the design (Battery 00:44, Model size 00:55, Hard questions 01:06) more closely on Gemma; on Gemini the last rows were "Install rate" and "Memory".
 
 Echo, the talk companion: the server side of the transcript (pre-recorded, replayed as if live per `team-captions-and-stt`), translation, Ask AI, Catch up, full summary and audience Q&A.
 Paths: `backend/echo/` (Go service, port 8082), `contracts/echo/` (this folder), `docs/decisions/feature-echo-*`. The Echo screens stay in the app shell (`mobile/app/lib/features/echo`, held by `mobile`); request `echo#1` asks mobile to wire them to this API.
@@ -54,6 +57,7 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 09:24 · INFO · for: all · @MilosBG03 is back and holds `feature:echo` again (`team-echo-holder`); thanks to @Ilij4n's agents for maintaining it. Your per-feature model change stays. `feature:find` stays with @Vertiglo; @MilosBG03 agrees (`team-find-holder`: "he and @Vertiglo agree who continues"). No API change.
 - 2026-10-11 03:40 · INFO · for: all · **Per-feature models** (maintained by @Ilij4n's agent while @MilosBG03 is away, `team-echo-holder`): Ask, Catch up, Summary and question grouping now run on `AI_MODEL` (`gemini-3.8-flash`); Translate stays on Gemma (`GEMMA_MODEL`). Contract 0.3.1 adds `translationModel` on `/healthz`. See `feature-echo-ai` (revised) for the measurements. Restart the Echo service to pick it up.
 - 2026-10-11 02:30 · ACTION · for: mobile · `mobile#9` done, Echo contract 0.3.0 (additive): structured `summary` on `getSummary` and question grouping (`mergedCount`, `submitQuestion` → `200` + `merged: true`). Treat `200` from `submitQuestion` as success. Serbian answers confirmed. See `CHANGELOG.md` and the two rows above.
 - 2026-10-11 01:40 · INFO · for: mobile · Echo contract 0.2.0 (additive): the session doc in Firestore has optional `title` and `speaker`. The demo keynote `s1` is now 6:52 / 68 lines; the first 16 lines are unchanged, so the design's "Ask about this" example (00:44 / 00:50) works, and Ask now ends with "Mara mentions it at 00:50." No change needed in the app.
