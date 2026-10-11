@@ -32,7 +32,7 @@
 | Map tab (venue plan, stages, search) | **Build** (`feature:maps`, @Vertiglo) | Seeded venue | — |
 | Meeting spot on the map | **Build** | — | — |
 | Organizer stats | **Build** if time allows (`feature:maps` phase 7) | — | — |
-| Echo: transcript | **Build, faked input** | A pre-recorded transcript is replayed as if live. Live speech-to-text is a stretch goal. | — |
+| Echo: transcript | **Build, live** (`team-live-stt`) | Live speech-to-text from a speaker phone (on-device recognizer). Fallback: the pre-recorded transcript replayed as if live. | — |
 | Echo: translation | **Build** | — | ✅ Gemma |
 | Echo: Q&A | **Build** | — | optional: group similar questions |
 | Echo: Ask the talk | **Build** | — | ✅ Gemini (`feature-echo-ai`) |
