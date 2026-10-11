@@ -20,9 +20,9 @@ void main() {
     expect(find.text('Join with a link or code'), findsOneWidget);
 
     // Deep link
-    GoRouter.of(tester.element(find.text('Eho'))).go('/e/devsummit');
+    GoRouter.of(tester.element(find.text('Eho'))).go('/e/devfest');
     await tester.pumpAndSettle();
-    expect(find.text('DevSummit Belgrade 2026'), findsOneWidget);
+    expect(find.text('DevFest Belgrade 2026'), findsOneWidget);
 
     // Join → onboarding (3 steps)
     await tester.tap(find.text('Join event'));
@@ -60,7 +60,7 @@ void main() {
 
     // Back to the tabs → Find
     GoRouter.of(tester.element(find.text('Full talk summary'))).go(
-      '/e/devsummit/find',
+      '/e/devfest/find',
     );
     await tester.pumpAndSettle();
     expect(find.text('Recommended for you'), findsOneWidget);

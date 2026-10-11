@@ -29,6 +29,9 @@ abstract interface class EventRepository {
 
   /// Agenda of an event. [API-3]
   Future<List<Session>> agenda(String eventId);
+
+  /// Topics offered in onboarding and on the profile.
+  List<String> get interestOptions;
 }
 
 abstract interface class EchoRepository {
@@ -146,13 +149,28 @@ abstract interface class OrganizerRepository {
 Future<void> _think([int ms = 900]) =>
     Future<void>.delayed(Duration(milliseconds: ms));
 
+/// Event ID the demo used before the rename to DevFest. Old QR codes and
+/// links still point at it, so it resolves to the demo event.
+const _legacyDemoEventId = 'devsummit';
+
+String _canonicalEventId(String eventId) =>
+    eventId == _legacyDemoEventId ? demoEventId : eventId;
+
+/// Lowercases only the first letter so acronyms and names survive
+/// ("on-device ML", "senior Go engineers").
+String _lowerFirst(String s) =>
+    s.isEmpty ? s : s[0].toLowerCase() + s.substring(1);
+
 class DemoEventRepository implements EventRepository {
+  @override
+  List<String> get interestOptions => demo.interestOptions;
+
   @override
   Future<EventSummary> getEvent(String eventId) async {
     await _think(300);
     if (eventId == demo.pastEvent.id) return demo.pastEvent;
     return EventSummary(
-      id: eventId,
+      id: _canonicalEventId(eventId),
       name: demo.demoEventName,
       dates: demo.demoEventDates,
       venue: demo.demoEventVenue,
@@ -334,8 +352,8 @@ class DemoFindRepository implements FindRepository {
           person: p,
           why: score > 0
               ? 'You both care about ${p.interests.where(mine.contains).join(' and ')}. '
-                    '${p.name.split(' ').first} is looking for: ${p.lookingFor.toLowerCase()}.'
-              : '${p.name.split(' ').first} is looking for: ${p.lookingFor.toLowerCase()}.',
+                    '${p.name.split(' ').first} is looking for: ${_lowerFirst(p.lookingFor)}.'
+              : '${p.name.split(' ').first} is looking for: ${_lowerFirst(p.lookingFor)}.',
         ),
     ];
   }
@@ -366,7 +384,7 @@ class DemoFindRepository implements FindRepository {
         PersonMatch(
           person: p,
           why: '${p.headline}. Matches "$prompt" on $score '
-              '${score == 1 ? 'point' : 'points'}; looking for: ${p.lookingFor.toLowerCase()}.',
+              '${score == 1 ? 'point' : 'points'}; looking for: ${_lowerFirst(p.lookingFor)}.',
         ),
     ];
   }
@@ -416,7 +434,7 @@ class DemoOrganizerRepository implements OrganizerRepository {
 /// `--dart-define=DEMO_EVENT_ID=<id>`.
 const demoEventId = String.fromEnvironment(
   'DEMO_EVENT_ID',
-  defaultValue: 'devsummit',
+  defaultValue: 'devfest',
 );
 
 /// Base URL for join links. On web, the app's own origin.
@@ -431,6 +449,11 @@ String linkBase() {
 
 final eventRepositoryProvider = Provider<EventRepository>(
   (ref) => DemoEventRepository(),
+);
+
+/// Interest topics for onboarding and the profile.
+final interestOptionsProvider = Provider<List<String>>(
+  (ref) => ref.watch(eventRepositoryProvider).interestOptions,
 );
 
 /// Echo API when enabled (`USE_ECHO_API`, default on), Firebase is up and

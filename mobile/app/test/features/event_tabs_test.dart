@@ -38,7 +38,7 @@ void main() {
   ) async {
     // Short screen so the agenda scrolls.
     await start(tester, height: 1200);
-    go(tester, '/e/devsummit/agenda');
+    go(tester, '/e/devfest/agenda');
     await tester.pumpAndSettle();
     expect(find.text('All stages'), findsOneWidget);
 
@@ -80,35 +80,35 @@ void main() {
   testWidgets('event deep links open the right screens', (tester) async {
     await start(tester);
 
-    go(tester, '/e/devsummit/agenda');
+    go(tester, '/e/devfest/agenda');
     await tester.pumpAndSettle();
     expect(find.text('All stages'), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
 
-    go(tester, '/e/devsummit/find');
+    go(tester, '/e/devfest/find');
     await tester.pumpAndSettle();
     expect(find.text('Find people'), findsOneWidget);
 
-    go(tester, '/e/devsummit/find/person/p2');
+    go(tester, '/e/devfest/find/person/p2');
     await tester.pumpAndSettle();
     expect(find.text('Founder, ParkIt'), findsWidgets);
 
-    go(tester, '/e/devsummit/profile');
+    go(tester, '/e/devfest/profile');
     await tester.pumpAndSettle();
     expect(find.byType(NavigationBar), findsOneWidget);
 
-    go(tester, '/e/devsummit/session/s1');
+    go(tester, '/e/devfest/session/s1');
     await tester.pumpAndSettle();
     expect(find.text('Open Echo: live transcript & AI'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
 
     // Not joined yet: `/e/{id}` shows the join screen.
-    go(tester, '/e/devsummit');
+    go(tester, '/e/devfest');
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
     expect(find.text('Join event'), findsOneWidget);
 
-    go(tester, '/e/devsummit/session/s1/echo');
+    go(tester, '/e/devfest/session/s1/echo');
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Ask AI'), findsOneWidget);

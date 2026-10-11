@@ -47,7 +47,7 @@ void main() {
         .read(joinedEventsProvider.notifier)
         .add(
           const EventSummary(
-            id: 'devsummit',
+            id: 'devfest',
             name: 'Dev Summit',
             dates: 'Oct 1',
             venue: 'Hall',
@@ -68,7 +68,7 @@ void main() {
     expect(p.shareMeetingSpot, isFalse);
     expect(p.onboarded, isTrue);
     expect(b.read(joinedEventsProvider).map((e) => e.id), [
-      'devsummit',
+      'devfest',
       demo.pastEvent.id,
     ]);
     expect(b.read(contactsProvider), {
@@ -80,7 +80,7 @@ void main() {
 
     // Clearing values persists too.
     b.read(meetingSpotProvider.notifier).set(null);
-    b.read(joinedEventsProvider.notifier).remove('devsummit');
+    b.read(joinedEventsProvider.notifier).remove('devfest');
     final c = _container(prefs);
     expect(c.read(meetingSpotProvider), isNull);
     expect(c.read(joinedEventsProvider).map((e) => e.id), [demo.pastEvent.id]);

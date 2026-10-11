@@ -139,7 +139,7 @@ flutter pub get
 flutter analyze             # must be "No issues found!"
 flutter test                # all tests must pass
 # screenshots (builds web first; each route is a fresh page load):
-../scripts/shots.sh /tmp/eho-shots start=/ agenda=/e/devsummit/agenda echo=/e/devsummit/session/s1/echo
+../scripts/shots.sh /tmp/eho-shots start=/ agenda=/e/devfest/agenda echo=/e/devfest/session/s1/echo
 ```
 
 - Widget tests: follow `test/features/happy_path_test.dart`. Use a phone-sized `tester.view`, `pumpAndSettle` for navigation, and an extra `pump` after stream/async updates (Echo uses timed streams; `pumpAndSettle` alone won't wait for them).

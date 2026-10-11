@@ -95,7 +95,7 @@ Future<void> _pumpEcho(WidgetTester tester, [EchoRepository? repo]) async {
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: EchoScreen(eventId: 'devsummit', sessionId: 's1'),
+        home: EchoScreen(eventId: 'devfest', sessionId: 's1'),
       ),
     ),
   );

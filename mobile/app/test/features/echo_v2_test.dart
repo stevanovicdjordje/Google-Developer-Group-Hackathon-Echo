@@ -80,7 +80,7 @@ Future<ProviderContainer> _pump(
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: EchoScreen(eventId: 'devsummit', sessionId: 's1'),
+        home: EchoScreen(eventId: 'devfest', sessionId: 's1'),
       ),
     ),
   );
@@ -245,7 +245,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('This talk'), findsOneWidget);
-    expect(find.text('Every talk at DevSummit Belgrade 2026'), findsOneWidget);
+    expect(find.text('Every talk at DevFest Belgrade 2026'), findsOneWidget);
 
     await tester.tap(find.text('Not now'));
     await tester.pumpAndSettle();
@@ -286,7 +286,7 @@ void main() {
 
   testWidgets('"Every talk" unlocks every talk of the event', (tester) async {
     final container = await _pump(tester, _EndingEcho());
-    await tester.tap(find.text('Every talk at DevSummit Belgrade 2026'));
+    await tester.tap(find.text('Every talk at DevFest Belgrade 2026'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Unlock summary'));
     await tester.pumpAndSettle();

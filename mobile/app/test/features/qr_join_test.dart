@@ -17,7 +17,7 @@ void main() {
     final router = GoRouter.of(tester.element(find.text('Eho')));
     router.go(link);
     await tester.pumpAndSettle();
-    expect(find.text('DevSummit Belgrade 2026'), findsOneWidget);
+    expect(find.text('DevFest Belgrade 2026'), findsOneWidget);
     return router;
   }
 
@@ -37,14 +37,22 @@ void main() {
       r.routerDelegate.currentConfiguration.uri.toString();
 
   testWidgets('QR link keeps ?at= through join and onboarding', (tester) async {
-    final router = await open(tester, '/e/devsummit?at=m1');
+    final router = await open(tester, '/e/devfest?at=m1');
     await joinWithOnboarding(tester);
-    expect(location(router), '/e/devsummit/map?at=m1');
+    expect(location(router), '/e/devfest/map?at=m1');
   });
 
   testWidgets('link without ?at= still lands on the agenda', (tester) async {
-    final router = await open(tester, '/e/devsummit');
+    final router = await open(tester, '/e/devfest');
     await joinWithOnboarding(tester);
-    expect(location(router), '/e/devsummit/agenda');
+    expect(location(router), '/e/devfest/agenda');
+  });
+
+  testWidgets('old /e/devsummit link joins the DevFest demo event', (
+    tester,
+  ) async {
+    final router = await open(tester, '/e/devsummit?at=m1');
+    await joinWithOnboarding(tester);
+    expect(location(router), '/e/devfest/map?at=m1');
   });
 }

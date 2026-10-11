@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../core/ui/ui.dart';
 import '../../data/app_state.dart';
-import '../../data/demo_data.dart' as demo;
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
@@ -373,7 +372,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         spacing: 10,
                         runSpacing: 10,
                         children: [
-                          for (final i in demo.interestOptions)
+                          for (final i in ref.watch(interestOptionsProvider))
                             _InterestChip(
                               label: i,
                               selected: _interests.contains(i),

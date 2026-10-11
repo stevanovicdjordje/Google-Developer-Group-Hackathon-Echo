@@ -8,8 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 const _event = EventSummary(
-  id: 'devsummit',
-  name: 'DevSummit Belgrade 2026',
+  id: 'devfest',
+  name: 'DevFest Belgrade 2026',
   dates: 'Oct 11–12, 2026',
   venue: 'Sava Centar, Belgrade',
 );
@@ -44,11 +44,11 @@ void main() {
     expect(find.text('LIVE NOW'), findsOneWidget);
     expect(find.textContaining('Next: On-device AI'), findsOneWidget);
 
-    router.go('/e/devsummit/agenda');
+    router.go('/e/devfest/agenda');
     await settle(tester);
     expect(find.text('LIVE NOW · ECHO ON'), findsOneWidget);
 
-    router.go('/e/devsummit/find');
+    router.go('/e/devfest/find');
     await settle(tester);
     expect(find.text('from your interests'), findsOneWidget);
     expect(find.text('Top match'), findsOneWidget);
@@ -73,7 +73,7 @@ void main() {
     container.read(joinedEventsProvider.notifier).add(_event);
     final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
 
-    router.go('/e/devsummit/find/person/p2');
+    router.go('/e/devfest/find/person/p2');
     await settle(tester);
     // A deep link has no `?why=`; the reason comes from the recommendations.
     expect(find.text('Why you should meet'), findsOneWidget);
@@ -89,7 +89,7 @@ void main() {
     container
         .read(meetingSpotProvider.notifier)
         .set(const MeetingSpot(personName: 'Milan Jovanović', place: 'Sala A'));
-    router.go('/e/devsummit/messages/p2');
+    router.go('/e/devfest/messages/p2');
     await settle(tester);
     expect(find.text('Milan accepted your contact request'), findsOneWidget);
     expect(find.text('Meet at Sala A'), findsOneWidget);
@@ -98,7 +98,7 @@ void main() {
     await settle(tester);
     expect(
       router.routerDelegate.currentConfiguration.uri.toString(),
-      '/e/devsummit/map?spot=1',
+      '/e/devfest/map?spot=1',
     );
     expect(find.byType(MapViewerScreen), findsOneWidget);
   });

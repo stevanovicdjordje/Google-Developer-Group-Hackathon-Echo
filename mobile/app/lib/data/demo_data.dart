@@ -7,7 +7,7 @@ library;
 import 'echo_models.dart';
 import 'models.dart';
 
-const demoEventName = 'DevSummit Belgrade 2026';
+const demoEventName = 'DevFest Belgrade 2026';
 const demoEventDates = 'Oct 11–12, 2026';
 const demoEventVenue = 'Sava Centar, Belgrade';
 
