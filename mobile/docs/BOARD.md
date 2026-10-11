@@ -22,7 +22,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
 | V-7 | verifier (sonnet, medium) | 2026-10-11 07:10 | none | Galaxy on `devfest`, DEMO_LOCATION 44.799820,20.400025; integration_test + live smoke incl. organizer upload/publish |
-| M-45 | dev | 2026-10-11 07:12 | worktree (on top of M-52) | Other person's meeting spot from `listContacts`; no find_screens.dart (M-53 holds it) |
+| M-45 | dev | done | `worktree-agent-a9e7c0bf446ba3a50` (3dce367, contains M-52) | **review**: merge after V-7, then add `ref.watch(contactSpotSyncProvider((eventId, p.id)))` in Messages (find_screens.dart ~855) + APP_GUIDE Find paragraph. 188 tests |
 | M-53 | dev (sonnet, medium) | done | `worktree-agent-a2fb66de4c8319100` (45434e3) | **review**: merge after V-7. Shots `echo-answer`, `echo-jump-live`, `messages-spot-picker`; APP_GUIDE shot list to update on merge |
 | M-52 | dev | done 07:2x | `worktree-agent-a4a6f09c231d68cfe` (09d3beb) | **review**: merge after V-7 finishes (V-7 uses the main checkout). 181/181. No count tile (there's none in the design). Warnings via `organizerWarningsProvider`. Follow-up: dev shots with issues/warnings |
 
