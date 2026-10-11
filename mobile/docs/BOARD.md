@@ -15,6 +15,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
+| M-57 | Map tab shows you-are-here on open (`locateOnOpen: true` in `map_tab.dart` + widget test with an overridden `locationSourceProvider`, shot with DEMO_LOCATION on `/e/devfest/map`) | feature:maps `mobile#20` (eho_maps has no API for it) |
 | M-14 | https App Links / Universal Links for `/e/{id}` (assetlinks.json / apple-app-site-association) | Hosting domain. Phones themselves run (`9dbd308`: `eho://open/e/{id}`, Android + iPhone 13 Pro Max on the local backends) |
 
 ## In progress / review
