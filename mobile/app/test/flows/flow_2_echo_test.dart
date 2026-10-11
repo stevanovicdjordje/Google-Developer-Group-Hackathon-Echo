@@ -53,7 +53,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.textContaining('12% battery'), findsOneWidget);
 
-    // Translate to Serbian: banner, SR pill and Serbian placeholder.
+    // Translate to Serbian: banner and SR pill; the chrome stays English.
     await tester.tap(find.byTooltip('Translate to Serbian'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(
@@ -61,7 +61,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('SR'), findsWidgets);
-    expect(find.text('Pitajte bilo šta o predavanju…'), findsOneWidget);
+    expect(find.text('Ask about this talk…'), findsOneWidget);
     expect(find.textContaining('Vaš granični trošak'), findsOneWidget);
     await tester.tap(find.byTooltip('Show original'));
     await tester.pump(const Duration(milliseconds: 500));

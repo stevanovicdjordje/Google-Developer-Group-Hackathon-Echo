@@ -765,7 +765,8 @@ class AppLocalizationsSr extends AppLocalizations {
       'Prevedeno uživo sa engleskog · dodirni SR za original';
 
   @override
-  String get echoAskHintTranslated => 'Pitajte bilo šta o predavanju…';
+  String get echoTranslatedBannerEnded =>
+      'Prevedeno sa engleskog · dodirni SR za original';
 
   @override
   String get echoLangOriginal => 'EN';

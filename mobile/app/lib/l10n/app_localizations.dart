@@ -1268,17 +1268,17 @@ abstract class AppLocalizations {
   /// **'Ended · {stage}'**
   String echoEndedAt(String stage);
 
-  /// Banner under the Echo header while translate is on.
+  /// Banner under the Echo header while translate is on and the talk is live.
   ///
   /// In en, this message translates to:
   /// **'Translated live from English · tap SR for the original'**
   String get echoTranslatedBanner;
 
-  /// Ask input placeholder while translate (to Serbian) is on. Intentionally Serbian in every locale.
+  /// Banner under the Echo header while translate is on and the talk has ended (no "live").
   ///
   /// In en, this message translates to:
-  /// **'Pitajte bilo šta o predavanju…'**
-  String get echoAskHintTranslated;
+  /// **'Translated from English · tap SR for the original'**
+  String get echoTranslatedBannerEnded;
 
   /// Translate pill label: transcript in the original language.
   ///
