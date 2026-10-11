@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:echo` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 09:24 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo
+**Last updated:** 2026-10-11 12:02 · **Owner:** @MilosBG03 · **Scopes held:** feature:echo
 
 ## Current state
 
@@ -70,6 +70,8 @@ Verified: `go test` (handlers, prompts/output validation, Gemini client against 
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
+| echo#3 | feature:maps | Found while testing the portal's *Open the map editor* button (echo#2): your STATUS notes that opening `/o` directly on a fresh page load keeps spinning (it works only from Profile → Edit venue map). The portal opens `/o` in a new tab, i.e. always a fresh load, so once echo#2 is fixed the button will hit this. Please make a direct load of `/o` reach the sign-in or the editor. | open | 2026-10-11 |
+| echo#2 | feature:onboarding | Portal *Venue* page: *Open the map editor* links to `{EHO_APP_URL}/organizer` (`backend/onboarding/internal/events/http.go:226`), which in the app is the agenda-PDF upload screen, not the map editor. The editor is the `/o` route (`mobile/app/lib/core/router.dart:42`). Please link to `/o` instead. Reproduced on the local stack: `GET /org/events/devfest/venue` renders `href="http://localhost:5050/organizer"`. See echo#3 for the fresh-load issue on `/o`. | open | 2026-10-11 |
 | echo#1 | mobile | Wire `EchoRepository` to the Echo API (mapping table above): an HTTP implementation with its own base URL (default `http://localhost:8082`, e.g. `--dart-define=ECHO_API_BASE_URL`), the transcript from the Firestore listener in `realtime.md`, and translation through `translateTranscript` instead of the precomputed `translated` text. Keep the demo implementation as the fallback if you like. Session `s1` (the keynote) is the one with a replayed transcript. | closed (done in mobile `138b7be`, design `0a1a027`) | 2026-10-11 |
 
 ## Inbound requests (others need something from us)
