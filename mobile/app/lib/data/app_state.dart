@@ -99,23 +99,42 @@ class JoinedEventsNotifier extends Notifier<List<EventSummary>> {
     return migrated;
   }
 
-  /// Adds the events the Events service knows the user joined (`listMyEvents`)
-  /// on top, server order first; events only the app knows stay below. The
-  /// demo repository knows none, so demo state is unchanged.
+  /// Ids `listMyEvents` returned, so a demo-only event the server really
+  /// lists still counts as real.
+  final _serverIds = <String>{};
+
+  bool _isDemoOnly(String id) =>
+      demoOnlyEventIds.contains(id) && !_serverIds.contains(id);
+
+  /// With the live Events service: drops the demo-only events (the demo past
+  /// event) the server doesn't know, and adds the events it knows the user
+  /// joined (`listMyEvents`) on top, server order first; events only the app
+  /// knows stay below. The demo repository knows none and keeps the demo
+  /// events, so demo state is unchanged.
   Future<void> _syncFromServer() async {
-    final List<EventSummary> server;
+    final repo = ref.read(eventRepositoryProvider);
+    var live = false;
+    var server = const <EventSummary>[];
     try {
-      server = await ref.read(eventRepositoryProvider).myEvents();
+      live = await repo.isLive;
+      server = await repo.myEvents();
     } catch (e) {
       debugPrint(
         'My events sync failed: '
         '${e is EventsException ? e.kind.name : e.runtimeType}',
       );
-      return;
     }
-    if (server.isEmpty || !ref.mounted) return;
+    if (!ref.mounted) return;
+    _serverIds
+      ..clear()
+      ..addAll(server.map((e) => e.id));
+    if (!live && server.isEmpty) return;
     final ids = {for (final e in server) e.id};
-    final merged = [...server, ...state.where((e) => !ids.contains(e.id))];
+    final merged = [
+      ...server,
+      for (final e in state)
+        if (!ids.contains(e.id) && !(live && _isDemoOnly(e.id))) e,
+    ];
     final same =
         merged.length == state.length &&
         [
@@ -140,9 +159,12 @@ class JoinedEventsNotifier extends Notifier<List<EventSummary>> {
   }
 
   /// Removes the event here and on the Events service (`leaveEvent`, in the
-  /// background; a failure only logs the error kind).
+  /// background; a failure only logs the error kind). Demo-only events are
+  /// never sent: the server doesn't know them.
   void remove(String id) {
+    final demoOnly = _isDemoOnly(id);
     _set(state.where((e) => e.id != id).toList());
+    if (demoOnly) return;
     ref
         .read(eventRepositoryProvider)
         .leave(id)

@@ -7,3 +7,9 @@
 /// (`JoinedEventsNotifier` in `app_state.dart`), and `DemoEventRepository`
 /// resolves them to the demo event.
 const demoEventAliases = {'devfest', 'devsummit'};
+
+/// Events that exist only in the demo data (`pastEvent` in `demo_data.dart`).
+/// The Events service doesn't know them unless it lists them in My events, so
+/// with the live service they are dropped from the joined events and leaving
+/// one never calls the server.
+const demoOnlyEventIds = {'ai-meetup-ns-2026'};
