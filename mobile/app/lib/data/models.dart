@@ -134,8 +134,12 @@ class Person {
   final List<String> interests;
   final String lookingFor;
 
-  String get initials =>
-      name.split(' ').where((p) => p.isNotEmpty).map((p) => p[0]).take(2).join();
+  String get initials => name
+      .split(' ')
+      .where((p) => p.isNotEmpty)
+      .map((p) => p[0])
+      .take(2)
+      .join();
 }
 
 class PersonMatch {
@@ -213,15 +217,39 @@ class Profile {
 
 enum ContactState { none, requested, accepted }
 
+/// A person as the Person screen needs them (`PersonDetail` in
+/// `contracts/find`).
+class PersonDetail {
+  const PersonDetail({
+    required this.person,
+    this.allowContact = true,
+    this.contactState,
+  });
+
+  final Person person;
+
+  /// Whether a contact request can be sent.
+  final bool allowContact;
+
+  /// The caller's contact state as the server knows it; null when only the
+  /// app knows it (demo data), so the local state stays.
+  final ContactState? contactState;
+}
+
 class MeetingSpot {
   const MeetingSpot({
     required this.personName,
     required this.place,
     this.time,
     this.floor,
+    this.personId,
   });
 
   final String personName;
+
+  /// The contact's `Person.id`, used to save the spot on the Find service.
+  /// Null on spots saved before it existed.
+  final String? personId;
 
   /// Name of a room/stand/POI on the venue map (`MeetingSpot.place` in
   /// `contracts/find`).
@@ -239,6 +267,7 @@ class MeetingSpot {
     'place': place,
     if (time != null) 'time': time,
     if (floor != null) 'floor': floor,
+    if (personId != null) 'personId': personId,
   };
 
   factory MeetingSpot.fromJson(Map<String, dynamic> j) => MeetingSpot(
@@ -246,6 +275,7 @@ class MeetingSpot {
     place: j['place'] as String,
     time: j['time'] as String?,
     floor: j['floor'] as String?,
+    personId: j['personId'] as String?,
   );
 }
 

@@ -4,13 +4,15 @@
 /// later (see `mobile/docs/api-needs.md`).
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'demo_data.dart' as demo;
 import 'demo_ids.dart';
 import 'local_store.dart';
 import 'models.dart';
-import 'repositories.dart' show demoEventId;
+import 'repositories.dart'
+    show FindException, demoEventId, findRepositoryProvider;
 
 class ProfileNotifier extends Notifier<Profile> {
   @override
@@ -23,11 +25,23 @@ class ProfileNotifier extends Notifier<Profile> {
           ) ??
       const Profile();
 
+  /// Saves locally and, once onboarding is done, on the Find service
+  /// (`FindRepository.saveProfile`; consents exactly as set).
   void save(Profile p) {
+    // Before the state change, so Find calls it triggers wait for this save.
+    _sync(ref.read(findRepositoryProvider).saveProfile(p));
     state = p;
     ref.read(localStoreProvider).write('profile', p.toJson());
   }
 }
+
+/// Background push to the Find service. A failure keeps the local state (the
+/// next Find call saves again); only the error kind is logged, never data.
+void _sync(Future<void> push) => push.catchError((Object e) {
+  debugPrint(
+    'Find sync failed: ${e is FindException ? e.kind.name : e.runtimeType}',
+  );
+});
 
 final profileProvider = NotifierProvider<ProfileNotifier, Profile>(
   ProfileNotifier.new,
@@ -138,6 +152,33 @@ class MeetingSpotNotifier extends Notifier<MeetingSpot?> {
   void set(MeetingSpot? spot) {
     state = spot;
     ref.read(localStoreProvider).write('meetingSpot', spot?.toJson());
+  }
+
+  /// Sets [spot] and saves it with the contact on the Find service
+  /// (`putMeetingSpot`; time and floor stay in the app). The place comes
+  /// back in the map's spelling.
+  void agree(String eventId, MeetingSpot spot) {
+    set(spot);
+    final personId = spot.personId;
+    if (personId == null) return;
+    _sync(
+      ref
+          .read(findRepositoryProvider)
+          .setMeetingSpot(eventId, personId, spot.place)
+          .then((place) {
+            if (identical(state, spot) && place != spot.place) {
+              set(
+                MeetingSpot(
+                  personName: spot.personName,
+                  place: place,
+                  time: spot.time,
+                  floor: spot.floor,
+                  personId: spot.personId,
+                ),
+              );
+            }
+          }),
+    );
   }
 }
 

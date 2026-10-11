@@ -13,9 +13,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/providers.dart';
+import 'app_state.dart' show profileProvider;
 import 'demo_data.dart' as demo;
 import 'echo_api_repository.dart';
 import 'echo_models.dart';
+import 'find_api_repository.dart';
 import 'models.dart';
 
 // ---------------------------------------------------------------- interfaces
@@ -124,16 +126,64 @@ class EchoException implements Exception {
 }
 
 abstract interface class FindRepository {
+  /// Saves the attendee's profile and consent switches, exactly as set.
+  /// Does nothing until onboarding is done ([Profile.onboarded]). [API-14]
+  Future<void> saveProfile(Profile profile);
+
+  /// Deletes the profile, event presence and contacts on the server
+  /// (`DATA_PRIVACY.md` -> Deletion). No screen offers it yet.
+  Future<void> deleteProfile();
+
   /// AI-ranked people to meet, based on the user's profile. [API-9]
   Future<List<PersonMatch>> recommendations(String eventId, Profile me);
 
   /// AI people search from a free-text prompt. [API-10]
   Future<List<PersonMatch>> search(String eventId, String prompt);
 
-  Future<Person> person(String eventId, String personId);
+  /// One person at the event; null when they aren't (or no longer) visible.
+  Future<PersonDetail?> person(String eventId, String personId);
 
-  /// Send a contact request. [API-11]
-  Future<void> requestContact(String eventId, String personId);
+  /// Send a contact request; emits the contact state as it changes
+  /// (`requested`, then `accepted` when the person accepts). [API-11]
+  Stream<ContactState> requestContact(String eventId, String personId);
+
+  /// Agree on [place] (a feature name on the venue map) with an accepted
+  /// contact; returns the place as stored (the map's spelling). [API-15]
+  Future<String> setMeetingSpot(String eventId, String personId, String place);
+}
+
+enum FindErrorKind {
+  /// The service can't be reached.
+  offline,
+
+  /// Too many AI requests; retry after [FindException.retryAfter].
+  rateLimited,
+
+  /// The AI failed or was too slow; safe to retry.
+  aiBusy,
+
+  /// The person isn't visible (or the event isn't published).
+  notFound,
+
+  /// The person doesn't take contact requests, or a meeting spot isn't
+  /// allowed (both sides need the switch on).
+  notAllowed,
+
+  /// No saved profile yet (onboarding not done).
+  profileRequired,
+  failed,
+}
+
+/// Failure of a [FindRepository] call, for the screen to explain.
+class FindException implements Exception {
+  const FindException(this.kind, [this.message = '', this.retryAfter]);
+
+  final FindErrorKind kind;
+  final String message;
+  final Duration? retryAfter;
+
+  @override
+  String toString() => 'FindException(${kind.name}): $message';
 }
 
 abstract interface class OrganizerRepository {
@@ -422,11 +472,32 @@ class DemoFindRepository implements FindRepository {
       '${p.headline}. Looking for ${_lowerFirst(p.lookingFor)}.';
 
   @override
-  Future<Person> person(String eventId, String personId) async =>
-      demo.people.firstWhere((p) => p.id == personId);
+  Future<PersonDetail?> person(String eventId, String personId) async {
+    final p = demo.people.where((p) => p.id == personId).firstOrNull;
+    return p == null ? null : PersonDetail(person: p);
+  }
+
+  /// Demo: the other person accepts shortly after the request.
+  @override
+  Stream<ContactState> requestContact(String eventId, String personId) async* {
+    await _think(500);
+    yield ContactState.requested;
+    await Future<void>.delayed(const Duration(seconds: 2));
+    yield ContactState.accepted;
+  }
 
   @override
-  Future<void> requestContact(String eventId, String personId) => _think(500);
+  Future<void> saveProfile(Profile profile) async {}
+
+  @override
+  Future<void> deleteProfile() async {}
+
+  @override
+  Future<String> setMeetingSpot(
+    String eventId,
+    String personId,
+    String place,
+  ) async => place;
 }
 
 class DemoOrganizerRepository implements OrganizerRepository {
@@ -512,9 +583,21 @@ bool _firebaseReady() {
   }
 }
 
-final findRepositoryProvider = Provider<FindRepository>(
-  (ref) => DemoFindRepository(),
-);
+/// Find API when enabled (`USE_FIND_API`, default on), Firebase is up and
+/// the service answers `/healthz`; demo data otherwise (and in tests).
+final findRepositoryProvider = Provider<FindRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  if (!config.useFindApi || !_firebaseReady()) return DemoFindRepository();
+  return FallbackFindRepository(
+    primary: FindApiRepository(
+      baseUrl: config.findApiBaseUrl,
+      tokenProvider: anonymousIdToken(ref.watch(firebaseAuthProvider)),
+      // Read when the service needs the profile first (before `joinFind`).
+      profile: () => ref.read(profileProvider),
+    ),
+    fallback: DemoFindRepository(),
+  );
+});
 final organizerRepositoryProvider = Provider<OrganizerRepository>(
   (ref) => DemoOrganizerRepository(demoEventId, linkBase()),
 );

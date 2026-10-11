@@ -10,6 +10,8 @@ class AppConfig {
     required this.emulatorHost,
     this.echoApiBaseUrl = 'http://localhost:8082',
     this.useEchoApi = true,
+    this.findApiBaseUrl = 'http://localhost:8083',
+    this.useFindApi = true,
     this.firebase = const FirebaseWebConfig(),
   });
 
@@ -29,6 +31,11 @@ class AppConfig {
       defaultValue: 'http://localhost:8082',
     ),
     useEchoApi: bool.fromEnvironment('USE_ECHO_API', defaultValue: true),
+    findApiBaseUrl: String.fromEnvironment(
+      'FIND_API_BASE_URL',
+      defaultValue: 'http://localhost:8083',
+    ),
+    useFindApi: bool.fromEnvironment('USE_FIND_API', defaultValue: true),
     firebase: FirebaseWebConfig(
       apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
       appId: String.fromEnvironment('FIREBASE_APP_ID'),
@@ -49,6 +56,13 @@ class AppConfig {
   /// Use the Echo API when Firebase is up and the service answers `/healthz`.
   /// Otherwise (or with `USE_ECHO_API=false`) Echo runs on demo data.
   final bool useEchoApi;
+
+  /// Find service (`backend/find`, `contracts/find`).
+  final String findApiBaseUrl;
+
+  /// Use the Find API when Firebase is up and the service answers `/healthz`.
+  /// Otherwise (or with `USE_FIND_API=false`) Find runs on demo data.
+  final bool useFindApi;
 
   /// Real Firebase project values, used only when `USE_EMULATORS=false`.
   final FirebaseWebConfig firebase;
