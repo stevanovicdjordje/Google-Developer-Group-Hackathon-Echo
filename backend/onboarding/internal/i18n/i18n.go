@@ -53,6 +53,12 @@ func (b *Bundle) Rating(f float64) string {
 	return strings.Replace(fmt.Sprintf("%.1f", f), ".", b.T("fmt.decimal"), 1)
 }
 
+// Money formats an amount in cents, e.g. "€2.99" (en) or "2,99 €" (sr).
+func (b *Bundle) Money(cents int) string {
+	n := fmt.Sprintf("%d%s%02d", cents/100, b.T("fmt.decimal"), cents%100)
+	return b.T("fmt.price", n)
+}
+
 // Keys returns every key of a language (tests).
 func Keys(lang string) []string {
 	var out []string

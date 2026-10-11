@@ -1,0 +1,28 @@
+{{define "content"}}
+<div class="page-head">
+  <h1>{{t "purchases.title"}}</h1>
+  <a class="btn" href="/talks">{{t "talks.title"}}</a>
+</div>
+<section class="card">
+  {{if .Data}}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>{{t "purchases.talk"}}</th><th>{{t "purchases.date"}}</th><th>{{t "purchases.amount"}}</th><th>{{t "purchases.card"}}</th><th></th></tr></thead>
+      <tbody>
+        {{range .Data}}
+        <tr>
+          <td><a href="{{.URL}}">{{if .SessionTitle}}{{.SessionTitle}}{{else}}{{.SessionID}}{{end}}</a><br><span class="muted">{{.EventTitle}}</span></td>
+          <td>{{date .CreatedAt}}</td>
+          <td>{{.Amount}}{{if eq .Mode "test"}} <span class="badge">{{t "purchases.test"}}</span>{{end}}</td>
+          <td>{{.CardBrand}} •••• {{.CardLast4}}</td>
+          <td><a class="btn btn-primary" href="{{.URL}}/report.pdf" download>{{t "talks.download"}}</a></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+    <p class="empty">{{t "purchases.empty"}}</p>
+  {{end}}
+</section>
+{{end}}

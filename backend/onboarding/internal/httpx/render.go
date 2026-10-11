@@ -192,7 +192,7 @@ func (rd *Renderer) Page(w http.ResponseWriter, req *http.Request, status int, n
 // codes are accepted so the query string cannot inject arbitrary text keys.
 func flashKey(code string) string {
 	switch code {
-	case "saved", "published", "invited", "accepted", "declined", "review", "profile", "deleted":
+	case "saved", "published", "invited", "accepted", "declined", "review", "profile", "deleted", "paid":
 		return "flash." + code
 	}
 	return ""

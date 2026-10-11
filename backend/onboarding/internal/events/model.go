@@ -121,6 +121,8 @@ type Repository interface {
 	Update(ctx context.Context, e Event) error
 	Get(ctx context.Context, id string) (Event, error)
 	ListByOwner(ctx context.Context, uid string) ([]Event, error)
+	// ListPublished returns every event attendees can see (any organizer).
+	ListPublished(ctx context.Context) ([]Event, error)
 
 	// GetAgenda returns the published agenda, or an empty one.
 	GetAgenda(ctx context.Context, eventID string) (Agenda, error)

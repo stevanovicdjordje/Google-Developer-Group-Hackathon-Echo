@@ -3,7 +3,6 @@ package reports
 import (
 	"bytes"
 	"context"
-	"encoding/csv"
 	"fmt"
 	"math"
 	"strings"
@@ -100,27 +99,60 @@ func TestStatSummarizer(t *testing.T) {
 	}
 }
 
-func TestWriteCSV(t *testing.T) {
+func TestWritePDF(t *testing.T) {
 	in := fixture()
-	in.Reviews[0].Comment = "=HYPERLINK(\"http://evil\")"
-	var buf bytes.Buffer
-	if err := WriteCSV(&buf, in.Reviews, in.Sessions[:3], time.UTC); err != nil {
-		t.Fatal(err)
+	// Serbian letters and enough comments to need a second page.
+	for i := 0; i < 40; i++ {
+		in.Reviews = append(in.Reviews, reviews.WithAuthor{Review: reviews.Review{ID: fmt.Sprint("x", i), Rating: 1 + i%5,
+			Comment: "Čačak, Đorđe, šećer i žurka – odlična organizacija „Eho“.", UpdatedAt: now}, AuthorName: "Đurđa Šović"})
 	}
-	rows, err := csv.NewReader(&buf).ReadAll()
+	b := i18n.New("sr")
+	rep := Compute(in)
+	sum, _ := StatSummarizer{T: b.T, Rating: b.Rating}.Summarize(context.Background(), rep)
+	var buf bytes.Buffer
+	err := WritePDF(&buf, rep, sum, PDFText{T: b.T, Rating: b.Rating,
+		Date: func(t time.Time) string { return t.Format("02.01.2006. 15:04") },
+		Day:  func(t time.Time) string { return t.Format("02.01.2006.") }})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(rows) != 4 || len(rows[0]) != 7+3 {
-		t.Fatalf("shape: %d rows, %d cols", len(rows), len(rows[0]))
+	out := buf.Bytes()
+	if !bytes.HasPrefix(out, []byte("%PDF-")) || !bytes.Contains(out[len(out)-32:], []byte("%%EOF")) {
+		t.Fatalf("not a complete PDF (%d bytes)", len(out))
 	}
-	if !strings.HasPrefix(rows[1][6], "'=") {
-		t.Errorf("formula not neutralized: %q", rows[1][6])
+	if n := bytes.Count(out, []byte("/Type /Page\n")) + bytes.Count(out, []byte("/Type /Page ")); n < 2 {
+		t.Errorf("expected at least 2 pages, got %d", n)
 	}
-	if rows[2][2] != "" || rows[2][3] != "" || rows[2][4] != "true" {
-		t.Errorf("anonymous row leaks author: %v", rows[2])
+}
+
+func TestWriteTalkPDF(t *testing.T) {
+	b := i18n.New("sr")
+	tx := PDFText{T: b.T, Rating: b.Rating,
+		Date:  func(t time.Time) string { return t.Format("02.01.2006. 15:04") },
+		Day:   func(t time.Time) string { return t.Format("02.01.2006.") },
+		Clock: func(t time.Time) string { return t.Format("15:04") }}
+	in := fixture()
+	count, avg, dist := TalkRatings(in.Reviews, "s1")
+	if count != 2 || avg != 4.5 || dist[0].Count != 1 {
+		t.Fatalf("talk ratings: %d %v %+v", count, avg, dist)
 	}
-	if got := fmt.Sprint(rows[1][7:]); got != "[5 2 ]" {
-		t.Errorf("session columns: %s", got)
+	qs := TopQuestions([]TalkQuestion{{"a", 1}, {"b", 7}, {"c", 3}}, 2)
+	if len(qs) != 2 || qs[0].Text != "b" || qs[1].Text != "c" {
+		t.Fatalf("top questions: %+v", qs)
+	}
+	tr := TalkReport{Event: in.Event, Session: events.Session{ID: "s1", Title: "Šta je novo u Go-u", Speaker: "Đorđe Ćirić",
+		Stage: "Glavna sala", StartsAt: now.Add(-3 * time.Hour), EndsAt: now.Add(-2 * time.Hour)},
+		Summary: &TalkSummary{Model: "gemma", Takeaway: "Lokalni modeli menjaju cenu.", KeyPoints: []string{"Prva tačka", "Druga tačka"},
+			Tradeoffs: []Tradeoff{{Topic: "Baterija", Issue: "Troši bateriju", Fix: "Kvantizacija", AtSeconds: 125}}},
+		Ratings: count, AvgRating: avg, Distribution: dist, Questions: qs}
+	for _, sum := range []*TalkSummary{tr.Summary, nil} {
+		tr.Summary = sum
+		var buf bytes.Buffer
+		if err := WriteTalkPDF(&buf, tr, tx); err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.HasPrefix(buf.Bytes(), []byte("%PDF-")) {
+			t.Fatal("not a PDF")
+		}
 	}
 }

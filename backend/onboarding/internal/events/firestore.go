@@ -152,6 +152,24 @@ func (r *FirestoreRepo) ListByOwner(ctx context.Context, uid string) ([]Event, e
 	return out, nil
 }
 
+func (r *FirestoreRepo) ListPublished(ctx context.Context) ([]Event, error) {
+	snaps, err := r.c.Collection("events").Documents(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+	var out []Event
+	for _, snap := range snaps {
+		var d eventDoc
+		if err := snap.DataTo(&d); err != nil {
+			return nil, fmt.Errorf("decode event %s: %w", snap.Ref.ID, err)
+		}
+		if e := r.toEvent(snap.Ref.ID, d); e.Published() {
+			out = append(out, e)
+		}
+	}
+	return out, nil
+}
+
 func (r *FirestoreRepo) agenda(id string) *firestore.DocumentRef {
 	return r.doc(id).Collection("published").Doc("agenda")
 }

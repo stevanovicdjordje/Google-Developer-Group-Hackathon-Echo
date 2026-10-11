@@ -75,11 +75,10 @@ make vet
 
 Unit tests: event status, overlap detection and the schedule grid, agenda
 conversion, the SVG map view, invitation status and response rules, review
-rules, report computation, the statistical summarizer, CSV export (formula
-injection), validation, i18n key coverage. HTTP tests run the full flow with
+rules, report computation, the statistical summarizer, the PDF export, validation, i18n key coverage. HTTP tests run the full flow with
 in-memory implementations of the same interfaces (registration, roles,
 ownership isolation, CSRF, onboarding, wizard, invitations, register-from-
-invite, publishing, review, report, CSV). `TestAgainstEmulators` repeats the
+invite, publishing, review, report, PDF download). `TestAgainstEmulators` repeats the
 main flow against real Firebase emulators and also reads the `devfest` event,
 its map and floor image.
 
@@ -99,6 +98,7 @@ See `.env.example`. Nothing secret is committed.
 | `FIREBASE_API_KEY` | (any value with the emulator) | Web API key, for the email/password check |
 | `STORAGE_BUCKET` | `<project>.appspot.com` | Floor-plan images (same default as `backend/maps`) |
 | `FIRESTORE_EMULATOR_HOST`, `FIREBASE_AUTH_EMULATOR_HOST`, `STORAGE_EMULATOR_HOST` | set by `scripts/dev.sh` | Emulators |
+| `EHO_ECHO_URL` | `http://localhost:8082` | Echo service, for the AI summary and questions in talk reports |
 | `GOOGLE_MAPS_API_KEY` | empty | Optional Maps Embed key; without it only the address is shown |
 
 ## Deploy (Cloud Run)
@@ -127,7 +127,8 @@ internal/
   invitations   invitations, public /i/{token} flow, participant panel
   mail          Sender interface; LogSender logs the links
   reviews       reviews + per-session ratings
-  reports       report, FeedbackSummarizer, CSV export
+  reports       event report + talk report, FeedbackSummarizer, PDF export (fpdf + DejaVu font)
+  talks         talk-report catalog, test checkout (PaymentProvider), purchases, Echo client
 templates/, static/
 ```
 
@@ -147,6 +148,18 @@ All writes use the Admin SDK. The project rules (`backend/maps/firebase`)
 deny clients everything not listed there, so reviews, invitations and profiles
 are not readable from the app.
 
+### Paid talk reports (`/talks`)
+
+Anyone signed in can buy the report of any talk that has ended: a PDF with
+Echo's AI summary (takeaway, key points, problems → fixes), the audience
+rating of that talk and the top five audience questions. €2.99 per talk;
+organizers get their own talks free. Checkout is **test mode** (`TestProvider`):
+use `4242 4242 4242 4242` (any future date, any CVC); `4000 0000 0000 0002` is
+declined; real card numbers are refused. Only the card brand and last four
+digits are stored (`purchases/*`). The portal calls Echo (`EHO_ECHO_URL`,
+default `http://localhost:8082`) as a service user. Details:
+`docs/decisions/feature-onboarding-talk-reports.md`.
+
 ### Rules worth knowing
 
 - **Event status:** draft until published here (`listedAt`) or until its map
@@ -158,13 +171,13 @@ are not readable from the app.
   bound to an account only that account can change the answer; declining works
   without an account.
 - **Reviews:** accepted invitation + event finished; one per participant
-  (editable); anonymous hides the author in the report and CSV.
+  (editable); anonymous hides the author in the report and the PDF.
 - **Access control** is server-side: role middleware and `ownerUid` checks;
   another organizer's event is a 404. Floor images are proxied only to the owner
   and to participants who accepted.
 - **Security:** Firebase session cookie (HttpOnly, SameSite=Lax), CSRF token on
   every form + `Sec-Fetch-Site` check, CSP without scripts (styles/fonts only
-  from self and Google Fonts), open-redirect protection, CSV formula-injection guard.
+  from self and Google Fonts), open-redirect protection.
 
 ### Extension points
 
@@ -172,6 +185,7 @@ are not readable from the app.
 | --- | --- | --- |
 | `auth.Identity` | Firebase Auth | — |
 | `*.Repository` | Firestore (+ in-memory for tests) | — |
+| `talks.PaymentProvider` | `TestProvider` (Stripe test cards, no money) | Stripe Checkout |
 | `mail.Sender` | `LogSender` (link in log + shown to the organizer) | real email |
 | `reports.FeedbackSummarizer` | `StatSummarizer` (statistics, no AI; the page says so) | Gemma; output treated as untrusted text, only rendered escaped, labeled as AI |
 | `i18n` catalogs | `en`, `sr` (same keys, tested) | more languages |

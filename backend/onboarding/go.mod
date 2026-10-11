@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/firestore v1.26.0
 	cloud.google.com/go/storage v1.69.0
 	firebase.google.com/go/v4 v4.22.0
+	github.com/go-pdf/fpdf v0.9.0
 	google.golang.org/grpc v1.83.2
 )
 

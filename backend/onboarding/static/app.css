@@ -307,3 +307,24 @@ td.wide { width: 30%; min-width: 120px; vertical-align: middle; }
   .table-wrap { overflow: visible; }
 }
 .card > h1:first-child, .card > h2:first-child { margin-top: 0; }
+
+/* talk reports + checkout */
+.lead-small { margin: 0; color: var(--c-muted); max-width: 640px; }
+.overline { margin: 0 0 4px; font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--c-muted); }
+.talk-card h3 a { color: var(--c-text); }
+.talk-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.talk-layout .card + .card { margin-top: 0; }
+.buy-box { position: sticky; top: 16px; }
+.buy-box .badge { margin: 0 0 10px; }
+.price { font-family: var(--font-display); font-size: 2.6rem; font-weight: 700; margin: 0; color: var(--c-ink); }
+.btn-block { width: 100%; margin-top: 12px; }
+.rated { font-weight: 600; color: var(--c-primary); }
+.receipt { margin: 4px 0; }
+.test-banner { padding: 12px 16px; border-radius: 16px; background: var(--c-live-soft); color: var(--c-live-ink); border: 1px solid #f6c7ad; font-weight: 500; }
+.order-item { line-height: 1.5; }
+.order-total { border-top: 1px solid var(--c-border); padding-top: 10px; }
+.order-total dd { font-size: 1.3rem; }
+@media (max-width: 760px) {
+  .talk-layout { grid-template-columns: 1fr; }
+  .buy-box { position: static; }
+}

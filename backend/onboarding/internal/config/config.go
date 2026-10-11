@@ -25,6 +25,8 @@ type Config struct {
 
 	// AppURL is the Flutter app (attendee app and organizer map editor).
 	AppURL string
+	// EchoURL is backend/echo (AI summary and audience questions of a talk).
+	EchoURL string
 }
 
 func Load() Config {
@@ -40,6 +42,7 @@ func Load() Config {
 		StorageBucket: os.Getenv("STORAGE_BUCKET"),
 		AuthEmulator:  os.Getenv("FIREBASE_AUTH_EMULATOR_HOST"),
 		AppURL:        env("EHO_APP_URL", "http://localhost:5050"),
+		EchoURL:       env("EHO_ECHO_URL", "http://localhost:8082"),
 	}
 	if c.StorageBucket == "" {
 		// Same default as backend/maps.

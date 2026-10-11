@@ -162,7 +162,7 @@ func TestFullEventLifecycle(t *testing.T) {
 	expect(t, res, http.StatusForbidden, "")
 	other := newClient(t, srv)
 	registerOrganizer(other, "drugi@primer.rs")
-	for _, p := range []string{base + "/edit", base + "/invitations", base + "/report", base + "/report.csv"} {
+	for _, p := range []string{base + "/edit", base + "/invitations", base + "/report", base + "/report.pdf"} {
 		res, _ = other.get(p)
 		expect(t, res, http.StatusNotFound, "")
 	}
@@ -218,12 +218,21 @@ func TestFullEventLifecycle(t *testing.T) {
 	_, body = org.get("/org/events")
 	mustContain(t, body, "Prethodni", "4,0 ★")
 
-	res, body = org.get(base + "/report.csv")
+	// CSV export was removed; the PDF is the download.
+	res, _ = org.get(base + "/report.csv")
+	expect(t, res, http.StatusNotFound, "")
+
+	// One-click PDF download.
+	res, body = org.get(base + "/report.pdf")
 	expect(t, res, http.StatusOK, "")
-	mustContain(t, body, "Odlična organizacija", "session: Keynote")
-	if strings.Contains(body, "p1@primer.rs") {
-		t.Error("anonymous review author leaked in CSV")
+	if res.Header.Get("Content-Type") != "application/pdf" || !strings.HasPrefix(body, "%PDF-") ||
+		!strings.Contains(res.Header.Get("Content-Disposition"), `attachment; filename="eho-report-Go-konferencija.pdf"`) {
+		t.Fatalf("pdf: %q %q %q", res.Header.Get("Content-Type"), res.Header.Get("Content-Disposition"), body[:min(8, len(body))])
 	}
+	res, _ = other.get(base + "/report.pdf")
+	expect(t, res, http.StatusNotFound, "")
+	res, _ = p1.get(base + "/report.pdf")
+	expect(t, res, http.StatusForbidden, "")
 }
 
 func TestAppEventsShowUp(t *testing.T) {
@@ -312,7 +321,10 @@ func TestReportInEnglish(t *testing.T) {
 	res, body := org.get("/org/events/" + ev.ID + "/report")
 	expect(t, res, http.StatusOK, "")
 	mustContain(t, body, `<html lang="en">`, "Overall impression", "4.0", "Good: most attendees", "Best-rated session",
-		"not AI", "Ratings per session", "Export CSV")
+		"not AI", "Ratings per session", "Download PDF")
+	if strings.Contains(body, "Export CSV") {
+		t.Error("the CSV export button must be gone")
+	}
 	if strings.Contains(body, "Ukupan utisak") {
 		t.Error("Serbian text on the English report")
 	}

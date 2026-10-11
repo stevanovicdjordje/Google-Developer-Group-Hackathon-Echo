@@ -105,6 +105,23 @@ func RequireRole(role string) func(http.Handler) http.Handler {
 	}
 }
 
+// RequireSignedIn allows any signed-in principal; participants must have
+// finished onboarding.
+func RequireSignedIn(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p := PrincipalFrom(r.Context())
+		if p == nil {
+			http.Redirect(w, r, "/login?next="+url.QueryEscape(r.URL.RequestURI()), http.StatusSeeOther)
+			return
+		}
+		if !p.Onboarded {
+			http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RequireOnboarded sends participants who have not finished onboarding back to it.
 func RequireOnboarded(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

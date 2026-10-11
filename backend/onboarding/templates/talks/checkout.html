@@ -1,0 +1,46 @@
+{{define "content"}}
+{{$d := .Data}}{{$s := $d.Session}}
+<p class="muted"><a href="/talks/{{$d.Event.ID}}/{{$s.ID}}">← {{t "checkout.back"}}</a></p>
+<h1>{{t "checkout.title"}}</h1>
+<p class="test-banner" role="note">🧪 {{t "checkout.test_banner"}}</p>
+
+<div class="talk-layout">
+  <section class="card">
+    <h2>{{t "checkout.card"}}</h2>
+    {{with index .Errors "_form"}}<p class="alert" role="alert">{{t .}}</p>{{end}}
+    <form method="post" action="/talks/{{$d.Event.ID}}/{{$s.ID}}/checkout" novalidate autocomplete="on">
+      {{template "csrf" .CSRF}}
+      <label>{{t "checkout.name"}}
+        <input type="text" name="card_name" value="{{.Form.Get "card_name"}}" autocomplete="cc-name" required>
+        {{template "ferr" (index .Errors "card_name")}}
+      </label>
+      <label>{{t "checkout.number"}}
+        <input type="text" name="card_number" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" maxlength="23" required>
+        {{template "ferr" (index .Errors "card_number")}}
+      </label>
+      <div class="grid-2">
+        <label>{{t "checkout.expiry"}}
+          <input type="text" name="card_expiry" value="{{.Form.Get "card_expiry"}}" inputmode="numeric" autocomplete="cc-exp" placeholder="12/29" maxlength="7" required>
+          {{template "ferr" (index .Errors "card_expiry")}}
+        </label>
+        <label>{{t "checkout.cvc"}}
+          <input type="password" name="card_cvc" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4" required>
+          <span class="hint">{{t "checkout.cvc_hint"}}</span>
+          {{template "ferr" (index .Errors "card_cvc")}}
+        </label>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">🔒 {{t "checkout.pay" $d.Price}}</button>
+      <p class="hint">{{t "checkout.secure"}}</p>
+    </form>
+  </section>
+
+  <aside class="card buy-box">
+    <h2>{{t "checkout.order"}}</h2>
+    <p class="order-item"><strong>{{t "checkout.item"}}</strong><br>{{$s.Title}}<br><span class="muted">{{$d.Event.Title}}{{with $s.Speaker}} · {{.}}{{end}}</span></p>
+    <dl class="summary order-total">
+      <dt>{{t "checkout.total"}}</dt><dd><strong>{{$d.Price}}</strong></dd>
+    </dl>
+    <p class="hint">{{t "checkout.vat"}}</p>
+  </aside>
+</div>
+{{end}}

@@ -16,8 +16,10 @@
       {{with .Principal}}
         {{if eq .Role "organizer"}}
           <a href="/org/events">{{t "nav.my_events"}}</a>
+          <a href="/talks">{{t "nav.talks"}}</a>
         {{else if .Onboarded}}
           <a href="/me/events">{{t "nav.my_events"}}</a>
+          <a href="/talks">{{t "nav.talks"}}</a>
           <a href="/me/profile">{{t "nav.profile"}}</a>
         {{end}}
         <span class="who">{{.Name}}</span>

@@ -1,0 +1,43 @@
+{{define "content"}}
+{{$d := .Data}}
+<div class="page-head">
+  <div>
+    <h1>{{t "talks.title"}}</h1>
+    <p class="lead-small">{{t "talks.lead"}}</p>
+  </div>
+  <a class="btn" href="/me/purchases">{{t "talks.purchases"}}</a>
+</div>
+
+<form class="filters card" method="get" action="/talks" role="search">
+  <label class="grow">{{t "talks.search"}}
+    <input type="search" name="q" value="{{$d.Query}}" placeholder="{{t "talks.search_placeholder"}}">
+  </label>
+  <button class="btn" type="submit">{{t "events.filter"}}</button>
+</form>
+
+{{range $d.Groups}}
+<section class="group">
+  <h2>{{.Event.Title}} <span class="count">{{len .Talks}}</span></h2>
+  <p class="meta">{{if .Event.StartsAt}}{{day .Event.StartsAt}}{{end}}{{with .Event.Address}} · {{.}}{{end}}</p>
+  <div class="cards">
+    {{range .Talks}}
+    <article class="card event-card talk-card">
+      <h3><a href="/talks/{{.Event.ID}}/{{.Session.ID}}">{{.Session.Title}}</a></h3>
+      <p class="meta">{{with .Session.Speaker}}{{.}} · {{end}}{{with .Session.Stage}}{{.}} · {{end}}{{clock .Session.StartsAt}}–{{clock .Session.EndsAt}}</p>
+      <div class="actions">
+        {{if or .Purchased .Free}}
+          <span class="badge inv-accepted">{{if .Free}}{{t "talks.free_owner"}}{{else}}{{t "talks.owned"}}{{end}}</span>
+          <a class="btn btn-primary" href="/talks/{{.Event.ID}}/{{.Session.ID}}/report.pdf" download>{{t "talks.download"}}</a>
+        {{else}}
+          <a class="btn" href="/talks/{{.Event.ID}}/{{.Session.ID}}">{{t "talks.view"}}</a>
+          <a class="btn btn-primary" href="/talks/{{.Event.ID}}/{{.Session.ID}}/checkout">{{t "talks.buy" $d.Price}}</a>
+        {{end}}
+      </div>
+    </article>
+    {{end}}
+  </div>
+</section>
+{{else}}
+<section class="card empty"><p>{{if $d.Query}}{{t "talks.no_match"}}{{else}}{{t "talks.empty"}}{{end}}</p></section>
+{{end}}
+{{end}}

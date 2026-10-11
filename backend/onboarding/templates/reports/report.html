@@ -8,7 +8,7 @@
   </div>
   {{if not $d.NotReady}}
   <div class="actions no-print">
-    <a class="btn" href="/org/events/{{$e.ID}}/report.csv">{{t "report.csv"}}</a>
+    <a class="btn btn-primary" href="/org/events/{{$e.ID}}/report.pdf" download>{{t "report.pdf"}}</a>
     {{if $d.Print}}
       <a class="btn" href="/org/events/{{$e.ID}}/report">{{t "report.screen"}}</a>
     {{else}}

@@ -61,6 +61,18 @@ func (m *MemRepo) ListByOwner(_ context.Context, uid string) ([]Event, error) {
 	return out, nil
 }
 
+func (m *MemRepo) ListPublished(_ context.Context) ([]Event, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var out []Event
+	for _, e := range m.events {
+		if e.Published() {
+			out = append(out, e)
+		}
+	}
+	return out, nil
+}
+
 // ListAll returns every event (tests).
 func (m *MemRepo) ListAll() []Event {
 	m.mu.Lock()

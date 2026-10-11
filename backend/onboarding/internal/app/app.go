@@ -20,6 +20,7 @@ import (
 	"github.com/Ilij4n/eho/backend/onboarding/internal/mail"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/reports"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/reviews"
+	"github.com/Ilij4n/eho/backend/onboarding/internal/talks"
 	"github.com/Ilij4n/eho/backend/onboarding/internal/users"
 )
 
@@ -32,14 +33,21 @@ type Deps struct {
 	Images      events.Images
 	Invitations invitations.Repository
 	Reviews     reviews.Repository
+	Purchases   talks.Repository
+	Echo        talks.Echo
+	Payments    talks.PaymentProvider
 	Mail        mail.Sender
 	Now         func() time.Time
 }
 
 // FirebaseDeps uses Firebase Auth, Firestore and Storage (or their emulators).
 func FirebaseDeps(cfg config.Config, c *fb.Clients) Deps {
+	identity := &auth.FirebaseIdentity{Client: c.Auth, APIKey: cfg.APIKey, EmulatorHost: cfg.AuthEmulator}
 	return Deps{
-		Identity:    &auth.FirebaseIdentity{Client: c.Auth, APIKey: cfg.APIKey, EmulatorHost: cfg.AuthEmulator},
+		Identity:    identity,
+		Purchases:   talks.NewFirestoreRepo(c.Firestore),
+		Echo:        &talks.HTTPEcho{BaseURL: cfg.EchoURL, Tokens: &auth.ServiceToken{Identity: identity, UID: "svc-onboarding"}},
+		Payments:    talks.TestProvider{},
 		Users:       users.NewFirestoreRepo(c.Firestore),
 		Events:      events.NewFirestoreRepo(c.Firestore, Location(cfg)),
 		Images:      events.StorageImages{Bucket: c.Bucket},
@@ -58,6 +66,9 @@ func MemDeps() Deps {
 		Images:      ev,
 		Invitations: invitations.NewMemRepo(),
 		Reviews:     reviews.NewMemRepo(),
+		Purchases:   talks.NewMemRepo(),
+		Echo:        talks.FakeEcho{},
+		Payments:    talks.TestProvider{},
 	}
 }
 
@@ -157,10 +168,23 @@ func New(cfg config.Config, d Deps) (http.Handler, error) {
 		Repo: d.Reviews, Events: d.Events, Invitations: d.Invitations, View: view, Loc: loc, Now: d.Now,
 	}).Register(mux, participantOnly)
 
+	pdfText := reports.PDFText{T: bundle.T, Rating: bundle.Rating,
+		Date:  func(t time.Time) string { return t.In(loc).Format(bundle.T("fmt.datetime")) },
+		Day:   func(t time.Time) string { return t.In(loc).Format(bundle.T("fmt.date")) },
+		Clock: func(t time.Time) string { return t.In(loc).Format("15:04") }}
 	(&reports.Handlers{
 		Access: access, Invitations: d.Invitations, Reviews: d.Reviews,
 		Summarizer: reports.StatSummarizer{T: bundle.T, Rating: bundle.Rating}, Loc: loc, Now: d.Now,
+		Text: reports.PDFText{T: bundle.T, Rating: bundle.Rating,
+			Date:  func(t time.Time) string { return t.In(loc).Format(bundle.T("fmt.datetime")) },
+			Day:   func(t time.Time) string { return t.In(loc).Format(bundle.T("fmt.date")) },
+			Clock: func(t time.Time) string { return t.In(loc).Format("15:04") }},
 	}).Register(mux, organizerOnly)
+
+	(&talks.Handlers{
+		Events: d.Events, Reviews: d.Reviews, Repo: d.Purchases, Payments: d.Payments, Echo: d.Echo,
+		View: view, Text: pdfText, Money: bundle.Money, Lang: bundle.Lang(), Loc: loc, Now: d.Now,
+	}).Register(mux)
 
 	var h http.Handler = mux
 	h = authH.LoadPrincipal(h)
