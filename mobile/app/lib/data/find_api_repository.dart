@@ -1,4 +1,4 @@
-/// Find backed by the Find service (`contracts/find` 0.1.1, `backend/find`).
+/// Find backed by the Find service (`contracts/find` 0.2.0, `backend/find`).
 ///
 /// Call order from the contract: the profile is saved (`putMyProfile`), the
 /// attendee is marked present at the event (`joinFind`), then
@@ -232,25 +232,64 @@ class FindApiRepository implements FindRepository {
   Future<String> setMeetingSpot(
     String eventId,
     String personId,
-    String place,
-  ) async {
+    String place, {
+    String? time,
+  }) async =>
+      (await putMeetingSpot(eventId, personId, place, time: time)).place;
+
+  /// `putMeetingSpot`: the stored place (the map's spelling) and time, which
+  /// fall back to what was sent when the answer lacks them.
+  Future<({String place, String? time})> putMeetingSpot(
+    String eventId,
+    String personId,
+    String place, {
+    String? time,
+  }) async {
     final json = await _inEvent(
       eventId,
       () => _send(
         'PUT',
         '${_event(eventId)}/contacts/${Uri.encodeComponent(personId)}'
             '/meeting-spot',
-        body: {'place': _cut(place.trim(), 80)},
+        body: meetingSpotRequest(place, time),
       ),
     );
-    final spot = json is Map ? json['meetingSpot'] : null;
-    final stored = spot is Map ? spot['place'] : null;
-    return stored is String && stored.trim().isNotEmpty
-        ? _cut(stored.trim(), 80)
-        : place;
+    final stored = parseMeetingSpot(json);
+    return (place: stored?.place ?? place, time: stored?.time ?? time);
   }
 
   // ------------------------------------------------------------ mapping
+
+  /// `MeetingSpotRequest`: the place, and the time only when it is a valid
+  /// "HH:mm" (zero-padded; the key is omitted otherwise).
+  static Map<String, Object?> meetingSpotRequest(String place, String? time) {
+    final t = _meetingTime(time);
+    return {'place': _cut(place.trim(), 80), 'time': ?t};
+  }
+
+  /// `Contact.meetingSpot` -> place and optional time, or null when the
+  /// contact has no valid spot. A missing or malformed time is ignored.
+  static ({String place, String? time})? parseMeetingSpot(Object? contact) {
+    final spot = contact is Map ? contact['meetingSpot'] : null;
+    final place = spot is Map ? spot['place'] : null;
+    if (spot is! Map || place is! String || place.trim().isEmpty) return null;
+    final time = spot['time'];
+    return (
+      place: _cut(place.trim(), 80),
+      time: time is String && _hhmm.hasMatch(time) ? time : null,
+    );
+  }
+
+  /// The contract's `time` pattern.
+  static final _hhmm = RegExp(r'^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+  /// [time] as "HH:mm", zero-padding "9:05"; null when absent or invalid.
+  static String? _meetingTime(String? time) {
+    final m = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(time?.trim() ?? '');
+    if (m == null) return null;
+    final t = '${m[1]!.padLeft(2, '0')}:${m[2]}';
+    return _hhmm.hasMatch(t) ? t : null;
+  }
 
   /// `Matches` → valid matches in server order; invalid entries are skipped.
   static List<PersonMatch> parseMatches(Object? json) {
@@ -442,6 +481,12 @@ class FallbackFindRepository implements FindRepository {
   Future<String> setMeetingSpot(
     String eventId,
     String personId,
-    String place,
-  ) async => (await _target).setMeetingSpot(eventId, personId, place);
+    String place, {
+    String? time,
+  }) async {
+    final target = await _target;
+    return target is FindApiRepository
+        ? target.setMeetingSpot(eventId, personId, place, time: time)
+        : target.setMeetingSpot(eventId, personId, place);
+  }
 }
