@@ -10,7 +10,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-24 | Dev-only state routes for screenshots (`/dev/shot/<state>`: Echo Q&A/paywall/summary/translated, Person states, Messages + meeting spot, My events live card, organizer review/published) behind a `DEV_ROUTES` define | M | dev | `core/router.dart` (hot), new `features/dev/shot_routes.dart` | Then V-3: verifier compares every state with `mobile/docs/design/`. |
+| V-3 | Verifier: screenshot every `/dev/shot/<state>` (+ main routes) and compare with `mobile/docs/design/` v1+v2; gaps → tasks | M | verifier | none | Next after M-24 |
 | M-26 | Echo on real Gemma: once `backend/echo/.env` has `GEMINI_API_KEY`, run Echo (`backend/echo/scripts/dev.sh` / `make dev`, loads `.env`; needs maps emulators), check `curl -s localhost:8082/healthz` reports a Gemma model (not `offline`) and Ask/catch-up responses carry it, then in the app test Ask + translate to sr | S | verifier + orchestrator | none (runtime check) | Blocked on the key. 🙋 when next: `! echo 'GEMINI_API_KEY=<key>' > ~/Developer/eho/backend/echo/.env` (key from @MilosBG03 or aistudio.google.com). `.env` is git-ignored (`backend/echo/.gitignore`). Never commit/print the key. No key on this machine (checked 2026-10-11). |
 | M-23 | Wire `FindRepository` to the Find API (API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, profile/consent) | M | opus | `data/` | Blocked on `contracts/find/openapi.yaml` (feature:find → @Vertiglo, `mobile#12`, `team-find-holder`). Keep demo data until then. |
 | M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
@@ -26,12 +26,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-24 | dev | 03:08 | worktree | screenshot state routes |
+| — | | | | |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-24 | `/dev/shot/<state>` (14 states + index) behind `DEV_ROUTES` (default on); `EchoScreen.startTranslated`, `FindScreen.initialPrompt` hooks. Not covered: Echo AI-answer card, Jump-to-live, organizer edit sheet, spot-picker sheet | `8b358ea` |
 | M-25 | Saved `devsummit` joined event migrates to `devfest` (deduped, written back once); session "Echo is on" card only when `Session.isLive`. Follow-up: export the legacy id from repositories.dart; a `hasEcho` flag if past talks with transcripts should show it | `600a12c` |
 | M-22 | maps#3: `USE_EMULATORS=false` builds take `FIREBASE_API_KEY`/`APP_ID`/`PROJECT_ID` (+ optional sender id, auth domain, storage bucket) from `--dart-define` | `c192f2a` |
 | M-17 | Demo event "DevFest Belgrade 2026", default id `devfest` (old `devsummit` links alias to it), Find fit-line casing, interest options via repository | `7490c90` |
