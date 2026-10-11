@@ -5,7 +5,7 @@
 //	go run ./cmd/replay -event <eventId> [-file demo/keynote.json] [-speed 2] [-instant]
 //
 // Without -event it picks the published demo event created by
-// backend/maps `make seed` ("Eho Demo Expo").
+// backend/maps `make seed` ("DevFest Belgrade 2026").
 package main
 
 import (
@@ -26,7 +26,7 @@ import (
 	"github.com/Ilij4n/eho/backend/echo/internal/store"
 )
 
-const demoEventName = "Eho Demo Expo"
+const demoEventName = "DevFest Belgrade 2026"
 
 type transcriptFile struct {
 	SessionID string `json:"sessionId"`

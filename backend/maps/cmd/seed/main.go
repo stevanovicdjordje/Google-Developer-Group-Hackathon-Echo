@@ -23,7 +23,10 @@ import (
 	"time"
 )
 
-const demoEventName = "Eho Demo Expo"
+const demoEventName = "DevFest Belgrade 2026"
+
+// oldDemoEventName is the demo event's earlier name; a re-seed removes it too.
+const oldDemoEventName = "Eho Demo Expo"
 
 type client struct {
 	api, authHost, storageHost, bucket, webURL string
@@ -68,7 +71,7 @@ func (c *client) run(email, password string) error {
 		return err
 	}
 	for _, e := range list.Events {
-		if e.Name == demoEventName {
+		if e.Name == demoEventName || e.Name == oldDemoEventName {
 			if err := c.call("DELETE", "/v1/events/"+e.ID, nil, nil); err != nil {
 				return err
 			}
