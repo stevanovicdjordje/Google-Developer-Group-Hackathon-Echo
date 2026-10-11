@@ -4,13 +4,16 @@ import 'dart:typed_data';
 
 import 'package:eho/data/app_state.dart';
 import 'package:eho/data/demo_data.dart' as demo;
+import 'package:eho/data/demo_ids.dart';
 import 'package:eho/data/events_api_repository.dart';
+import 'package:eho/data/local_store.dart';
 import 'package:eho/data/models.dart';
 import 'package:eho/data/repositories.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// A fixture from `contracts/events/examples/`, unchanged (tests run in
 /// `mobile/app`).
@@ -551,5 +554,98 @@ void main() {
         expect(c.read(joinedEventsProvider), [demo.pastEvent]);
       },
     );
+
+    group('with the real repository', () {
+      /// An Events service whose My events list is only DevFest, as on the
+      /// seeded server (it never heard of the demo past event).
+      Future<http.Response> devfestOnly(http.Request r) async {
+        final events =
+            (_fixture('my-events.response.json') as Map)['events'] as List;
+        return switch ((r.method, r.url.path)) {
+          ('GET', '/v1/me/events') => _json({
+            'events': events.take(1).toList(),
+          }),
+          ('DELETE', _) => _json(null, 204),
+          _ => service(r),
+        };
+      }
+
+      Future<ProviderContainer> container(
+        EventRepository e, {
+        SharedPreferences? prefs,
+      }) async {
+        final c = ProviderContainer(
+          overrides: [
+            eventRepositoryProvider.overrideWithValue(e),
+            if (prefs != null)
+              sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+        );
+        addTearDown(c.dispose);
+        return c;
+      }
+
+      Future<void> settle() =>
+          Future<void>.delayed(const Duration(milliseconds: 50));
+
+      test('live: demo-only event is dropped and not persisted; leaving it '
+          'calls no server', () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final events = FallbackEventRepository(
+          primary: repo(handler: devfestOnly),
+          fallback: DemoEventRepository(),
+        );
+        final c = await container(events, prefs: prefs);
+        expect(demoOnlyEventIds, {demo.pastEvent.id});
+        expect(c.read(joinedEventsProvider), [demo.pastEvent]);
+        await settle();
+        expect(c.read(joinedEventsProvider).map((e) => e.id), ['devfest']);
+        final saved = jsonDecode(prefs.getString('eho.joinedEvents')!) as List;
+        expect(saved.map((e) => (e as Map)['id']), ['devfest']);
+
+        // Re-added (e.g. a stale link) and left: still no server call.
+        final n = c.read(joinedEventsProvider.notifier)..add(demo.pastEvent);
+        n.remove(demo.pastEvent.id);
+        await settle();
+        expect(requests.where((r) => r.method == 'DELETE'), isEmpty);
+        // A real event still reaches the server.
+        n.remove('devfest');
+        await settle();
+        expect(
+          requests.where((r) => r.method == 'DELETE').map((r) => r.url.path),
+          ['/v1/events/devfest/join'],
+        );
+      });
+
+      test('live, server lists the demo-only event: it stays', () async {
+        final events = FallbackEventRepository(
+          primary: repo(),
+          fallback: DemoEventRepository(),
+        );
+        final c = await container(events);
+        c.read(joinedEventsProvider);
+        await settle();
+        expect(c.read(joinedEventsProvider).map((e) => e.id), [
+          'devfest',
+          demo.pastEvent.id,
+        ]);
+      });
+
+      test('service down: demo fallback keeps the demo past event', () async {
+        final events = FallbackEventRepository(
+          primary: repo(handler: (_) async => http.Response('', 503)),
+          fallback: DemoEventRepository(),
+        );
+        final c = await container(events);
+        c.read(joinedEventsProvider);
+        await settle();
+        expect(c.read(joinedEventsProvider), [demo.pastEvent]);
+        expect(await events.isLive, isFalse);
+        c.read(joinedEventsProvider.notifier).remove(demo.pastEvent.id);
+        expect(c.read(joinedEventsProvider), isEmpty);
+        expect(requests.map((r) => r.url.path).toSet(), {'/healthz'});
+      });
+    });
   });
 }

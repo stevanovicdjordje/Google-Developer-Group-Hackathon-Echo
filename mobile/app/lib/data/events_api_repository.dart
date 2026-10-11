@@ -161,6 +161,9 @@ class EventsApiRepository implements EventRepository, OrganizerRepository {
       _send('DELETE', '${_event(eventId)}/join');
 
   @override
+  Future<bool> get isLive => reachable;
+
+  @override
   Future<List<EventSummary>> myEvents() async =>
       parseMyEvents(await _send('GET', '/v1/me/events'));
 
@@ -631,6 +634,9 @@ class FallbackEventRepository implements EventRepository {
 
   @override
   Future<void> leave(String eventId) async => (await _target).leave(eventId);
+
+  @override
+  Future<bool> get isLive async => identical(await _target, primary);
 
   @override
   Future<List<EventSummary>> myEvents() async => (await _target).myEvents();

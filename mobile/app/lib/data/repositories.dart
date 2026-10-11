@@ -34,6 +34,9 @@ abstract interface class EventRepository {
   /// Removes the event from the user's events. [API-2]
   Future<void> leave(String eventId);
 
+  /// Whether the real Events service is in use (false: demo data).
+  Future<bool> get isLive;
+
   /// Events the user joined, newest join first, as the server knows them.
   /// Empty when only the app knows them (demo data). [API-14]
   Future<List<EventSummary>> myEvents();
@@ -299,6 +302,9 @@ class DemoEventRepository implements EventRepository {
 
   @override
   Future<void> leave(String eventId) async {}
+
+  @override
+  Future<bool> get isLive async => false;
 
   @override
   Future<List<EventSummary>> myEvents() async => const [];
