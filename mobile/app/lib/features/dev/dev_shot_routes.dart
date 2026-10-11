@@ -60,11 +60,17 @@ const _session = demo.keynoteId;
 const _personId = 'p1';
 
 final devShots = <DevShot>[
-  DevShot('echo-qa', 'Echo, "Questions for the speaker" sheet open', () {
-    return _EchoShot(ended: false, onReady: _openQuestions);
+  DevShot('echo-qa', 'Echo, "Questions for the speaker" sheet open (other people\'s questions only)', () {
+    return _EchoShot(
+      ended: false,
+      onReady: (c) => _openQuestions(c, own: false),
+    );
   }),
   DevShot('echo-qa-own', 'Echo, questions sheet with one of your own questions (q2 is seeded as yours)', () {
-    return _EchoShot(ended: false, onReady: _openQuestions);
+    return _EchoShot(
+      ended: false,
+      onReady: (c) => _openQuestions(c, own: true),
+    );
   }),
   DevShot(
     'echo-selected',
@@ -334,11 +340,24 @@ class _AfterFirstFrameState extends State<_AfterFirstFrame> {
   Widget build(BuildContext context) => widget.child;
 }
 
-/// Opens the questions sheet with the seeded demo questions as they are
-/// (the second one is yours and voted).
-Future<void> _openQuestions(BuildContext context) async {
+/// Opens the questions sheet with the seeded demo questions. The demo data
+/// has one question that is yours and voted (the second one); without [own]
+/// it is shown as someone else's, so no "Your question" card appears.
+Future<void> _openQuestions(BuildContext context, {required bool own}) async {
   final repo = ProviderScope.containerOf(context).read(echoRepositoryProvider);
-  final loaded = await repo.questions(_event, _session);
+  final seeded = await repo.questions(_event, _session);
+  final loaded = own
+      ? seeded
+      : [
+          for (final q in seeded)
+            SpeakerQuestion(
+              id: q.id,
+              text: q.text,
+              votes: q.votes,
+              voted: q.voted,
+              mergedCount: q.mergedCount,
+            ),
+        ];
   if (!context.mounted) return;
   final questions = ValueNotifier<List<SpeakerQuestion>>(loaded);
   final name = demo.sessions

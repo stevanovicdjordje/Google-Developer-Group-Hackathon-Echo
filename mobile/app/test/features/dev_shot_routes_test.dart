@@ -65,6 +65,17 @@ void main() {
     });
   }
 
+  testWidgets('/dev/shot/echo-qa shows no question of yours', (tester) async {
+    await open(tester, '/dev/shot/echo-qa');
+    expect(find.textContaining('Questions for Mara'), findsWidgets);
+    expect(find.text('YOUR QUESTION'), findsNothing);
+  });
+
+  testWidgets('/dev/shot/echo-qa-own shows your question', (tester) async {
+    await open(tester, '/dev/shot/echo-qa-own');
+    expect(find.text('YOUR QUESTION'), findsOneWidget);
+  });
+
   testWidgets('/dev/shot/echo-selected shows the AI answer inline', (
     tester,
   ) async {
