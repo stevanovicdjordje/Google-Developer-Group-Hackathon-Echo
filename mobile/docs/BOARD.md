@@ -10,11 +10,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
+| M-61 | Organizer: resume an open draft after an app restart via Events `getDraft` | M | dev | `data/events_api_repository.dart`, organizer screens | Low demo value; after M-60 (repositories.dart) |
 
 ## Blocked
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
+| V-8 | Galaxy re-check of M-52/55/56/58/45 on `devfest` (first run hit the usage limit at ~07:53, no report). Re-seed Events after it | Galaxy not attached (🙋 asked 2026-10-11 09:00) |
 | M-57 | Map tab shows you-are-here on open (`locateOnOpen: true` in `map_tab.dart` + widget test with an overridden `locationSourceProvider`, shot with DEMO_LOCATION on `/e/devfest/map`) | feature:maps `mobile#20` (eho_maps has no API for it) |
 | M-14 | https App Links / Universal Links for `/e/{id}` (assetlinks.json / apple-app-site-association) | Hosting domain. Phones themselves run (`9dbd308`: `eho://open/e/{id}`, Android + iPhone 13 Pro Max on the local backends) |
 
@@ -22,7 +24,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| V-8 | verifier (sonnet, medium) | 2026-10-11 07:47 | none | Galaxy re-check of M-52/55/56/58/45 on `devfest` (publishes again → re-seed Events after) |
+| M-59 | dev (sonnet) | 2026-10-11 09:05 | worktree | Dev shots `organizer-review-issues` / `organizer-published-warnings` |
+| M-60 | dev (sonnet) | 2026-10-11 09:05 | worktree | Server contact `state` from `listContacts` → `contactsProvider` |
 
 ## Done
 
