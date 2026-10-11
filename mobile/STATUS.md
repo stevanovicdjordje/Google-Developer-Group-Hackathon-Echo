@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 07:41 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 08:58 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -44,7 +44,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 | maps: published venue (Firestore realtime) | on real API (via `eho_maps`) |
 | echo 0.3.1 (no model name shown in the app): transcript (Firestore), `getCatchUp`, `ask`, `listQuestions`, `submitQuestion`, vote/unvote, `getSummary` (0.3.0 structured `summary`), `translateTranscript`, `mergedCount`/merged submit, `language` on catch-up/ask/summary | verified e2e (transcript, catch-up, questions in the app; ask/translate/submit/unvote via curl; UI paths by widget tests) |
 | maps: `getRoute`, `/o` editor | verified e2e (via `eho_maps`) |
-| find 0.2.0: `putMyProfile` (after onboarding, consents as set), `joinFind`, `getRecommendations`, `searchPeople`, `getPerson`, `requestContact`, `listContacts` (other person's meeting spot, M-45), `putMeetingSpot` (with 0.2.0 `time` "HH:mm"), `findHealthz` (`USE_FIND_API`, `FIND_API_BASE_URL` default `http://localhost:8083`; demo fallback when healthz fails) | on fixtures (contract examples, mapping tests); not e2e yet, service not running. Not used yet: `getMyProfile`, `deleteMyProfile` (no UI), `leaveFind`, `listContacts`, `acceptContact`, `deleteMeetingSpot` |
+| find 0.2.0: `putMyProfile` (after onboarding, consents as set), `joinFind`, `getRecommendations`, `searchPeople`, `getPerson`, `requestContact`, `listContacts` (other person's meeting spot, M-45), `putMeetingSpot` (with 0.2.0 `time` "HH:mm"), `findHealthz` (`USE_FIND_API`, `FIND_API_BASE_URL` default `http://localhost:8083`; demo fallback when healthz fails) | **verified e2e** on the Galaxy A55 against local Find (V-7: server people, search ~4 s, contact auto-accept, meeting spot). Not used yet: `getMyProfile`, `deleteMyProfile` (no UI), `leaveFind`, `acceptContact`, `deleteMeetingSpot` |
 | events 0.1.0: `getPublicEvent`, `joinEvent`, `leaveEvent`, `listMyEvents`, `getAgenda`, `createDraft` (multipart with bytes), `updateDraft`, `publishDraft` (into `DEMO_EVENT_ID`, default `devfest`), `eventsHealthz` (`USE_EVENTS_API`, `EVENTS_API_BASE_URL` default `http://localhost:8084`; demo fallback when healthz fails or a demo id 404s; organizer = `/o` account, or `organizer@eho.test` on emulator builds) | **verified e2e** on the Galaxy A55 against local `devfest` (V-7: join, agenda, My events, leave, organizer upload of `backend/events/demo/*` → draft in ~5 s → publish → attendee agenda). Draft `issues` and publish `warnings` shown (M-52). Not used: `getDraft`, `hasMap`/`hasAgenda` |
 
 ## Announcements (newest first)
