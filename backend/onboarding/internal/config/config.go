@@ -39,7 +39,7 @@ func Load() Config {
 		APIKey:        os.Getenv("FIREBASE_API_KEY"),
 		StorageBucket: os.Getenv("STORAGE_BUCKET"),
 		AuthEmulator:  os.Getenv("FIREBASE_AUTH_EMULATOR_HOST"),
-		AppURL:        env("EHO_APP_URL", "http://localhost:5000"),
+		AppURL:        env("EHO_APP_URL", "http://localhost:5050"),
 	}
 	if c.StorageBucket == "" {
 		// Same default as backend/maps.

@@ -91,7 +91,7 @@ See `.env.example`. Nothing secret is committed.
 | --- | --- | --- |
 | `PORT` | `8085` | HTTP port (`backend/maps` uses 8080) |
 | `EHO_BASE_URL` | `http://localhost:8085` | Builds invitation links |
-| `EHO_APP_URL` | `http://localhost:5000` | Flutter app: map editor (`/organizer`) and event links (`/e/{id}`) |
+| `EHO_APP_URL` | `http://localhost:5050` | Flutter app: map editor (`/organizer`) and event links (`/e/{id}`) |
 | `EHO_COOKIE_SECURE` | `false` | `true` behind HTTPS |
 | `EHO_TIMEZONE` | `Europe/Belgrade` | Entering/showing times; agenda days and clock times are local |
 | `EHO_LANG` | `en` | UI language: `en` or `sr` |

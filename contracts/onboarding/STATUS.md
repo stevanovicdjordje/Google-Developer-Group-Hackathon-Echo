@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:onboarding` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 10:30 · **Owner:** @stevanovicdjordje · **Scopes held:** feature:onboarding
+**Last updated:** 2026-10-11 11:00 · **Owner:** @stevanovicdjordje · **Scopes held:** feature:onboarding
 
 ## Current state
 
@@ -35,6 +35,7 @@ It runs on the **shared Firebase project** (Auth, Firestore, Storage; locally th
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 11:00 · ACTION · for: mobile, feature:maps · **Flutter web dev port 5000 → 5050**, at @stevanovicdjordje's explicit request: on macOS port 5000 is taken by the AirPlay Receiver, so `flutter run` fails there. Changed (one line each): `mobile/scripts/dev_all.sh`, `mobile/README.md`, `backend/maps/cmd/seed` (printed links), `contracts/maps/KAKO-RADI.md`, `contracts/maps/PLAN.md`; onboarding's `EHO_APP_URL` default. Backends already allow any localhost port (CORS `localhost:*`). Revert in your files if you object; nothing depends on 5000.
 - 2026-10-11 10:30 · ACTION · for: mobile, integration · `mobile#21` done: registered, port 8085, `devfest-report` seed (DevFest agenda + fake reviews), English report pages with the design tokens, summary labeled "not AI". Report URL in *How to consume*.
 - 2026-10-11 10:30 · INFO · for: feature:maps, feature:events · Onboarding writes into shared Firestore paths (see *Current state*): extra fields on `events/{id}` (field-level), `published/agenda` (your format), `draft/map` on create, `members/{uid}/events/{id}` on accept. Nothing of yours is overwritten.
 
