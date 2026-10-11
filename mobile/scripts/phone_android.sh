@@ -17,8 +17,8 @@ if [[ -z "$SERIAL" ]]; then
   [[ -n "$SERIAL" ]] || { echo "no Android device connected (adb devices)" >&2; exit 1; }
 fi
 
-# Go APIs (8080-8083) + Firebase emulators (8081 Firestore, 9099 Auth, 9199 Storage).
-PORTS=(8080 8081 8082 8083 9099 9199)
+# Go APIs (8080-8084) + Firebase emulators (8081 Firestore, 9099 Auth, 9199 Storage).
+PORTS=(8080 8081 8082 8083 8084 9099 9199)
 for p in "${PORTS[@]}"; do "$ADB" -s "$SERIAL" reverse "tcp:$p" "tcp:$p" >/dev/null; done
 echo "adb reverse set for ${PORTS[*]} on $SERIAL"
 
