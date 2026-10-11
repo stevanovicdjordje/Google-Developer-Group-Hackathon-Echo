@@ -1,0 +1,545 @@
+openapi: 3.1.0
+info:
+  title: Eho Find API
+  version: 0.1.0
+  summary: People to meet at an event (profiles with consent, AI matches, contact requests, meeting spot).
+  description: |
+    Contract between the app's Find, Person, Messages and Profile screens
+    (`mobile/app`, `FindRepository`) and the Find service (`backend/find/`).
+    Requested by `mobile#5` / `mobile#12`: API-9, API-10, API-11, API-15 and the
+    profile part of API-14 in `mobile/docs/api-needs.md`.
+
+    **Consent comes first** (`docs/DATA_PRIVACY.md` → *People features*). Every
+    switch is off until the attendee turns it on:
+    - `visibleInFind`: the profile can appear in other attendees'
+      recommendations and searches, **only at events the attendee is present
+      at** (`joinFind`), and only to signed-in attendees of that event.
+    - `allowContact`: matches may send a contact request.
+    - `shareMeetingSpot`: the attendee may agree on a place on the venue map with
+      an accepted contact. Both sides need it on. Never a live position.
+
+    A person is **visible** at an event when they have a profile with
+    `visibleInFind: true` and are present at that event. Operations that take a
+    `personId` answer `404 not_found` for anyone who isn't visible, so hidden
+    people can't be probed.
+
+    **AI.** Recommendations and prompt search are ranked by Gemma through the
+    Gemini API (`team-gemma-core`), behind a backend adapter. Only the visible
+    candidates' `headline`, `interests` and `lookingFor` are sent to the model,
+    never names or user IDs. The model output is validated: only candidate IDs
+    are accepted and `why` is plain text, cut to 240 characters. `model` names
+    the model that ranked, or `offline` when the service runs without an AI key
+    or the model failed (deterministic overlap ranking, so the demo works
+    offline).
+
+    Profiles are per user and shared by all events. The caller is always the
+    signed-in user (attendees are anonymous Firebase users); there is no way to
+    read or change someone else's profile.
+
+    **Errors** always use the `Error` schema.
+servers:
+  - url: http://localhost:8083
+    description: Local (`backend/find`, `make dev`)
+security:
+  - firebaseIdToken: []
+tags:
+  - name: profile
+  - name: people
+  - name: contacts
+paths:
+  /healthz:
+    get:
+      operationId: findHealthz
+      summary: Liveness check.
+      security: []
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, model]
+                properties:
+                  status: { type: string, const: ok }
+                  model:
+                    type: string
+                    description: AI model in use, or `offline`.
+
+  /v1/me/profile:
+    get:
+      operationId: getMyProfile
+      tags: [profile]
+      summary: The caller's profile (API-14, profile part).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+              example: { $ref: "examples/profile.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404":
+          description: No profile yet (`not_found`). Show onboarding.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    put:
+      operationId: putMyProfile
+      tags: [profile]
+      summary: Create or replace the caller's profile and consent switches (API-14, profile part).
+      description: |
+        Turning `visibleInFind` off hides the caller from every event right
+        away. Turning `allowContact` off rejects new contact requests (existing
+        contacts stay). Turning `shareMeetingSpot` off hides agreed meeting
+        spots from both sides.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileInput" }
+            example: { $ref: "examples/profile.json" }
+      responses:
+        "200":
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      operationId: deleteMyProfile
+      tags: [profile]
+      summary: Delete the caller's profile, event presence and contacts (`DATA_PRIVACY.md` → Deletion).
+      responses:
+        "204": { description: Deleted (also when there was nothing to delete). }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /v1/events/{eventId}/people/me:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    put:
+      operationId: joinFind
+      tags: [people]
+      summary: Mark the caller as present at the event, so Find works there.
+      description: |
+        Idempotent. Call it when the attendee opens the event (after join) or
+        turns `visibleInFind` on. Being present alone shows nobody anything;
+        the caller is only listed to others while `visibleInFind` is on.
+        Recommendations, search and contacts need the caller to be present.
+      responses:
+        "204": { description: Present. }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: No profile yet (`profile_required`). Save one first.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      operationId: leaveFind
+      tags: [people]
+      summary: Stop being present at the event.
+      responses:
+        "204": { description: Not present (also when the caller wasn't). }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /v1/events/{eventId}/people/recommendations:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    get:
+      operationId: getRecommendations
+      tags: [people]
+      summary: AI-ranked people to meet, from the caller's saved profile (API-9).
+      description: |
+        Up to `limit` visible people at the event, best first, each with a
+        short `why`. The caller is never in the list. Uses the caller's
+        **saved** profile (`putMyProfile`), not one sent by the client.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: OK (an empty `matches` when nobody else is visible).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Matches" }
+              example: { $ref: "examples/recommendations.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/NotPresent" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /v1/events/{eventId}/people/search:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    post:
+      operationId: searchPeople
+      tags: [people]
+      summary: AI people search from a free-text prompt (API-10).
+      description: |
+        Same result shape as recommendations. People who don't fit the prompt
+        are left out, so the list may be shorter than `limit` or empty.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SearchRequest" }
+            example: { $ref: "examples/search.request.json" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Matches" }
+              example: { $ref: "examples/search.response.json" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/NotPresent" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /v1/events/{eventId}/people/{personId}:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/personId"
+    get:
+      operationId: getPerson
+      tags: [people]
+      summary: One visible person at the event, with the caller's contact state.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PersonDetail" }
+              example: { $ref: "examples/person.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/NotPresent" }
+
+  /v1/events/{eventId}/contacts:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+    get:
+      operationId: listContacts
+      tags: [contacts]
+      summary: The caller's contact requests at the event, sent and received.
+      responses:
+        "200":
+          description: OK, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contacts]
+                properties:
+                  contacts:
+                    type: array
+                    items: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/NotPresent" }
+    post:
+      operationId: requestContact
+      tags: [contacts]
+      summary: Send a contact request to a visible person (API-11).
+      description: |
+        Needs the target's `allowContact` on (else `403 contact_not_allowed`).
+        Idempotent: asking again returns the existing contact. If the target
+        already asked the caller, this accepts their request instead.
+        Demo attendees from the seed (`backend/find` `make seed`) accept at once,
+        so the whole flow works in the video.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactRequest" }
+            example: { $ref: "examples/contact.request.json" }
+      responses:
+        "200":
+          description: The contact (new, existing, or just accepted).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+              example: { $ref: "examples/contact.response.json" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403":
+          description: The person doesn't accept contact requests (`contact_not_allowed`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/NotPresent" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+
+  /v1/events/{eventId}/contacts/{personId}/accept:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/personId"
+    post:
+      operationId: acceptContact
+      tags: [contacts]
+      summary: Accept a contact request the person sent the caller.
+      description: Contact details are shared only after this (`DATA_PRIVACY.md`).
+      responses:
+        "200":
+          description: Accepted (also when it already was).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404":
+          description: No request from this person (`not_found`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409": { $ref: "#/components/responses/NotPresent" }
+
+  /v1/events/{eventId}/contacts/{personId}/meeting-spot:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/personId"
+    put:
+      operationId: putMeetingSpot
+      tags: [contacts]
+      summary: Agree on a place on the venue map with an accepted contact (API-15).
+      description: |
+        `place` must be the name of a room, stand or POI on the event's
+        **published** venue map (`contracts/maps`, case-insensitive; the stored
+        value uses the map's spelling), so the app can point to it with
+        `MapViewerScreen(highlightFeatureId: …)`. Needs an accepted contact
+        and `shareMeetingSpot` on for **both** people (`403
+        meeting_spot_not_allowed` otherwise). Either side may change it; the
+        last one wins. Never a live position.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MeetingSpotRequest" }
+            example: { $ref: "examples/meeting-spot.request.json" }
+      responses:
+        "200":
+          description: Saved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+              example: { $ref: "examples/meeting-spot.response.json" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403":
+          description: Not an accepted contact, or a side has `shareMeetingSpot` off (`meeting_spot_not_allowed`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/NotPresent" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+    delete:
+      operationId: deleteMeetingSpot
+      tags: [contacts]
+      summary: Clear the agreed meeting spot.
+      responses:
+        "200":
+          description: Cleared.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contact" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/NotPresent" }
+
+components:
+  securitySchemes:
+    firebaseIdToken:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+      description: Firebase Auth ID token (`team-auth`). Attendees sign in anonymously.
+  parameters:
+    eventId:
+      name: eventId
+      in: path
+      required: true
+      description: A **published** event (`contracts/maps`); others answer `404`.
+      schema: { type: string }
+    personId:
+      name: personId
+      in: path
+      required: true
+      description: The person's ID as returned in `Person.id` (not guessable from anything else).
+      schema: { type: string }
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 20, default: 8 }
+  responses:
+    BadRequest:
+      description: Malformed JSON (`invalid_json`).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthenticated:
+      description: Missing or invalid ID token (`unauthenticated`).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Unknown or unpublished event, or a person who isn't visible there (`not_found`).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotPresent:
+      description: The caller isn't present at the event (`not_present`); call `joinFind` first.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationFailed:
+      description: Input is invalid (`validation_failed`, `details` lists the fields).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { $ref: "examples/validation-error.response.json" }
+    RateLimited:
+      description: Too many AI requests (`rate_limited`). Retry after `Retry-After` seconds.
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    ProfileInput:
+      type: object
+      required: [name, headline, interests, lookingFor, visibleInFind, allowContact, shareMeetingSpot]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
+        headline:
+          type: string
+          maxLength: 100
+          description: Role and company, e.g. "Android dev at Fintio".
+        interests:
+          type: array
+          maxItems: 10
+          items: { type: string, minLength: 1, maxLength: 30 }
+          description: Duplicates (case-insensitive) are dropped.
+        lookingFor:
+          type: string
+          maxLength: 200
+          description: What the attendee wants from the event, in their words.
+        visibleInFind: { type: boolean }
+        allowContact: { type: boolean }
+        shareMeetingSpot: { type: boolean }
+    Profile:
+      allOf:
+        - $ref: "#/components/schemas/ProfileInput"
+        - type: object
+          required: [updatedAt]
+          properties:
+            updatedAt: { type: string, format: date-time }
+    Person:
+      type: object
+      description: What other attendees see. Never consent switches, contact details or user IDs.
+      required: [id, name, headline, interests, lookingFor]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        headline: { type: string }
+        interests:
+          type: array
+          items: { type: string }
+        lookingFor: { type: string }
+    PersonDetail:
+      allOf:
+        - $ref: "#/components/schemas/Person"
+        - type: object
+          required: [allowContact, contactState]
+          properties:
+            allowContact:
+              type: boolean
+              description: Whether a contact request can be sent.
+            contactState:
+              $ref: "#/components/schemas/ContactState"
+    Match:
+      type: object
+      required: [person, why]
+      properties:
+        person: { $ref: "#/components/schemas/Person" }
+        why:
+          type: string
+          maxLength: 240
+          description: Short plain-text reason (AI, untrusted; render as text).
+    Matches:
+      type: object
+      required: [matches, model]
+      properties:
+        matches:
+          type: array
+          items: { $ref: "#/components/schemas/Match" }
+        model:
+          type: string
+          description: Model that ranked, or `offline`.
+    SearchRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt: { type: string, minLength: 2, maxLength: 300 }
+    ContactState:
+      type: string
+      description: |
+        From the caller's side: `none` (no request), `requested` (the caller
+        asked, waiting), `incoming` (the person asked the caller), `accepted`.
+      enum: [none, requested, incoming, accepted]
+    ContactRequest:
+      type: object
+      required: [personId]
+      properties:
+        personId: { type: string }
+    Contact:
+      type: object
+      required: [person, state, createdAt]
+      properties:
+        person: { $ref: "#/components/schemas/Person" }
+        state:
+          $ref: "#/components/schemas/ContactState"
+        meetingSpot:
+          $ref: "#/components/schemas/MeetingSpot"
+        createdAt: { type: string, format: date-time }
+    MeetingSpot:
+      type: object
+      description: Present only on accepted contacts where both have `shareMeetingSpot` on.
+      required: [place, setByMe, updatedAt]
+      properties:
+        place:
+          type: string
+          description: Name of a feature on the published venue map.
+        setByMe: { type: boolean }
+        updatedAt: { type: string, format: date-time }
+    MeetingSpotRequest:
+      type: object
+      required: [place]
+      properties:
+        place: { type: string, minLength: 1, maxLength: 80 }
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          description: "validation_failed → FieldError[]; invalid_json → parser message (string); otherwise absent."
+          oneOf:
+            - type: string
+            - type: array
+              items: { $ref: "#/components/schemas/FieldError" }
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field: { type: string }
+        message: { type: string }

@@ -1,0 +1,5 @@
+{
+  "code": "validation_failed",
+  "message": "request is invalid",
+  "details": [{ "field": "prompt", "message": "must be 2 to 300 characters" }]
+}
