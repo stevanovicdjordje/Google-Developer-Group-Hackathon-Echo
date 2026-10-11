@@ -24,12 +24,16 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| V-6 | verifier (sonnet, medium) | 2026-10-11 session 4 | — (Galaxy) | Real-device visual pass vs design |
+| M-46 | dev | session 4 | worktree | Status bar style + onboarding keyboard |
+| M-47 | dev | session 4 | worktree | Find/Person/meeting-spot sheet fixes |
+| M-48 | dev | session 4 | worktree | Echo translate polish |
+| M-49 | dev | session 4 | worktree | Organizer sheet over nav, Android back on tabs |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| V-6 | Galaxy A55 visual pass (debug build, real Echo/Find/maps, `DEMO_LOCATION` at the entrance): no exceptions/overflow; Echo ask 3–8 s, Find search <7 s. Found → M-46…M-49 (app), `mobile#19` (map fit/route camera/labels). Data to clean before the video (re-seed, `mobile#16`): duplicate Q&A question, test people "Dev Tester"/"Ilija" in Find. Not reached: organizer upload/review/published | verification |
 | M-43 | Find 0.2.0: `setMeetingSpot(…, {time})` sends "HH:mm" and returns the stored place/time (server wins); `parseMeetingSpot` ready for reading `Contact.meetingSpot` | `748f986` |
 | M-44 | `DEMO_LOCATION` pretend GPS: `phone_android.sh` and `shots.sh` forward the env var; APP_GUIDE *Run on phones* + README | `4a3abcc` |
 | M-41/42 | `mobile/scripts/phone_android.sh` (adb reverse, `fwd6.py` IPv6→IPv4 for emulators, `EMULATOR_HOST=0.0.0.0`) verified on the Galaxy; onboarding unfocuses the keyboard between steps | `c726924` |
