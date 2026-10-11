@@ -10,20 +10,19 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| V-7 | After the local stack restart (stable `devfest`, events :8084, Find on Gemini): rebuild the Galaxy (`DEMO_EVENT_ID=devfest`, `DEMO_LOCATION` from `make seed`), run `integration_test/` + live smoke incl. organizer upload of `backend/events/demo/*` and publish; re-check M-46 status bar/keyboard and the map polish | M | verifier | none | Blocked on the human stopping the old servers |
 | M-45 | (Low) Read the other person's meeting spot back: `listContacts`/`Contact.meetingSpot` → Messages spot card (`FindApiRepository.parseMeetingSpot` exists) | M | dev | `data/find_api_repository.dart`, `repositories.dart`, `app_state.dart` | Only matters with two real users; demo person auto-accepts |
 
 ## Blocked
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
-| M-51 | Local stack restart on @Vertiglo's setup (see HANDOFF *Stack restart*) | Human: auto mode denies killing processes; needs `! kill …` from him |
 | M-14 | https App Links / Universal Links for `/e/{id}` (assetlinks.json / apple-app-site-association) | Hosting domain. Phones themselves run (`9dbd308`: `eho://open/e/{id}`, Android + iPhone 13 Pro Max on the local backends) |
 
 ## In progress / review
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| V-7 | verifier (sonnet, medium) | 2026-10-11 07:10 | none | Galaxy on `devfest`, DEMO_LOCATION 44.799820,20.400025; integration_test + live smoke incl. organizer upload/publish |
 | M-53 | dev (sonnet, medium) | 2026-10-11 07:07 | worktree | Dev shots `echo-answer`, `echo-jump-live`, `messages-spot-picker` (M-24 gaps); files: dev_shot_routes.dart, echo_screen.dart/find_screens.dart optional hooks |
 | M-52 | dev | 2026-10-11 07:07 | worktree | Events draft `issues` → review flags (by sessionId + general "To check" block), publish `warnings` on published screen; files: models.dart, events_api_repository.dart, repositories.dart (demo organizer), organizer_screens.dart, ARB. M-45 waits (repositories.dart) |
 
@@ -31,6 +30,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-51 | Local stack restart: maps API :8080 (new code) on the old 127.0.0.1 emulators, `make seed` → `devfest` (DEMO_LOCATION entrance 44.799820,20.400025), Echo replay `devfest` (live, speed 2), Find :8083 + 20 attendees, Events :8084 + 7-session agenda; logs in the session scratchpad | ops |
 | M-50 | Join errors: notFound → "This event isn't available yet" + Back to start; offline/rate-limited → "Can't reach Eho right now" + Try again; else generic + Try again (`eventSummaryProvider` no auto-retry) | `4794abf` |
 | M-13 | Events 0.1.0 wired (`data/events_api_repository.dart`): join, agenda, My events (server merged on top of saved), leave, organizer upload with bytes → AI draft → background saves → publish into `devfest`; demo fallback on healthz fail / demo-id 404. `devfest` keynote `s1` stays live (demo script). `phone_android.sh` reverses 8084. Not e2e yet | `2867aa3` |
 | M-46 | Status bar: transparent app-wide, dark icons (`ehoStatusBarOnLight`), light over ink headers (Join, organizer published) via `AnnotatedRegion(ehoStatusBarOnDark)`, edge-to-edge; onboarding keeps the focused + next field above Continue with the keyboard. Needs a device re-check | `78e4bc6` |
