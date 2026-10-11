@@ -23,12 +23,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-17 | dev | 2026-10-11 01:57 | worktree | DevFest rename + lookingFor casing + interestOptions via repository |
+| — | | | | |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-17 | Demo event "DevFest Belgrade 2026", default id `devfest` (old `devsummit` links alias to it), Find fit-line casing, interest options via repository | `7490c90` |
 | M-21 | Echo 0.3.0 (mobile#9): structured summary + trade-off time links into the transcript, "N similar questions merged", merged submit, `language=sr` for catch-up/ask/summary when translating; demo repo mirrors it | `91e9ec3` |
 | M-20 | Design polish: missing copy in ARB (21 keys), `Session.isLive`, My events live card + Next row, Top match, results caption, contact notes, Messages pill + "Show on map" → `?spot=1` highlight | `899429a` |
 | V-2 | Redesign screenshot review: all screens match/minor gaps; hex literals 0; follow-ups → M-20 additions, mobile#10 (map chrome, `/o`) | verification |
