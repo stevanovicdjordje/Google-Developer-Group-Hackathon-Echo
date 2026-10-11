@@ -1,5 +1,6 @@
 import 'package:eho_maps/eho_maps.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,6 +37,12 @@ class _EhoAppState extends State<EhoApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: _router,
+      // App-wide default: a transparent status bar with dark icons. Screens
+      // with a dark header put their own AnnotatedRegion deeper in the tree.
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+        value: ehoStatusBarOnLight,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

@@ -1,4 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+/// Status bar over a light screen: transparent, dark icons (Android reads
+/// `statusBarIconBrightness`, iOS reads `statusBarBrightness`, which names the
+/// brightness of the *content behind* the bar, so it is inverted).
+const ehoStatusBarOnLight = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.dark,
+  statusBarBrightness: Brightness.light,
+  systemStatusBarContrastEnforced: false,
+);
+
+/// Status bar over a dark (ink) header: transparent, light icons.
+const ehoStatusBarOnDark = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark,
+  systemStatusBarContrastEnforced: false,
+);
 
 /// Design tokens from `mobile/docs/design/README.md`. Screens never use these
 /// directly: read them via `Theme.of(context).colorScheme` / `textTheme` or
@@ -268,6 +287,7 @@ ThemeData _build() {
       scrolledUnderElevation: 0,
       centerTitle: false,
       titleTextStyle: text.titleLarge,
+      systemOverlayStyle: ehoStatusBarOnLight,
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -81,60 +82,65 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      color: eho.ink,
-                      child: SafeArea(
-                        bottom: false,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              IconButton(
-                                style: IconButton.styleFrom(
-                                  backgroundColor: eho.inkOverlay,
-                                  foregroundColor: eho.onInk,
+                    // Dark navy header: light status-bar icons while it is
+                    // under the bar (the app default applies once scrolled).
+                    AnnotatedRegion<SystemUiOverlayStyle>(
+                      value: ehoStatusBarOnDark,
+                      child: Container(
+                        color: eho.ink,
+                        child: SafeArea(
+                          bottom: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                IconButton(
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: eho.inkOverlay,
+                                    foregroundColor: eho.onInk,
+                                  ),
+                                  tooltip: MaterialLocalizations.of(context)
+                                      .backButtonTooltip,
+                                  icon: const Icon(Icons.chevron_left),
+                                  onPressed: () => context.canPop()
+                                      ? context.pop()
+                                      : context.go('/'),
                                 ),
-                                tooltip: MaterialLocalizations.of(context)
-                                    .backButtonTooltip,
-                                icon: const Icon(Icons.chevron_left),
-                                onPressed: () => context.canPop()
-                                    ? context.pop()
-                                    : context.go('/'),
-                              ),
-                              const SizedBox(height: 18),
-                              Text(
-                                l10n.joinInvited,
-                                style: t.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: eho.onInkPrimary,
+                                const SizedBox(height: 18),
+                                Text(
+                                  l10n.joinInvited,
+                                  style: t.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: eho.onInkPrimary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 18),
-                              Text(
-                                e.name,
-                                style: t.displayMedium?.copyWith(
-                                  color: eho.onInk,
-                                  height: 1.02,
+                                const SizedBox(height: 18),
+                                Text(
+                                  e.name,
+                                  style: t.displayMedium?.copyWith(
+                                    color: eho.onInk,
+                                    height: 1.02,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 18),
-                              Text(
-                                e.dates,
-                                style: t.bodyLarge?.copyWith(
-                                  fontSize: 16,
-                                  color: eho.onInkMuted,
+                                const SizedBox(height: 18),
+                                Text(
+                                  e.dates,
+                                  style: t.bodyLarge?.copyWith(
+                                    fontSize: 16,
+                                    color: eho.onInkMuted,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                e.venue,
-                                style: t.bodyLarge?.copyWith(
-                                  fontSize: 16,
-                                  color: eho.onInkMuted,
+                                const SizedBox(height: 6),
+                                Text(
+                                  e.venue,
+                                  style: t.bodyLarge?.copyWith(
+                                    fontSize: 16,
+                                    color: eho.onInkMuted,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -225,7 +231,8 @@ class OnboardingScreen extends ConsumerStatefulWidget {
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
+    with WidgetsBindingObserver {
   final _page = PageController();
   final _name = TextEditingController();
   final _headline = TextEditingController();
@@ -235,6 +242,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   bool _contact = true;
   bool _meetingSpot = true;
   int _step = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _page.dispose();
+    _name.dispose();
+    _headline.dispose();
+    _lookingFor.dispose();
+    super.dispose();
+  }
+
+  /// The keyboard animates in after the field got focus, and the scroll view
+  /// shrinks with it: once the layout has settled, bring the focused field back
+  /// near the top of the visible part so it and the next field stay clear of
+  /// the pinned Continue button.
+  @override
+  void didChangeMetrics() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final focus = FocusManager.instance.primaryFocus?.context;
+      if (focus == null || MediaQuery.viewInsetsOf(context).bottom <= 0) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        focus,
+        alignment: 0.15,
+        duration: const Duration(milliseconds: 150),
+      );
+    });
+  }
 
   void _next() {
     // Close the keyboard on every step change so it never covers the consents.
@@ -285,8 +328,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final t = theme.textTheme;
     final l10n = AppLocalizations.of(context);
     final scheme = theme.colorScheme;
-    const pad = EdgeInsets.fromLTRB(24, 24, 24, 0);
+    // The Scaffold below resizes for the keyboard and hides the inset from its
+    // body, so read it here: the pinned Continue button gets tighter padding.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    const pad = EdgeInsets.fromLTRB(24, 24, 24, 24);
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Column(
           children: [
@@ -354,13 +401,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       const SizedBox(height: 24),
                       _Field(
                         label: l10n.onboardingName,
-                        child: TextField(controller: _name),
+                        child: TextField(
+                          controller: _name,
+                          scrollPadding: _fieldScrollPadding,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       _Field(
                         label: l10n.onboardingHeadline,
                         child: TextField(
                           controller: _headline,
+                          scrollPadding: _fieldScrollPadding,
                           decoration: InputDecoration(
                             hintText: l10n.onboardingHeadlineHint,
                           ),
@@ -401,6 +452,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         label: l10n.onboardingLookingForLabel,
                         child: TextField(
                           controller: _lookingFor,
+                          scrollPadding: _fieldScrollPadding,
                           minLines: 3,
                           maxLines: 3,
                           decoration: InputDecoration(
@@ -484,7 +536,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+              padding: EdgeInsets.fromLTRB(24, 12, 24, keyboardOpen ? 12 : 28),
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -498,6 +550,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
     );
   }
+
+  /// Room kept around a focused field when it scrolls into view: leaves the
+  /// next field (label + input, ~110 px) visible under it, above the pinned
+  /// Continue button.
+  static const _fieldScrollPadding = EdgeInsets.fromLTRB(20, 20, 20, 140);
 
   /// Step headline: Bricolage 34 (the design's big screen title).
   TextStyle? _title(TextTheme t) => t.displaySmall?.copyWith(height: 1.05);
