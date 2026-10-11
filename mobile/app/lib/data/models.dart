@@ -255,7 +255,7 @@ class MeetingSpot {
   /// `contracts/find`).
   final String place;
 
-  /// Agreed time, "HH:mm" (app-only for now; the contract has no time yet).
+  /// Agreed time, "HH:mm" (`MeetingSpot.time` in `contracts/find` 0.2.0).
   final String? time;
 
   /// Name of the map floor the place is on, e.g. "Ground floor" (app-only,

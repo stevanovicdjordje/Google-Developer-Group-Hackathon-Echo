@@ -155,8 +155,8 @@ class MeetingSpotNotifier extends Notifier<MeetingSpot?> {
   }
 
   /// Sets [spot] and saves it with the contact on the Find service
-  /// (`putMeetingSpot`; time and floor stay in the app). The place comes
-  /// back in the map's spelling.
+  /// (`putMeetingSpot`; the floor stays in the app). The place comes back in
+  /// the map's spelling and the time as the service stored it.
   void agree(String eventId, MeetingSpot spot) {
     set(spot);
     final personId = spot.personId;
@@ -164,14 +164,15 @@ class MeetingSpotNotifier extends Notifier<MeetingSpot?> {
     _sync(
       ref
           .read(findRepositoryProvider)
-          .setMeetingSpot(eventId, personId, spot.place)
-          .then((place) {
-            if (identical(state, spot) && place != spot.place) {
+          .setMeetingSpot(eventId, personId, spot.place, time: spot.time)
+          .then((stored) {
+            if (identical(state, spot) &&
+                (stored.place != spot.place || stored.time != spot.time)) {
               set(
                 MeetingSpot(
                   personName: spot.personName,
-                  place: place,
-                  time: spot.time,
+                  place: stored.place,
+                  time: stored.time,
                   floor: spot.floor,
                   personId: spot.personId,
                 ),

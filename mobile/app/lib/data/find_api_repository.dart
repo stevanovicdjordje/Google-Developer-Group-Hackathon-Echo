@@ -228,18 +228,10 @@ class FindApiRepository implements FindRepository {
     yield _contactState(json);
   }
 
+  /// The stored place (the map's spelling) and time, which fall back to what
+  /// was sent when the answer lacks them.
   @override
-  Future<String> setMeetingSpot(
-    String eventId,
-    String personId,
-    String place, {
-    String? time,
-  }) async =>
-      (await putMeetingSpot(eventId, personId, place, time: time)).place;
-
-  /// `putMeetingSpot`: the stored place (the map's spelling) and time, which
-  /// fall back to what was sent when the answer lacks them.
-  Future<({String place, String? time})> putMeetingSpot(
+  Future<({String place, String? time})> setMeetingSpot(
     String eventId,
     String personId,
     String place, {
@@ -255,7 +247,10 @@ class FindApiRepository implements FindRepository {
       ),
     );
     final stored = parseMeetingSpot(json);
-    return (place: stored?.place ?? place, time: stored?.time ?? time);
+    return (
+      place: stored?.place ?? place,
+      time: stored?.time ?? _meetingTime(time),
+    );
   }
 
   // ------------------------------------------------------------ mapping
@@ -478,15 +473,11 @@ class FallbackFindRepository implements FindRepository {
           .asyncExpand((r) => r.requestContact(eventId, personId));
 
   @override
-  Future<String> setMeetingSpot(
+  Future<({String place, String? time})> setMeetingSpot(
     String eventId,
     String personId,
     String place, {
     String? time,
-  }) async {
-    final target = await _target;
-    return target is FindApiRepository
-        ? target.setMeetingSpot(eventId, personId, place, time: time)
-        : target.setMeetingSpot(eventId, personId, place);
-  }
+  }) async =>
+      (await _target).setMeetingSpot(eventId, personId, place, time: time);
 }

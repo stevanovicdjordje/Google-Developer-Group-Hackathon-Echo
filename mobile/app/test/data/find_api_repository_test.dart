@@ -37,19 +37,20 @@ http.Response _json(Object? body, [int status = 200, Map<String, String>? h]) =>
 /// Records every call to the repository the notifiers push to.
 class _RecordingFind extends DemoFindRepository {
   final saved = <Profile>[];
-  final spots = <(String, String, String)>[];
+  final spots = <(String, String, String, String?)>[];
 
   @override
   Future<void> saveProfile(Profile profile) async => saved.add(profile);
 
   @override
-  Future<String> setMeetingSpot(
+  Future<({String place, String? time})> setMeetingSpot(
     String eventId,
     String personId,
-    String place,
-  ) async {
-    spots.add((eventId, personId, place));
-    return 'Info pult';
+    String place, {
+    String? time,
+  }) async {
+    spots.add((eventId, personId, place, time));
+    return (place: 'Info pult', time: time);
   }
 }
 
@@ -162,7 +163,7 @@ void main() {
 
   test('meeting spot sends place and time as in the 0.2.0 fixture', () async {
     final r = repo();
-    final spot = await r.putMeetingSpot(
+    final spot = await r.setMeetingSpot(
       'ev',
       'k7Qm2xLp',
       'Info pult',
@@ -192,10 +193,9 @@ void main() {
       }
       return service(req);
     });
-    final place = await r.setMeetingSpot('ev', 'k7Qm2xLp', 'info pult');
+    final spot = await r.setMeetingSpot('ev', 'k7Qm2xLp', 'info pult');
     expect(jsonDecode(requests.last.body), {'place': 'info pult'});
-    expect(place, 'Info pult'); // the map's spelling, from the response
-    final spot = await r.putMeetingSpot('ev', 'k7Qm2xLp', 'info pult');
+    expect(spot.place, 'Info pult'); // the map's spelling, from the response
     expect(spot.time, isNull);
   });
 
@@ -401,7 +401,7 @@ void main() {
             );
         expect(c.read(meetingSpotProvider)?.place, 'info pult');
         await pumpEventQueue();
-        expect(find.spots, [('ev', 'p3', 'info pult')]);
+        expect(find.spots, [('ev', 'p3', 'info pult', '15:20')]);
         final spot = c.read(meetingSpotProvider)!;
         expect(spot.place, 'Info pult');
         expect(spot.time, '15:20');

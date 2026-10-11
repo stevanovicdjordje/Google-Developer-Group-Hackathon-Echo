@@ -149,8 +149,14 @@ abstract interface class FindRepository {
   Stream<ContactState> requestContact(String eventId, String personId);
 
   /// Agree on [place] (a feature name on the venue map) with an accepted
-  /// contact; returns the place as stored (the map's spelling). [API-15]
-  Future<String> setMeetingSpot(String eventId, String personId, String place);
+  /// contact, optionally at [time] ("HH:mm"); returns the place as stored
+  /// (the map's spelling) and the stored time. [API-15]
+  Future<({String place, String? time})> setMeetingSpot(
+    String eventId,
+    String personId,
+    String place, {
+    String? time,
+  });
 }
 
 enum FindErrorKind {
@@ -492,11 +498,12 @@ class DemoFindRepository implements FindRepository {
   Future<void> deleteProfile() async {}
 
   @override
-  Future<String> setMeetingSpot(
+  Future<({String place, String? time})> setMeetingSpot(
     String eventId,
     String personId,
-    String place,
-  ) async => place;
+    String place, {
+    String? time,
+  }) async => (place: place, time: time);
 }
 
 class DemoOrganizerRepository implements OrganizerRepository {
