@@ -14,6 +14,7 @@ spec = yaml.safe_load((ROOT / "openapi.yaml").read_text())
 
 EXAMPLES = {
     "profile.json": "#/components/schemas/Profile",
+    "profile-input.json": "#/components/schemas/ProfileInput",
     "recommendations.response.json": "#/components/schemas/Matches",
     "search.request.json": "#/components/schemas/SearchRequest",
     "search.response.json": "#/components/schemas/Matches",

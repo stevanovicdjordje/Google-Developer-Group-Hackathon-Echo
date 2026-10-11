@@ -71,7 +71,7 @@ func recommendWhy(c Candidate, shared, common []string) string {
 		parts = append(parts, sentence(c.Headline))
 	}
 	if lf := strings.TrimSpace(c.LookingFor); lf != "" {
-		parts = append(parts, "Looking for: "+sentence(lowerFirst(lf)))
+		parts = append(parts, "Looking for: "+sentence(lf))
 	}
 	if len(parts) == 0 {
 		return "Also at this event."
@@ -114,7 +114,7 @@ func searchWhy(c Candidate, interests, common []string) string {
 		parts = append(parts, sentence(h))
 	}
 	if lf := strings.TrimSpace(c.LookingFor); lf != "" {
-		parts = append(parts, "Looking for: "+sentence(lowerFirst(lf)))
+		parts = append(parts, "Looking for: "+sentence(lf))
 	}
 	return CleanWhy(strings.Join(parts, " "))
 }
@@ -134,15 +134,6 @@ func sentence(s string) string {
 	s = strings.TrimSpace(s)
 	s = strings.TrimRight(s, ".!? ")
 	return s + "."
-}
-
-func lowerFirst(s string) string {
-	r := []rune(s)
-	// Keep acronyms ("AI researchers") as they are.
-	if len(r) > 1 && unicode.IsUpper(r[0]) && !unicode.IsUpper(r[1]) {
-		r[0] = unicode.ToLower(r[0])
-	}
-	return string(r)
 }
 
 func joinAnd(items []string) string {

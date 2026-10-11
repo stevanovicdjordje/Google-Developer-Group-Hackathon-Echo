@@ -2,6 +2,15 @@
 
 Find feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## 0.1.1 — 2026-10-11
+- **Impact:** fixture-only
+- **Affected:** mobile (reads examples)
+- **Changes:**
+  - ADDED `examples/profile-input.json` as the `putMyProfile` request example (the old one carried `updatedAt`);
+    `examples/profile.json` is now its response example
+  - Documented that unknown request fields (e.g. `updatedAt` sent back) are ignored
+- **Consumer action:** none.
+
 ## 0.1.0 — 2026-10-11
 - **Impact:** additive (new contract)
 - **Affected:** backend/find (implements), mobile (consumes)

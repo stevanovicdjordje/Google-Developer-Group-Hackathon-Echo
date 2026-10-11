@@ -65,7 +65,7 @@ func TestOfflineRecommend(t *testing.T) {
 			nina = p.Why
 		}
 	}
-	if nina != "You both care about AI / ML. Looking for: mobile devs to prototype with." {
+	if nina != "You both care about AI / ML. Looking for: Mobile devs to prototype with." {
 		t.Fatalf("nina why %q", nina)
 	}
 	// Deterministic, and limit applies.

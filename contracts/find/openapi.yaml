@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Eho Find API
-  version: 0.1.0
+  version: 0.1.1
   summary: People to meet at an event (profiles with consent, AI matches, contact requests, meeting spot).
   description: |
     Contract between the app's Find, Person, Messages and Profile screens
@@ -98,13 +98,14 @@ paths:
         content:
           application/json:
             schema: { $ref: "#/components/schemas/ProfileInput" }
-            example: { $ref: "examples/profile.json" }
+            example: { $ref: "examples/profile-input.json" }
       responses:
         "200":
           description: Saved.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Profile" }
+              example: { $ref: "examples/profile.json" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthenticated" }
         "422": { $ref: "#/components/responses/ValidationFailed" }
@@ -416,6 +417,7 @@ components:
   schemas:
     ProfileInput:
       type: object
+      description: Unknown fields (e.g. `updatedAt` sent back) are ignored.
       required: [name, headline, interests, lookingFor, visibleInFind, allowContact, shareMeetingSpot]
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
