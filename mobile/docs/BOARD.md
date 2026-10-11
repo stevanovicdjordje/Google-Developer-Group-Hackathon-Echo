@@ -10,14 +10,13 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-38 | Echo screen: the "Full talk summary / Premium" banner overlaps/clips the top transcript line on ended talks (V-4a echo.png) | S | dev | `features/echo/` | |
-| M-34 | Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
+| M-34 | (Likely superseded by `mobile#16` stable event id — prefer that.) Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 
 ## Blocked
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
-| M-13 | Wire real endpoints API-1…API-15 as they land | Backend has no owner yet (`mobile#5`) |
+| M-13 | Wire Events endpoints (API-1, 2, 3, 12, 13, 14: join, agenda, My events, organizer extract/publish) | `mobile#17`: @Vertiglo takes the Events backend (`feature:events`); wire when `contracts/events/` lands, like M-23 (fallback to demo) |
 | M-14 | https App Links / Universal Links for `/e/{id}` (assetlinks.json / apple-app-site-association) | Hosting domain. Phones themselves run (`9dbd308`: `eho://open/e/{id}`, Android + iPhone 13 Pro Max on the local backends) |
 
 ## In progress / review
