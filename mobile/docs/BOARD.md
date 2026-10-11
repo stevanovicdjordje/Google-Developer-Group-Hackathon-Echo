@@ -10,7 +10,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-45 | (Low) Read the other person's meeting spot back: `listContacts`/`Contact.meetingSpot` → Messages spot card (`FindApiRepository.parseMeetingSpot` exists) | M | dev | `data/find_api_repository.dart`, `repositories.dart`, `app_state.dart` | Only matters with two real users; demo person auto-accepts |
 
 ## Blocked
 
@@ -23,8 +22,9 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
 | V-7 | verifier (sonnet, medium) | 2026-10-11 07:10 | none | Galaxy on `devfest`, DEMO_LOCATION 44.799820,20.400025; integration_test + live smoke incl. organizer upload/publish |
+| M-45 | dev | 2026-10-11 07:12 | worktree (on top of M-52) | Other person's meeting spot from `listContacts`; no find_screens.dart (M-53 holds it) |
 | M-53 | dev (sonnet, medium) | 2026-10-11 07:07 | worktree | Dev shots `echo-answer`, `echo-jump-live`, `messages-spot-picker` (M-24 gaps); files: dev_shot_routes.dart, echo_screen.dart/find_screens.dart optional hooks |
-| M-52 | dev | 2026-10-11 07:07 | worktree | Events draft `issues` → review flags (by sessionId + general "To check" block), publish `warnings` on published screen; files: models.dart, events_api_repository.dart, repositories.dart (demo organizer), organizer_screens.dart, ARB. M-45 waits (repositories.dart) |
+| M-52 | dev | done 07:2x | `worktree-agent-a4a6f09c231d68cfe` (09d3beb) | **review**: merge after V-7 finishes (V-7 uses the main checkout). 181/181. No count tile (there's none in the design). Warnings via `organizerWarningsProvider`. Follow-up: dev shots with issues/warnings |
 
 ## Done
 
