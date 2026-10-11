@@ -2,7 +2,7 @@
 
 Rewritten by the orchestrator at the end of every session. The next orchestrator reads this right after syncing (`mobile/docs/WORKFLOW.md` §1).
 
-**Last session:** 2026-10-11, sixth orchestrator session. Done: M-57, M-59…M-63, V-8, V-9, R-1. Opened mobile#22 and mobile#23 (both done by feature:maps/find). R-2 running.
+**Last session:** 2026-10-11, sixth orchestrator session. Done: M-57, M-59…M-63, V-8, V-9, R-1. Opened mobile#22 and mobile#23 (both done by feature:maps/find). R-2 done. Handed off at ~170k on eho-f7's request, because a big feature is starting: live speech-to-text (`team-live-stt`; safe-point tag `safe/pre-live-stt`). Read that decision and eho-f7's instructions first.
 
 ## Standing mandate from @Ilij4n (relayed by his coordinator session **eho-f7**; message it, not ilijan-72)
 
