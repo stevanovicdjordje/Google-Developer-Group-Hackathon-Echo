@@ -1,6 +1,5 @@
 import 'package:eho_maps/eho_maps.dart';
 import 'package:eho_maps/src/location/georef.dart';
-import 'package:eho_maps/src/location/location_source.dart';
 import 'package:eho_maps/src/location/tracking.dart';
 import 'package:flutter_test/flutter_test.dart';
 

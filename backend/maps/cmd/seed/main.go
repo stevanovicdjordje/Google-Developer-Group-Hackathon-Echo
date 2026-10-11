@@ -126,6 +126,9 @@ func (c *client) run(email, password string) error {
 	fmt.Printf("Demo event published (version %d, %d warnings)\n", pub.PublishedVersion, len(pub.Warnings))
 	fmt.Printf("  eventId:   %s\n  organizer: %s / %s (emulator only)\n  attendee:  %s/e/%s\nQR markers:\n%s\n",
 		ev.ID, email, password, c.webURL, ev.ID, strings.Join(markers, "\n"))
+	// Pretend GPS for phones that aren't at this fictional venue (app: --dart-define=DEMO_LOCATION=...).
+	fmt.Printf("Demo GPS (app --dart-define=DEMO_LOCATION=...):\n  at the entrance:          %s\n  walk entrance → Glavna sala: %s\n",
+		demoLocation(nodes["m40"]), demoLocation(nodes["m40"], nodes["m880"], nodes["r200"]))
 	return nil
 }
 
@@ -243,13 +246,28 @@ func graph() map[string]any {
 
 // georef places the plan at a fictional spot in Belgrade, north-up, 0.05 m/px.
 func georef() map[string]any {
-	const lat0, lng0, mpp = 44.8000, 20.4000, 0.05
 	cp := func(x, y float64) map[string]any {
-		dLat := -y * mpp / 111320.0
-		dLng := x * mpp / (111320.0 * 0.7096) // cos(44.8°)
-		return map[string]any{"px": map[string]any{"x": x, "y": y}, "latLng": map[string]any{"lat": lat0 + dLat, "lng": lng0 + dLng}}
+		lat, lng := latLngAt(x, y)
+		return map[string]any{"px": map[string]any{"x": x, "y": y}, "latLng": map[string]any{"lat": lat, "lng": lng}}
 	}
 	return map[string]any{"controlPoints": []any{cp(0, 0), cp(planW, 0), cp(0, planH)}}
+}
+
+// latLngAt is where plan pixel (x, y) lies under georef.
+func latLngAt(x, y float64) (lat, lng float64) {
+	const lat0, lng0, mpp = 44.8000, 20.4000, 0.05
+	return lat0 - y*mpp/111320.0, lng0 + x*mpp/(111320.0*0.7096) // cos(44.8°)
+}
+
+// demoLocation renders plan points as a DEMO_LOCATION value for the app
+// (mobile#14): one point stands still, several are walked along.
+func demoLocation(pts ...pt) string {
+	parts := make([]string, len(pts))
+	for i, p := range pts {
+		lat, lng := latLngAt(p.x, p.y)
+		parts[i] = fmt.Sprintf("%.6f,%.6f", lat, lng)
+	}
+	return strings.Join(parts, ";")
 }
 
 func rect(x0, y0, x1, y1 float64) map[string]any {

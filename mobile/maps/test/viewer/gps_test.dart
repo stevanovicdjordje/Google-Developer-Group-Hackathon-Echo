@@ -5,7 +5,6 @@ import 'package:eho_maps/eho_maps.dart';
 import 'package:eho_maps/src/editor/editor_providers.dart';
 import 'package:eho_maps/src/editor/maps_api.dart';
 import 'package:eho_maps/src/location/georef.dart';
-import 'package:eho_maps/src/location/location_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_map/flutter_map.dart';

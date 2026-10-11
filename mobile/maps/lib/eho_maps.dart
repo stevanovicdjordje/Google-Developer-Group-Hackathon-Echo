@@ -6,6 +6,15 @@ export 'l10n/maps_localizations.dart';
 export 'src/data/published_map_repository.dart';
 export 'src/editor/editor_providers.dart' show mapsApiBaseUrlProvider;
 export 'src/editor/qr_screen.dart' show mapsLinkBaseProvider;
+export 'src/location/location_source.dart'
+    show
+        LocationSource,
+        GpsFix,
+        LocationUnavailable,
+        LocationProblem,
+        DemoLocationSource,
+        GeolocatorLocationSource,
+        locationSourceProvider;
 export 'src/model/map_models.dart';
 export 'src/model/route_models.dart';
 export 'src/routes.dart';
