@@ -66,6 +66,11 @@ Future<void> initFirebase(AppConfig config) async {
   }
   await clearPersistedAuthSession();
   await Firebase.initializeApp(options: _demoOptions);
+  // One host for all three emulators. On Android FlutterFire rewrites
+  // `localhost`/`127.0.0.1` to `10.0.2.2` (the emulator's alias for the Mac),
+  // which a physical phone can't reach; `0.0.0.0` is left alone, so a USB
+  // phone with `adb reverse` uses `EMULATOR_HOST=0.0.0.0`
+  // (`mobile/scripts/phone_android.sh`). The default stays `localhost`.
   final host = config.emulatorHost;
   await FirebaseAuth.instance.useAuthEmulator(host, _authPort);
   FirebaseFirestore.instance.useFirestoreEmulator(host, _firestorePort);

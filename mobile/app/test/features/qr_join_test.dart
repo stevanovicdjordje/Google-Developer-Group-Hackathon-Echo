@@ -55,4 +55,29 @@ void main() {
     await joinWithOnboarding(tester);
     expect(location(router), '/e/devfest/map?at=m1');
   });
+
+  testWidgets('Continue from the name step drops the keyboard focus', (
+    tester,
+  ) async {
+    await open(tester, '/e/devfest');
+    await tester.tap(find.text('Join event'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+    await tester.enterText(find.byType(TextField).first, 'Ilija');
+    expect(FocusManager.instance.primaryFocus?.context, isNotNull);
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    final focused = FocusManager.instance.primaryFocus?.context;
+    expect(
+      focused == null
+          ? null
+          : find.ancestor(
+              of: find.byWidget(focused.widget),
+              matching: find.byType(EditableText),
+            ),
+      anyOf(isNull, findsNothing),
+    );
+    expect(focused?.widget is EditableText, isFalse);
+  });
 }
