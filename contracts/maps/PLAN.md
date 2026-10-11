@@ -57,4 +57,4 @@ the deployed app so they point to the real URL. Open for @Vertiglo: `contracts/m
 section (not committed by the agent unless asked).
 
 How to run: `cd backend/maps && make dev`, `make seed`, `cd mobile/app && flutter build web`, serve `build/web` with SPA fallback
-on :5000, open `/e/<eventId>` (attendee) or `/o` (organizer, emulator login `organizer@eho.test` / `eho-demo-123`).
+on :5050, open `/e/<eventId>` (attendee) or `/o` (organizer, emulator login `organizer@eho.test` / `eho-demo-123`).

@@ -120,12 +120,12 @@ Link do konkretnog objekta: `/e/{eventId}/stand/{featureId}` (radi za bilo koji 
 ## 8. Pokretanje i testiranje
 
 ```bash
-mobile/scripts/dev_all.sh                       # emulatori + API + aplikacija u Chrome-u (:5000)
+mobile/scripts/dev_all.sh                       # emulatori + API + aplikacija u Chrome-u (:5050)
 cd backend/maps && make seed                    # demo događaj; ispiše linkove
 ```
 
-- Posetilac: `http://localhost:5000/e/<eventId>`
-- Organizator: `http://localhost:5000/o`, login `organizer@eho.test` / `eho-demo-123` (samo emulator)
+- Posetilac: `http://localhost:5050/e/<eventId>`
+- Organizator: `http://localhost:5050/o`, login `organizer@eho.test` / `eho-demo-123` (samo emulator)
 - Firebase emulator UI (pregled baze): `http://localhost:4000`
 - Testovi: `cd mobile/maps && flutter test`, `cd backend/maps && go test ./...`
 

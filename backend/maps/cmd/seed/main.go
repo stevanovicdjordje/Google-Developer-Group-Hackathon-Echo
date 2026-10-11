@@ -42,7 +42,7 @@ func main() {
 	flag.StringVar(&c.authHost, "auth", envOr("FIREBASE_AUTH_EMULATOR_HOST", "127.0.0.1:9099"), "Auth emulator host:port")
 	flag.StringVar(&c.storageHost, "storage", strings.TrimPrefix(envOr("STORAGE_EMULATOR_HOST", "127.0.0.1:9199"), "http://"), "Storage emulator host:port")
 	flag.StringVar(&c.bucket, "bucket", "demo-eho.appspot.com", "Storage bucket")
-	flag.StringVar(&c.webURL, "web", "http://localhost:5000", "web app base URL for printed links")
+	flag.StringVar(&c.webURL, "web", "http://localhost:5050", "web app base URL for printed links")
 	email := flag.String("email", "organizer@eho.test", "demo organizer email (emulator only)")
 	password := flag.String("password", "eho-demo-123", "demo organizer password (emulator only)")
 	flag.Parse()

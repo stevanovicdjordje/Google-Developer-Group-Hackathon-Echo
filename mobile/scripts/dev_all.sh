@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # One command for local development: Firebase emulators + Go API (backend/maps/scripts/dev.sh)
 # and the Flutter web app in Chrome, pointed at them. Ctrl+C stops everything.
+# Port 5050: on macOS, 5000 is taken by the AirPlay Receiver.
 # Usage: mobile/scripts/dev_all.sh [extra flutter run args]
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -16,6 +17,6 @@ for _ in $(seq 1 90); do
 done
 
 cd "$ROOT/mobile/app"
-flutter run -d chrome --web-port 5000 \
+flutter run -d chrome --web-port 5050 \
   --dart-define=API_BASE_URL=http://localhost:8080 \
   --dart-define=USE_EMULATORS=true "$@"

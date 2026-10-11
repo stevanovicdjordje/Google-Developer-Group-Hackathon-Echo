@@ -39,7 +39,7 @@ The attendee-facing client. It lets a visitor join an event and use Eho's attend
 Requirements: Flutter stable (3.47+), Chrome; for the backend + emulators see `../backend/maps/README.md`.
 
 ```bash
-mobile/scripts/dev_all.sh          # emulators + Go API + Flutter web in Chrome (http://localhost:5000)
+mobile/scripts/dev_all.sh          # emulators + Go API + Flutter web in Chrome (http://localhost:5050)
 
 cd mobile/app
 flutter test
