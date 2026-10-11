@@ -11,7 +11,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
 | M-24 | Dev-only state routes for screenshots (`/dev/shot/<state>`: Echo Q&A/paywall/summary/translated, Person states, Messages + meeting spot, My events live card, organizer review/published) behind a `DEV_ROUTES` define | M | dev | `core/router.dart` (hot), new `features/dev/shot_routes.dart` | Then V-3: verifier compares every state with `mobile/docs/design/`. |
-| M-25 | Cleanups: migrate persisted `devsummit` joined entry → `devfest`; session page "Echo is on" card only for talks with Echo | S | dev | `data/local_store.dart`/`app_state.dart`, `features/agenda/` | |
 | M-23 | Wire `FindRepository` to the Find API (API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, profile/consent) | M | opus | `data/` | Blocked on `contracts/find/openapi.yaml` (feature:find → @Vertiglo, `mobile#12`, `team-find-holder`). Keep demo data until then. |
 | M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
 
@@ -27,12 +26,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
 | M-24 | dev | 03:08 | worktree | screenshot state routes |
-| M-25 | dev | 03:08 | worktree | cleanups |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-25 | Saved `devsummit` joined event migrates to `devfest` (deduped, written back once); session "Echo is on" card only when `Session.isLive`. Follow-up: export the legacy id from repositories.dart; a `hasEcho` flag if past talks with transcripts should show it | `600a12c` |
 | M-22 | maps#3: `USE_EMULATORS=false` builds take `FIREBASE_API_KEY`/`APP_ID`/`PROJECT_ID` (+ optional sender id, auth domain, storage bucket) from `--dart-define` | `c192f2a` |
 | M-17 | Demo event "DevFest Belgrade 2026", default id `devfest` (old `devsummit` links alias to it), Find fit-line casing, interest options via repository | `7490c90` |
 | M-21 | Echo 0.3.0 (mobile#9): structured summary + trade-off time links into the transcript, "N similar questions merged", merged submit, `language=sr` for catch-up/ask/summary when translating; demo repo mirrors it | `91e9ec3` |
