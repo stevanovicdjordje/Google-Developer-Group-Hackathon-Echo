@@ -10,10 +10,9 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-26 | Echo on real Gemma — API part verified 2026-10-11: `/healthz` → `gemma-4-26b-a4b-it`; ask (en 2 s, sr via body `language`), catch-up `?language=sr`, translate sr (50 lines, 13 s) all answer from Gemma on the replayed keynote. Left: app-side look (build with `DEMO_EVENT_ID=ik6vmvjr7wlektj6`, Echo route shows server transcript) after V-3 | S | verifier | none | Emulator data was not persisted: re-seeded, event now `ik6vmvjr7wlektj6`, keynote replayed `-instant`. Key lives only in git-ignored `backend/echo/.env`. |
+| M-26 | Echo on real AI — API part verified: Gemini (`gemini-3.8-flash`) for ask/catch-up/summary, Gemma (`gemma-4-26b-a4b-it`) for translate (echo 0.3.1, `efb51cc`); ask en/sr, catch-up sr, translate sr OK on the replayed keynote. App-side check = M-26b | S | verifier | none | Emulator data isn't persisted: re-seeded, event `ik6vmvjr7wlektj6`, keynote replayed `-instant`. Key only in git-ignored `backend/echo/.env`. |
 | M-31 | Organizer polish (V-3 #7): "✦ Extracted from 3 files" overline, flag "Designing for crowded rooms" (seed), short link display `eho.app/e/<id>`, "Copy"; shot routes for upload files-chosen + progress | S | dev | `features/organizer/`, `data/demo_data.dart`, `features/dev/` | After M-30 (demo_data) and M-28 (dev shots) |
-| M-23 | Wire `FindRepository` to the Find API (API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, profile/consent) | M | opus | `data/` | Blocked on `contracts/find/openapi.yaml` (feature:find → @Vertiglo, `mobile#12`, `team-find-holder`). Keep demo data until then. |
-| M-19 | Map detail (v2 `MapDetail.dc.html`): stage sheet with capacity, walk time, NOW session → session, Start route + Open Echo | M | dev | `features/map/map_tab.dart` | Blocked on `mobile#8` (feature:maps: a hook for app-provided sheet content + route line to the selected stage). |
+| M-23 | Wire `FindRepository` to the Find API (API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, profile/consent) | M | opus | `data/` | Unblocked: find 0.1.0 (`106f9c2`), service `backend/find` :8083 not running yet → build against fixtures, keep demo fallback. Run after M-30 (same files). |
 
 ## Blocked
 
@@ -29,6 +28,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | M-28 | dev | 03:26 | worktree | Echo polish (V-3 #1–3, #9 echo part) + shots.sh USE_ECHO_API |
 | M-29 | dev | 03:26 | worktree | Agenda/session + Start/My events/Profile/Onboarding copy (V-3 #4, #8) |
 | M-30 | opus | 03:26 | worktree | Find/Person/Messages + demo data (V-3 #5, #6) |
+| M-19 | dev | resumed | worktree | map detail sheet (mobile#8 done) |
 | M-26b | verifier | 03:26 | — | app-side Echo on Gemma check |
 
 ## Done
