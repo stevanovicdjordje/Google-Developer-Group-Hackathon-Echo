@@ -22,12 +22,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| M-54 | opus | 07:36 | worktree | integration_test 0/6 on the Galaxy (host 6/6): flow 1 path `/e/devfest?at=m1` vs `/map?at=m1`, tab labels "Profile"/"Find" not found, "Meet at Glavna sala" not found. Files: test/flows/**, integration_test/** |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-54 | integration_test 6/6 on the Galaxy again: on device `pumpAndSettle` returned before the demo join's 400 ms delay (Join shows no spinner), so flows continued from the Join screen. Harness `pumpUntil`/`waitForJoin` in `test/flows/flow_helpers.dart` | `d06d23c` |
 | M-55 | Agenda: sessions without a stage → no empty chip, no stray "·", no "Show on map"; review Publish with flagged rows/issues → "Publish anyway" / "Review" dialog | `9e44929` |
 | M-56 | Events live: demo-only events (`demoOnlyEventIds`) the server doesn't list are dropped from My events (not persisted), no server `leave` for them; `EventRepository.isLive`. Briefly visible at start until `listMyEvents` returns | `5dc6d80` |
 | V-7 | Galaxy A55 on local `devfest`: live smoke PASS (join, agenda 7 sessions, My events/leave, Echo ask ~6 s + translate sr, map you-are-here/route, Find server people + search ~4 s + contact + spot, organizer upload → draft ~5 s → publish → attendee agenda, M-46 status bar/keyboard). No exceptions, no 4xx/5xx. Found: integration_test 0/6 on device (→ M-54), empty stage after publishing a flagged row (→ M-55), demo-only event in My events with live API (→ M-56). Echo ENDED vs agenda LIVE: replay finished (re-run replay before the video) | verification |
