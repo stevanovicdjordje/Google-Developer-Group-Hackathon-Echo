@@ -2,6 +2,15 @@
 
 Venue map feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## 0.3.1 — 2026-10-11
+- **Impact:** additive
+- **Affected:** backend/maps (implements), seed scripts
+- **Requested by:** mobile#16 (stable demo event ID)
+- **Changes:**
+  - ADDED optional `id` on `EventInput` (`createEvent`): `^[a-z0-9][a-z0-9-]{2,39}$`; an existing ID → `409 conflict` (new `Conflict` response)
+  - `make seed` now publishes the demo event as `devfest` (`EVENT_ID=<id>` overrides)
+- **Consumer action:** none; the app can keep `DEMO_EVENT_ID=devfest` across re-seeds.
+
 ## 0.3.0 — 2026-10-11
 - **Impact:** additive
 - **Affected:** backend/maps (implements), mobile/maps (consumes: viewer reports, organizer stats screen)

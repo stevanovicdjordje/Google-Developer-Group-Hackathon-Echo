@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -44,6 +45,8 @@ func (s *server) respondErr(w http.ResponseWriter, r *http.Request, err error) {
 		writeError(w, http.StatusUnprocessableEntity, "validation_failed", "input is invalid", []venue.FieldError(ve))
 	case errors.Is(err, store.ErrNotFound):
 		writeError(w, http.StatusNotFound, "not_found", "resource not found", nil)
+	case errors.Is(err, store.ErrConflict):
+		writeError(w, http.StatusConflict, "conflict", "resource already exists", nil)
 	default:
 		s.log.ErrorContext(r.Context(), "request failed", "route", r.Pattern, "err", err)
 		writeError(w, http.StatusInternalServerError, "internal", "internal server error", nil)
@@ -66,7 +69,10 @@ func (s *server) ownedEvent(w http.ResponseWriter, r *http.Request, p auth.Princ
 
 // ---- events ----
 
+var eventIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{2,39}$`)
+
 type eventInput struct {
+	ID        string `json:"id"` // optional; stable IDs for demo seeds
 	Name      string `json:"name"`
 	StartDate string `json:"startDate"`
 	EndDate   string `json:"endDate"`
@@ -82,9 +88,18 @@ func (s *server) createEvent(w http.ResponseWriter, r *http.Request, p auth.Prin
 	if !decode(w, r, &in) {
 		return
 	}
+	id := store.NewID()
+	if in.ID != "" {
+		if !eventIDPattern.MatchString(in.ID) {
+			writeError(w, http.StatusUnprocessableEntity, "validation_failed", "input is invalid",
+				[]venue.FieldError{{Field: "id", Message: "must be 3-40 lowercase letters, digits or dashes"}})
+			return
+		}
+		id = in.ID
+	}
 	now := time.Now().UTC()
 	e := &venue.Event{
-		ID: store.NewID(), Name: strings.TrimSpace(in.Name), StartDate: in.StartDate, EndDate: in.EndDate,
+		ID: id, Name: strings.TrimSpace(in.Name), StartDate: in.StartDate, EndDate: in.EndDate,
 		Address: strings.TrimSpace(in.Address), OwnerUID: p.UID, CreatedAt: now, UpdatedAt: now,
 	}
 	if err := venue.ValidateEvent(e); err != nil {

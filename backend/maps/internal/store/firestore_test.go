@@ -107,6 +107,9 @@ func TestFirestoreStats(t *testing.T) {
 	if err := s.CreateEvent(ctx, e); err != nil {
 		t.Fatal(err)
 	}
+	if err := s.CreateEvent(ctx, e); !errors.Is(err, ErrConflict) {
+		t.Fatalf("second create = %v, want ErrConflict", err)
+	}
 	// Search terms are arbitrary text: dots, slashes and backticks must survive.
 	odd := []string{"a.b", "c/d", "`x`", "kafa i čaj"}
 	for _, date := range []string{"2026-10-10", "2026-10-11", "2026-10-11", "2026-10-12"} {

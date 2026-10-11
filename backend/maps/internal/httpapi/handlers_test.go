@@ -287,3 +287,20 @@ func TestBodyTooLarge(t *testing.T) {
 	big := `{"name":"` + strings.Repeat("x", maxBodyBytes+1) + `"}`
 	a.must(413, a.do("POST", "/v1/events", org, big))
 }
+
+func TestCreateEventWithStableID(t *testing.T) {
+	a := newAPI(t)
+	body := map[string]any{"id": "devfest", "name": "DevFest", "startDate": "2026-10-10", "endDate": "2026-10-11"}
+	r := a.must(201, a.do("POST", "/v1/events", org, body))
+	if r.Body["id"] != "devfest" {
+		t.Fatalf("id = %v", r.Body["id"])
+	}
+	if r := a.must(409, a.do("POST", "/v1/events", org, body)); errorCode(r) != "conflict" {
+		t.Fatalf("code = %s", r.Raw)
+	}
+	body["id"] = "Bad ID"
+	a.must(422, a.do("POST", "/v1/events", org, body))
+	a.must(204, a.do("DELETE", "/v1/events/devfest", org, nil))
+	body["id"] = "devfest"
+	a.must(201, a.do("POST", "/v1/events", org, body))
+}

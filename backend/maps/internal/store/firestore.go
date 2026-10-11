@@ -65,6 +65,9 @@ func (s *FirestoreStore) CreateEvent(ctx context.Context, e *venue.Event) error 
 	batch.Create(s.event(e.ID), e)
 	batch.Set(s.draft(e.ID), map[string]any{"updatedAt": e.CreatedAt})
 	if _, err := batch.Commit(ctx); err != nil {
+		if status.Code(err) == codes.AlreadyExists {
+			return ErrConflict
+		}
 		return fmt.Errorf("create event: %w", err)
 	}
 	return nil

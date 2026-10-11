@@ -46,6 +46,9 @@ func clone[T any](v T) T {
 func (s *MemStore) CreateEvent(_ context.Context, e *venue.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if _, ok := s.events[e.ID]; ok {
+		return ErrConflict
+	}
 	s.events[e.ID] = clone(*e)
 	s.draft[e.ID] = &venue.Map{}
 	return nil

@@ -18,7 +18,9 @@ make rules-test # Firestore + Storage security rules against the running emulato
 curl localhost:8080/healthz
 ```
 
-Emulators run as the demo project `demo-eho` (no real Firebase project or credentials needed). Emulator data is persisted in `firebase/.emulator-data/` (git-ignored).
+Emulators run as the demo project `demo-eho` (no real Firebase project or credentials needed). Emulator data is persisted in `firebase/.emulator-data/` (git-ignored). They listen on all interfaces, IPv4 and IPv6 (`"::"`), so phones on the same Wi-Fi (`<laptop-ip>:8081`) and over `adb reverse` (`::1`) reach them; the API listens on `:8080` too.
+
+`make seed` publishes the demo event "DevFest Belgrade 2026" with the fixed ID **`devfest`** (`EVENT_ID=<id> make seed` for another, `EVENT_ID= ` for random); re-seeding replaces it and keeps the ID, so the app's `DEMO_EVENT_ID=devfest` never changes. Echo's `make replay` and Find's `make seed` find it by name.
 
 Configuration is env-only; see `.env.example`. In production the server uses Application Default Credentials on Cloud Run.
 

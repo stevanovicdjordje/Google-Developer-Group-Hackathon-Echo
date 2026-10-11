@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Eho venue map API
-  version: 0.3.0
+  version: 0.3.1
   summary: Venue map feature (floors, rooms, stands, POIs, walkway graph, publish, routing, stats).
   description: |
     Contract between the Flutter app (`mobile/maps/`) and the
@@ -76,6 +76,7 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthenticated" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/ValidationFailed" }
   /v1/events/{eventId}:
     parameters:
@@ -524,6 +525,11 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+    Conflict:
+      description: "An event with the requested `id` already exists (`code` = `conflict`)."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     TooLarge:
       description: "Body over 2 MiB (`code` = `body_too_large`)."
       content:
@@ -578,6 +584,10 @@ components:
       required: [name, startDate, endDate]
       additionalProperties: false
       properties:
+        id:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{2,39}$"
+          description: Optional stable event ID (demo seeds, e.g. `devfest`); omitted = random. Taken → 409.
         name: { type: string, minLength: 1, maxLength: 120 }
         startDate: { $ref: "#/components/schemas/Date" }
         endDate: { $ref: "#/components/schemas/Date" }

@@ -29,6 +29,7 @@ const demoEventName = "DevFest Belgrade 2026"
 const oldDemoEventName = "Eho Demo Expo"
 
 type client struct {
+	eventID                                    string
 	api, authHost, storageHost, bucket, webURL string
 	token                                      string
 	http                                       *http.Client
@@ -36,6 +37,7 @@ type client struct {
 
 func main() {
 	c := &client{http: &http.Client{Timeout: 20 * time.Second}}
+	flag.StringVar(&c.eventID, "event-id", "devfest", "stable event ID, so re-seeding keeps the app's DEMO_EVENT_ID (\"\" = random)")
 	flag.StringVar(&c.api, "api", "http://localhost:8080", "map API base URL")
 	flag.StringVar(&c.authHost, "auth", envOr("FIREBASE_AUTH_EMULATOR_HOST", "127.0.0.1:9099"), "Auth emulator host:port")
 	flag.StringVar(&c.storageHost, "storage", strings.TrimPrefix(envOr("STORAGE_EMULATOR_HOST", "127.0.0.1:9199"), "http://"), "Storage emulator host:port")
@@ -71,7 +73,7 @@ func (c *client) run(email, password string) error {
 		return err
 	}
 	for _, e := range list.Events {
-		if e.Name == demoEventName || e.Name == oldDemoEventName {
+		if e.Name == demoEventName || e.Name == oldDemoEventName || (c.eventID != "" && e.ID == c.eventID) {
 			if err := c.call("DELETE", "/v1/events/"+e.ID, nil, nil); err != nil {
 				return err
 			}
@@ -80,7 +82,7 @@ func (c *client) run(email, password string) error {
 
 	var ev struct{ ID string }
 	if err := c.call("POST", "/v1/events", map[string]any{
-		"name": demoEventName, "startDate": time.Now().Format(time.DateOnly), "endDate": time.Now().AddDate(0, 0, 1).Format(time.DateOnly),
+		"id": c.eventID, "name": demoEventName, "startDate": time.Now().Format(time.DateOnly), "endDate": time.Now().AddDate(0, 0, 1).Format(time.DateOnly),
 		"address": "Demo hala, Beograd",
 	}, &ev); err != nil {
 		return err
@@ -355,12 +357,12 @@ func drawPlan() []byte {
 
 	fill(0, 0, planW, planH, white)
 	box(10, 10, planW-10, planH-10, white, wall) // outer wall
-	fill(20, 375, 1180, 425, corridor)          // main corridor
-	fill(295, 180, 345, 640, corridor)          // left corridor
-	fill(855, 180, 905, 640, corridor)          // right corridor
-	fill(295, 595, 905, 645, corridor)          // bottom corridor
-	box(40, 40, 280, 360, room, wall)           // Sala A
-	box(40, 440, 280, 760, room, wall)          // Sala B
+	fill(20, 375, 1180, 425, corridor)           // main corridor
+	fill(295, 180, 345, 640, corridor)           // left corridor
+	fill(855, 180, 905, 640, corridor)           // right corridor
+	fill(295, 595, 905, 645, corridor)           // bottom corridor
+	box(40, 40, 280, 360, room, wall)            // Sala A
+	box(40, 440, 280, 760, room, wall)           // Sala B
 
 	// Glavna sala polygon (scanline fill + outline).
 	for y := 40; y < 360; y++ {

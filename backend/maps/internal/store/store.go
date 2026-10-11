@@ -17,6 +17,7 @@ import (
 // Errors returned by Store implementations.
 var (
 	ErrNotFound = errors.New("not found")
+	ErrConflict = errors.New("already exists")
 )
 
 // Store is the persistence boundary. All map operations act on the draft;
