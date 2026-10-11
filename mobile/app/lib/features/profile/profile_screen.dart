@@ -203,6 +203,8 @@ void _showOrganizerSheet(BuildContext context) {
   final l10n = AppLocalizations.of(context);
   showModalBottomSheet<void>(
     context: context,
+    // Root navigator: the sheet and its scrim cover the event's bottom nav.
+    useRootNavigator: true,
     showDragHandle: true,
     builder: (sheet) => SafeArea(
       child: Column(

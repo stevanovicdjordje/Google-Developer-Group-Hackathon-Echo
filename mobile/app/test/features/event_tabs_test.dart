@@ -121,4 +121,50 @@ void main() {
     await tester.pump(const Duration(seconds: 60));
     await tester.pumpAndSettle();
   });
+
+  testWidgets('Android back on Find / Profile goes to Agenda, then exits', (
+    tester,
+  ) async {
+    await start(tester);
+    go(tester, '/e/devfest/find');
+    await tester.pumpAndSettle();
+    expect(find.text('Find people'), findsOneWidget);
+
+    // Cold stack: back goes to the Agenda tab of the same event.
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('All stages'), findsOneWidget);
+    final nav = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(nav.selectedIndex, 0);
+
+    go(tester, '/e/devfest/profile');
+    await tester.pumpAndSettle();
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('All stages'), findsOneWidget);
+
+    // On the Agenda root back is not handled: the app would close.
+    expect(await tester.binding.handlePopRoute(), isFalse);
+  });
+
+  testWidgets('organizer sheet covers the bottom navigation', (tester) async {
+    await start(tester);
+    go(tester, '/e/devfest/profile');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('For organizers'));
+    await tester.pumpAndSettle();
+    expect(find.text('Create event'), findsOneWidget);
+
+    // The sheet lives in the root overlay above the shell: the nav sits
+    // under it and under the scrim, so no nav item can be tapped.
+    final nav = find.byType(NavigationBar);
+    expect(nav.hitTestable(), findsNothing);
+    expect(find.text('Find').hitTestable(), findsNothing);
+
+    // Tapping the scrim closes the sheet; the tab stays on Profile.
+    await tester.tapAt(const Offset(200, 100));
+    await tester.pumpAndSettle();
+    expect(find.text('Create event'), findsNothing);
+    expect(tester.widget<NavigationBar>(nav).selectedIndex, 3);
+  });
 }
