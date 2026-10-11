@@ -165,6 +165,11 @@ abstract interface class FindRepository {
     String place, {
     String? time,
   });
+
+  /// The caller's contacts at the event with the meeting spot stored with
+  /// each (set by either side). Demo data has none: its spot lives in the
+  /// app only.
+  Future<List<Contact>> listContacts(String eventId);
 }
 
 enum FindErrorKind {
@@ -567,6 +572,9 @@ class DemoFindRepository implements FindRepository {
     String place, {
     String? time,
   }) async => (place: place, time: time);
+
+  @override
+  Future<List<Contact>> listContacts(String eventId) async => const [];
 }
 
 class DemoOrganizerRepository implements OrganizerRepository {
@@ -579,35 +587,58 @@ class DemoOrganizerRepository implements OrganizerRepository {
   @override
   Future<EventDraft> extract(List<UploadedFile> files) async {
     await _think(2600);
+    final sessions = [
+      for (final s in demo.sessions.where((s) => !s.isBreak))
+        s.id == demo.organizerFlaggedSessionId
+            ? Session(
+                id: s.id,
+                title: s.title,
+                stage: '',
+                start: s.start,
+                end: s.end,
+                speakers: s.speakers,
+                description: s.description,
+                track: s.track,
+                isLive: s.isLive,
+              )
+            : s,
+    ];
     return EventDraft(
       name: demo.demoEventName,
       dates: demo.demoEventDates,
       venue: demo.demoEventVenue,
       stages: demo.stages,
       // One session comes back without a stage ("room missing in the PDF"),
-      // so the review shows a flagged row.
-      sessions: [
-        for (final s in demo.sessions.where((s) => !s.isBreak))
-          s.id == demo.organizerFlaggedSessionId
-              ? Session(
-                  id: s.id,
-                  title: s.title,
-                  stage: '',
-                  start: s.start,
-                  end: s.end,
-                  speakers: s.speakers,
-                  description: s.description,
-                  track: s.track,
-                  isLive: s.isLive,
-                )
-              : s,
-      ],
+      // so the review shows a flagged row, via an issue like the real API.
+      sessions: sessions,
       speakers: demo.speakers,
+      issues: [
+        for (var i = 0; i < sessions.length; i++)
+          if (sessions[i].stage.isEmpty)
+            DraftIssue(
+              sessionId: sessions[i].id,
+              field: 'sessions[$i].stage',
+              message: _roomMissing,
+            ),
+      ],
     );
   }
 
+  static const _roomMissing = 'Check: room missing in the PDF';
+
+  /// Like the server, saving recomputes the issues: a session that now has a
+  /// stage is no longer flagged.
   @override
-  Future<EventDraft> save(EventDraft draft) async => draft;
+  Future<EventDraft> save(EventDraft draft) async {
+    final noStage = {
+      for (final s in draft.sessions)
+        if (s.stage.trim().isEmpty) s.id,
+    };
+    return draft.withIssues([
+      for (final i in draft.issues)
+        if (i.sessionId == null || noStage.contains(i.sessionId)) i,
+    ]);
+  }
 
   @override
   Future<PublishedLink> publish(EventDraft draft) async {

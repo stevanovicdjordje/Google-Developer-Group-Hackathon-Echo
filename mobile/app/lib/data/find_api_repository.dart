@@ -253,7 +253,37 @@ class FindApiRepository implements FindRepository {
     );
   }
 
+  /// Contacts newest first, each with the spot stored for it.
+  @override
+  Future<List<Contact>> listContacts(String eventId) =>
+      _inEvent(eventId, () async {
+        final json = await _send('GET', '${_event(eventId)}/contacts');
+        return parseContacts(json);
+      });
+
   // ------------------------------------------------------------ mapping
+
+  /// `{contacts: Contact[]}` -> valid contacts in server order; entries
+  /// without a valid person or state are skipped. A missing or invalid
+  /// `meetingSpot` just means none.
+  static List<Contact> parseContacts(Object? json) {
+    final list = json is Map ? json['contacts'] : null;
+    if (list is! List) throw _badResponse;
+    final contacts = <Contact>[];
+    for (final c in list) {
+      if (c is! Map || c['state'] is! String) continue;
+      final person = parsePerson(c['person']);
+      if (person == null) continue;
+      contacts.add(
+        Contact(
+          person: person,
+          state: parseContactState(c['state']),
+          meetingSpot: parseMeetingSpot(c),
+        ),
+      );
+    }
+    return contacts;
+  }
 
   /// `MeetingSpotRequest`: the place, and the time only when it is a valid
   /// "HH:mm" (zero-padded; the key is omitted otherwise).
@@ -480,4 +510,8 @@ class FallbackFindRepository implements FindRepository {
     String? time,
   }) async =>
       (await _target).setMeetingSpot(eventId, personId, place, time: time);
+
+  @override
+  Future<List<Contact>> listContacts(String eventId) async =>
+      (await _target).listContacts(eventId);
 }

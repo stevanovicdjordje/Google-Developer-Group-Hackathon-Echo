@@ -366,7 +366,7 @@ class EventsApiRepository implements EventRepository, OrganizerRepository {
     if (name is! String) return null;
     final start = _str(j['startDate']), end = _str(j['endDate']);
     final stages = j['stages'], speakers = j['speakers'];
-    final sessions = j['sessions'];
+    final sessions = j['sessions'], issues = j['issues'];
     final seen = <String>{};
     return EventDraft(
       id: id,
@@ -389,6 +389,25 @@ class EventsApiRepository implements EventRepository, OrganizerRepository {
           for (final s in sessions.map(parseSession))
             if (s != null && seen.add(s.id)) s,
       ].take(300).toList(),
+      issues: [
+        if (issues is List)
+          for (final i in issues.map(parseIssue)) ?i,
+      ].take(100).toList(),
+    );
+  }
+
+  /// `Issue`, or null when it has no message.
+  static DraftIssue? parseIssue(Object? j) {
+    if (j is! Map) return null;
+    final message = _str(j['message']).trim();
+    if (message.isEmpty) return null;
+    final sessionId = j['sessionId'];
+    return DraftIssue(
+      sessionId: sessionId is String && _id.hasMatch(sessionId)
+          ? sessionId
+          : null,
+      field: _cut(_str(j['field']).trim(), 100),
+      message: _cut(message, 200),
     );
   }
 
@@ -431,7 +450,16 @@ class EventsApiRepository implements EventRepository, OrganizerRepository {
     if (j is! Map) return null;
     final id = j['eventId'];
     if (id is! String || !_id.hasMatch(id)) return null;
-    return PublishedLink(eventId: id, url: '$linkBase/e/$id');
+    final warnings = j['warnings'];
+    return PublishedLink(
+      eventId: id,
+      url: '$linkBase/e/$id',
+      warnings: [
+        if (warnings is List)
+          for (final w in warnings)
+            if (w is String && w.trim().isNotEmpty) _cut(w.trim(), 200),
+      ].take(20).toList(),
+    );
   }
 
   // ------------------------------------------------------------ HTTP

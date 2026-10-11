@@ -635,6 +635,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orgCheckRoomMissing => 'Check: room missing in the PDF';
 
   @override
+  String get orgToCheck => 'To check';
+
+  @override
+  String get orgPublishWarnings => 'Check before the event';
+
+  @override
   String get orgSessions => 'Sessions';
 
   @override
