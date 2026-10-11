@@ -5,6 +5,8 @@
 /// repositories in `demo_repositories.dart` return hardcoded data.
 library;
 
+import 'dart:typed_data';
+
 class EventSummary {
   const EventSummary({
     required this.id,
@@ -57,10 +59,15 @@ class Session {
     this.track = '',
     this.isBreak = false,
     this.isLive = false,
+    this.day = '',
   });
 
   final String id;
   final String title;
+
+  /// Day of the session, "YYYY-MM-DD" (Events API `Session.day`). Empty in
+  /// demo data, which has a single day.
+  final String day;
 
   /// Stage/room name. Matches a room name on the venue map.
   final String stage;
@@ -280,10 +287,14 @@ class MeetingSpot {
 }
 
 class UploadedFile {
-  const UploadedFile({required this.name, required this.sizeBytes});
+  const UploadedFile({required this.name, required this.sizeBytes, this.bytes});
 
   final String name;
   final int sizeBytes;
+
+  /// The file's content, sent to the Events API (`createDraft`). Null for
+  /// placeholder files (dev shots, demo data).
+  final Uint8List? bytes;
 }
 
 /// What the AI extracted from the organizer's files, before publishing.
@@ -295,14 +306,39 @@ class EventDraft {
     required this.stages,
     required this.sessions,
     required this.speakers,
+    this.id,
+    this.startDate,
+    this.endDate,
   });
 
   final String name;
+
+  /// Display form of the dates ("Oct 11–12, 2026").
   final String dates;
   final String venue;
   final List<String> stages;
   final List<Session> sessions;
   final List<Speaker> speakers;
+
+  /// Server draft id (Events API); null for demo drafts.
+  final String? id;
+
+  /// "YYYY-MM-DD"; set on drafts from the Events API.
+  final String? startDate;
+  final String? endDate;
+
+  /// The same draft with [sessions] replaced.
+  EventDraft withSessions(List<Session> sessions) => EventDraft(
+    name: name,
+    dates: dates,
+    venue: venue,
+    stages: stages,
+    sessions: sessions,
+    speakers: speakers,
+    id: id,
+    startDate: startDate,
+    endDate: endDate,
+  );
 }
 
 class PublishedLink {

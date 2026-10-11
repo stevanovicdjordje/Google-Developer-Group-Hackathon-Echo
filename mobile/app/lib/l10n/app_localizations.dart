@@ -1124,6 +1124,66 @@ abstract class AppLocalizations {
   /// **'Open as attendee'**
   String get orgOpenAsAttendee;
 
+  /// No description provided for @orgErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Eho can\'t reach the event service. Check your connection and try again.'**
+  String get orgErrorOffline;
+
+  /// No description provided for @orgErrorOrganizerRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in as an organizer first (Profile → For organizers).'**
+  String get orgErrorOrganizerRequired;
+
+  /// No description provided for @orgErrorForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Your organizer account can\'t publish to this event.'**
+  String get orgErrorForbidden;
+
+  /// No description provided for @orgErrorTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many or too large files. Up to 10 files, 10 MB each, 20 MB in total.'**
+  String get orgErrorTooLarge;
+
+  /// No description provided for @orgErrorUnsupportedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Eho can\'t read {file}. Use PDF, images, spreadsheets, CSV, text or Word files.'**
+  String orgErrorUnsupportedFile(String file);
+
+  /// No description provided for @orgErrorNothingExtracted.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions found in these files. Add the agenda and try again.'**
+  String get orgErrorNothingExtracted;
+
+  /// No description provided for @orgErrorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Some details aren\'t valid. Check the sessions and try again.'**
+  String get orgErrorInvalid;
+
+  /// No description provided for @orgErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Wait a few seconds and try again.'**
+  String get orgErrorRateLimited;
+
+  /// No description provided for @orgErrorAiBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI couldn\'t read your files right now. Try again in a moment.'**
+  String get orgErrorAiBusy;
+
+  /// No description provided for @orgErrorFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get orgErrorFailed;
+
   /// No description provided for @devStatusTitle.
   ///
   /// In en, this message translates to:

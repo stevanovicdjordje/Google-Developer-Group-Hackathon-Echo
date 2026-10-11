@@ -18,6 +18,7 @@ import 'demo_data.dart' as demo;
 import 'demo_ids.dart';
 import 'echo_api_repository.dart';
 import 'echo_models.dart';
+import 'events_api_repository.dart';
 import 'find_api_repository.dart';
 import 'models.dart';
 
@@ -29,6 +30,13 @@ abstract interface class EventRepository {
 
   /// Registers the current user for the event. [API-2]
   Future<void> join(String eventId);
+
+  /// Removes the event from the user's events. [API-2]
+  Future<void> leave(String eventId);
+
+  /// Events the user joined, newest join first, as the server knows them.
+  /// Empty when only the app knows them (demo data). [API-14]
+  Future<List<EventSummary>> myEvents();
 
   /// Agenda of an event. [API-3]
   Future<List<Session>> agenda(String eventId);
@@ -197,8 +205,57 @@ abstract interface class OrganizerRepository {
   /// Upload files and let the AI extract the event. [API-12]
   Future<EventDraft> extract(List<UploadedFile> files);
 
-  /// Publish the draft and get the join link. [API-13]
+  /// Save the organizer's edits; returns the draft as stored. [API-12]
+  Future<EventDraft> save(EventDraft draft);
+
+  /// Publish the draft and get the join link. Unsaved edits are saved
+  /// first. [API-13]
   Future<PublishedLink> publish(EventDraft draft);
+}
+
+enum EventsErrorKind {
+  /// The service can't be reached.
+  offline,
+
+  /// The event (or draft) doesn't exist or isn't public.
+  notFound,
+
+  /// The organizer screens need an organizer account (not anonymous).
+  organizerRequired,
+
+  /// The organizer doesn't own the event.
+  forbidden,
+
+  /// Too many files, or a file or all of them too big.
+  tooLarge,
+
+  /// A file type the AI can't read ([EventsException.message] = file name).
+  unsupportedFile,
+
+  /// No sessions found in the files.
+  nothingExtracted,
+
+  /// The draft has invalid fields.
+  invalid,
+
+  /// Too many requests; retry after [EventsException.retryAfter].
+  rateLimited,
+
+  /// The AI failed or was too slow; safe to retry.
+  aiBusy,
+  failed,
+}
+
+/// Failure of an [EventRepository] / [OrganizerRepository] call.
+class EventsException implements Exception {
+  const EventsException(this.kind, [this.message = '', this.retryAfter]);
+
+  final EventsErrorKind kind;
+  final String message;
+  final Duration? retryAfter;
+
+  @override
+  String toString() => 'EventsException(${kind.name}): $message';
 }
 
 // ---------------------------------------------------------- demo versions
@@ -234,6 +291,12 @@ class DemoEventRepository implements EventRepository {
 
   @override
   Future<void> join(String eventId) => _think(400);
+
+  @override
+  Future<void> leave(String eventId) async {}
+
+  @override
+  Future<List<EventSummary>> myEvents() async => const [];
 
   @override
   Future<List<Session>> agenda(String eventId) async {
@@ -544,6 +607,9 @@ class DemoOrganizerRepository implements OrganizerRepository {
   }
 
   @override
+  Future<EventDraft> save(EventDraft draft) async => draft;
+
+  @override
   Future<PublishedLink> publish(EventDraft draft) async {
     await _think(1000);
     return PublishedLink(eventId: demoEventId, url: '$linkBase/e/$demoEventId');
@@ -570,9 +636,38 @@ String linkBase() {
   );
 }
 
-final eventRepositoryProvider = Provider<EventRepository>(
-  (ref) => DemoEventRepository(),
-);
+/// Events API when enabled (`USE_EVENTS_API`, default on), Firebase is up
+/// and the service answers `/healthz`; demo data otherwise (and in tests).
+final eventRepositoryProvider = Provider<EventRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  if (!config.useEventsApi || !_firebaseReady()) return DemoEventRepository();
+  return FallbackEventRepository(
+    primary: ref.watch(_eventsApiProvider),
+    fallback: DemoEventRepository(),
+    demoEventIds: {demoEventId, ...demoEventAliases, demo.pastEvent.id},
+  );
+});
+
+/// One Events API client for attendee and organizer calls.
+final _eventsApiProvider = Provider<EventsApiRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  final auth = ref.watch(firebaseAuthProvider);
+  return EventsApiRepository(
+    baseUrl: config.eventsApiBaseUrl,
+    tokenProvider: anonymousIdToken(auth),
+    organizerTokenProvider: organizerIdToken(auth, config),
+    publishEventId: demoEventId,
+    linkBase: linkBase(),
+    // The scripted demo: the keynote (Echo's replay session) is live.
+    pinnedLive: {
+      for (final id in {demoEventId, ...demoEventAliases})
+        id: {
+          for (final s in demo.sessions)
+            if (s.isLive) s.id,
+        },
+    },
+  );
+});
 
 /// Interest topics for onboarding and the profile.
 final interestOptionsProvider = Provider<List<String>>(
@@ -621,6 +716,15 @@ final findRepositoryProvider = Provider<FindRepository>((ref) {
     fallback: DemoFindRepository(),
   );
 });
-final organizerRepositoryProvider = Provider<OrganizerRepository>(
-  (ref) => DemoOrganizerRepository(demoEventId, linkBase()),
-);
+
+/// Events API like [eventRepositoryProvider]; publishes into [demoEventId]
+/// (the venue-map event) so join link, Map tab and agenda share one id.
+final organizerRepositoryProvider = Provider<OrganizerRepository>((ref) {
+  final demoRepo = DemoOrganizerRepository(demoEventId, linkBase());
+  final config = ref.watch(appConfigProvider);
+  if (!config.useEventsApi || !_firebaseReady()) return demoRepo;
+  return FallbackOrganizerRepository(
+    primary: ref.watch(_eventsApiProvider),
+    fallback: demoRepo,
+  );
+});
