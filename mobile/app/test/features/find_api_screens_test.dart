@@ -24,6 +24,10 @@ class _ServiceLike extends DemoFindRepository {
   Duration? retryAfter;
   int recommendationCalls = 0;
   PersonDetail? detail;
+  List<Contact> contacts = const [];
+
+  @override
+  Future<List<Contact>> listContacts(String eventId) async => contacts;
 
   @override
   Future<List<PersonMatch>> recommendations(String eventId, Profile me) async {
@@ -73,6 +77,31 @@ void main() {
       tester.element(find.byType(PersonScreen)),
     );
     expect(c.read(contactsProvider)['k7Qm2xLp'], ContactState.accepted);
+  });
+
+  testWidgets('Person shows the state listContacts reports (M-60)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    // The person endpoint has no contact state; only the contact list does,
+    // as for a contact made in an earlier session.
+    final repo = _ServiceLike()
+      ..failRecommendations = false
+      ..detail = const PersonDetail(person: _teodora)
+      ..contacts = const [
+        Contact(person: _teodora, state: ContactState.accepted),
+      ];
+    await tester.pumpWidget(
+      _app(
+        const PersonScreen(eventId: 'ev', personId: 'k7Qm2xLp', why: 'x'),
+        repo,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Teodora accepted · Message'), findsOneWidget);
+    expect(find.text('Send contact request'), findsNothing);
   });
 
   testWidgets('Find shows a friendly error with Try again', (tester) async {

@@ -196,10 +196,25 @@ class ContactsNotifier extends Notifier<Map<String, ContactState>> {
 
   void set(String personId, ContactState s) {
     state = {...state, personId: s};
-    ref.read(localStoreProvider).write('contacts', {
-      for (final e in state.entries) e.key: e.value.name,
-    });
+    _save();
   }
+
+  /// Applies the contact states the Find service lists (`listContacts`): for
+  /// everyone it lists the server's state wins over the saved one; people it
+  /// doesn't list keep their local entry. Nothing changes when nothing differs.
+  void loadFromContacts(List<Contact> contacts) {
+    final next = {...state};
+    for (final c in contacts) {
+      next[c.person.id] = c.state;
+    }
+    if (mapEquals(next, state)) return;
+    state = next;
+    _save();
+  }
+
+  void _save() => ref.read(localStoreProvider).write('contacts', {
+    for (final e in state.entries) e.key: e.value.name,
+  });
 }
 
 final contactsProvider =
@@ -255,8 +270,13 @@ class MeetingSpotNotifier extends Notifier<MeetingSpot?> {
   /// that person (the local floor is kept when the place is the same). No
   /// server spot, or a failed call, leaves the state alone; so does a spot
   /// set here while the call was running.
+  ///
+  /// The same single call also feeds [contactsProvider] with the contacts'
+  /// states (server wins for the people it lists; skipped when a contact
+  /// state was set here while the call was running).
   Future<void> loadFromContacts(String eventId, String personId) async {
     final before = state;
+    final contactsBefore = ref.read(contactsProvider);
     final List<Contact> contacts;
     try {
       contacts = await ref.read(findRepositoryProvider).listContacts(eventId);
@@ -267,7 +287,11 @@ class MeetingSpotNotifier extends Notifier<MeetingSpot?> {
       );
       return;
     }
-    if (!ref.mounted || !identical(state, before)) return;
+    if (!ref.mounted) return;
+    if (identical(ref.read(contactsProvider), contactsBefore)) {
+      ref.read(contactsProvider.notifier).loadFromContacts(contacts);
+    }
+    if (!identical(state, before)) return;
     final contact = contacts.where((c) => c.person.id == personId).firstOrNull;
     final stored = contact?.meetingSpot;
     if (contact == null || stored == null) return;
@@ -286,8 +310,9 @@ class MeetingSpotNotifier extends Notifier<MeetingSpot?> {
   }
 }
 
-/// Loads the spot stored with a contact into [meetingSpotProvider] when
-/// Messages opens: watch it with `(eventId, personId)`; it runs again each
+/// Loads the contacts from the Find service when Person or Messages opens:
+/// the spot stored with the contact into [meetingSpotProvider] and the
+/// contact states into [contactsProvider] (one `listContacts` call): watch it with `(eventId, personId)`; it runs again each
 /// time the screen is reopened (or when invalidated), never on a timer.
 final contactSpotSyncProvider = FutureProvider.autoDispose
     .family<void, (String, String)>(

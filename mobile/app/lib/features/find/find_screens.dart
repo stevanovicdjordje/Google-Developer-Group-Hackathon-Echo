@@ -601,6 +601,8 @@ class _PersonScreenState extends ConsumerState<PersonScreen> {
   @override
   Widget build(BuildContext context) {
     final key = (widget.eventId, widget.personId);
+    // Reads the contact states (and the spot) from `listContacts` (M-60).
+    ref.watch(contactSpotSyncProvider(key));
     // The server's contact state wins over the one saved in the app.
     ref.listen(personDetailProvider(key), (_, next) {
       final s = next.value?.contactState;
@@ -882,7 +884,8 @@ class MessagesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final key = (eventId, personId);
     final detail = ref.watch(personDetailProvider(key));
-    // Reads the other person's meeting spot from `listContacts` (M-45).
+    // Reads the contact states and the other person's meeting spot from
+    // `listContacts` (M-45, M-60).
     ref.watch(contactSpotSyncProvider(key));
     if (detail.hasError && !detail.hasValue) {
       return Scaffold(
