@@ -11,6 +11,8 @@ void main() {
   // State name -> text that must be on screen.
   const expected = <String, String>{
     'echo-qa': 'Questions for Mara',
+    'echo-qa-own': 'YOUR QUESTION',
+    'echo-selected': 'Ask about this',
     'echo-paywall': 'Missed something? Get the whole talk in 2 minutes.',
     'echo-summary': 'AI SUMMARY · PREMIUM',
     'echo-translated': 'Translated live from English · tap SR for the original',
@@ -53,6 +55,14 @@ void main() {
       expect(find.textContaining(e.value), findsWidgets);
     });
   }
+
+  testWidgets('/dev/shot/echo-selected shows the AI answer inline', (
+    tester,
+  ) async {
+    await open(tester, '/dev/shot/echo-selected');
+    expect(find.text('What is the main advice of the talk?'), findsOneWidget);
+    expect(find.textContaining('Based on the talk so far'), findsWidgets);
+  });
 
   testWidgets('/dev/shot lists every state as a link', (tester) async {
     await open(tester, '/dev/shot');

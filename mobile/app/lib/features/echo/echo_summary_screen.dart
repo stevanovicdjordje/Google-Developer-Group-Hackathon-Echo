@@ -224,7 +224,7 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
                     if (snap.hasData) ...[
                       const SizedBox(width: 8),
                       _RoundButton(
-                        icon: Icons.copy_rounded,
+                        icon: Icons.ios_share,
                         tooltip: l10n.echoCopySummary,
                         onPressed: () => _copy(snap.data!.text),
                       ),
@@ -294,7 +294,14 @@ class _EchoSummaryScreenState extends ConsumerState<EchoSummaryScreen> {
         ? ParsedSummary.fromTalkSummary(structured)
         : parseEchoSummary(text, title: s?.title);
     final talkMinutes = s == null ? null : _minutes(s.start, s.end);
-    final words = text.split(RegExp(r'\s+')).length;
+    // ~200 words per minute over what the page shows, at least 1 minute.
+    final words = [
+      ?s?.title,
+      ?parsed.takeaway,
+      ...parsed.keyPoints,
+      ...parsed.paragraphs,
+      for (final r in parsed.tradeoffs) ...[r.issue, r.detail],
+    ].join(' ').split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
     final meta = [
       if (s != null && s.speakers.isNotEmpty)
         s.speakers.map((p) => p.name).join(', '),
