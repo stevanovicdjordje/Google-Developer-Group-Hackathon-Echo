@@ -357,6 +357,10 @@ const demoSearches = <(List<String>, List<(String, String)>)>[
 /// map has a single ground floor).
 const demoFloorName = 'Ground floor';
 
+/// Session the organizer review flags as "room missing in the PDF" (dev shot
+/// `organizer-review`; the extraction itself places every session).
+const organizerFlaggedSessionId = 's3';
+
 /// Meeting time agreed in [demoMessages].
 const demoMeetingTime = '15:20';
 

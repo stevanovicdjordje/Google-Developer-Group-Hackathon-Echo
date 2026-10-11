@@ -3,6 +3,7 @@ import 'package:eho/data/app_state.dart';
 import 'package:eho/data/demo_data.dart' as demo;
 import 'package:eho/data/models.dart';
 import 'package:eho/data/repositories.dart';
+import 'package:eho/features/organizer/organizer_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,8 +71,10 @@ void main() {
     // Link/QR screen shows the `/e/{eventId}` join link.
     final link = '${linkBase()}/e/$demoEventId';
     expect(find.text('${demo.demoEventName} is live'), findsOneWidget);
-    expect(find.text(link), findsOneWidget);
-    expect(find.text('Copy link'), findsOneWidget);
+    // Shown short (no scheme); copy and QR keep the full link.
+    expect(find.text(displayJoinLink(link)), findsOneWidget);
+    expect(find.text(link), findsNothing);
+    expect(find.text('Copy'), findsOneWidget);
     expect(find.byType(QrImageView), findsOneWidget);
 
     // "Open as attendee" lands on the event's join screen.
@@ -121,5 +124,51 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Review your event'), findsOneWidget);
     expect(find.text(firstSession.title), findsOneWidget);
+  });
+
+  test('displayJoinLink drops the scheme and may use a public host', () {
+    expect(
+      displayJoinLink('http://127.0.0.1:52020/e/devfest', publicBase: ''),
+      '127.0.0.1:52020/e/devfest',
+    );
+    expect(
+      displayJoinLink('https://eho.app/e/devfest', publicBase: ''),
+      'eho.app/e/devfest',
+    );
+    expect(
+      displayJoinLink(
+        'http://127.0.0.1:52020/e/devfest?at=s1',
+        publicBase: 'https://eho.app',
+      ),
+      'eho.app/e/devfest?at=s1',
+    );
+  });
+
+  testWidgets('review says how many files the event was extracted from', (
+    tester,
+  ) async {
+    usePhoneView(tester);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(organizerFileCountProvider.notifier).set(3);
+    container
+        .read(organizerDraftProvider.notifier)
+        .set(
+          EventDraft(
+            name: demo.demoEventName,
+            dates: demo.demoEventDates,
+            venue: demo.demoEventVenue,
+            stages: demo.stages,
+            sessions: demo.sessions.where((s) => !s.isBreak).toList(),
+            speakers: demo.speakers,
+          ),
+        );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: EhoApp()),
+    );
+    await tester.pumpAndSettle();
+    GoRouter.of(tester.element(find.text('Eho'))).go('/organizer/review');
+    await tester.pumpAndSettle();
+    expect(find.text('Extracted from 3 files'), findsOneWidget);
   });
 }

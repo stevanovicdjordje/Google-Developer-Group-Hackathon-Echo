@@ -25,6 +25,8 @@ void main() {
     'find-results': 'Speaker · ML Engineer, Lumen Labs',
     'myevents-live': 'LIVE · DAY 1',
     'organizer-review': 'Review your event',
+    'organizer-upload-files': 'sava-centar-ground-floor.png',
+    'organizer-upload-progress': 'Found 3 stages, 6 sessions, 6 speakers so far',
     'organizer-published': 'PUBLISHED',
   };
 
