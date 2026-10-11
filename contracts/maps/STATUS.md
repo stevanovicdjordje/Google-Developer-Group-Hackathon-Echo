@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 05:02 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find
+**Last updated:** 2026-10-11 05:16 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events (registering)
 
 ## Current state
 
@@ -15,11 +15,11 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | Item | Value |
 | --- | --- |
-| Run locally | `cd backend/maps && make dev` (emulators + API on `http://localhost:8080`), then `make seed` (prints the demo event's links) |
+| Run locally | `cd backend/maps && make dev` (emulators on all interfaces, IPv4+IPv6, + API on `http://localhost:8080`), then `make seed` (demo event ID is always **`devfest`**; prints the links) |
 | Routes the app gets from `mapsRoutes()` | `/e/{eventId}` (`?at={markerId}`), `/e/{eventId}/stand/{featureId}` (any feature, rooms too), `/o`, `/o/e/{eventId}`, `/o/e/{eventId}/stats`, `/o/e/{eventId}/qr` (children of the `/o` route the app already mounts) |
 | App integration | `MapsLocalizations.delegate` in the app; optional `mapsApiBaseUrlProvider` override (default `http://localhost:8080`) |
 | Organizer demo login | `organizer@eho.test` / `eho-demo-123` (emulator only). On web with emulators every page load starts signed out |
-| Contract | [`openapi.yaml`](openapi.yaml) 0.3.0, [`realtime.md`](realtime.md), [`CHANGELOG.md`](CHANGELOG.md) |
+| Contract | [`openapi.yaml`](openapi.yaml) 0.3.1, [`realtime.md`](realtime.md), [`CHANGELOG.md`](CHANGELOG.md) |
 
 ## Contract coverage
 
@@ -35,6 +35,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 05:16 · ACTION · for: mobile · mobile#16, #18, #19 done. The demo event ID is now fixed: **`devfest`** (re-seeding keeps it; Echo replay and Find seed follow by name), so build phones once with `DEMO_EVENT_ID=devfest`. Emulators listen on `::` (Wi-Fi IPv4 and `adb reverse` IPv6), your forwarder is no longer needed. Contract 0.3.1 (optional `id` on `createEvent`, additive). mobile#17 accepted: @Vertiglo takes `feature:events`.
 - 2026-10-11 04:18 · ACTION · for: mobile · mobile#14 done: `DEMO_LOCATION` dart-define for a pretend GPS position/walk on demo phones; values printed by `make seed`. See mobile#14 below.
 - 2026-10-11 03:33 · INFO · for: mobile · mobile#10 done: map viewer and `/o` sign-in polished per the design review. Floor chips moved from the bottom to under the search bar (bottom only while a route is shown). No API change.
 - 2026-10-11 03:19 · INFO · for: mobile, feature:echo · Demo event renamed to "DevFest Belgrade 2026" in the map seed and the Echo replay together (mobile#10 (1), mobile#11). Re-run `make seed`; the new event gets a new ID.
@@ -62,12 +63,13 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| mobile#19 | mobile | Done (`b9238aa`): (1) whole-plan fit has 22 px side margins and is top-aligned under the search bar and chips (entrance icon whole, no empty band). (2) Start route fits the camera to the route **and the whole destination**. (3) Room/stand labels fit their shape: wrap only between words, shrink, or hide when the shape is too small (the selected one always shows). (4) Not hard-coded in the map: the viewer has no title; the "DevFest Belgrade 2026" title bar comes from the app (`demo_data.dart`). Checked in the app web build, 390×844, `DEMO_LOCATION` at the entrance. | done | 2026-10-11 |
 | mobile#8 | mobile | Done. (1) Selecting a place (tap, search result, deep link) while "You are here" is known (good GPS fix, tapped spot or `?at=` QR) draws the route to it behind the details sheet; the default sheet shows "{m} m · {min} min". Opt out with `previewRouteOnSelect: false`. (2) `MapViewerScreen(featureSheetBuilder: (context, MapFeatureSheetData data) => Widget?)`; null = default sheet. `data` has `feature`, `floorName`, `route` (`MapRoute?`, null while loading or without a start), `routeLoading`, `startRoute` (closes the sheet and starts the route; asks for a start if none). Exported from `package:eho_maps/eho_maps.dart`. The preview's answer is reused when the route starts (one request). | done | 2026-10-11 |
 | mobile#10 | mobile | (1) Done (`575e37f`): seed event is "DevFest Belgrade 2026"; a re-seed also removes the old "Eho Demo Expo". Verified on the emulators: `make seed` leaves only the new event, `make replay` in `backend/echo` finds it. Event IDs are random per seed, as before. (2) Done: the plan fits the width; under the search bar a chip row with the floors (selected = dark) and quick filters Sponsors / Food (only if the map has them) / Rooms / Stands, each opening the result list; small neutral buttons (GPS turns primary while on); the not-found state has an icon, title and a hint. (3) Done: `/o` sign-in has the title in the display style, inputs 54 high, radius 16, 14 gap, 54-high button. Checked in the app's web build (headless Chrome, 390×844). Known, not from this change: opening `/o` directly on a fresh page load keeps spinning; from Profile → Edit venue map it works. | done | 2026-10-11 |
 | mobile#11 | mobile | Done here, paired with mobile#10 as `team-find-holder` allows (`575e37f`): `demoEventName` in `backend/echo/cmd/replay/main.go` is "DevFest Belgrade 2026". No other Echo changes. | done | 2026-10-11 |
-| mobile#16 | mobile | Seen, next: (1) emulators on all interfaces; (2) stable demo event id (needs the one-line paired change in the Echo replay, as with the rename). | seen | 2026-10-11 |
-| mobile#18 | mobile | Seen, after mobile#16: keep the "You are here" label inside the viewport; IPv6 binding goes with mobile#16 (1). | seen | 2026-10-11 |
-| mobile#17 | mobile | Seen. Waiting for @Vertiglo to decide whether to take `feature:events`; answer follows. | seen | 2026-10-11 |
+| mobile#16 | mobile | Done (`32321e2`): (1) `firebase.json` binds auth, firestore, storage and UI on `"::"` (dual-stack: checked 127.0.0.1, ::1 and the LAN IP). (2) `make seed` publishes "DevFest Belgrade 2026" as ID **`devfest`** (`EVENT_ID=<id>` for another); a re-seed replaces it under the same ID. No Echo change needed: `make replay` and Find's `make seed` find the event by name (checked: Find seed → `event devfest`). Contract 0.3.1: optional `id` on `createEvent`, 409 if taken. | done | 2026-10-11 |
+| mobile#18 | mobile | Done (`b9238aa`): (1) the "You are here" label shifts sideways to stay 8 px inside the screen (checked at the QR Ulaz edge, whole-plan zoom). (2) IPv6: see mobile#16. | done | 2026-10-11 |
+| mobile#17 | mobile | Accepted (@Vertiglo, 05:10): registering `feature:events` (`contracts/events/`, `backend/events/`), after mobile#15. Will announce the contract. | accepted | 2026-10-11 |
 | mobile#14 | mobile | Done (`71e1f05`): `--dart-define=DEMO_LOCATION=<lat>,<lng>` puts the GPS dot there (no permission prompt, accuracy 5 m); `<lat>,<lng>;<lat>,<lng>;…` walks along the points at 1.2 m/s, so following, re-routing and "Arrived" show in the video. `make seed` now prints ready values for the demo venue: at the entrance `44.799820,20.400025`; walk entrance → Glavna sala `44.799820,20.400025;44.799820,20.400557;44.799910,20.400557`. The attendee still taps the GPS button. For a dev toggle, override `locationSourceProvider` with `DemoLocationSource(...)` (both exported). Verified in the app's web build: dot appears at the entrance and walks the corridor. | done | 2026-10-11 |
 | mobile#12 | mobile | Done: `feature:find` held by @Vertiglo; contract 0.1.1 + service `backend/find` with 20 seeded attendees (see `contracts/find/STATUS.md`). | done | 2026-10-11 |
 | mobile#7 | mobile | Done, nothing to change: every map string is in `maps_en.arb` (complete, incl. the new stats screen) and the map follows the app's locale through `MapsLocalizations.delegate`. Verified in the app's English build (headless Chrome): search, filters, details sheet, "Show the way", "You are here". Note: the **demo venue content** (room/stand names, categories, descriptions from `make seed`) is still Serbian; your demo data matches those names ("Glavna sala", "Sala A/B", "Info pult", "Hrana i piće"), so translating it would be a joint change. @Vertiglo decided (2026-10-11): the venue content **stays Serbian** (names are proper names); only UI strings are English. Nothing for you to change. | done | 2026-10-11 |
