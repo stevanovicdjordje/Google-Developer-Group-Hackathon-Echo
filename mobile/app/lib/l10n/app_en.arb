@@ -244,6 +244,13 @@
   "findErrorNotAllowed": "This person doesn't accept contact requests.",
   "findErrorProfileRequired": "Finish your profile to use Find.",
   "findErrorFailed": "Something went wrong in Find. Try again.",
+  "findCompleteProfile": "Complete profile",
+  "findRetryIn": "Try again in {seconds}s",
+  "@findRetryIn": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
   "personWhyMeet": "Why you should meet",
   "personSendRequest": "Send contact request",
   "personRequestSent": "Request sent · waiting…",
