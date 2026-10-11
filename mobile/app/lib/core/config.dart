@@ -12,6 +12,8 @@ class AppConfig {
     this.useEchoApi = true,
     this.findApiBaseUrl = 'http://localhost:8083',
     this.useFindApi = true,
+    this.eventsApiBaseUrl = 'http://localhost:8084',
+    this.useEventsApi = true,
     this.firebase = const FirebaseWebConfig(),
   });
 
@@ -36,6 +38,11 @@ class AppConfig {
       defaultValue: 'http://localhost:8083',
     ),
     useFindApi: bool.fromEnvironment('USE_FIND_API', defaultValue: true),
+    eventsApiBaseUrl: String.fromEnvironment(
+      'EVENTS_API_BASE_URL',
+      defaultValue: 'http://localhost:8084',
+    ),
+    useEventsApi: bool.fromEnvironment('USE_EVENTS_API', defaultValue: true),
     firebase: FirebaseWebConfig(
       apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
       appId: String.fromEnvironment('FIREBASE_APP_ID'),
@@ -63,6 +70,14 @@ class AppConfig {
   /// Use the Find API when Firebase is up and the service answers `/healthz`.
   /// Otherwise (or with `USE_FIND_API=false`) Find runs on demo data.
   final bool useFindApi;
+
+  /// Events service (`backend/events`, `contracts/events`).
+  final String eventsApiBaseUrl;
+
+  /// Use the Events API (join, agenda, My events, organizer import) when
+  /// Firebase is up and the service answers `/healthz`. Otherwise (or with
+  /// `USE_EVENTS_API=false`) they run on demo data.
+  final bool useEventsApi;
 
   /// Real Firebase project values, used only when `USE_EMULATORS=false`.
   final FirebaseWebConfig firebase;

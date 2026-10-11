@@ -12,7 +12,12 @@ import 'demo_ids.dart';
 import 'local_store.dart';
 import 'models.dart';
 import 'repositories.dart'
-    show FindException, demoEventId, findRepositoryProvider;
+    show
+        EventsException,
+        FindException,
+        demoEventId,
+        eventRepositoryProvider,
+        findRepositoryProvider;
 
 class ProfileNotifier extends Notifier<Profile> {
   @override
@@ -55,6 +60,7 @@ final demoEventIdProvider = Provider<String>((ref) => demoEventId);
 class JoinedEventsNotifier extends Notifier<List<EventSummary>> {
   @override
   List<EventSummary> build() {
+    Future.microtask(_syncFromServer);
     final store = ref.read(localStoreProvider);
     final saved = store.readAs('joinedEvents', (j) {
       return [
@@ -93,6 +99,32 @@ class JoinedEventsNotifier extends Notifier<List<EventSummary>> {
     return migrated;
   }
 
+  /// Adds the events the Events service knows the user joined (`listMyEvents`)
+  /// on top, server order first; events only the app knows stay below. The
+  /// demo repository knows none, so demo state is unchanged.
+  Future<void> _syncFromServer() async {
+    final List<EventSummary> server;
+    try {
+      server = await ref.read(eventRepositoryProvider).myEvents();
+    } catch (e) {
+      debugPrint(
+        'My events sync failed: '
+        '${e is EventsException ? e.kind.name : e.runtimeType}',
+      );
+      return;
+    }
+    if (server.isEmpty || !ref.mounted) return;
+    final ids = {for (final e in server) e.id};
+    final merged = [...server, ...state.where((e) => !ids.contains(e.id))];
+    final same =
+        merged.length == state.length &&
+        [
+          for (var i = 0; i < merged.length; i++)
+            merged[i].toJson().toString() == state[i].toJson().toString(),
+        ].every((b) => b);
+    if (!same) _set(merged);
+  }
+
   bool isJoined(String id) => state.any((e) => e.id == id);
 
   void _set(List<EventSummary> events) {
@@ -107,7 +139,20 @@ class JoinedEventsNotifier extends Notifier<List<EventSummary>> {
     _set([e, ...state]);
   }
 
-  void remove(String id) => _set(state.where((e) => e.id != id).toList());
+  /// Removes the event here and on the Events service (`leaveEvent`, in the
+  /// background; a failure only logs the error kind).
+  void remove(String id) {
+    _set(state.where((e) => e.id != id).toList());
+    ref
+        .read(eventRepositoryProvider)
+        .leave(id)
+        .catchError(
+          (Object e) => debugPrint(
+            'Leave event failed: '
+            '${e is EventsException ? e.kind.name : e.runtimeType}',
+          ),
+        );
+  }
 }
 
 final joinedEventsProvider =

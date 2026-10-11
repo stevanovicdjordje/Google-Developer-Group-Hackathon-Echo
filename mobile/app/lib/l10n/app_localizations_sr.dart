@@ -680,6 +680,46 @@ class AppLocalizationsSr extends AppLocalizations {
   String get orgOpenAsAttendee => 'Otvori kao posetilac';
 
   @override
+  String get orgErrorOffline =>
+      'Eho ne može da dođe do servisa za događaje. Proveri vezu i pokušaj ponovo.';
+
+  @override
+  String get orgErrorOrganizerRequired =>
+      'Prvo se prijavi kao organizator (Profil → Za organizatore).';
+
+  @override
+  String get orgErrorForbidden =>
+      'Tvoj organizatorski nalog ne može da objavi ovaj događaj.';
+
+  @override
+  String get orgErrorTooLarge =>
+      'Previše ili preveliki fajlovi. Do 10 fajlova, 10 MB svaki, ukupno 20 MB.';
+
+  @override
+  String orgErrorUnsupportedFile(String file) {
+    return 'Eho ne može da pročita $file. Koristi PDF, slike, tabele, CSV, tekst ili Word fajlove.';
+  }
+
+  @override
+  String get orgErrorNothingExtracted =>
+      'U ovim fajlovima nema sesija. Dodaj agendu i pokušaj ponovo.';
+
+  @override
+  String get orgErrorInvalid =>
+      'Neki podaci nisu ispravni. Proveri sesije i pokušaj ponovo.';
+
+  @override
+  String get orgErrorRateLimited =>
+      'Previše zahteva. Sačekaj nekoliko sekundi i pokušaj ponovo.';
+
+  @override
+  String get orgErrorAiBusy =>
+      'AI trenutno ne može da pročita fajlove. Pokušaj ponovo za trenutak.';
+
+  @override
+  String get orgErrorFailed => 'Nešto nije u redu. Pokušaj ponovo.';
+
+  @override
   String get devStatusTitle => 'Status sistema';
 
   @override

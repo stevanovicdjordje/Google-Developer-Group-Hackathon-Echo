@@ -669,6 +669,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orgOpenAsAttendee => 'Open as attendee';
 
   @override
+  String get orgErrorOffline =>
+      'Eho can\'t reach the event service. Check your connection and try again.';
+
+  @override
+  String get orgErrorOrganizerRequired =>
+      'Sign in as an organizer first (Profile → For organizers).';
+
+  @override
+  String get orgErrorForbidden =>
+      'Your organizer account can\'t publish to this event.';
+
+  @override
+  String get orgErrorTooLarge =>
+      'Too many or too large files. Up to 10 files, 10 MB each, 20 MB in total.';
+
+  @override
+  String orgErrorUnsupportedFile(String file) {
+    return 'Eho can\'t read $file. Use PDF, images, spreadsheets, CSV, text or Word files.';
+  }
+
+  @override
+  String get orgErrorNothingExtracted =>
+      'No sessions found in these files. Add the agenda and try again.';
+
+  @override
+  String get orgErrorInvalid =>
+      'Some details aren\'t valid. Check the sessions and try again.';
+
+  @override
+  String get orgErrorRateLimited =>
+      'Too many requests. Wait a few seconds and try again.';
+
+  @override
+  String get orgErrorAiBusy =>
+      'The AI couldn\'t read your files right now. Try again in a moment.';
+
+  @override
+  String get orgErrorFailed => 'Something went wrong. Try again.';
+
+  @override
   String get devStatusTitle => 'System status';
 
   @override

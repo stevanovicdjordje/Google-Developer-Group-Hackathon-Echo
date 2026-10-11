@@ -500,6 +500,23 @@
   "orgCopy": "Copy",
   "orgLinkCopied": "Link copied",
   "orgOpenAsAttendee": "Open as attendee",
+  "orgErrorOffline": "Eho can't reach the event service. Check your connection and try again.",
+  "orgErrorOrganizerRequired": "Sign in as an organizer first (Profile → For organizers).",
+  "orgErrorForbidden": "Your organizer account can't publish to this event.",
+  "orgErrorTooLarge": "Too many or too large files. Up to 10 files, 10 MB each, 20 MB in total.",
+  "orgErrorUnsupportedFile": "Eho can't read {file}. Use PDF, images, spreadsheets, CSV, text or Word files.",
+  "@orgErrorUnsupportedFile": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "orgErrorNothingExtracted": "No sessions found in these files. Add the agenda and try again.",
+  "orgErrorInvalid": "Some details aren't valid. Check the sessions and try again.",
+  "orgErrorRateLimited": "Too many requests. Wait a few seconds and try again.",
+  "orgErrorAiBusy": "The AI couldn't read your files right now. Try again in a moment.",
+  "orgErrorFailed": "Something went wrong. Try again.",
   "devStatusTitle": "System status",
   "backendLabel": "Backend",
   "authLabel": "Sign-in",

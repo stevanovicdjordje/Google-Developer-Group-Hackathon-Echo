@@ -13,6 +13,8 @@ import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../../data/repositories.dart';
 import '../../l10n/app_localizations.dart';
+import '../agenda/agenda_screens.dart' show agendaProvider;
+import '../join/join_screens.dart' show eventSummaryProvider;
 
 /// Top row of the organizer screens: 44 px round back button + a caption.
 class _TopBar extends StatelessWidget {
@@ -96,17 +98,28 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
   Future<void> _pick() async {
     final picked = await FilePicker.pickFiles();
     if (picked.isEmpty) return;
-    final files = [
-      for (final f in picked)
-        UploadedFile(name: f.name, sizeBytes: await f.xFile.length()),
-    ];
+    final files = <UploadedFile>[];
+    for (final f in picked) {
+      final bytes = await f.xFile.readAsBytes();
+      files.add(
+        UploadedFile(name: f.name, sizeBytes: bytes.length, bytes: bytes),
+      );
+    }
     if (!mounted) return;
     setState(() => _files.addAll(files));
   }
 
   Future<void> _extract() async {
     setState(() => _working = true);
-    final draft = await ref.read(organizerRepositoryProvider).extract(_files);
+    final EventDraft draft;
+    try {
+      draft = await ref.read(organizerRepositoryProvider).extract(_files);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _working = false);
+      _showOrganizerError(context, e);
+      return;
+    }
     if (!mounted) return;
     ref.read(organizerFileCountProvider.notifier).set(_files.length);
     ref.read(organizerDraftProvider.notifier).set(draft);
@@ -209,6 +222,30 @@ class _OrganizerUploadScreenState extends ConsumerState<OrganizerUploadScreen> {
       ),
     );
   }
+}
+
+/// Explains a failed Events API call (`EventsException`) in a snack bar;
+/// the screen stays as it was, so the organizer can try again.
+void _showOrganizerError(BuildContext context, Object error) {
+  final l10n = AppLocalizations.of(context);
+  final e = error is EventsException
+      ? error
+      : const EventsException(EventsErrorKind.failed);
+  final text = switch (e.kind) {
+    EventsErrorKind.offline => l10n.orgErrorOffline,
+    EventsErrorKind.organizerRequired => l10n.orgErrorOrganizerRequired,
+    EventsErrorKind.forbidden => l10n.orgErrorForbidden,
+    EventsErrorKind.tooLarge => l10n.orgErrorTooLarge,
+    EventsErrorKind.unsupportedFile => l10n.orgErrorUnsupportedFile(e.message),
+    EventsErrorKind.nothingExtracted => l10n.orgErrorNothingExtracted,
+    EventsErrorKind.invalid => l10n.orgErrorInvalid,
+    EventsErrorKind.rateLimited => l10n.orgErrorRateLimited,
+    EventsErrorKind.aiBusy => l10n.orgErrorAiBusy,
+    EventsErrorKind.notFound || EventsErrorKind.failed => l10n.orgErrorFailed,
+  };
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(text)));
 }
 
 /// The big dashed "Choose files" target.
@@ -385,7 +422,18 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
 
   Future<void> _publish(EventDraft draft) async {
     setState(() => _publishing = true);
-    final link = await ref.read(organizerRepositoryProvider).publish(draft);
+    final PublishedLink link;
+    try {
+      link = await ref.read(organizerRepositoryProvider).publish(draft);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _publishing = false);
+      _showOrganizerError(context, e);
+      return;
+    }
+    // Attendee screens show the newly published agenda and event info.
+    ref.invalidate(agendaProvider(link.eventId));
+    ref.invalidate(eventSummaryProvider(link.eventId));
     if (!mounted) return;
     context.go(
       '/organizer/published?url=${Uri.encodeComponent(link.url)}'
@@ -401,20 +449,24 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
       builder: (_) => _SessionEditSheet(session: session, stages: draft.stages),
     );
     if (edited == null || !mounted) return;
-    ref
-        .read(organizerDraftProvider.notifier)
-        .set(
-          EventDraft(
-            name: draft.name,
-            dates: draft.dates,
-            venue: draft.venue,
-            stages: draft.stages,
-            sessions: [
-              for (final s in draft.sessions) s.id == edited.id ? edited : s,
-            ],
-            speakers: draft.speakers,
-          ),
-        );
+    final updated = draft.withSessions([
+      for (final s in draft.sessions) s.id == edited.id ? edited : s,
+    ]);
+    final drafts = ref.read(organizerDraftProvider.notifier);
+    drafts.set(updated);
+    // Save on the server in the background; publish saves again if this
+    // fails. The stored draft replaces the local one unless edited since.
+    try {
+      final saved = await ref.read(organizerRepositoryProvider).save(updated);
+      if (mounted && identical(ref.read(organizerDraftProvider), updated)) {
+        drafts.set(saved);
+      }
+    } catch (e) {
+      debugPrint(
+        'Draft save failed: '
+        '${e is EventsException ? e.kind.name : e.runtimeType}',
+      );
+    }
   }
 
   @override
@@ -710,6 +762,7 @@ class _SessionEditSheetState extends State<_SessionEditSheet> {
         description: s.description,
         track: s.track,
         isBreak: s.isBreak,
+        day: s.day,
       ),
     );
   }
