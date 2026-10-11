@@ -328,48 +328,52 @@ class SessionScreen extends ConsumerWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 18),
-            EhoCard(
-              color: eho.ink,
-              radius: 20,
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.graphic_eq, size: 22, color: eho.onInkLive),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          l10n.agendaEchoOnTitle,
-                          style: t.titleMedium?.copyWith(color: eho.onInk),
+            // Echo exists only for talks that are on now (the demo data has
+            // no recorded talks, and the repositories expose no transcript flag).
+            if (s.isLive) ...[
+              const SizedBox(height: 18),
+              EhoCard(
+                color: eho.ink,
+                radius: 20,
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.graphic_eq, size: 22, color: eho.onInkLive),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            l10n.agendaEchoOnTitle,
+                            style: t.titleMedium?.copyWith(color: eho.onInk),
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.agendaEchoOnBody,
+                      style: t.bodySmall?.copyWith(
+                        color: eho.onInkMuted,
+                        height: 1.45,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.agendaEchoOnBody,
-                    style: t.bodySmall?.copyWith(
-                      color: eho.onInkMuted,
-                      height: 1.45,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      backgroundColor: eho.onInk,
-                      foregroundColor: eho.ink,
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                        backgroundColor: eho.onInk,
+                        foregroundColor: eho.ink,
+                      ),
+                      onPressed: () =>
+                          context.push('/e/$eventId/session/$sessionId/echo'),
+                      child: Text(l10n.sessionOpenEcho),
                     ),
-                    onPressed: () =>
-                        context.push('/e/$eventId/session/$sessionId/echo'),
-                    child: Text(l10n.sessionOpenEcho),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 18),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(

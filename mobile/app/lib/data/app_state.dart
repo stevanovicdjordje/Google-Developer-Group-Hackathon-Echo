@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'demo_data.dart' as demo;
 import 'local_store.dart';
 import 'models.dart';
+import 'repositories.dart' show demoEventId;
 
 class ProfileNotifier extends Notifier<Profile> {
   @override
@@ -31,17 +32,49 @@ final profileProvider = NotifierProvider<ProfileNotifier, Profile>(
   ProfileNotifier.new,
 );
 
+/// Event ID the demo used before the rename to DevFest. Same value as the
+/// routing alias in `repositories.dart` (`_legacyDemoEventId`, private there).
+const _legacyDemoEventId = 'devsummit';
+
 /// Events the user joined via links, newest first. Seeded with one past event.
 class JoinedEventsNotifier extends Notifier<List<EventSummary>> {
   @override
-  List<EventSummary> build() =>
-      ref.read(localStoreProvider).readAs('joinedEvents', (j) {
-        return [
-          for (final e in j as List)
-            EventSummary.fromJson(e as Map<String, dynamic>),
-        ];
-      }) ??
-      const [demo.pastEvent];
+  List<EventSummary> build() {
+    final store = ref.read(localStoreProvider);
+    final saved = store.readAs('joinedEvents', (j) {
+      return [
+        for (final e in j as List)
+          EventSummary.fromJson(e as Map<String, dynamic>),
+      ];
+    });
+    if (saved == null) return const [demo.pastEvent];
+    // Joined before the rename: `devsummit` becomes the current demo event
+    // (`devfest`), without a duplicate when both were saved. Saved once.
+    final seen = <String>{};
+    final migrated = <EventSummary>[];
+    var changed = false;
+    for (final e in saved) {
+      final legacy = e.id == _legacyDemoEventId;
+      final fixed = legacy
+          ? const EventSummary(
+              id: demoEventId,
+              name: demo.demoEventName,
+              dates: demo.demoEventDates,
+              venue: demo.demoEventVenue,
+            )
+          : e;
+      if (seen.add(fixed.id)) {
+        migrated.add(fixed);
+      } else {
+        changed = true;
+      }
+      if (legacy) changed = true;
+    }
+    if (changed) {
+      store.write('joinedEvents', [for (final e in migrated) e.toJson()]);
+    }
+    return migrated;
+  }
 
   bool isJoined(String id) => state.any((e) => e.id == id);
 
@@ -127,9 +160,8 @@ class UnlockedNotifier extends Notifier<Set<String>> {
   }
 }
 
-final unlockedSummariesProvider = NotifierProvider<UnlockedNotifier, Set<String>>(
-  UnlockedNotifier.new,
-);
+final unlockedSummariesProvider =
+    NotifierProvider<UnlockedNotifier, Set<String>>(UnlockedNotifier.new);
 
 /// The draft the organizer is reviewing (between extract and publish).
 class DraftNotifier extends Notifier<EventDraft?> {

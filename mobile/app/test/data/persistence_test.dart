@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:eho/data/app_state.dart';
 import 'package:eho/data/demo_data.dart' as demo;
 import 'package:eho/data/local_store.dart';
@@ -84,6 +86,40 @@ void main() {
     final c = _container(prefs);
     expect(c.read(meetingSpotProvider), isNull);
     expect(c.read(joinedEventsProvider).map((e) => e.id), [demo.pastEvent.id]);
+  });
+
+  test('saved legacy devsummit event becomes devfest, saved once', () async {
+    Map<String, Object> ev(String id, {bool past = false}) => {
+      'id': id,
+      'name': 'Event $id',
+      'dates': 'Oct 1',
+      'venue': 'Hall',
+      'isPast': past,
+    };
+    SharedPreferences.setMockInitialValues({
+      'eho.joinedEvents': jsonEncode([
+        ev('devsummit'),
+        ev('devfest'),
+        ev(demo.pastEvent.id, past: true),
+      ]),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final a = _container(prefs);
+    expect(a.read(joinedEventsProvider).map((e) => e.id), [
+      'devfest',
+      demo.pastEvent.id,
+    ]);
+    final saved = jsonDecode(prefs.getString('eho.joinedEvents')!) as List;
+    expect(saved.map((e) => (e as Map)['id']), ['devfest', demo.pastEvent.id]);
+
+    // Only the legacy entry saved: it is renamed to the current demo event.
+    SharedPreferences.setMockInitialValues({
+      'eho.joinedEvents': jsonEncode([ev('devsummit')]),
+    });
+    final b = _container(await SharedPreferences.getInstance());
+    final only = b.read(joinedEventsProvider).single;
+    expect(only.id, 'devfest');
+    expect(only.name, demo.demoEventName);
   });
 
   test('corrupt saved data is ignored and cleared', () async {
