@@ -10,8 +10,6 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Size | Agent | Files (expected) | Notes |
 | --- | --- | --- | --- | --- | --- |
-| M-43 | Consume find 0.2.0: send `MeetingSpot.time` ("HH:mm") in `putMeetingSpot`, read `Contact.meetingSpot.time` back (keep floor app-side); update mapping tests with the 0.2.0 fixtures | S | dev | `data/find_api_repository.dart`, `data/models.dart`?, tests | `9654e4f` |
-| M-44 | `DEMO_LOCATION` (maps `114a5d3`): pass it through `phone_android.sh` / iPhone run docs (values printed by `make seed`), document in APP_GUIDE *Run on phones*; check how eho_maps reads it (dart-define name) | S | dev | `mobile/scripts/`, APP_GUIDE, README | |
 | M-34 | (Likely superseded by `mobile#16` stable event id — prefer that.) Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 
 ## Blocked
@@ -25,8 +23,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
-| — | | | | |
-| M-38 | dev (sonnet, medium) | now | worktree | Echo banner overlap |
+| M-43 | dev | 2026-10-11 session 4 | worktree | find 0.2.0 meeting `time` |
+| M-44 | dev | 2026-10-11 session 4 | worktree | `DEMO_LOCATION` in phone script + docs |
 
 ## Done
 
