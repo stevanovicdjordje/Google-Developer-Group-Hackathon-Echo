@@ -12,6 +12,8 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | --- | --- | --- | --- | --- | --- |
 | M-26 | Echo on real AI — API part verified: Gemini (`gemini-3.8-flash`) for ask/catch-up/summary, Gemma (`gemma-4-26b-a4b-it`) for translate (echo 0.3.1, `efb51cc`); ask en/sr, catch-up sr, translate sr OK on the replayed keynote. App-side check = M-26b | S | verifier | none | Emulator data isn't persisted: re-seeded, event `ik6vmvjr7wlektj6`, keynote replayed `-instant`. Key only in git-ignored `backend/echo/.env`. |
 | M-31 | Organizer polish (V-3 #7): "✦ Extracted from 3 files" overline, flag "Designing for crowded rooms" (seed), short link display `eho.app/e/<id>`, "Copy"; shot routes for upload files-chosen + progress | S | dev | `features/organizer/`, `data/demo_data.dart`, `features/dev/` | After M-30 (demo_data) and M-28 (dev shots) |
+| M-33 | Joined-event alias: a saved `devfest` entry counts as joined for `/e/<DEMO_EVENT_ID>` (migrate or compare canonical ids); one public legacy/demo alias constant in `data/` used by repositories, app_state and router | S | dev | `data/app_state.dart`, `data/repositories.dart`, `core/router.dart` | After M-30 (hot files) |
+| M-34 | Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 | M-23 | Wire `FindRepository` to the Find API (API-9 recommendations, API-10 prompt search, API-11 contact requests, API-15 meeting spot, profile/consent) | M | opus | `data/` | Unblocked: find 0.1.0 (`106f9c2`), service `backend/find` :8083 not running yet → build against fixtures, keep demo fallback. Run after M-30 (same files). |
 
 ## Blocked
@@ -29,12 +31,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | M-29 | dev | 03:26 | worktree | Agenda/session + Start/My events/Profile/Onboarding copy (V-3 #4, #8) |
 | M-30 | opus | 03:26 | worktree | Find/Person/Messages + demo data (V-3 #5, #6) |
 | M-19 | dev | resumed | worktree | map detail sheet (mobile#8 done) |
-| M-32 | dev | now | worktree | `/e/devfest/...` → `/e/<DEMO_EVENT_ID>/...` redirect (found by M-26b) |
 
 ## Done
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| M-32 | `/e/devfest|devsummit/...` redirect to `/e/<DEMO_EVENT_ID>/...` (path + query kept; no-op by default); live: Echo transcript + map on `/e/devfest` | `37e3170` |
 | M-26b | App on real Echo: `/e/<backend id>/session/s1/echo` shows the server transcript; app sends `language` per echo 0.3.1; no model name in the UI. Bug: `/e/devfest/...` ignores `DEMO_EVENT_ID` → M-32 | verification |
 | V-3 | Every state vs design: no errors/overflow; all match or minor gaps → M-28…M-31. Screenshots/renders in the session scratchpad (not kept) | verification |
 | M-24 | `/dev/shot/<state>` (14 states + index) behind `DEV_ROUTES` (default on); `EchoScreen.startTranslated`, `FindScreen.initialPrompt` hooks. Not covered: Echo AI-answer card, Jump-to-live, organizer edit sheet, spot-picker sheet | `8b358ea` |
