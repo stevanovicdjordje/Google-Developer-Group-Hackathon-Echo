@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:events` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 06:48 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
+**Last updated:** 2026-10-11 08:42 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
 
 ## Current state
 
@@ -45,7 +45,7 @@ AI: a Gemini model reads the uploads ([`feature-events-ai`](../../docs/decisions
 
 | ID | To | What / why | Status | Updated |
 | --- | --- | --- | --- | --- |
-| events#1 | integration (@Ilij4n) | `team-import-formats` is still `open`. `mobile#17` asked for PDF/XLSX/images with AI extraction; events 0.1.0 accepts PDF, PNG, JPEG, WebP, XLSX, CSV, TXT, DOCX (≤10 files, 10 MiB each, 20 MiB total), AI extraction + organizer review, spreadsheets also without AI (`feature-events-ai`). Please record or adjust the team decision. | open | 2026-10-11 |
+| events#1 | integration (@Ilij4n) | `team-import-formats` is still `open`. `mobile#17` asked for PDF/XLSX/images with AI extraction; events 0.1.0 accepts PDF, PNG, JPEG, WebP, XLSX, CSV, TXT, DOCX (≤10 files, 10 MiB each, 20 MiB total), AI extraction + organizer review, spreadsheets also without AI (`feature-events-ai`). Please record or adjust the team decision. | closed (`team-import-formats` accepted, `486c0f4`) | 2026-10-11 |
 
 ## Inbound requests (others need something from us)
 

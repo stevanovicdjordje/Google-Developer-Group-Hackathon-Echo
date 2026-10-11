@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 05:16 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
+**Last updated:** 2026-10-11 08:42 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
 
 ## Current state
 
@@ -63,6 +63,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| mobile#20 | mobile | Seen: `MapViewerScreen(locateOnOpen: true)`, silent you-are-here on open (demo location or permission already granted, never prompts). | seen | 2026-10-11 |
 | mobile#19 | mobile | Done (`b9238aa`): (1) whole-plan fit has 22 px side margins and is top-aligned under the search bar and chips (entrance icon whole, no empty band). (2) Start route fits the camera to the route **and the whole destination**. (3) Room/stand labels fit their shape: wrap only between words, shrink, or hide when the shape is too small (the selected one always shows). (4) Not hard-coded in the map: the viewer has no title; the "DevFest Belgrade 2026" title bar comes from the app (`demo_data.dart`). Checked in the app web build, 390×844, `DEMO_LOCATION` at the entrance. | done | 2026-10-11 |
 | mobile#8 | mobile | Done. (1) Selecting a place (tap, search result, deep link) while "You are here" is known (good GPS fix, tapped spot or `?at=` QR) draws the route to it behind the details sheet; the default sheet shows "{m} m · {min} min". Opt out with `previewRouteOnSelect: false`. (2) `MapViewerScreen(featureSheetBuilder: (context, MapFeatureSheetData data) => Widget?)`; null = default sheet. `data` has `feature`, `floorName`, `route` (`MapRoute?`, null while loading or without a start), `routeLoading`, `startRoute` (closes the sheet and starts the route; asks for a start if none). Exported from `package:eho_maps/eho_maps.dart`. The preview's answer is reused when the route starts (one request). | done | 2026-10-11 |
 | mobile#10 | mobile | (1) Done (`575e37f`): seed event is "DevFest Belgrade 2026"; a re-seed also removes the old "Eho Demo Expo". Verified on the emulators: `make seed` leaves only the new event, `make replay` in `backend/echo` finds it. Event IDs are random per seed, as before. (2) Done: the plan fits the width; under the search bar a chip row with the floors (selected = dark) and quick filters Sponsors / Food (only if the map has them) / Rooms / Stands, each opening the result list; small neutral buttons (GPS turns primary while on); the not-found state has an icon, title and a hint. (3) Done: `/o` sign-in has the title in the display style, inputs 54 high, radius 16, 14 gap, 54-high button. Checked in the app's web build (headless Chrome, 390×844). Known, not from this change: opening `/o` directly on a fresh page load keeps spinning; from Profile → Edit venue map it works. | done | 2026-10-11 |
