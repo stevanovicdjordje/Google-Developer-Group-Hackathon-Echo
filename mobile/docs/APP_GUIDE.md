@@ -152,3 +152,12 @@ flutter test                # all tests must pass
 - Widget tests: follow `test/features/happy_path_test.dart`. Use a phone-sized `tester.view`, `pumpAndSettle` for navigation, and an extra `pump` after stream/async updates (Echo uses timed streams; `pumpAndSettle` alone won't wait for them).
 - Look at screenshots with the Read tool. The Map tab shows "The server is not reachable right now…" unless the `backend/maps` emulators are running. That's expected locally.
 - The Firebase Auth emulator banner is hidden on web by CSS + a MutationObserver in `web/index.html` (FlutterFire doesn't expose `disableWarnings`).
+
+## Run on phones (local backend)
+
+Start the backends on the Mac first (`backend/maps/scripts/dev.sh`, `backend/echo/scripts/dev.sh`; seed + replay per HANDOFF). Then from `mobile/app`, with the seeded event id:
+
+- **Android (USB):** `adb reverse tcp:8080 tcp:8080` and the same for 8081, 8082, 8083, 9099, 9199, then `flutter run -d <device> --dart-define=DEMO_EVENT_ID=<id>`. `localhost` on the phone now reaches the Mac. Cleartext HTTP is allowed in the debug manifest only.
+- **iPhone (same Wi-Fi):** `flutter run -d <device> --dart-define=DEMO_EVENT_ID=<id> --dart-define=EMULATOR_HOST=<mac LAN ip> --dart-define=API_BASE_URL=http://<mac LAN ip>:8080 --dart-define=ECHO_API_BASE_URL=http://<mac LAN ip>:8082` (+ `FIND_API_BASE_URL` once Find runs). The Go APIs listen on all interfaces, but the Firebase emulators bind to localhost, so forward `<ip>:8081/9099/9199` → `127.0.0.1` (e.g. `socat TCP-LISTEN:8081,bind=<ip>,fork TCP:127.0.0.1:8081`). Signing team is set in the Xcode project; iOS allows local networking (ATS `NSAllowsLocalNetworking`).
+- **Deep links:** `eho://open/e/<id>` opens the installed app on both platforms (`adb shell am start -a android.intent.action.VIEW -d "eho://open/e/<id>"`, or paste in Safari). https links for `/e/<id>` need a hosting domain (board M-14).
+- **GPS:** the seeded venue is georeferenced at a fictional spot (44.8000, 20.4000), so a real GPS dot lands off the plan anywhere else. Use the QR "you are here" (`?at=<markerId>`) until there's a demo location override (`mobile#14`).

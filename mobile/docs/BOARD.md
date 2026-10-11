@@ -20,7 +20,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | ID | Task | Blocked on |
 | --- | --- | --- |
 | M-13 | Wire real endpoints API-1…API-15 as they land | Backend has no owner yet (`mobile#5`) |
-| M-14 | Android build on an emulator/device (`EMULATOR_HOST=10.0.2.2`) + Android App Links for `/e/{id}` | Hosting domain for assetlinks.json; Android SDK on the machine |
+| M-14 | https App Links / Universal Links for `/e/{id}` (assetlinks.json / apple-app-site-association) | Hosting domain. Phones themselves run (`9dbd308`: `eho://open/e/{id}`, Android + iPhone 13 Pro Max on the local backends) |
 
 ## In progress / review
 
@@ -33,6 +33,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Commit |
 | --- | --- | --- |
+| P-1 | Run on phones (other @Ilij4n session): Galaxy A55 via `adb reverse`, iPhone via LAN + port forward for emulators; eho:// deep links; APP_GUIDE *Run on phones* | `9dbd308` |
 | M-23 | Find on contract 0.1.1 (`data/find_api_repository.dart`, health-check fallback to demo; `USE_FIND_API`, `FIND_API_BASE_URL`), `PersonDetail`, contact state stream, `MeetingSpotNotifier.agree` → `putMeetingSpot`; 15 mapping tests on the fixtures. Not e2e (service down) | `0f11f3d` |
 | M-31 | Organizer: "✦ Extracted from N files", short join link (`LINK_BASE` define, else host), "Copy", upload shots `organizer-upload-files`/`-progress`; dev shots use new demo data (fit line, Info pult 15:20, seeded questions) | `64be061` |
 | M-33 | Stand links keep `?at=` → map `markerId`; `data/demo_ids.dart` `demoEventAliases`; saved `devfest`/`devsummit` joins migrate to `DEMO_EVENT_ID` (`demoEventIdProvider`). Left: repositories.dart private `_legacyDemoEventId` → use `demoEventAliases` (M-35) | `96e428c` |

@@ -3,7 +3,7 @@
 > **Single writer:** the mobile owner and their agent. Everyone else reads.
 > Protocol: [`../docs/COORDINATION.md`](../docs/COORDINATION.md). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 03:57 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
+**Last updated:** 2026-10-11 03:58 · **Owner:** @Ilij4n · **Scopes held:** mobile, integration, product
 <!-- Set by the agent on its first session: Owner = @github-handle of its human (docs/COORDINATION.md §2). -->
 
 ## Current state
@@ -50,6 +50,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 03:58 · ACTION · for: feature:maps · Request `mobile#14`: demo location override for the GPS dot (venue is georeferenced at a fictional spot). The app now runs on Android + iPhone against the local backends (`9dbd308`; how-to: `mobile/docs/APP_GUIDE.md` → *Run on phones*).
 - 2026-10-11 03:57 · INFO · for: feature:find · The app consumes find 0.1.1 (M-23): profile + consents, joinFind, recommendations, search, person, contact request, meeting spot, with a demo fallback while the service is down. Questions in `mobile#13`.
 - 2026-10-11 03:33 · INFO · for: feature:find, feature:maps, feature:echo · Seen: find 0.1.0 (wiring = M-23, after the current Find screen polish), mobile#8 (map detail sheet = M-19, in progress), mobile#10 (1)/#11 rename, Echo 0.3.1 split models (app shows no model name; no change needed).
 - 2026-10-11 03:03 · ACTION · for: feature:maps · maps#3 done: real Firebase via `--dart-define=USE_EMULATORS=false` + `FIREBASE_*` (see `mobile/README.md`). Your deploy script should also pass `API_BASE_URL` and `ECHO_API_BASE_URL`.
@@ -78,6 +79,7 @@ Flutter (web + Android + iOS), Riverpod, go_router, flutter_map (CrsSimple), geo
 
 | ID | To | Request | Status | Opened |
 | --- | --- | --- | --- | --- |
+| mobile#14 | feature:maps | For the demo video on real phones: a **demo location override** for the "you are here" dot, e.g. `--dart-define=DEMO_LOCATION=<lat>,<lng>` mapped onto the venue (or a dev-only "pretend I'm at the venue" toggle), because the seed georeferences the venue at a fictional 44.8000, 20.4000 so real GPS lands off-plan. Additive, dev/demo only; QR `?at=` remains the fallback. | open | 2026-10-11 |
 | mobile#13 | feature:find | Questions from wiring 0.1.1 (no blocker): (1) should `MeetingSpot` carry a `time` ("HH:mm")? The app keeps it on the device for now; (2) could `requestContact` say when the target is a seeded person that auto-accepts? The app shows whatever `contactState` comes back. FYI: recommendations reload when the attendee toggles a consent; tell us if that risks your rate limit. Please announce when `backend/find` runs locally so we can verify end to end. | open | 2026-10-11 |
 | mobile#1 | product | Venue map is agreed by the team as an MVP feature (human @Vertiglo, 2026-10-10): floor plan image with rooms/stands/POIs, server-side routing, live GPS dot with accuracy circle and QR/manual "you are here" fallback, organizer stats (search, views, route targets, QR scans; never GPS coordinates). Please update `docs/MVP.md` / `docs/PRODUCT.md` (currently "candidate, no real-time indoor positioning") and add a location section to `docs/DATA_PRIVACY.md`: position is sent to the backend only to compute a route, never stored, logged or shown to others. | open | 2026-10-10 |
 | mobile#2 | integration | Record `team-auth`: Firebase Auth. Organizers use email/password, attendees anonymous sign-in; clients send `Authorization: Bearer <Firebase ID token>`; backend verifies and checks `ownerUid` for organizer operations. (Agreed by @Vertiglo's team, 2026-10-10.) | open | 2026-10-10 |
