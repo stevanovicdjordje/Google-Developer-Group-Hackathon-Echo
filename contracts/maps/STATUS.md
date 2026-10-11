@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:maps` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 09:20 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
+**Last updated:** 2026-10-11 09:43 · **Owner:** @Vertiglo · **Scopes held:** feature:maps, feature:find, feature:events
 
 ## Current state
 
@@ -35,6 +35,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 09:43 · INFO · for: mobile · mobile#22 done: first view with you-are-here on open (whole plan + dot, no labels under the chips, dot above icons). Pull `mobile/maps`; nothing to change in the app.
 - 2026-10-11 09:20 · INFO · for: mobile · The demo event's address in `make seed` is now "Sava Centar, Belgrade" (was "Demo hala, Beograd"), matching your demo data and the demo PDF. Re-run `make seed` in `backend/maps` to see it on the join screen; the ID stays `devfest`, the agenda and Echo data stay. No rebuild needed.
 - 2026-10-11 08:57 · ACTION · for: mobile · mobile#20 done: `MapViewerScreen(locateOnOpen: true)` (additive, default off); add it in `map_tab.dart`. New export `QuietLocationSource`. See mobile#20 below.
 - 2026-10-11 05:16 · ACTION · for: mobile · mobile#16, #18, #19 done. The demo event ID is now fixed: **`devfest`** (re-seeding keeps it; Echo replay and Find seed follow by name), so build phones once with `DEMO_EVENT_ID=devfest`. Emulators listen on `::` (Wi-Fi IPv4 and `adb reverse` IPv6), your forwarder is no longer needed. Contract 0.3.1 (optional `id` on `createEvent`, additive). mobile#17 accepted: @Vertiglo takes `feature:events`.
@@ -65,6 +66,7 @@ Phase 5 (routing) done: the server computes walking routes (`getRoute`, contract
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| mobile#22 | mobile | Done (`ffc79fe`): (1) with `locateOnOpen` the map keeps its opening view (the whole plan, top-aligned under the search bar and chips, or the place it opened on) and no longer zooms to the dot, so the dot and all rooms are in view; (2) room/stand labels whose center would be under the search+chips band are hidden (the selected one always shows); (3) POI icons under the you-are-here dot are left out (the entrance icon no longer peeks out). Checked in the app web build, 390×844, `devfest`, `DEMO_LOCATION` at the entrance. No API change. | done | 2026-10-11 |
 | mobile#20 | mobile | Done (`0dbb0d4`): `MapViewerScreen(locateOnOpen: true)` starts the GPS dot after the first frame and again whenever the map comes back on screen (TickerMode), only if the source is a `QuietLocationSource` that says no prompt is needed (`DemoLocationSource` always; `GeolocatorLocationSource` when the service is on and permission is already whileInUse/always, via `checkPermission` only). Never calls `requestPermission`. Denied/service off stay silent and the button stays idle; a later tap behaves as before (with messages). With `initialFeatureId`/`markerId`/`highlightFeatureId` it doesn't move the camera. "Not at the venue" hint unchanged. A custom `LocationSource` that isn't a `QuietLocationSource` never starts on its own. 5 widget tests; not tried in the app (needs your one line in `map_tab.dart`). | done | 2026-10-11 |
 | mobile#19 | mobile | Done (`b9238aa`): (1) whole-plan fit has 22 px side margins and is top-aligned under the search bar and chips (entrance icon whole, no empty band). (2) Start route fits the camera to the route **and the whole destination**. (3) Room/stand labels fit their shape: wrap only between words, shrink, or hide when the shape is too small (the selected one always shows). (4) Not hard-coded in the map: the viewer has no title; the "DevFest Belgrade 2026" title bar comes from the app (`demo_data.dart`). Checked in the app web build, 390×844, `DEMO_LOCATION` at the entrance. | done | 2026-10-11 |
 | mobile#8 | mobile | Done. (1) Selecting a place (tap, search result, deep link) while "You are here" is known (good GPS fix, tapped spot or `?at=` QR) draws the route to it behind the details sheet; the default sheet shows "{m} m · {min} min". Opt out with `previewRouteOnSelect: false`. (2) `MapViewerScreen(featureSheetBuilder: (context, MapFeatureSheetData data) => Widget?)`; null = default sheet. `data` has `feature`, `floorName`, `route` (`MapRoute?`, null while loading or without a start), `routeLoading`, `startRoute` (closes the sheet and starts the route; asks for a start if none). Exported from `package:eho_maps/eho_maps.dart`. The preview's answer is reused when the route starts (one request). | done | 2026-10-11 |
