@@ -235,162 +235,214 @@ class SessionScreen extends ConsumerWidget {
       return Scaffold(appBar: AppBar(), body: const SizedBox.shrink());
     }
     final live = s.isLive;
+    final backButton = IconButton(
+      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+      icon: const Icon(Icons.chevron_left_rounded, size: 26),
+      style: IconButton.styleFrom(
+        backgroundColor: scheme.surface,
+        foregroundColor: scheme.onSurface,
+      ),
+      onPressed: () =>
+          context.canPop() ? context.pop() : context.go('/e/$eventId/agenda'),
+    );
     return Scaffold(
       body: SafeArea(
-        child: ListView(
+        child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                icon: const Icon(Icons.chevron_left_rounded, size: 26),
-                style: IconButton.styleFrom(
-                  backgroundColor: scheme.surface,
-                  foregroundColor: scheme.onSurface,
-                ),
-                onPressed: () => context.canPop()
-                    ? context.pop()
-                    : context.go('/e/$eventId/agenda'),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [backButton, const _BookmarkButton()],
               ),
-            ),
-            const SizedBox(height: 18),
-            if (s.track.isNotEmpty || live)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (s.track.isNotEmpty)
-                      _Pill(
-                        label: s.track,
-                        color: scheme.primaryContainer,
-                        foreground: eho.primaryPressed,
-                      ),
-                    if (live)
-                      _Pill(
-                        label: l10n.agendaLiveNow,
-                        color: eho.liveContainer,
-                        foreground: eho.onLiveContainer,
-                        dot: eho.live,
-                      ),
-                  ],
-                ),
-              ),
-            Text(
-              s.title,
-              style: t.headlineMedium?.copyWith(fontSize: 30, height: 1.08),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              '${s.start}–${s.end} · ${s.stage}',
-              style: t.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            if (s.description.isNotEmpty) ...[
               const SizedBox(height: 18),
-              Text(s.description, style: t.bodyLarge),
-            ],
-            for (final sp in s.speakers) ...[
-              const SizedBox(height: 18),
-              EhoCard(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                child: Row(
+              Expanded(
+                child: ListView(
                   children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: eho.ink,
-                      foregroundColor: eho.onInk,
-                      child: Text(
-                        _initials(sp.name),
-                        style: t.titleSmall?.copyWith(color: eho.onInk),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(sp.name, style: t.titleMedium),
-                          Text(
-                            sp.title,
-                            style: t.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            // Echo exists only for talks that are on now (the demo data has
-            // no recorded talks, and the repositories expose no transcript flag).
-            if (s.isLive) ...[
-              const SizedBox(height: 18),
-              EhoCard(
-                color: eho.ink,
-                radius: 20,
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.graphic_eq, size: 22, color: eho.onInkLive),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            l10n.agendaEchoOnTitle,
-                            style: t.titleMedium?.copyWith(color: eho.onInk),
-                          ),
+                    if (s.track.isNotEmpty || live)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (s.track.isNotEmpty)
+                              _Pill(
+                                label: l10n.sessionTrack(s.track),
+                                color: scheme.primaryContainer,
+                                foreground: eho.primaryPressed,
+                              ),
+                            if (live)
+                              _Pill(
+                                label: l10n.agendaLiveNow,
+                                color: eho.liveContainer,
+                                foreground: eho.onLiveContainer,
+                                dot: eho.live,
+                              ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
+                      ),
                     Text(
-                      l10n.agendaEchoOnBody,
-                      style: t.bodySmall?.copyWith(
-                        color: eho.onInkMuted,
-                        height: 1.45,
+                      s.title,
+                      style: t.headlineMedium?.copyWith(
+                        fontSize: 30,
+                        height: 1.08,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(52),
-                        backgroundColor: eho.onInk,
-                        foregroundColor: eho.ink,
+                    const SizedBox(height: 10),
+                    Text(
+                      '${s.start}–${s.end} · ${s.stage}',
+                      style: t.bodyLarge?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
-                      onPressed: () =>
-                          context.push('/e/$eventId/session/$sessionId/echo'),
-                      child: Text(l10n.sessionOpenEcho),
                     ),
+                    if (s.description.isNotEmpty) ...[
+                      const SizedBox(height: 18),
+                      Text(s.description, style: t.bodyLarge),
+                    ],
+                    for (final sp in s.speakers) ...[
+                      const SizedBox(height: 18),
+                      EhoCard(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: eho.ink,
+                              foregroundColor: eho.onInk,
+                              child: Text(
+                                _initials(sp.name),
+                                style: t.titleSmall?.copyWith(color: eho.onInk),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(sp.name, style: t.titleMedium),
+                                  Text(
+                                    sp.title,
+                                    style: t.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    // Echo exists only for talks that are on now (the demo data has
+                    // no recorded talks, and the repositories expose no transcript flag).
+                    if (s.isLive) ...[
+                      const SizedBox(height: 18),
+                      EhoCard(
+                        color: eho.ink,
+                        radius: 20,
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.graphic_eq,
+                                  size: 22,
+                                  color: eho.onInkLive,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    l10n.agendaEchoOnTitle,
+                                    style: t.titleMedium?.copyWith(
+                                      color: eho.onInk,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l10n.agendaEchoOnBody,
+                              style: t.bodySmall?.copyWith(
+                                color: eho.onInkMuted,
+                                height: 1.45,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size.fromHeight(52),
+                                backgroundColor: eho.onInk,
+                                foregroundColor: eho.ink,
+                              ),
+                              onPressed: () => context.push(
+                                '/e/$eventId/session/$sessionId/echo',
+                              ),
+                              child: Text(l10n.sessionOpenEcho),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-            ],
-            const SizedBox(height: 18),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(52),
+              const SizedBox(height: 18),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                ),
+                icon: const Icon(Icons.place_outlined, size: 18),
+                label: Text(l10n.sessionShowOnMap(s.stage)),
+                onPressed: () {
+                  final id = _stageFeatureId(ref, s.stage);
+                  context.go(
+                    id == null
+                        ? '/e/$eventId/map'
+                        : '/e/$eventId/map/stand/$id',
+                  );
+                },
               ),
-              icon: const Icon(Icons.place_outlined, size: 18),
-              label: Text(l10n.sessionShowOnMap(s.stage)),
-              onPressed: () {
-                final id = _stageFeatureId(ref, s.stage);
-                context.go(
-                  id == null ? '/e/$eventId/map' : '/e/$eventId/map/stand/$id',
-                );
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Bookmark button of the session header. Local and not persisted: there is
+/// no "my agenda" in the data layer yet.
+class _BookmarkButton extends StatefulWidget {
+  const _BookmarkButton();
+
+  @override
+  State<_BookmarkButton> createState() => _BookmarkButtonState();
+}
+
+class _BookmarkButtonState extends State<_BookmarkButton> {
+  bool _saved = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    return IconButton(
+      tooltip: _saved ? l10n.sessionSaved : l10n.sessionSave,
+      isSelected: _saved,
+      icon: const Icon(Icons.bookmark_border_rounded, size: 22),
+      selectedIcon: const Icon(Icons.bookmark_rounded, size: 22),
+      style: IconButton.styleFrom(
+        backgroundColor: scheme.surface,
+        foregroundColor: _saved ? scheme.primary : scheme.onSurface,
+      ),
+      onPressed: () => setState(() => _saved = !_saved),
     );
   }
 }

@@ -35,7 +35,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('FOR ORGANIZERS'), findsOneWidget);
+    expect(find.text('Create event'), findsNothing);
+    await tester.tap(find.text('For organizers'));
+    await tester.pumpAndSettle();
     expect(find.text('Create event'), findsOneWidget);
     await tester.tap(find.text('Edit venue map'));
     await tester.pumpAndSettle();

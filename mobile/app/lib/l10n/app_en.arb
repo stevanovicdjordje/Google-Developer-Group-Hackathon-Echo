@@ -15,7 +15,7 @@
   "showMeInFind": "Show me in Find",
   "allowContactRequests": "Allow contact requests",
   "allowMeetingSpots": "Allow meeting spots",
-  "startTagline": "Your AI companion for events: agenda, venue, talks and people.",
+  "startTagline": "Your AI companion for events. The agenda, the venue, every talk, and the people worth meeting.",
   "startJoinButton": "Join with a link or code",
   "startOrganizerButton": "I'm an organizer",
   "joinDialogTitle": "Join an event",
@@ -83,7 +83,17 @@
   "agendaLiveNow": "Live now",
   "agendaEchoOnTitle": "Echo is on for this talk",
   "agendaEchoOnBody": "Live transcript, translation, ask the AI about what was said, and send questions to the speaker.",
-  "sessionOpenEcho": "Open Echo: live transcript & AI",
+  "sessionOpenEcho": "Open Echo",
+  "sessionTrack": "{track} track",
+  "@sessionTrack": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionSave": "Save to my agenda",
+  "sessionSaved": "Remove from my agenda",
   "sessionShowOnMap": "Show {stage} on map",
   "@sessionShowOnMap": {
     "placeholders": {
@@ -107,7 +117,7 @@
   "joinPerkFind": "Find the people worth meeting",
   "joinWithEho": "With Eho you get",
   "joinJoining": "Joining…",
-  "onboardingStep": "Step {step} of {total}",
+  "onboardingStep": "{step} of {total}",
   "@onboardingStep": {
     "placeholders": {
       "step": {
@@ -134,7 +144,8 @@
   "allowContactRequestsSubtitle": "Your details are shared only if you accept.",
   "allowMeetingSpotsSubtitle": "Agree on a place to meet. Never your live location.",
   "onboardingPrivacyNote": "Your profile only ever goes to the AI to find matches, and only while \"Show me in Find\" is on.",
-  "myEventsUpcoming": "Now & upcoming",
+  "myEventsNow": "Happening now",
+  "myEventsLiveDay": "Live · Day 1",
   "myEventsPast": "Past",
   "myEventsEmpty": "Open an event link to join your first event.",
   "leaveEvent": "Leave event",

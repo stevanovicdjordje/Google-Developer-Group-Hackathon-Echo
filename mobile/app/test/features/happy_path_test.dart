@@ -43,7 +43,7 @@ void main() {
       find.text('On-device AI: when the model lives in your pocket'),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Open Echo: live transcript & AI'));
+    await tester.tap(find.text('Open Echo'));
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Ask AI'), findsOneWidget);

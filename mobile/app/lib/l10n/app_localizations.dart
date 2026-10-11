@@ -173,7 +173,7 @@ abstract class AppLocalizations {
   /// No description provided for @startTagline.
   ///
   /// In en, this message translates to:
-  /// **'Your AI companion for events: agenda, venue, talks and people.'**
+  /// **'Your AI companion for events. The agenda, the venue, every talk, and the people worth meeting.'**
   String get startTagline;
 
   /// No description provided for @startJoinButton.
@@ -329,8 +329,26 @@ abstract class AppLocalizations {
   /// No description provided for @sessionOpenEcho.
   ///
   /// In en, this message translates to:
-  /// **'Open Echo: live transcript & AI'**
+  /// **'Open Echo'**
   String get sessionOpenEcho;
+
+  /// No description provided for @sessionTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'{track} track'**
+  String sessionTrack(String track);
+
+  /// No description provided for @sessionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to my agenda'**
+  String get sessionSave;
+
+  /// No description provided for @sessionSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from my agenda'**
+  String get sessionSaved;
 
   /// No description provided for @sessionShowOnMap.
   ///
@@ -389,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingStep.
   ///
   /// In en, this message translates to:
-  /// **'Step {step} of {total}'**
+  /// **'{step} of {total}'**
   String onboardingStep(int step, int total);
 
   /// No description provided for @onboardingWhoTitle.
@@ -488,11 +506,17 @@ abstract class AppLocalizations {
   /// **'Your profile only ever goes to the AI to find matches, and only while \"Show me in Find\" is on.'**
   String get onboardingPrivacyNote;
 
-  /// No description provided for @myEventsUpcoming.
+  /// No description provided for @myEventsNow.
   ///
   /// In en, this message translates to:
-  /// **'Now & upcoming'**
-  String get myEventsUpcoming;
+  /// **'Happening now'**
+  String get myEventsNow;
+
+  /// No description provided for @myEventsLiveDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Live · Day 1'**
+  String get myEventsLiveDay;
 
   /// No description provided for @myEventsPast.
   ///

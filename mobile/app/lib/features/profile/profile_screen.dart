@@ -155,7 +155,7 @@ class ProfileScreen extends ConsumerWidget {
                   icon: Icons.calendar_today_outlined,
                   title: l10n.myEvents,
                   trailing: Text(
-                    l10n.profileJoinedCount(joined),
+                    '$joined',
                     style: t.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -184,26 +184,11 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: SectionLabel(l10n.profileForOrganizers),
-            ),
-            _Group(
-              children: [
                 _NavRow(
-                  icon: Icons.add_circle_outline,
-                  title: l10n.profileCreateEvent,
+                  icon: Icons.home_work_outlined,
+                  title: l10n.profileForOrganizers,
                   chevron: true,
-                  onTap: () => context.push('/organizer'),
-                ),
-                _NavRow(
-                  icon: Icons.edit_location_alt_outlined,
-                  title: l10n.profileEditVenueMap,
-                  chevron: true,
-                  onTap: () => context.push('/o'),
+                  onTap: () => _showOrganizerSheet(context),
                 ),
               ],
             ),
@@ -212,6 +197,49 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Chooser behind the "For organizers" row: create an event or edit a map.
+void _showOrganizerSheet(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheet) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+            child: Text(
+              l10n.profileForOrganizers,
+              style: Theme.of(sheet).textTheme.titleLarge,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.add_circle_outline),
+            title: Text(l10n.profileCreateEvent),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.pop(sheet);
+              context.push('/organizer');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit_location_alt_outlined),
+            title: Text(l10n.profileEditVenueMap),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.pop(sheet);
+              context.push('/o');
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
 }
 
 /// White radius-18 card holding rows separated by 1 px dividers.

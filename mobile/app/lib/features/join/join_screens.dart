@@ -640,7 +640,7 @@ class MyEventsScreen extends ConsumerWidget {
             ),
             if (upcoming.isNotEmpty)
               SectionLabel(
-                l10n.myEventsUpcoming,
+                l10n.myEventsNow,
                 padding: const EdgeInsets.fromLTRB(4, 0, 4, 20),
               ),
             for (final e in upcoming)
@@ -676,16 +676,15 @@ class MyEventsScreen extends ConsumerWidget {
   }
 }
 
-/// Overflow menu with "Leave event" (shared by both card kinds).
+/// Overflow menu with "Leave event" (on the past event cards).
 class _LeaveMenu extends ConsumerWidget {
-  const _LeaveMenu(this.event, {this.color});
+  const _LeaveMenu(this.event);
 
   final EventSummary event;
-  final Color? color;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => PopupMenuButton<String>(
-    iconColor: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
+    iconColor: Theme.of(context).colorScheme.onSurfaceVariant,
     onSelected: (_) => ref.read(joinedEventsProvider.notifier).remove(event.id),
     itemBuilder: (context) => [
       PopupMenuItem(
@@ -719,24 +718,13 @@ class _LiveEventCard extends ConsumerWidget {
           if (live != null) ...[
             Align(
               alignment: Alignment.centerLeft,
-              child: LiveBadge(l10n.agendaLiveNow, onDark: true),
+              child: LiveBadge(l10n.myEventsLiveDay, onDark: true),
             ),
             const SizedBox(height: 12),
           ],
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  event.name,
-                  style: t.headlineMedium?.copyWith(
-                    color: eho.onInk,
-                    height: 1.1,
-                  ),
-                ),
-              ),
-              _LeaveMenu(event, color: eho.onInkMuted),
-            ],
+          Text(
+            event.name,
+            style: t.headlineMedium?.copyWith(color: eho.onInk, height: 1.1),
           ),
           const SizedBox(height: 14),
           Text(
@@ -753,7 +741,7 @@ class _LiveEventCard extends ConsumerWidget {
                   live == null
                       ? l10n.tabAgenda
                       : l10n.myEventsNext(live.title, live.start, live.stage),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: t.bodyMedium?.copyWith(color: eho.onInk),
                 ),
