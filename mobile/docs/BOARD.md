@@ -12,12 +12,12 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 | --- | --- | --- | --- | --- | --- |
 | V-7 | After the local stack restart (stable `devfest`, events :8084, Find on Gemini): rebuild the Galaxy (`DEMO_EVENT_ID=devfest`, `DEMO_LOCATION` from `make seed`), run `integration_test/` + live smoke incl. organizer upload of `backend/events/demo/*` and publish; re-check M-46 status bar/keyboard and the map polish | M | verifier | none | Blocked on the human stopping the old servers |
 | M-45 | (Low) Read the other person's meeting spot back: `listContacts`/`Contact.meetingSpot` → Messages spot card (`FindApiRepository.parseMeetingSpot` exists) | M | dev | `data/find_api_repository.dart`, `repositories.dart`, `app_state.dart` | Only matters with two real users; demo person auto-accepts |
-| M-34 | (Likely superseded by `mobile#16` stable event id — prefer that.) Re-seed emulators so the event is "DevFest Belgrade 2026" (current `ik6vmvjr7wlektj6` is still "Eho Demo Expo"), `make replay` in backend/echo, record new DEMO_EVENT_ID in HANDOFF | S | orchestrator | none | Only after the human finishes click-testing on :5070 (re-seed deletes the old event) — ask first |
 
 ## Blocked
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
+| M-51 | Local stack restart on @Vertiglo's setup (see HANDOFF *Stack restart*) | Human: auto mode denies killing processes; needs `! kill …` from him |
 | M-14 | https App Links / Universal Links for `/e/{id}` (assetlinks.json / apple-app-site-association) | Hosting domain. Phones themselves run (`9dbd308`: `eho://open/e/{id}`, Android + iPhone 13 Pro Max on the local backends) |
 
 ## In progress / review
