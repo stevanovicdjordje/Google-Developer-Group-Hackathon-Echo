@@ -176,4 +176,120 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Extracted from 3 files'), findsOneWidget);
   });
+
+  testWidgets('server issues flag the right rows and a general block', (
+    tester,
+  ) async {
+    usePhoneView(tester);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final sessions = demo.sessions.where((s) => !s.isBreak).toList();
+    final flagged = sessions[1];
+    container
+        .read(organizerDraftProvider.notifier)
+        .set(
+          EventDraft(
+            name: demo.demoEventName,
+            dates: demo.demoEventDates,
+            venue: demo.demoEventVenue,
+            stages: demo.stages,
+            sessions: sessions,
+            speakers: demo.speakers,
+            issues: [
+              DraftIssue(
+                sessionId: flagged.id,
+                field: 'sessions[1].end',
+                message: 'Overlaps another session on this stage.',
+              ),
+              const DraftIssue(
+                field: 'startDate',
+                message: 'The event has no start date.',
+              ),
+            ],
+          ),
+        );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: EhoApp()),
+    );
+    await tester.pumpAndSettle();
+    GoRouter.of(tester.element(find.text('Eho'))).go('/organizer/review');
+    await tester.pumpAndSettle();
+
+    // The row carries the server's message (the session has a stage, so the
+    // app's own check would not flag it), the general issue sits above.
+    expect(
+      find.textContaining('Overlaps another session on this stage.'),
+      findsOneWidget,
+    );
+    expect(find.text('TO CHECK'), findsOneWidget);
+    expect(find.text('The event has no start date.'), findsOneWidget);
+    expect(find.textContaining('room missing'), findsNothing);
+  });
+
+  testWidgets('no issues: no "to check" block; demo extract flags s3', (
+    tester,
+  ) async {
+    usePhoneView(tester);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final repo = container.read(organizerRepositoryProvider);
+    final extracting = repo.extract(const []);
+    await tester.pump(const Duration(seconds: 3));
+    final draft = await extracting;
+    expect(draft.issues.map((i) => i.sessionId), [
+      demo.organizerFlaggedSessionId,
+    ]);
+    container.read(organizerDraftProvider.notifier).set(draft);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: EhoApp()),
+    );
+    await tester.pumpAndSettle();
+    GoRouter.of(tester.element(find.text('Eho'))).go('/organizer/review');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('room missing in the PDF'), findsOneWidget);
+    expect(find.text('TO CHECK'), findsNothing);
+
+    // Saving after the stage is filled in clears the issue (like the server).
+    final fixed = await repo.save(
+      draft.withSessions([
+        for (final s in draft.sessions)
+          s.stage.isEmpty
+              ? Session(
+                  id: s.id,
+                  title: s.title,
+                  stage: demo.stages.first,
+                  start: s.start,
+                  end: s.end,
+                  speakers: s.speakers,
+                )
+              : s,
+      ]),
+    );
+    expect(fixed.issues, isEmpty);
+  });
+
+  testWidgets('published screen lists the publish warnings', (tester) async {
+    usePhoneView(tester);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: EhoApp()),
+    );
+    await tester.pumpAndSettle();
+    final url = Uri.encodeComponent('${linkBase()}/e/$demoEventId');
+    GoRouter.of(tester.element(find.text('Eho')))
+        .go('/organizer/published?url=$url&name=X');
+    await tester.pumpAndSettle();
+    expect(find.text('CHECK BEFORE THE EVENT'), findsNothing);
+
+    container.read(organizerWarningsProvider.notifier).set([
+      "Stage 'Sala C' isn't a room on the venue map.",
+    ]);
+    await tester.pumpAndSettle();
+    expect(find.text('CHECK BEFORE THE EVENT'), findsOneWidget);
+    expect(
+      find.text("Stage 'Sala C' isn't a room on the venue map."),
+      findsOneWidget,
+    );
+  });
 }

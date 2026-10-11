@@ -408,6 +408,20 @@ class _FileRow extends StatelessWidget {
   }
 }
 
+/// The warnings of the last publish (`PublishResult.warnings`), shown on the
+/// published screen; set by the review screen before it navigates there.
+class OrganizerWarningsNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => const [];
+
+  void set(List<String> warnings) => state = warnings;
+}
+
+final organizerWarningsProvider =
+    NotifierProvider<OrganizerWarningsNotifier, List<String>>(
+      OrganizerWarningsNotifier.new,
+    );
+
 /// `/organizer/review`: what the AI extracted, then publish.
 class OrganizerReviewScreen extends ConsumerStatefulWidget {
   const OrganizerReviewScreen({super.key});
@@ -431,6 +445,7 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
       _showOrganizerError(context, e);
       return;
     }
+    ref.read(organizerWarningsProvider.notifier).set(link.warnings);
     // Attendee screens show the newly published agenda and event info.
     ref.invalidate(agendaProvider(link.eventId));
     ref.invalidate(eventSummaryProvider(link.eventId));
@@ -487,6 +502,19 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
     final t = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final fileCount = ref.watch(organizerFileCountProvider);
+    // The server's issues: by session (first message wins), and the ones
+    // that are about the event as a whole (or a session that isn't listed).
+    final sessionIds = {for (final s in draft.sessions) s.id};
+    final bySession = <String, String>{};
+    final general = <DraftIssue>[];
+    for (final i in draft.issues) {
+      final id = i.sessionId;
+      if (id != null && sessionIds.contains(id)) {
+        bySession.putIfAbsent(id, () => i.message);
+      } else {
+        general.add(i);
+      }
+    }
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -538,6 +566,10 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
                 ],
               ),
               const SizedBox(height: 16),
+              if (general.isNotEmpty) ...[
+                _ToCheckBlock(messages: [for (final i in general) i.message]),
+                const SizedBox(height: 12),
+              ],
               Expanded(
                 child: Card(
                   clipBehavior: Clip.antiAlias,
@@ -549,6 +581,7 @@ class _OrganizerReviewScreenState extends ConsumerState<OrganizerReviewScreen> {
                       final s = draft.sessions[i];
                       return _SessionRow(
                         session: s,
+                        issue: bySession[s.id],
                         onEdit: () => _edit(draft, s),
                       );
                     },
@@ -618,13 +651,61 @@ class _CountTile extends StatelessWidget {
   }
 }
 
-/// One session in the review list. A session the AI could not place on a
-/// stage is flagged (tinted row, live-colored hint and edit button).
+/// Issues about the event as a whole (not tied to a session), above the list.
+class _ToCheckBlock extends StatelessWidget {
+  const _ToCheckBlock({required this.messages});
+
+  final List<String> messages;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final eho = context.eho;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 120),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: eho.liveContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.orgToCheck.toUpperCase(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: eho.onLiveContainer,
+              ),
+            ),
+            for (final m in messages) ...[
+              const SizedBox(height: 4),
+              Text(
+                m,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: eho.onLiveContainer,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One session in the review list. A session the server flagged ([issue] is
+/// its message) or the AI could not place on a stage is flagged (tinted row,
+/// live-colored hint and edit button).
 class _SessionRow extends StatelessWidget {
-  const _SessionRow({required this.session, required this.onEdit});
+  const _SessionRow({required this.session, required this.onEdit, this.issue});
 
   final Session session;
   final VoidCallback onEdit;
+
+  /// The server's message for this session, if it flagged it.
+  final String? issue;
 
   @override
   Widget build(BuildContext context) {
@@ -633,10 +714,10 @@ class _SessionRow extends StatelessWidget {
     final eho = context.eho;
     final l10n = AppLocalizations.of(context);
     final s = session;
-    final flagged = s.stage.trim().isEmpty;
+    final flagged = issue != null || s.stage.trim().isEmpty;
     final speakers = s.speakers.map((p) => p.name).join(', ');
     final meta = flagged
-        ? '${s.start}–${s.end} · ${l10n.orgCheckRoomMissing}'
+        ? '${s.start}–${s.end} · ${issue ?? l10n.orgCheckRoomMissing}'
         : '${s.start}–${s.end} · ${s.stage}'
               '${speakers.isEmpty ? '' : ' · $speakers'}';
     return Container(
@@ -652,7 +733,7 @@ class _SessionRow extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   meta,
-                  maxLines: 1,
+                  maxLines: flagged ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: flagged
@@ -877,18 +958,25 @@ String displayJoinLink(String url, {String publicBase = _publicLinkBase}) {
 }
 
 /// `/organizer/published`: the join link and QR code.
-class OrganizerPublishedScreen extends StatelessWidget {
+class OrganizerPublishedScreen extends ConsumerWidget {
   const OrganizerPublishedScreen({
     super.key,
     required this.url,
     required this.name,
+    this.warnings,
   });
 
   final String url;
   final String name;
 
+  /// What the server asks the organizer to check; null = the warnings of the
+  /// publish that led here.
+  final List<String>? warnings;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final List<String> warnings =
+        this.warnings ?? ref.watch(organizerWarningsProvider);
     final t = Theme.of(context).textTheme;
     final eho = context.eho;
     final l10n = AppLocalizations.of(context);
@@ -1022,6 +1110,10 @@ class OrganizerPublishedScreen extends StatelessWidget {
                               ],
                             ),
                           ),
+                          if (warnings.isNotEmpty) ...[
+                            const SizedBox(height: 20),
+                            _PublishWarnings(warnings: warnings),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -1037,6 +1129,52 @@ class OrganizerPublishedScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "Check before the event": the publish warnings, one calm line each.
+class _PublishWarnings extends StatelessWidget {
+  const _PublishWarnings({required this.warnings});
+
+  final List<String> warnings;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final eho = context.eho;
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.orgPublishWarnings.toUpperCase(),
+          style: t.labelSmall?.copyWith(color: eho.onInkLive),
+        ),
+        for (final w in warnings) ...[
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: eho.onInkMuted,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  w,
+                  style: t.bodySmall?.copyWith(color: eho.onInkMuted),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

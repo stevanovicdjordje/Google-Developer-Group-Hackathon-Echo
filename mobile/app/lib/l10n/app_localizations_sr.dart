@@ -646,6 +646,12 @@ class AppLocalizationsSr extends AppLocalizations {
   String get orgCheckRoomMissing => 'Proveri: sala nedostaje u PDF-u';
 
   @override
+  String get orgToCheck => 'Proveri';
+
+  @override
+  String get orgPublishWarnings => 'Proveri pre događaja';
+
+  @override
   String get orgSessions => 'Predavanja';
 
   @override
