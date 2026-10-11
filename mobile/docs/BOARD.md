@@ -15,13 +15,14 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Task | Blocked on |
 | --- | --- | --- |
-| V-8 | Galaxy re-check of M-52/55/56/58/45 on `devfest` (first run hit the usage limit at ~07:53, no report). Re-seed Events after it | Galaxy not attached (🙋 asked 2026-10-11 09:00) |
 | M-14 | https App Links / Universal Links for `/e/{id}` (assetlinks.json / apple-app-site-association) | Hosting domain. Phones themselves run (`9dbd308`: `eho://open/e/{id}`, Android + iPhone 13 Pro Max on the local backends) |
 
 ## In progress / review
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| V-8 | verifier (sonnet, medium) | 2026-10-11 09:35 | detached worktree in session scratchpad (`v8wt`) | Galaxy re-check of M-52/55/56/58/45 + M-57/60/61; then re-seed Events + Find, Echo replay without `-instant` (ready to record) |
+| V-9 | verifier (sonnet, medium) | 2026-10-11 09:30 | main checkout (hold merges) | Web regression shots of all dev shots + live routes |
 
 ## Done
 
