@@ -10,6 +10,7 @@ class AppConfig {
     required this.emulatorHost,
     this.echoApiBaseUrl = 'http://localhost:8082',
     this.useEchoApi = true,
+    this.firebase = const FirebaseWebConfig(),
   });
 
   factory AppConfig.fromEnvironment() => const AppConfig(
@@ -28,6 +29,14 @@ class AppConfig {
       defaultValue: 'http://localhost:8082',
     ),
     useEchoApi: bool.fromEnvironment('USE_ECHO_API', defaultValue: true),
+    firebase: FirebaseWebConfig(
+      apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
+      appId: String.fromEnvironment('FIREBASE_APP_ID'),
+      projectId: String.fromEnvironment('FIREBASE_PROJECT_ID'),
+      messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+      authDomain: String.fromEnvironment('FIREBASE_AUTH_DOMAIN'),
+      storageBucket: String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
+    ),
   );
 
   final String apiBaseUrl;
@@ -40,4 +49,27 @@ class AppConfig {
   /// Use the Echo API when Firebase is up and the service answers `/healthz`.
   /// Otherwise (or with `USE_ECHO_API=false`) Echo runs on demo data.
   final bool useEchoApi;
+
+  /// Real Firebase project values, used only when `USE_EMULATORS=false`.
+  final FirebaseWebConfig firebase;
+}
+
+/// Public Firebase client config (not secrets), read from `--dart-define`.
+/// Empty string means "not set". Never commit real values.
+class FirebaseWebConfig {
+  const FirebaseWebConfig({
+    this.apiKey = '',
+    this.appId = '',
+    this.projectId = '',
+    this.messagingSenderId = '',
+    this.authDomain = '',
+    this.storageBucket = '',
+  });
+
+  final String apiKey;
+  final String appId;
+  final String projectId;
+  final String messagingSenderId;
+  final String authDomain;
+  final String storageBucket;
 }

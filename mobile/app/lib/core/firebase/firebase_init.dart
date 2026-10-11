@@ -9,7 +9,7 @@ import 'clear_auth_session_stub.dart'
 
 /// Options for the local `demo-eho` emulator project. Not secrets: demo
 /// projects only work against the emulators. A real project is configured
-/// later with `flutterfire configure`.
+/// with `--dart-define=FIREBASE_*` (see [realFirebaseOptions]).
 const _demoOptions = FirebaseOptions(
   apiKey: 'demo-api-key',
   appId: '1:000000000000:web:0000000000000000000000',
@@ -23,11 +23,36 @@ const _authPort = 9099;
 const _firestorePort = 8081;
 const _storagePort = 9199;
 
+/// Builds [FirebaseOptions] for a real project from the `FIREBASE_*` defines.
+/// Throws a [StateError] naming every missing required define
+/// (`FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID`). The sender
+/// id, auth domain and storage bucket are optional.
+FirebaseOptions realFirebaseOptions(FirebaseWebConfig c) {
+  final missing = [
+    if (c.apiKey.isEmpty) 'FIREBASE_API_KEY',
+    if (c.appId.isEmpty) 'FIREBASE_APP_ID',
+    if (c.projectId.isEmpty) 'FIREBASE_PROJECT_ID',
+  ];
+  if (missing.isNotEmpty) {
+    throw StateError(
+      'USE_EMULATORS=false needs a real Firebase project. Missing '
+      '--dart-define: ${missing.join(', ')}.',
+    );
+  }
+  return FirebaseOptions(
+    apiKey: c.apiKey,
+    appId: c.appId,
+    messagingSenderId: c.messagingSenderId,
+    projectId: c.projectId,
+    authDomain: c.authDomain.isEmpty ? null : c.authDomain,
+    storageBucket: c.storageBucket.isEmpty ? null : c.storageBucket,
+  );
+}
+
 Future<void> initFirebase(AppConfig config) async {
   if (!config.useEmulators) {
-    throw UnsupportedError(
-      'No real Firebase project configured yet: run with USE_EMULATORS=true.',
-    );
+    await Firebase.initializeApp(options: realFirebaseOptions(config.firebase));
+    return;
   }
   await clearPersistedAuthSession();
   await Firebase.initializeApp(options: _demoOptions);
