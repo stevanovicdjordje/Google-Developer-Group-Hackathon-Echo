@@ -64,3 +64,8 @@ features (`events/{eventId}/published/map/features`, `name`) for meeting spots.
 - No profile text, prompts or request bodies are logged.
 - `DELETE /v1/me/profile` removes the profile, all presence docs and the
   caller's contacts at those events.
+
+## Deploy
+
+`make deploy PROJECT=<id> [REGION=europe-west1]` (Cloud Run, after `backend/maps`' deploy for the rules);
+see `backend/events/README.md` → Deploy.

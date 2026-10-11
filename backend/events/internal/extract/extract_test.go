@@ -4,9 +4,13 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Ilij4n/eho/backend/events/internal/agenda"
 )
 
 func zipOf(t *testing.T, files map[string]string) []byte {
@@ -114,5 +118,43 @@ func TestSplitNamesAndRoles(t *testing.T) {
 	}
 	if d := parseDay("11.10.", 2026); d != "2026-10-11" {
 		t.Fatal(d)
+	}
+}
+
+// The demo upload files (scripts/demo_files.py) must work without a model.
+type Session = agenda.Session
+
+func TestDemoFilesOffline(t *testing.T) {
+	var files []File
+	for _, name := range []string{"devfest-agenda-final-v3.pdf", "speakers.xlsx", "devfest-agenda.csv"} {
+		data, err := os.ReadFile(filepath.Join("..", "..", "demo", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		f, err := Sniff(name, data)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		files = append(files, f)
+	}
+	res, err := (&Extractor{}).Extract(context.Background(), files)
+	if err != nil || res.Model != OfflineModel {
+		t.Fatal(res, err)
+	}
+	s := res.Fields.Sessions
+	if len(s) != 7 || res.Fields.StartDate != "2026-10-11" {
+		t.Fatalf("%d sessions, start %s", len(s), res.Fields.StartDate)
+	}
+	var workshop Session
+	for _, x := range s {
+		if x.Title == "Designing for crowded rooms" {
+			workshop = x
+		}
+	}
+	if workshop.Stage != "" || len(workshop.Speakers) != 1 || workshop.Speakers[0].Title != "Product Designer, Kvadrat" {
+		t.Fatalf("workshop %+v", workshop)
+	}
+	if len(res.Fields.Speakers) != 6 {
+		t.Fatalf("speakers %+v", res.Fields.Speakers)
 	}
 }

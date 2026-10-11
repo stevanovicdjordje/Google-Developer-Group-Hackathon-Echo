@@ -65,3 +65,16 @@ See `internal/store/store.go`: `events/{eventId}` (shared with the map),
 - "My events" stores only which events a user joined and when; `DELETE
   /v1/events/{id}/join` removes it.
 - Speaker names and roles in an agenda are organizer content, published on purpose.
+
+## Demo upload files
+
+`demo/` holds fictional organizer files that match the app's demo data: `devfest-agenda-final-v3.pdf` (the
+programme as a flyer; "Designing for crowded rooms" has no room, so the review flags it), `speakers.xlsx` and
+`devfest-agenda.csv` (works without an AI key). Rebuild them with `python3 -I scripts/demo_files.py`.
+Upload as the demo organizer and publish into `devfest`.
+
+## Deploy
+
+After `backend/maps` (`make deploy PROJECT=<id>`: rules, map API, web app): `make deploy PROJECT=<id>` here and in
+`backend/find`. Each prints its Cloud Run URL; the app needs them as `EVENTS_API_BASE_URL` / `FIND_API_BASE_URL`.
+`GEMINI_API_KEY` (from the environment or `.env`) is stored once in Secret Manager as `gemini-api-key`.

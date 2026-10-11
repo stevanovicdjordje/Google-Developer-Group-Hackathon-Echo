@@ -1,4 +1,4 @@
-.PHONY: dev run test test-emulator vet seed docker
+.PHONY: dev run test test-emulator vet seed docker deploy
 
 dev:            ## events API on :8084 against the emulators started by backend/maps `make dev`
 	./scripts/dev.sh
@@ -21,3 +21,6 @@ seed:           ## demo agenda into the demo event (EVENT=<id>, default devfest)
 
 docker:
 	docker build -t eho-events .
+
+deploy:         ## make deploy PROJECT=<firebase-project> [REGION=europe-west1] (Cloud Run; GEMINI_API_KEY from .env → Secret Manager)
+	./scripts/deploy.sh $(PROJECT) $(REGION)
