@@ -1,0 +1,60 @@
+{{define "content"}}
+{{$d := .Data}}
+<div class="page-head">
+  <h1>{{t "panel.organizer.title"}}</h1>
+  <a class="btn btn-primary" href="/org/events/new">{{t "events.new"}}</a>
+</div>
+
+{{if eq $d.Total 0}}
+  <section class="card empty">
+    <p>{{t "panel.organizer.empty"}}</p>
+    <p><a class="btn btn-primary" href="/org/events/new">{{t "events.new"}}</a></p>
+  </section>
+{{else}}
+  <form class="filters card" method="get" action="/org/events" role="search">
+    <label class="grow">{{t "events.search"}}
+      <input type="search" name="q" value="{{$d.Query}}" placeholder="{{t "events.search_placeholder"}}">
+    </label>
+    <label>{{t "events.status"}}
+      <select name="status">
+        <option value="">{{t "events.all"}}</option>
+        {{range $d.Statuses}}<option value="{{.}}" {{if eq (printf "%s" .) $d.Status}}selected{{end}}>{{t (printf "status.%s" .)}}</option>{{end}}
+      </select>
+    </label>
+    <button class="btn" type="submit">{{t "events.filter"}}</button>
+  </form>
+
+  {{range $d.Groups}}
+  <section class="group">
+    <h2>{{t (printf "group.%s" .Status)}} <span class="count">{{len .Items}}</span></h2>
+    <div class="cards">
+      {{range .Items}}{{$st := .Status $d.Now}}
+      <article class="card event-card">
+        <div class="event-card-head">
+          <h3><a href="/org/events/{{.ID}}">{{.Title}}</a></h3>
+          {{template "status_badge" $st}}
+        </div>
+        <p class="meta">📅 {{if .StartsAt}}{{date .StartsAt}} – {{date .EndsAt}}{{else}}{{t "events.no_date"}}{{end}}</p>
+        <p class="meta">📍 {{if .Address}}{{.Address}}{{else}}{{t "events.no_address"}}{{end}}</p>
+        <dl class="stats">
+          <div><dt>{{t "events.invited"}}</dt><dd>{{.Invited}}</dd></div>
+          <div><dt>{{t "events.accepted"}}</dt><dd>{{.Accepted}}</dd></div>
+          {{if eq (printf "%s" $st) "finished"}}<div><dt>{{t "events.avg_rating"}}</dt><dd>{{if .Reviews}}{{rating .AvgRating}} ★{{else}}—{{end}}</dd></div>{{end}}
+        </dl>
+        <div class="actions">
+          {{if eq (printf "%s" $st) "finished"}}
+            <a class="btn btn-primary" href="/org/events/{{.ID}}/report">{{t "events.report"}}</a>
+          {{else}}
+            <a class="btn" href="/org/events/{{.ID}}/invitations">{{t "events.invitations"}}</a>
+            <a class="btn btn-primary" href="/org/events/{{.ID}}/edit">{{t "events.edit"}}</a>
+          {{end}}
+        </div>
+      </article>
+      {{end}}
+    </div>
+  </section>
+  {{else}}
+  <section class="card empty"><p>{{t "events.no_match"}}</p></section>
+  {{end}}
+{{end}}
+{{end}}

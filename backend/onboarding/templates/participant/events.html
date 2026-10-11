@@ -1,0 +1,60 @@
+{{define "content"}}
+{{$d := .Data}}
+<div class="page-head">
+  <h1>{{t "panel.participant.title"}}</h1>
+  <a class="btn" href="/me/profile">{{t "nav.profile"}}</a>
+</div>
+
+{{if and (not $d.Current) (not $d.Past) (not $d.Pending)}}
+  <section class="card empty"><p>{{t "panel.participant.empty"}}</p></section>
+{{end}}
+
+{{if $d.Pending}}
+<section class="group">
+  <h2>{{t "participant.pending"}} <span class="count">{{len $d.Pending}}</span></h2>
+  <div class="cards">
+    {{range $d.Pending}}
+    <article class="card event-card">
+      <h3>{{.Event.Title}}</h3>
+      <p class="meta">📅 {{date .Event.StartsAt}}</p>
+      <div class="actions"><a class="btn btn-primary" href="/i/{{.Token}}">{{t "participant.respond"}}</a></div>
+    </article>
+    {{end}}
+  </div>
+</section>
+{{end}}
+
+{{if $d.Current}}
+<section class="group">
+  <h2>{{t "participant.current"}} <span class="count">{{len $d.Current}}</span></h2>
+  <div class="cards">
+    {{range $d.Current}}
+    <article class="card event-card">
+      <div class="event-card-head"><h3><a href="/me/events/{{.Event.ID}}">{{.Event.Title}}</a></h3>{{template "status_badge" (.Event.Status $d.Now)}}</div>
+      <p class="meta">📅 {{date .Event.StartsAt}} – {{date .Event.EndsAt}}</p>
+      <p class="meta">📍 {{.Event.Address}}</p>
+      <div class="actions"><a class="btn btn-primary" href="/me/events/{{.Event.ID}}">{{t "participant.open"}}</a></div>
+    </article>
+    {{end}}
+  </div>
+</section>
+{{end}}
+
+{{if $d.Past}}
+<section class="group">
+  <h2>{{t "participant.past"}} <span class="count">{{len $d.Past}}</span></h2>
+  <div class="cards">
+    {{range $d.Past}}
+    <article class="card event-card">
+      <h3><a href="/me/events/{{.Event.ID}}">{{.Event.Title}}</a></h3>
+      <p class="meta">📅 {{day .Event.StartsAt}}</p>
+      <div class="actions">
+        <a class="btn" href="/me/events/{{.Event.ID}}">{{t "participant.open"}}</a>
+        <a class="btn btn-primary" href="/me/events/{{.Event.ID}}/review">{{t "participant.review"}}</a>
+      </div>
+    </article>
+    {{end}}
+  </div>
+</section>
+{{end}}
+{{end}}

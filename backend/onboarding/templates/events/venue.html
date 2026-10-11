@@ -1,0 +1,82 @@
+{{define "content"}}
+{{$d := .Data}}{{$v := $d.Extra}}{{$id := $d.Event.ID}}
+<div class="page-head"><h1>{{$d.Event.Title}}</h1></div>
+{{template "wizard" $d}}
+
+<section class="card">
+  <h2>{{t "venue.plan"}}</h2>
+  {{if $v.HasMap}}
+    <div class="plan-wrap">{{template "venue_svg" $v.Plan}}</div>
+  {{else}}
+    <p class="empty">{{t "venue.no_plan"}}</p>
+  {{end}}
+  <form method="post" action="/org/events/{{$id}}/venue/plan" enctype="multipart/form-data">
+    {{template "csrf" .CSRF}}
+    <label>{{if $v.HasMap}}{{t "venue.replace"}}{{else}}{{t "venue.upload"}}{{end}}
+      <input type="file" name="plan" accept="image/png,image/jpeg" required>
+      <span class="hint">{{t "venue.upload_hint"}}</span>
+      {{template "ferr" (index .Errors "plan")}}
+    </label>
+    <div class="actions"><button class="btn" type="submit">{{t "venue.upload_btn"}}</button></div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>{{t "venue.zones"}}</h2>
+  {{if $v.Zones}}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>{{t "zone.name"}}</th><th>{{t "zone.kind"}}</th><th>X %</th><th>Y %</th><th>{{t "zone.w"}} %</th><th>{{t "zone.h"}} %</th><th></th></tr></thead>
+      <tbody>
+        {{range $v.Zones}}
+        <tr>
+          <td>{{.Name}}</td>
+          <td><span class="zone-chip zone-{{.Kind}}">{{t (printf "zone.%s" .Kind)}}</span></td>
+          <td>{{num .X}}</td><td>{{num .Y}}</td><td>{{num .W}}</td><td>{{num .H}}</td>
+          <td>
+            <form method="post" action="/org/events/{{$id}}/zones/{{.ID}}/delete" class="inline">
+              {{template "csrf" $.CSRF}}
+              <button class="btn btn-link danger" type="submit">{{t "btn.delete"}}</button>
+            </form>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+    <p class="muted">{{t "venue.no_zones"}}</p>
+  {{end}}
+
+  <h3>{{t "venue.add_zone"}}</h3>
+  <form method="post" action="/org/events/{{$id}}/zones" novalidate>
+    {{template "csrf" .CSRF}}
+    <div class="grid-2">
+      <label>{{t "zone.name"}}
+        <input type="text" name="name" value="{{.Form.Get "name"}}" maxlength="80" required>
+        {{template "ferr" (index .Errors "name")}}
+      </label>
+      <label>{{t "zone.kind"}}
+        <select name="kind">
+          {{range $v.Kinds}}<option value="{{.}}" {{if eq ($.Form.Get "kind") (printf "%s" .)}}selected{{end}}>{{t (printf "zone.%s" .)}}</option>{{end}}
+        </select>
+        {{template "ferr" (index .Errors "kind")}}
+      </label>
+    </div>
+    <p class="hint">{{t "venue.geometry_hint"}}</p>
+    <div class="grid-4">
+      <label>X %<input type="number" step="0.1" min="0" max="100" name="x" value="{{.Form.Get "x"}}"></label>
+      <label>Y %<input type="number" step="0.1" min="0" max="100" name="y" value="{{.Form.Get "y"}}"></label>
+      <label>{{t "zone.w"}} %<input type="number" step="0.1" min="0" max="100" name="w" value="{{.Form.Get "w"}}"></label>
+      <label>{{t "zone.h"}} %<input type="number" step="0.1" min="0" max="100" name="h" value="{{.Form.Get "h"}}"></label>
+    </div>
+    {{template "ferr" (index .Errors "geometry")}}
+    <div class="actions"><button class="btn" type="submit">{{t "venue.add_zone"}}</button></div>
+  </form>
+</section>
+
+<div class="actions">
+  <a class="btn" href="/org/events/{{$id}}/edit">{{t "btn.back"}}</a>
+  <a class="btn btn-primary" href="/org/events/{{$id}}/schedule">{{t "btn.next"}}</a>
+</div>
+{{end}}

@@ -1,0 +1,28 @@
+{{define "content"}}
+<section class="card narrow">
+  <h1>{{t "reg.participant.title"}}</h1>
+  <form method="post" action="/register/participant" novalidate>
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    {{with .Form.Get "invite"}}<input type="hidden" name="invite" value="{{.}}"><p class="notice">{{t "reg.from_invite"}}</p>{{end}}
+    <label>{{t "field.full_name"}}
+      <input type="text" name="full_name" value="{{.Form.Get "full_name"}}" autocomplete="name" required>
+      {{with index .Errors "full_name"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <label>{{t "field.email"}}
+      <input type="email" name="email" value="{{.Form.Get "email"}}" autocomplete="email" required>
+      {{with index .Errors "email"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <label>{{t "field.password"}}
+      <input type="password" name="password" autocomplete="new-password" required>
+      <span class="hint">{{t "hint.password"}}</span>
+      {{with index .Errors "password"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <label>{{t "field.password_confirm"}}
+      <input type="password" name="password_confirm" autocomplete="new-password" required>
+      {{with index .Errors "password_confirm"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <button class="btn btn-primary" type="submit">{{t "reg.participant.submit"}}</button>
+  </form>
+  <p class="muted"><a href="/login">{{t "reg.have_account"}}</a></p>
+</section>
+{{end}}

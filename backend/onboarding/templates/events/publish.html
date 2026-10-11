@@ -1,0 +1,45 @@
+{{define "content"}}
+{{$d := .Data}}{{$p := $d.Extra}}{{$e := $d.Event}}
+<div class="page-head"><h1>{{$e.Title}}</h1>{{template "status_badge" ($e.Status $d.Now)}}</div>
+{{template "wizard" $d}}
+
+<section class="card">
+  <h2>{{t "wizard.step.publish"}}</h2>
+  <dl class="summary">
+    <dt>{{t "event.when"}}</dt><dd>{{if $e.StartsAt}}{{date $e.StartsAt}} – {{date $e.EndsAt}}{{else}}—{{end}}</dd>
+    <dt>{{t "event.address"}}</dt><dd>{{if $e.Address}}{{$e.Address}}{{else}}—{{end}}</dd>
+    {{with $e.Description}}<dt>{{t "event.description"}}</dt><dd class="pre">{{.}}</dd>{{end}}
+  </dl>
+  <ul class="checklist">
+    <li class="{{if $p.HasMap}}ok{{else}}todo{{end}}">{{t "publish.map"}}</li>
+    <li class="{{if $p.Zones}}ok{{else}}todo{{end}}">{{t "publish.zones" $p.Zones}}</li>
+    <li class="{{if $p.Sessions}}ok{{else}}todo{{end}}">{{t "publish.sessions" $p.Sessions}}</li>
+    <li class="{{if $p.Conflicts}}todo{{else}}ok{{end}}">{{t "publish.conflicts" $p.Conflicts}}</li>
+    <li class="{{if $p.Stats.Invited}}ok{{else}}todo{{end}}">{{t "publish.invitations" $p.Stats.Invited}}</li>
+  </ul>
+  {{if $p.Problems}}
+    <div class="alert" role="alert">
+      <p>{{t "publish.blocked"}}</p>
+      <ul>{{range $p.Problems}}<li>{{t .}}</li>{{end}}</ul>
+    </div>
+  {{end}}
+  {{if $p.Published}}
+    <p class="notice">{{t "publish.already"}}</p>
+  {{else}}
+    <form method="post" action="/org/events/{{$e.ID}}/publish">
+      {{template "csrf" .CSRF}}
+      <div class="actions">
+        <a class="btn" href="/org/events?ok=saved">{{t "wizard.keep_draft"}}</a>
+        <button class="btn btn-primary" type="submit" {{if $p.Problems}}disabled{{end}}>{{t "publish.button"}}</button>
+      </div>
+    </form>
+  {{end}}
+</section>
+
+{{if $d.MapEmbed}}
+<section class="card">
+  <h2>{{t "event.location"}}</h2>
+  <iframe class="map-embed" src="{{$d.MapEmbed}}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="{{t "event.location"}}"></iframe>
+</section>
+{{end}}
+{{end}}

@@ -1,0 +1,64 @@
+{{define "content"}}
+{{$d := .Data}}
+<section class="card narrow">
+  <p class="steps muted">{{t "onboarding.step_of" $d.Step $d.Total}}</p>
+  <ol class="stepper" aria-hidden="true">
+    {{range seq 1 $d.Total}}<li class="{{if eq . $d.Step}}current{{else if lt . $d.Step}}done{{end}}"></li>{{end}}
+  </ol>
+
+  <form method="post" action="/onboarding/{{$d.Step}}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+
+    {{if eq $d.Step 1}}
+      <h1>{{t "step1.title"}}</h1>
+      <p class="muted">{{t "step1.help"}}</p>
+      {{with index .Errors "language"}}<p class="field-error" role="alert">{{t .}}</p>{{end}}
+      <div class="choices">
+        {{range $d.Languages}}
+          <label class="choice"><input type="radio" name="language" value="{{.}}" {{if eq ($.Form.Get "language") .}}checked{{end}}> {{t (printf "lang.%s" .)}}</label>
+        {{end}}
+      </div>
+
+    {{else if eq $d.Step 2}}
+      <h1>{{t "step2.title"}}</h1>
+      <p class="muted">{{t "step2.help"}}</p>
+      {{with index .Errors "interests"}}<p class="field-error" role="alert">{{t .}}</p>{{end}}
+      {{$sel := index .Form "interests"}}
+      <div class="choices">
+        {{range $d.Topics}}
+          <label class="choice"><input type="checkbox" name="interests" value="{{.}}" {{if has $sel .}}checked{{end}}> {{t (printf "topic.%s" .)}}</label>
+        {{end}}
+      </div>
+      <label>{{t "step2.custom"}}
+        <input type="text" name="custom" value="{{if .Form.Get "custom"}}{{.Form.Get "custom"}}{{else}}{{range $i, $c := $d.Profile.CustomInterests}}{{if $i}}, {{end}}{{$c}}{{end}}{{end}}">
+      </label>
+
+    {{else if eq $d.Step 3}}
+      <h1>{{t "step3.title"}}</h1>
+      <p class="muted">{{t "step3.help"}}</p>
+      {{with index .Errors "goal"}}<p class="field-error" role="alert">{{t .}}</p>{{end}}
+      <div class="choices">
+        {{range $d.Goals}}
+          <label class="choice"><input type="radio" name="goal" value="{{.}}" {{if eq ($.Form.Get "goal") (printf "%s" .)}}checked{{end}}> {{t (printf "goal.%s" .)}}</label>
+        {{end}}
+      </div>
+
+    {{else if eq $d.Step 4}}
+      <h1>{{t "step4.title"}}</h1>
+      <p class="muted">{{t "step4.help"}}</p>
+      <label class="choice"><input type="checkbox" name="visible" value="on" {{if eq (.Form.Get "visible") "on"}}checked{{end}}> {{t "step4.visible"}}</label>
+
+    {{else}}
+      <h1>{{t "step5.title"}}</h1>
+      <p class="muted">{{t "step5.help"}}</p>
+      {{with index .Errors "gdpr"}}<p class="field-error" role="alert">{{t .}}</p>{{end}}
+      <label class="choice"><input type="checkbox" name="gdpr" value="on"> {{t "step5.gdpr"}}</label>
+    {{end}}
+
+    <div class="actions">
+      {{if gt $d.Step 1}}<a class="btn" href="/onboarding/{{add $d.Step -1}}">{{t "btn.back"}}</a>{{end}}
+      <button class="btn btn-primary" type="submit">{{if eq $d.Step $d.Total}}{{t "btn.finish"}}{{else}}{{t "btn.next"}}{{end}}</button>
+    </div>
+  </form>
+</section>
+{{end}}
