@@ -65,7 +65,9 @@ type Attendee struct {
 
 // MeetingSpot is an agreed place on the venue map.
 type MeetingSpot struct {
-	Place     string    `firestore:"place"`
+	Place string `firestore:"place"`
+	// Time is the agreed time of day, "HH:mm" (24 h), or "".
+	Time      string    `firestore:"time,omitempty"`
 	SetBy     string    `firestore:"setBy"`
 	UpdatedAt time.Time `firestore:"updatedAt"`
 }

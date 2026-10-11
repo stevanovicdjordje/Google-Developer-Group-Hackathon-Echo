@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -68,6 +69,7 @@ type matchesJSON struct {
 
 type meetingSpotJSON struct {
 	Place     string    `json:"place"`
+	Time      string    `json:"time,omitempty"`
 	SetByMe   bool      `json:"setByMe"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
@@ -120,7 +122,7 @@ func contactState(c *store.Contact, uid string) string {
 func toContact(c store.Contact, me, other store.Profile) contactJSON {
 	out := contactJSON{Person: toPerson(other), State: contactState(&c, me.UID), CreatedAt: c.CreatedAt.UTC()}
 	if c.MeetingSpot != nil && c.State == store.StateAccepted && me.ShareMeetingSpot && other.ShareMeetingSpot {
-		out.MeetingSpot = &meetingSpotJSON{Place: c.MeetingSpot.Place, SetByMe: c.MeetingSpot.SetBy == me.UID, UpdatedAt: c.MeetingSpot.UpdatedAt.UTC()}
+		out.MeetingSpot = &meetingSpotJSON{Place: c.MeetingSpot.Place, Time: c.MeetingSpot.Time, SetByMe: c.MeetingSpot.SetBy == me.UID, UpdatedAt: c.MeetingSpot.UpdatedAt.UTC()}
 	}
 	return out
 }
@@ -614,9 +616,13 @@ func (s *server) acceptContact(w http.ResponseWriter, r *http.Request, p auth.Pr
 	writeJSON(w, http.StatusOK, toContact(c, me, other))
 }
 
+// timeOfDay is a meeting time, "HH:mm" in 24 h.
+var timeOfDay = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)
+
 func (s *server) putMeetingSpot(w http.ResponseWriter, r *http.Request, p auth.Principal) {
 	var in struct {
 		Place *string `json:"place"`
+		Time  string  `json:"time"`
 	}
 	if !decode(w, r, &in) {
 		return
@@ -628,6 +634,11 @@ func (s *server) putMeetingSpot(w http.ResponseWriter, r *http.Request, p auth.P
 	place := strings.TrimSpace(*in.Place)
 	if n := runes(place); n < 1 || n > 80 {
 		invalid(w, fieldError{"place", "must be 1 to 80 characters"})
+		return
+	}
+	at := strings.TrimSpace(in.Time)
+	if at != "" && !timeOfDay.MatchString(at) {
+		invalid(w, fieldError{"time", `must be "HH:mm" (24 h)`})
 		return
 	}
 	eventID, me, ok := s.caller(w, r, p)
@@ -669,7 +680,7 @@ func (s *server) putMeetingSpot(w http.ResponseWriter, r *http.Request, p auth.P
 		if cur == nil || cur.State != store.StateAccepted {
 			return nil, errSpotNotAllowed
 		}
-		cur.MeetingSpot = &store.MeetingSpot{Place: name, SetBy: p.UID, UpdatedAt: now}
+		cur.MeetingSpot = &store.MeetingSpot{Place: name, Time: at, SetBy: p.UID, UpdatedAt: now}
 		return cur, nil
 	})
 	if errors.Is(err, errSpotNotAllowed) {

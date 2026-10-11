@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Eho Find API
-  version: 0.1.1
+  version: 0.2.0
   summary: People to meet at an event (profiles with consent, AI matches, contact requests, meeting spot).
   description: |
     Contract between the app's Find, Person, Messages and Profile screens
@@ -520,6 +520,10 @@ components:
         place:
           type: string
           description: Name of a feature on the published venue map.
+        time:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          description: Agreed time of day, "HH:mm" (24 h, event local time). Absent when none was given.
         setByMe: { type: boolean }
         updatedAt: { type: string, format: date-time }
     MeetingSpotRequest:
@@ -527,6 +531,10 @@ components:
       required: [place]
       properties:
         place: { type: string, minLength: 1, maxLength: 80 }
+        time:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          description: Optional time of day, "HH:mm" (24 h). Omit for no time; each PUT replaces place and time.
     Error:
       type: object
       required: [code, message]

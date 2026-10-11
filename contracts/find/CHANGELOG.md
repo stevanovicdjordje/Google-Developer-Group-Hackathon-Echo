@@ -2,6 +2,14 @@
 
 Find feature contract. Same entry format as [`../CHANGELOG.md`](../CHANGELOG.md).
 
+## 0.2.0 — 2026-10-11
+- **Impact:** additive
+- **Affected:** backend/find (implements), mobile (may send/read)
+- **Requested by:** `mobile#13` (1)
+- **Changes:**
+  - ADDED optional `time` ("HH:mm", 24 h) on `MeetingSpotRequest` and `MeetingSpot`
+- **Consumer action:** optional: send the meeting time with `putMeetingSpot` instead of keeping it on the device.
+
 ## 0.1.1 — 2026-10-11
 - **Impact:** fixture-only
 - **Affected:** mobile (reads examples)

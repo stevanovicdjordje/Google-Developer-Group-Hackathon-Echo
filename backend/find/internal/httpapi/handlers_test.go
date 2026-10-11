@@ -484,6 +484,22 @@ func TestMeetingSpotRules(t *testing.T) {
 	if r.body["meetingSpot"].(map[string]any)["place"] != "Glavna sala" {
 		t.Fatal(r.raw)
 	}
+	if _, ok := r.body["meetingSpot"].(map[string]any)["time"]; ok {
+		t.Fatal("no time given, none expected: " + r.raw)
+	}
+
+	// Optional time of day.
+	f.wantErr(f.do("me", "PUT", spot, map[string]any{"place": "Info pult", "time": "25:00"}), 422, "validation_failed")
+	f.wantErr(f.do("me", "PUT", spot, map[string]any{"place": "Info pult", "time": "3pm"}), 422, "validation_failed")
+	r = f.want(f.do("me", "PUT", spot, map[string]any{"place": "Info pult", "time": "15:20"}), 200)
+	if r.body["meetingSpot"].(map[string]any)["time"] != "15:20" {
+		t.Fatal(r.raw)
+	}
+	r = f.want(f.do("teo", "GET", ev+"/contacts", nil), 200)
+	if r.body["contacts"].([]any)[0].(map[string]any)["meetingSpot"].(map[string]any)["time"] != "15:20" {
+		t.Fatal(r.raw)
+	}
+
 	r = f.want(f.do("me", "DELETE", spot, nil), 200)
 	if _, ok := r.body["meetingSpot"]; ok {
 		t.Fatal(r.raw)
