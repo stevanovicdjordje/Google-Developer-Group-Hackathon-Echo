@@ -143,6 +143,10 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
           onDone: () {
             if (!mounted) return;
             setState(() => _ended = true);
+            // A talk that was already over when opened arrives in one go:
+            // read it from the top, under the summary banner, not from the
+            // end with the first visible line cut by the banner.
+            if (_updates <= 1) _toTop();
             _offerSummary();
           },
         );
@@ -298,6 +302,14 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
       } finally {
         _autoScrolls--;
       }
+    });
+  }
+
+  void _toTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      _atBottom = false;
+      _scroll.jumpTo(0);
     });
   }
 

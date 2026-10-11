@@ -7,18 +7,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Echo repository whose transcript arrives all at once, so the list is long
-/// enough to scroll.
+/// enough to scroll (then it ends).
 class _FakeEcho extends DemoEchoRepository {
+  static List<TranscriptLine> get lines => [
+    for (var i = 0; i < 40; i++)
+      TranscriptLine(
+        atSeconds: i * 5,
+        text: 'Spoken line number $i',
+        translated: 'Izgovorena linija $i',
+      ),
+  ];
+
   @override
   Stream<List<TranscriptLine>> transcript(String eventId, String sessionId) =>
-      Stream.value([
-        for (var i = 0; i < 40; i++)
-          TranscriptLine(
-            atSeconds: i * 5,
-            text: 'Spoken line number $i',
-            translated: 'Izgovorena linija $i',
-          ),
-      ]);
+      Stream.value(lines);
 
   @override
   Future<TranscriptTranslation> translate(
@@ -58,7 +60,7 @@ class _LanguageEcho extends _FakeEcho {
   @override
   Stream<List<TranscriptLine>> transcript(String eventId, String sessionId) =>
       Stream<List<TranscriptLine>>.multi((c) {
-        super.transcript(eventId, sessionId).first.then(c.add);
+        c.add(_FakeEcho.lines);
       });
 
   @override
@@ -83,7 +85,11 @@ class _LanguageEcho extends _FakeEcho {
   }
 }
 
-Future<void> _pumpEcho(WidgetTester tester, [EchoRepository? repo]) async {
+Future<void> _pumpEcho(
+  WidgetTester tester, [
+  EchoRepository? repo,
+  bool atTop = false,
+]) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
   addTearDown(tester.view.reset);
@@ -103,6 +109,12 @@ Future<void> _pumpEcho(WidgetTester tester, [EchoRepository? repo]) async {
   // The transcript is a timed stream: one more pump after settling.
   await tester.pump(const Duration(seconds: 1));
   await tester.pumpAndSettle();
+  if (!atTop) {
+    // An ended talk opens at the top; these tests read from the newest line.
+    final list = tester.widget<ListView>(find.byType(ListView).last);
+    list.controller!.jumpTo(list.controller!.position.maxScrollExtent);
+    await tester.pumpAndSettle();
+  }
 }
 
 void main() {
@@ -125,6 +137,19 @@ void main() {
     final field = tester.widget<TextField>(find.byType(TextField));
     expect(field.controller!.text, contains('Spoken line number 39'));
     expect(field.focusNode!.hasFocus, isTrue);
+  });
+
+  testWidgets('an ended talk opens at the top, first line below the banner', (
+    tester,
+  ) async {
+    await _pumpEcho(tester, null, true);
+    expect(find.text('Full talk summary'), findsOneWidget);
+    final banner = tester.getBottomLeft(
+      find.text('Premium · AI summary of the whole talk'),
+    );
+    final first = tester.getTopLeft(find.text('Spoken line number 0'));
+    expect(first.dy, greaterThan(banner.dy));
+    expect(find.text('Spoken line number 39'), findsNothing);
   });
 
   testWidgets('scrolling up pauses follow and shows Jump to live', (
