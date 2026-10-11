@@ -27,6 +27,8 @@ class EchoScreen extends ConsumerStatefulWidget {
     this.startTranslated = false,
     this.devSelectLine,
     this.devAsk,
+    this.initialQuestion,
+    this.startScrolledUp = false,
   });
 
   final String eventId;
@@ -39,6 +41,14 @@ class EchoScreen extends ConsumerStatefulWidget {
   /// question to ask the AI right after (dev screenshot routes only).
   final int? devSelectLine;
   final String? devAsk;
+
+  /// Asks the AI this question once the transcript has loaded, without
+  /// selecting a line (dev screenshot routes only).
+  final String? initialQuestion;
+
+  /// Scrolls the transcript to the top once loaded, so "Jump to live" shows
+  /// (dev screenshot routes only).
+  final bool startScrolledUp;
 
   @override
   ConsumerState<EchoScreen> createState() => _EchoScreenState();
@@ -156,6 +166,18 @@ class _EchoScreenState extends ConsumerState<EchoScreen> {
 
   /// Dev screenshot routes: select a line and ask a question, once.
   void _applyDevStart() {
+    if (!_devApplied &&
+        _lineCount > 0 &&
+        (widget.initialQuestion != null || widget.startScrolledUp)) {
+      _devApplied = true;
+      final q = widget.initialQuestion;
+      if (q != null) _send(q);
+      if (widget.startScrolledUp) {
+        setState(() => _atBottom = false);
+        _toTop();
+      }
+      return;
+    }
     final at = widget.devSelectLine;
     if (_devApplied || at == null || _lineCount <= at) return;
     _devApplied = true;

@@ -837,6 +837,30 @@ class _BackButton extends StatelessWidget {
   }
 }
 
+/// Runs [run] once, after the first frame (dev screenshot hooks). Takes no
+/// space.
+class _OnFirstFrame extends StatefulWidget {
+  const _OnFirstFrame({required this.run});
+
+  final VoidCallback run;
+
+  @override
+  State<_OnFirstFrame> createState() => _OnFirstFrameState();
+}
+
+class _OnFirstFrameState extends State<_OnFirstFrame> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.run();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
+
 /// MOCK messages screen (docs/MVP.md): hardcoded conversation, plus the real
 /// "suggest a meeting spot" action that shows up on the Map tab.
 class MessagesScreen extends ConsumerWidget {
@@ -844,10 +868,15 @@ class MessagesScreen extends ConsumerWidget {
     super.key,
     required this.eventId,
     required this.personId,
+    this.openSpotPicker = false,
   });
 
   final String eventId;
   final String personId;
+
+  /// Opens the meeting-spot picker after the first frame (dev screenshot
+  /// routes only).
+  final bool openSpotPicker;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -884,6 +913,8 @@ class MessagesScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
+            if (openSpotPicker)
+              _OnFirstFrame(run: () => _pickSpot(context, ref, p)),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
