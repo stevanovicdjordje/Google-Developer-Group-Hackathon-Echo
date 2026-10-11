@@ -83,7 +83,7 @@ func (c *client) run(email, password string) error {
 	var ev struct{ ID string }
 	if err := c.call("POST", "/v1/events", map[string]any{
 		"id": c.eventID, "name": demoEventName, "startDate": time.Now().Format(time.DateOnly), "endDate": time.Now().AddDate(0, 0, 1).Format(time.DateOnly),
-		"address": "Demo hala, Beograd",
+		"address": "Sava Centar, Belgrade",
 	}, &ev); err != nil {
 		return err
 	}
