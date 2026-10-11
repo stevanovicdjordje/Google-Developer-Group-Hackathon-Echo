@@ -224,6 +224,22 @@ class EventsApiRepository implements EventRepository, OrganizerRepository {
     return parsePublish(json, linkBase) ?? (throw _badResponse);
   }
 
+  @override
+  Future<EventDraft?> getDraft(String id) async {
+    if (!_id.hasMatch(id)) return null;
+    final Object? json;
+    try {
+      json = await _send('GET', '/v1/organizer/drafts/$id', organizer: true);
+    } on EventsException catch (e) {
+      if (e.kind == EventsErrorKind.notFound) return null;
+      rethrow;
+    }
+    // Set after the first publish: nothing left to review.
+    final published = json is Map ? json['publishedEventId'] : null;
+    if (published is String && published.isNotEmpty) return null;
+    return _saved = parseDraft(json) ?? (throw _badResponse);
+  }
+
   /// Contract limits, checked before uploading; every file needs its bytes.
   static void checkUpload(List<UploadedFile> files) {
     if (files.isEmpty) {
@@ -675,4 +691,7 @@ class FallbackOrganizerRepository implements OrganizerRepository {
   @override
   Future<PublishedLink> publish(EventDraft draft) async =>
       (await _target).publish(draft);
+
+  @override
+  Future<EventDraft?> getDraft(String id) async => (await _target).getDraft(id);
 }

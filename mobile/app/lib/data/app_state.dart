@@ -357,3 +357,25 @@ class DraftNotifier extends Notifier<EventDraft?> {
 final organizerDraftProvider = NotifierProvider<DraftNotifier, EventDraft?>(
   DraftNotifier.new,
 );
+
+/// The server id of the organizer's open draft (from `createDraft`), kept in
+/// local storage so the review can be resumed after a restart. Set after an
+/// extract, cleared after a publish. Only the id is stored, never the draft.
+class DraftIdNotifier extends Notifier<String?> {
+  static const _key = 'organizerDraftId';
+
+  @override
+  String? build() =>
+      ref.read(localStoreProvider).readAs(_key, (j) => j as String);
+
+  /// Remembers [id]; null (a draft without a server id) forgets it.
+  void set(String? id) {
+    if (state == id) return;
+    state = id;
+    ref.read(localStoreProvider).write(_key, id);
+  }
+}
+
+final organizerDraftIdProvider = NotifierProvider<DraftIdNotifier, String?>(
+  DraftIdNotifier.new,
+);

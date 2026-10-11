@@ -67,6 +67,9 @@ void main() {
         _fixture('draft.response.json'),
         201,
       ),
+      ('GET', '/v1/organizer/drafts/k2v9q3m1x8a7b6c5') => _json(
+        _fixture('draft.response.json'),
+      ),
       ('PUT', '/v1/organizer/drafts/k2v9q3m1x8a7b6c5') => _json(
         _fixture('draft.response.json'),
       ),
@@ -208,6 +211,51 @@ void main() {
   });
 
   group('organizer', () {
+    test('getDraft: parses the contract fixture, organizer token', () async {
+      final draft = (await repo().getDraft('k2v9q3m1x8a7b6c5'))!;
+      expect(requests.single.method, 'GET');
+      expect(requests.single.url.path, '/v1/organizer/drafts/k2v9q3m1x8a7b6c5');
+      expect(tokens.single, 'Bearer organizer-token');
+      expect(draft.id, 'k2v9q3m1x8a7b6c5');
+      expect(draft.name, 'DevFest Belgrade 2026');
+      expect(draft.sessions, hasLength(5));
+      expect(draft.issues.single.sessionId, 'd2');
+    });
+
+    test('getDraft: 404 and a published draft are null', () async {
+      expect(await repo().getDraft('gone1234'), isNull);
+      final published = {
+        ...(_fixture('draft.response.json') as Map<String, Object?>),
+        'publishedEventId': 'devfest',
+      };
+      expect(
+        await repo(handler: (_) async => _json(published)).getDraft('x1'),
+        isNull,
+      );
+      // Not an ID: no request at all.
+      requests.clear();
+      expect(await repo().getDraft('../me'), isNull);
+      expect(requests, isEmpty);
+    });
+
+    test('getDraft: other failures and bad bodies throw', () async {
+      await expectLater(
+        repo(handler: (_) async => _json(null, 503)).getDraft('x1'),
+        throwsA(isA<EventsException>()),
+      );
+      await expectLater(
+        repo(handler: (_) async => _json({'nope': 1})).getDraft('x1'),
+        throwsA(isA<EventsException>()),
+      );
+    });
+
+    test('publish after getDraft sends no save', () async {
+      final r = repo();
+      final draft = (await r.getDraft('k2v9q3m1x8a7b6c5'))!;
+      await r.publish(draft);
+      expect(requests.map((q) => q.method), ['GET', 'POST']);
+    });
+
     test('createDraft: multipart files with the organizer token', () async {
       final draft = await repo().extract([
         _file('devfest-agenda-final-v3.pdf', 300),
