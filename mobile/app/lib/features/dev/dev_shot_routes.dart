@@ -1,3 +1,4 @@
+import 'package:eho_maps/eho_maps.dart' show publishedEventProvider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,6 +76,19 @@ final devShots = <DevShot>[
       ask: 'What is the main advice of the talk?',
     ),
   ),
+  DevShot(
+    'echo-answer',
+    'Echo live, an AI answer card after "Ask"',
+    () => const _EchoShot(
+      ended: false,
+      initialQuestion: 'What is the main advice of the talk?',
+    ),
+  ),
+  DevShot(
+    'echo-jump-live',
+    'Echo live scrolled up, "Jump to live" pill visible',
+    () => const _EchoShot(ended: false, scrolledUp: true),
+  ),
   DevShot('echo-paywall', 'Echo, ended, "Missed something?" paywall sheet', () {
     return _EchoShot(
       ended: true,
@@ -120,6 +134,11 @@ final devShots = <DevShot>[
     'messages-spot',
     'Messages with a meeting-spot card',
     () => const _MessagesShot(),
+  ),
+  DevShot(
+    'messages-spot-picker',
+    'Messages with the meeting-spot picker sheet open',
+    () => const _MessagesShot(openSpotPicker: true),
   ),
   DevShot(
     'find-results',
@@ -240,6 +259,8 @@ class _EchoShot extends StatelessWidget {
     this.unlocked = false,
     this.selectLine,
     this.ask,
+    this.initialQuestion,
+    this.scrolledUp = false,
     this.onReady,
   });
 
@@ -248,6 +269,8 @@ class _EchoShot extends StatelessWidget {
   final bool unlocked;
   final int? selectLine;
   final String? ask;
+  final String? initialQuestion;
+  final bool scrolledUp;
   final void Function(BuildContext context)? onReady;
 
   @override
@@ -266,6 +289,8 @@ class _EchoShot extends StatelessWidget {
         startTranslated: translated,
         devSelectLine: selectLine,
         devAsk: ask,
+        initialQuestion: initialQuestion,
+        startScrolledUp: scrolledUp,
       ),
     ),
   );
@@ -392,7 +417,9 @@ class _PersonShot extends StatelessWidget {
 }
 
 class _MessagesShot extends StatelessWidget {
-  const _MessagesShot();
+  const _MessagesShot({this.openSpotPicker = false});
+
+  final bool openSpotPicker;
 
   @override
   Widget build(BuildContext context) => ProviderScope(
@@ -400,8 +427,15 @@ class _MessagesShot extends StatelessWidget {
       _demoFind,
       contactsProvider.overrideWith(() => _Contact(ContactState.accepted)),
       meetingSpotProvider.overrideWith(_Spot.new),
+      // No map sign-in: the picker lists the demo places.
+      publishedEventProvider(_event)
+          .overrideWith((ref) => const Stream.empty()),
     ],
-    child: const MessagesScreen(eventId: _event, personId: _personId),
+    child: MessagesScreen(
+      eventId: _event,
+      personId: _personId,
+      openSpotPicker: openSpotPicker,
+    ),
   );
 }
 

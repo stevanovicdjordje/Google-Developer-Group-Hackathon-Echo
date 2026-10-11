@@ -13,6 +13,8 @@ void main() {
     'echo-qa': 'Questions for Mara',
     'echo-qa-own': 'YOUR QUESTION',
     'echo-selected': 'Ask about this',
+    'echo-answer': 'Based on the talk so far',
+    'echo-jump-live': 'Jump to live',
     'echo-paywall': 'Missed something? Get the whole talk in 2 minutes.',
     'echo-summary': 'AI SUMMARY · PREMIUM',
     'echo-translated': 'Translated live from English · tap SR for the original',
@@ -22,6 +24,7 @@ void main() {
     'person-pending': 'Request sent · waiting for Ana',
     'person-connected': 'Ana accepted · Message',
     'messages-spot': 'Ana Petrović',
+    'messages-spot-picker': 'Suggest a meeting spot',
     'find-results': 'Speaker · ML Engineer, Lumen Labs',
     'find-live': 'Recommended for you',
     'myevents-live': 'LIVE · DAY 1',
@@ -33,7 +36,7 @@ void main() {
   };
 
   Future<void> open(WidgetTester tester, String location) async {
-    tester.view.physicalSize = const Size(1080, 5200);
+    tester.view.physicalSize = const Size(1080, 9000);
     tester.view.devicePixelRatio = 2.5;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
