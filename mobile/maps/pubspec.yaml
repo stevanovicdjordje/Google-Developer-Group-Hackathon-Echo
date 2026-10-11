@@ -23,6 +23,9 @@ dependencies:
   http: ^1.6.0
   intl: ^0.20.3
   latlong2: ^0.10.1
+  qr: ^3.0.2
+  qr_flutter: ^4.1.0
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:

@@ -179,5 +179,17 @@
   "statsRemoved": "(removed from the plan)",
   "statsEmpty": "No data for this period yet. Numbers arrive as attendees use the map, up to 10 seconds later.",
   "statsError": "Stats are not available right now.",
-  "statsPrivacy": "Daily totals only. No locations and no data about people."
+  "statsPrivacy": "Daily totals only. No locations and no data about people.",
+  "qrOpen": "QR signs to print",
+  "qrTitle": "QR signs",
+  "qrIntro": "Print each sign and put it up where you placed it on the plan. Attendees scan it and see where they are and the way to a stand or room.",
+  "qrNotPublished": "The event isn't published yet. The codes work once you publish the map.",
+  "qrPublishFirst": "A new or moved sign works only after you publish.",
+  "qrNone": "No QR signs yet. Add them with the “QR marker” tool on the plan, then publish.",
+  "qrPrint": "Print",
+  "qrScanHint": "Scan with your phone camera: venue plan and the way to any stand or room.",
+  "qrPopupBlocked": "The browser blocked the new tab. Allow pop-ups for this page.",
+  "qrCopy": "Copy link",
+  "qrCopied": "Link copied.",
+  "qrLoadFailed": "Couldn't load the signs right now."
 }

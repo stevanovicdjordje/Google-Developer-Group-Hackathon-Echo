@@ -627,4 +627,46 @@ class MapsLocalizationsEn extends MapsLocalizations {
   @override
   String get statsPrivacy =>
       'Daily totals only. No locations and no data about people.';
+
+  @override
+  String get qrOpen => 'QR signs to print';
+
+  @override
+  String get qrTitle => 'QR signs';
+
+  @override
+  String get qrIntro =>
+      'Print each sign and put it up where you placed it on the plan. Attendees scan it and see where they are and the way to a stand or room.';
+
+  @override
+  String get qrNotPublished =>
+      'The event isn\'t published yet. The codes work once you publish the map.';
+
+  @override
+  String get qrPublishFirst =>
+      'A new or moved sign works only after you publish.';
+
+  @override
+  String get qrNone =>
+      'No QR signs yet. Add them with the “QR marker” tool on the plan, then publish.';
+
+  @override
+  String get qrPrint => 'Print';
+
+  @override
+  String get qrScanHint =>
+      'Scan with your phone camera: venue plan and the way to any stand or room.';
+
+  @override
+  String get qrPopupBlocked =>
+      'The browser blocked the new tab. Allow pop-ups for this page.';
+
+  @override
+  String get qrCopy => 'Copy link';
+
+  @override
+  String get qrCopied => 'Link copied.';
+
+  @override
+  String get qrLoadFailed => 'Couldn\'t load the signs right now.';
 }

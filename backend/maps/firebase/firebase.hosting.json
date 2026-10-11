@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "public": ".hosting",
+    "ignore": ["**/.*"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
+  },
+  "emulators": {
+    "hosting": { "host": "127.0.0.1", "port": 5055 }
+  }
+}

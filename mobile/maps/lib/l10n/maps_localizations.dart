@@ -1177,6 +1177,78 @@ abstract class MapsLocalizations {
   /// In sr, this message translates to:
   /// **'Samo zbirni brojevi po danu. Bez lokacija i bez podataka o osobama.'**
   String get statsPrivacy;
+
+  /// No description provided for @qrOpen.
+  ///
+  /// In sr, this message translates to:
+  /// **'QR oznake za štampu'**
+  String get qrOpen;
+
+  /// No description provided for @qrTitle.
+  ///
+  /// In sr, this message translates to:
+  /// **'QR oznake'**
+  String get qrTitle;
+
+  /// No description provided for @qrIntro.
+  ///
+  /// In sr, this message translates to:
+  /// **'Odštampajte i postavite svaku oznaku na mesto koje ste označili na planu. Posetilac skenira kod i odmah vidi gde je i put do štanda ili sale.'**
+  String get qrIntro;
+
+  /// No description provided for @qrNotPublished.
+  ///
+  /// In sr, this message translates to:
+  /// **'Događaj još nije objavljen. Kodovi rade tek kad objavite mapu.'**
+  String get qrNotPublished;
+
+  /// No description provided for @qrPublishFirst.
+  ///
+  /// In sr, this message translates to:
+  /// **'Nova ili pomerena oznaka radi tek posle objave.'**
+  String get qrPublishFirst;
+
+  /// No description provided for @qrNone.
+  ///
+  /// In sr, this message translates to:
+  /// **'Još nema QR oznaka. Dodajte ih alatom „QR marker“ na planu, pa objavite.'**
+  String get qrNone;
+
+  /// No description provided for @qrPrint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Štampaj'**
+  String get qrPrint;
+
+  /// No description provided for @qrScanHint.
+  ///
+  /// In sr, this message translates to:
+  /// **'Skenirajte kamerom telefona: plan objekta i put do štanda ili sale.'**
+  String get qrScanHint;
+
+  /// No description provided for @qrPopupBlocked.
+  ///
+  /// In sr, this message translates to:
+  /// **'Pregledač je blokirao novu karticu. Dozvolite iskačuće prozore za ovu stranicu.'**
+  String get qrPopupBlocked;
+
+  /// No description provided for @qrCopy.
+  ///
+  /// In sr, this message translates to:
+  /// **'Kopiraj link'**
+  String get qrCopy;
+
+  /// No description provided for @qrCopied.
+  ///
+  /// In sr, this message translates to:
+  /// **'Link je kopiran.'**
+  String get qrCopied;
+
+  /// No description provided for @qrLoadFailed.
+  ///
+  /// In sr, this message translates to:
+  /// **'Oznake trenutno nije moguće učitati.'**
+  String get qrLoadFailed;
 }
 
 class _MapsLocalizationsDelegate
