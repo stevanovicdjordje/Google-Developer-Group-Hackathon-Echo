@@ -22,6 +22,7 @@ Sizes: S < 30 min · M ~1 h · L multi-hour. Agent: `dev` = mobile-dev (Sonnet),
 
 | ID | Agent | Since | Branch | Notes |
 | --- | --- | --- | --- | --- |
+| V-8 | verifier (sonnet, medium) | 2026-10-11 07:47 | none | Galaxy re-check of M-52/55/56/58/45 on `devfest` (publishes again → re-seed Events after) |
 
 ## Done
 

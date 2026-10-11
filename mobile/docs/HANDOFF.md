@@ -2,67 +2,67 @@
 
 Rewritten by the orchestrator at the end of every session. The next orchestrator reads this right after syncing (`mobile/docs/WORKFLOW.md` §1).
 
-**Last session:** 2026-10-11, fourth orchestrator session. Ran M-43, M-44, V-6, M-46…M-50, M-13. A usage limit interrupted M-46…49 at ~05:00; all resumed and merged.
+**Last session:** 2026-10-11, fifth orchestrator session. Ran M-51 (stack restart), V-7, M-52…M-58, opened `mobile#20`; V-8 dispatched.
 
 ## Standing mandate from @Ilij4n (relayed by his other session "ilijan-72")
 
 1. Work through `BOARD.md`, highest demo value first, in parallel where files don't overlap. Use Sonnet at medium effort (`model: sonnet`, `effort: medium`) for test/verify workers.
 2. Wire teammates' contracts as they land. Don't wait for him; stop only for real 🧭 product decisions. Note defaults here.
-3. **Don't touch the iPhone.** It still runs an old release build on event `ik6vmvjr7wlektj6`. He'll ask for a `devfest` rebuild when he's up. The **Galaxy A55** (`adb -s RZCX511WWLF`, `~/Library/Android/sdk/platform-tools/adb`) is a dedicated test device. Reinstall and clear it freely, one worker at a time.
+3. **Don't touch the iPhone.** It still runs an old release build. He'll ask for a `devfest` rebuild. The **Galaxy A55** (`adb -s RZCX511WWLF`, `~/Library/Android/sdk/platform-tools/adb`) is a dedicated test device. Reinstall and clear it freely, one device worker at a time.
 4. When context nears 200k: WORKFLOW §5 handoff, then `SendMessage` to `ilijan-72`. It starts the successor.
 
 ## State in one paragraph
 
-All demo flows run in `mobile/app` in the human's design with an English UI. **All four backends are wired with demo fallback:**
-- Echo: contract 0.3.1, verified e2e.
-- Maps: `eho_maps`, verified e2e.
-- Find: contract 0.2.0, verified e2e via the API (M-37). Meeting `time` is sent and read (M-43).
-- **Events:** contract 0.1.0 (M-13). Covers join, agenda, My events, leave, and organizer upload with bytes → AI draft → saves → publish into `devfest`. Mapping tests only; **not e2e yet**.
+All demo flows run in `mobile/app` on all four real backends, with demo fallback. **Verified e2e on the Galaxy against local `devfest` (V-7):**
+- join, agenda, My events/leave
+- Echo: ask ~6 s, translate sr
+- map: you-are-here and route
+- Find: search ~4 s, contact, spot
+- organizer: upload → AI draft ~5 s → publish → attendee agenda
 
-Polish from the Galaxy pass V-6 is merged: status bar (M-46), Find/Person (M-47), Echo translate (M-48), sheets over the nav + Android back (M-49), friendly join errors (M-50). `flutter analyze` is clean, **176/176 tests**. `DEMO_LOCATION` (pretend GPS) is forwarded by `phone_android.sh`/`shots.sh` (M-44). `phone_android.sh` also reverses 8084.
+Fixes from V-7 are merged:
+- M-54: integration_test 6/6 on the device again (harness timing)
+- M-55: room-less sessions are clean in the agenda, and Publish with flagged rows asks first
+- M-56: demo-only "AI Meetup Novi Sad" is hidden when Events is live
+- M-58: Join spinner
 
-## Blocked: stack restart (M-51), then V-7
+Also merged:
+- M-52: draft `issues` / publish `warnings`
+- M-45: other person's meeting spot via `listContacts`
+- M-53: dev shots `echo-answer`, `echo-jump-live`, `messages-spot-picker`
 
-The local stack still runs the **old** setup: emulators on 127.0.0.1 with old maps API code, Find offline-ranking, no Events. @Vertiglo's new setup:
-- stable event id `devfest` (re-seeding keeps it)
-- emulators on `::`/0.0.0.0, so no forwarders are needed
-- Find on Gemini with an 8 s timeout
-- Events on :8084
+`flutter analyze` is clean, **201/201 tests**.
 
-`backend/maps` `make seed` **fails against the old API** (500 deleting the old event), so a restart is required. Auto mode **denied this session killing processes** ("Interfere With Workloads"). I asked the human (🙋) to run:
-```
-! kill 1771 36443 84453 84499 84510 24520 24528 24545
-```
-Those are:
-- 1771: the other session's LAN forwarder
-- 36443: the V-5 `::1` forwarder
-- 84453/84499/84510: maps `dev.sh` + go run + API; dev.sh's trap stops the emulators, which export to `.emulator-data`
-- 24520/24528/24545: Find `dev.sh` + go run + API
+## Local stack (running since ~07:08, started by this session)
 
-Leave Echo (25625/25630/25634, :8082) alone. If he runs it, or the PIDs changed (re-check with `lsof -nP -iTCP -sTCP:LISTEN`), then:
-1. `cd backend/maps && make dev` (background, `nohup`, log to the scratchpad), then `make seed` → note the `DEMO_LOCATION` values it prints.
-2. `cd backend/echo && make replay EVENT=devfest`. Use no `-instant` for the video, so `s1` is live. The app shows `devfest` `s1` live anyway (M-13).
-3. `cd backend/find && make dev` (it reads `.env`; `GEMMA_MODEL` there is ignored now, and `AI_MODEL` defaults to `gemini-3-flash-preview`), then `make seed`.
-4. `cd backend/events && make dev` (`.env` **already created** from the example with the key; git-ignored, never print it), then `make seed`.
-5. Dispatch **V-7** (verifier, Sonnet medium). Spec is on the board: Galaxy with `DEMO_EVENT_ID=devfest DEMO_LOCATION=…`, `integration_test/`, live smoke incl. organizer upload of `backend/events/demo/*` (organizer = `organizer@eho.test` / `eho-demo-123`, auto sign-in on emulator builds) and publish, re-check M-46 on the device.
+- Firebase emulators: the **old** processes (node 84459, java 84497) on 127.0.0.1, which survived the kill. Reused, not restarted, because `phone_android.sh`'s `fwd6.py` + adb reverse handle 127.0.0.1.
+- maps API :8080: new code, `go run ./cmd/api` with the emulator env vars, not via `make dev`, which would start a second emulator set.
+- Find :8083 and Events :8084: `make dev`, Gemini.
+- Echo :8082: the other session's process (25634). Leave it alone.
+- Logs: `/private/tmp/claude-501/-Users-ilijan-Developer-eho/3a9df22b-2784-4690-9927-259687df740a/scratchpad/stack/` (session scratchpad; it may be gone in a new session, so re-check with `lsof -nP -iTCP -sTCP:LISTEN`).
+- Seeds: maps `devfest` (DEMO_LOCATION entrance `44.799820,20.400025`; walk entrance → Glavna sala `44.799820,20.400025;44.799820,20.400557;44.799910,20.400557`), Find 20 attendees, Events 7 sessions.
+- **The Events agenda was re-seeded after V-7's test publish. V-8 publishes again, so re-seed after it:** `cd backend/events && EVENT=devfest make seed`.
+- **Before recording the video:** `cd backend/echo && make replay EVENT=devfest` (no `-instant`) so `s1` is live in Echo. The previous replay ended, so Echo showed ENDED while the agenda shows LIVE. Also re-seed Find (`make seed`) to clear test contacts.
 
 ## In flight
 
-Nothing. No worker branches open.
+- **V-8** (verifier, Sonnet medium): Galaxy re-check of M-52/55/56/58/45 on `devfest`. After it, re-seed Events (above) and fix whatever it finds.
 
-## Next up (after V-7)
+## Next up
 
-1. Fix whatever V-7 finds. Then update `mobile/STATUS.md` *Contract coverage*: events → verified e2e.
-2. Optional: wire Events `getDraft`, draft `issues` and publish `warnings`. Today the review flags only sessions with no stage itself.
-3. M-45 (low): the other person's meeting spot via `listContacts`.
-4. Before recording the video: re-seeding on `devfest` cleans the test leftovers V-6 saw (a duplicate Q&A question; "Dev Tester"/"Ilija" in Find). The map title comes from the seed name.
+1. Act on V-8's findings.
+2. **M-57** blocked on feature:maps `mobile#20` (`MapViewerScreen.locateOnOpen`, silent you-are-here on open). When it lands, one line in `map_tab.dart` + a widget test + a shot.
+3. Optional:
+   - dev shots seeded with draft issues / publish warnings (`dev_shot_routes.dart`, `_FlaggedDraft`)
+   - feed the server's contact `state` from `listContacts` into `contactsProvider`
+   - Events `getDraft`
 
 ## Defaults decided this session (no 🧭 needed; tell him if asked)
 
-- Echo with translate on: **chrome stays English**, only content (transcript, answers, catch-up, summary) is Serbian (M-48, per `product-ui-language`).
-- `devfest` keynote `s1` always shows live (demo script), other events by time (M-13).
-- Organizer on emulator builds signs in as the demo organizer on a second Firebase app, so the attendee's anonymous user is kept (M-13).
-- Android back on Map/Find/Profile → Agenda (M-49).
+- Publishing with flagged rows is allowed, after a "Publish anyway / Review" dialog (the contract says issues don't block).
+- Server issue messages are shown as sent (English); only the headings are localized.
+- Demo-only events disappear from My events when the Events service is live. They stay in demo fallback.
+- Kept from before: Echo translate keeps the chrome English; `devfest` `s1` is always live; organizer on emulator builds = demo organizer on a second Firebase app; Android back on Map/Find/Profile → Agenda.
 
 ## Human preferences (important)
 
@@ -72,12 +72,15 @@ Nothing. No worker branches open.
 
 ## Gotchas
 
-- **Auto mode blocks `kill`** of running services, and sometimes `git worktree remove` when chained with `lsof`. Run worktree cleanup as its own command.
-- Usage limits kill workers mid-task. `SendMessage` to the same agent id resumes it. If its worktree vanished, it recreates one (tell it to branch off local main, never work in the main checkout).
-- Briefs that scope only the data layer can't finish wiring (M-43 needed `repositories.dart`/`app_state.dart`). Include the hot files the flow needs when nobody else holds them.
-- Workers sometimes run `dart format` on files outside their scope. If left uncommitted in a worktree, verify it's whitespace-only.
+- **Auto mode blocks `kill`** of running services. Ask the human (🙋 with an exact `! kill …`). Never ask another session to do it. Run `git worktree remove` as its own command.
+- Integration tests on the device run very fast (the human sees the Start screen flash 5 times; that's normal). Flow tests must wait with `pumpUntil`/`waitForJoin` (`test/flows/flow_helpers.dart`) for anything with a real-time delay. `pumpAndSettle` alone returns early on a device.
+- A verifier using the main checkout for a device build: hold merges until it's done, or have later workers merge the pending branch into their worktree first (as M-45 did with M-52).
+- Usage limits kill workers mid-task. `SendMessage` to the same agent id resumes it.
+- Briefs that scope only the data layer can't finish wiring. Include the hot files the flow needs when nobody else holds them, or do the one-line UI hookup yourself after the merge (as for M-45).
+- Workers sometimes run `dart format` on files outside their scope. Check worktrees.
 - ARB merges auto-merge fine. Always run `flutter gen-l10n` + analyze + test after a batch.
 - The other @Ilij4n session works **in this same checkout** (phones, Echo backend). Never stage its files; `git pull --rebase=merges --autostash`.
 - `shots.sh` builds with `USE_ECHO_API=false` by default and forwards `DEMO_EVENT_ID`, `LINK_BASE`, `DEMO_LOCATION`. Give each worker its own scratchpad subdir.
+- eho_maps (`mobile/maps/`) is feature:maps, read-only. The viewer's GPS state is private, so any map behavior change is a request.
 - Design source of truth: `mobile/docs/design/` (v1 + v2). The live canvas is private: don't fetch it.
 - Kept from before: `StatefulShellRoute` placeholder branches (`/e/_/<tab>`, navigate with `context.go`, never `goBranch`); web Firebase init has a 5 s timeout; extra `pump` after Echo streams in widget tests.
