@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Clients never write: every write goes through the Go backend (Admin SDK bypasses rules).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function event(eventId) { return get(/databases/$(database)/documents/events/$(eventId)).data; }
+    function isOwner(eventId) { return signedIn() && event(eventId).ownerUid == request.auth.uid; }
+    function isPublished(eventId) { return event(eventId).publishedVersion > 0; }
+
+    match /events/{eventId} {
+      allow read: if signedIn() && (resource.data.ownerUid == request.auth.uid || resource.data.publishedVersion > 0);
+      allow write: if false;
+
+      match /published/{document=**} {
+        allow read: if signedIn() && isPublished(eventId);
+        allow write: if false;
+      }
+      match /draft/{document=**} {
+        allow read: if isOwner(eventId);
+        allow write: if false;
+      }
+      match /stats/{document=**} {
+        allow read: if isOwner(eventId);
+        allow write: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "publishedVersion": 3,
+  "legs": [
+    { "floorId": "f-ground", "points": [ { "x": 40, "y": 400 }, { "x": 300, "y": 400 }, { "x": 300, "y": 120 } ] },
+    { "floorId": "f-first", "arriveBy": "lift", "points": [ { "x": 300, "y": 120 }, { "x": 520, "y": 120 } ] }
+  ],
+  "distanceMeters": 38.0,
+  "durationSeconds": 66.7,
+  "distanceEstimated": true
+}

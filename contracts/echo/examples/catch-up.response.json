@@ -1,0 +1,5 @@
+{
+  "text": "The talk is about running AI models on the phone instead of in the cloud. So far: local models cut the cost per user to almost zero, keep data on the device, and cost about 12% battery for continuous transcription, which batching fixes.",
+  "model": "gemma-4-26b-a4b-it",
+  "basedOnLines": 11
+}

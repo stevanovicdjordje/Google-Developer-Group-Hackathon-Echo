@@ -1,0 +1,707 @@
+{
+  "@@locale": "en",
+  "appTitle": "Eho",
+  "@appTitle": {
+    "description": "App name."
+  },
+  "cancel": "Cancel",
+  "open": "Open",
+  "save": "Save",
+  "done": "Done",
+  "continueButton": "Continue",
+  "myEvents": "My events",
+  "joinEvent": "Join event",
+  "lookingFor": "Looking for",
+  "showMeInFind": "Show me in Find",
+  "allowContactRequests": "Allow contact requests",
+  "allowMeetingSpots": "Allow meeting spots",
+  "startTagline": "Your AI companion for events. The agenda, the venue, every talk, and the people worth meeting.",
+  "startJoinButton": "Join with a link or code",
+  "startOrganizerButton": "I'm an organizer",
+  "joinDialogTitle": "Join an event",
+  "joinDialogLabel": "Event link or code",
+  "tabAgenda": "Agenda",
+  "@tabAgenda": {
+    "description": "Bottom tab and agenda title fallback."
+  },
+  "tabMap": "Map",
+  "tabFind": "Find",
+  "tabProfile": "Profile",
+  "@tabProfile": {
+    "description": "Bottom tab and profile screen title."
+  },
+  "mapMeetingHighlight": "Meeting: {name}",
+  "@mapMeetingHighlight": {
+    "description": "Label of the meeting spot pin on the map.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mapMeetingTitle": "Meeting {name}",
+  "@mapMeetingTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mapMeetingAt": "at {place}",
+  "@mapMeetingAt": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "mapShowSpot": "Show",
+  "mapSheetCapacity": "up to {count} seats",
+  "@mapSheetCapacity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapSheetWalkMinutes": "{minutes} min",
+  "@mapSheetWalkMinutes": {
+    "description": "Walking time to the selected room, big blue number in the map details sheet.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mapSheetWalkDistance": "~{meters} m walk",
+  "@mapSheetWalkDistance": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "mapSheetNow": "Now · {start}–{end}",
+  "@mapSheetNow": {
+    "description": "Overline of the live session in the map details sheet.",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "mapSheetNext": "Next · {start}",
+  "@mapSheetNext": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      }
+    }
+  },
+  "mapSheetStartRoute": "Start route",
+  "mapSheetOpenEcho": "Open Echo",
+  "profileYourName": "Your name",
+  "profilePrivacy": "Privacy",
+  "profileJoinedCount": "{count, plural, =1{1 joined} other{{count} joined}}",
+  "@profileJoinedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileTalkSummaries": "Talk summaries",
+  "profilePremium": "Premium",
+  "profileForOrganizers": "For organizers",
+  "profileCreateEvent": "Create event",
+  "profileEditVenueMap": "Edit venue map",
+  "agendaEventDay": "{event} · Day {day}",
+  "@agendaEventDay": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "agendaAllStages": "All stages",
+  "agendaLiveEchoOn": "Live now · Echo on",
+  "agendaLiveNow": "Live now",
+  "agendaEchoOnTitle": "Echo is on for this talk",
+  "agendaEchoOnBody": "Live transcript, translation, ask the AI about what was said, and send questions to the speaker.",
+  "sessionOpenEcho": "Open Echo",
+  "sessionTrack": "{track} track",
+  "@sessionTrack": {
+    "placeholders": {
+      "track": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionSave": "Save to my agenda",
+  "sessionSaved": "Remove from my agenda",
+  "sessionShowOnMap": "Show {stage} on map",
+  "@sessionShowOnMap": {
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "joinErrorNotFoundTitle": "This event isn't available yet",
+  "joinErrorNotFoundBody": "Check the link you opened, or ask the organizer to share it again. The event may not be published yet.",
+  "joinErrorOfflineTitle": "Can't reach Eho right now",
+  "joinErrorOfflineBody": "Check your connection and try again.",
+  "joinErrorFailedTitle": "Something went wrong",
+  "joinErrorFailedBody": "We couldn't load this event. Try again in a moment.",
+  "joinBackToStart": "Back to start",
+  "joinInvited": "You're invited to",
+  "joinPerkAgenda": "Agenda for every stage",
+  "joinPerkMap": "Venue map and directions",
+  "joinPerkEcho": "Live transcripts and AI answers in every talk",
+  "joinPerkFind": "Find the people worth meeting",
+  "joinWithEho": "With Eho you get",
+  "joinJoining": "Joining…",
+  "onboardingStep": "{step} of {total}",
+  "@onboardingStep": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingWhoTitle": "Who are you?",
+  "onboardingWhoSubtitle": "This is how other attendees see you in Find. Only if you choose to be visible.",
+  "onboardingName": "Name",
+  "onboardingHeadline": "What you do",
+  "onboardingHeadlineHint": "e.g. Android dev at Fintio",
+  "onboardingInterestsTitle": "What are you into?",
+  "onboardingInterestsSubtitle": "We use this to recommend talks and people. Pick a few.",
+  "onboardingLookingForLabel": "Who do you want to meet?",
+  "onboardingLookingForHint": "e.g. people who shipped on-device ML",
+  "onboardingLookingForNote": "The AI reads this to find your matches.",
+  "onboardingPrivacyTitle": "You decide what others see",
+  "onboardingPrivacyBody": "Each switch is separate. You can change them any time in Profile.",
+  "showMeInFindSubtitle": "People at this event can get you as a recommendation.",
+  "allowContactRequestsSubtitle": "Your details are shared only if you accept.",
+  "allowMeetingSpotsSubtitle": "Agree on a place to meet. Never your live location.",
+  "onboardingPrivacyNote": "Your profile only ever goes to the AI to find matches, and only while \"Show me in Find\" is on.",
+  "myEventsNow": "Happening now",
+  "myEventsLiveDay": "Live · Day {day}",
+  "@myEventsLiveDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "myEventsPast": "Past",
+  "myEventsEmpty": "Open an event link to join your first event.",
+  "leaveEvent": "Leave event",
+  "myEventsNext": "Next: {session} · {time} · {stage}",
+  "@myEventsNext": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "findTitle": "Find people",
+  "findSearchHint": "Describe who you want to meet",
+  "findSearching": "Searching attendees…",
+  "findRecommended": "Recommended for you",
+  "findFromInterests": "from your interests",
+  "findTopMatch": "Top match",
+  "findResultsCaption": "{count, plural, =1{1 person here fits} other{{count} people here fit}} · only people who opted in",
+  "@findResultsCaption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "findThinking": "Finding your best matches…",
+  "findNoMatches": "No one matches yet. Try describing it differently.",
+  "findErrorOffline": "Find can't be reached. Check your connection and try again.",
+  "findErrorRateLimited": "Too many requests. Wait a few seconds and try again.",
+  "findErrorAiBusy": "Couldn't find matches right now. Try again in a moment.",
+  "findErrorNotFound": "This person is no longer visible in Find.",
+  "findErrorNotAllowed": "This person doesn't accept contact requests.",
+  "findErrorProfileRequired": "Finish your profile to use Find.",
+  "findErrorFailed": "Something went wrong in Find. Try again.",
+  "findCompleteProfile": "Complete profile",
+  "findRetryIn": "Try again in {seconds}s",
+  "@findRetryIn": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "personWhyMeet": "Why you should meet",
+  "personSendRequest": "Send contact request",
+  "personRequestSent": "Request sent · waiting…",
+  "personRequestSentTo": "Request sent · waiting for {name}",
+  "@personRequestSentTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "personDetailsNote": "Your details are shared only after {name} accepts.",
+  "@personDetailsNote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "personDetailsAccepted": "You're connected. {name} can see your details.",
+  "@personDetailsAccepted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "personAccepted": "{name} accepted · Message",
+  "@personAccepted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "personNotAccepting": "{name} doesn't accept contact requests.",
+  "@personNotAccepting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesMeetAt": "Meet at {place}",
+  "@messagesMeetAt": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesSpotWhen": "{time} · {floor}",
+  "@messagesSpotWhen": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "floor": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesSuggestSpot": "Suggest a meeting spot",
+  "messagesMatchedOn": "Matched on {topics}",
+  "@messagesMatchedOn": {
+    "placeholders": {
+      "topics": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesTopicsTwo": "{first} and {second}",
+  "@messagesTopicsTwo": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesAcceptedPill": "{name} accepted your contact request",
+  "@messagesAcceptedPill": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesShowOnMap": "Show on map",
+  "messagesHint": "Message",
+  "echoTitle": "Echo",
+  "@echoTitle": {
+    "description": "Echo screen title fallback (feature name)."
+  },
+  "echoAskAboutPrefill": "What did the speaker mean by: \"{line}\"",
+  "@echoAskAboutPrefill": {
+    "description": "Prefilled question when asking about a transcript line.",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "echoQuestionSent": "Question sent to the speaker",
+  "echoQuestionMerged": "Merged with a similar question · your vote counts",
+  "echoMergedCount": "{count, plural, =1{1 similar question merged} other{{count} similar questions merged}}",
+  "@echoMergedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "echoJumpToTime": "Show {time} in the transcript",
+  "@echoJumpToTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "echoShowOriginal": "Show original",
+  "echoTranslate": "Translate to Serbian",
+  "echoJumpToLive": "Jump to live",
+  "echoJumpToEnd": "Jump to end",
+  "echoQuestionsTitle": "Questions for the speaker",
+  "echoYourQuestion": "Your question",
+  "echoFullSummary": "Full talk summary",
+  "echoUnlocked": "Unlocked",
+  "echoPremiumSubtitle": "Premium · AI summary of the whole talk",
+  "echoCatchUp": "Catch up",
+  "echoCatchUpSubtitle": "What was said so far",
+  "echoSummarizing": "Summarizing…",
+  "echoNotNow": "Not now",
+  "echoAskAboutThis": "Ask about this",
+  "echoTalkEnded": "Talk ended",
+  "echoAskAi": "Ask AI",
+  "echoAskSpeaker": "Ask speaker",
+  "echoAskHint": "Ask about this talk…",
+  "echoSpeakerHint": "Question for the speaker…",
+  "orgNewEvent": "New event",
+  "orgUploadTitle": "Drop in whatever you have",
+  "orgUploadBody": "Agenda PDFs, speaker spreadsheets, venue plans, slides. Eho reads them and builds your event.",
+  "orgChooseFiles": "Choose files",
+  "orgFileSizeKb": "{kb} KB",
+  "@orgFileSizeKb": {
+    "placeholders": {
+      "kb": {
+        "type": "String"
+      }
+    }
+  },
+  "orgFileSizeMb": "{mb} MB",
+  "@orgFileSizeMb": {
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "orgReading": "Reading your files and extracting stages, sessions and speakers…",
+  "orgFoundSoFar": "Found {stages}, {sessions}, {speakers} so far…",
+  "@orgFoundSoFar": {
+    "placeholders": {
+      "stages": {
+        "type": "String"
+      },
+      "sessions": {
+        "type": "String"
+      },
+      "speakers": {
+        "type": "String"
+      }
+    }
+  },
+  "orgBuild": "Build my event with AI",
+  "orgStartByUploading": "Start by uploading files",
+  "orgReviewTitle": "Review your event",
+  "orgExtractedFrom": "Extracted from {count, plural, =1{1 file} other{{count} files}}",
+  "@orgExtractedFrom": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orgStagesCount": "{count, plural, =1{1 stage} other{{count} stages}}",
+  "@orgStagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orgSessionsCount": "{count, plural, =1{1 session} other{{count} sessions}}",
+  "@orgSessionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orgSpeakersCount": "{count, plural, =1{1 speaker} other{{count} speakers}}",
+  "@orgSpeakersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orgCheckRoomMissing": "Check: room missing in the PDF",
+  "orgToCheck": "To check",
+  "orgPublishWarnings": "Check before the event",
+  "orgSessions": "Sessions",
+  "orgEditSession": "Edit session",
+  "orgPublish": "Publish & get join link",
+  "orgPublishFlaggedTitle": "{count, plural, =1{1 session still needs a check} other{{count} sessions still need a check}}",
+  "@orgPublishFlaggedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orgPublishAnyway": "Publish anyway",
+  "orgPublishReview": "Review",
+  "orgTitleRequired": "Title is required",
+  "orgEndAfterStart": "End must be after start",
+  "orgTitleLabel": "Title",
+  "orgStartTime": "Start {time}",
+  "@orgStartTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "orgEndTime": "End {time}",
+  "@orgEndTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "orgStageLabel": "Stage",
+  "orgPublished": "Published",
+  "orgIsLive": "{name} is live",
+  "@orgIsLive": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "orgShareBody": "Share this link or print the QR code. Attendees join in one tap, in the app or the browser.",
+  "orgCopy": "Copy",
+  "orgLinkCopied": "Link copied",
+  "orgOpenAsAttendee": "Open as attendee",
+  "orgErrorOffline": "Eho can't reach the event service. Check your connection and try again.",
+  "orgErrorOrganizerRequired": "Sign in as an organizer first (Profile → For organizers).",
+  "orgErrorForbidden": "Your organizer account can't publish to this event.",
+  "orgErrorTooLarge": "Too many or too large files. Up to 10 files, 10 MB each, 20 MB in total.",
+  "orgErrorUnsupportedFile": "Eho can't read {file}. Use PDF, images, spreadsheets, CSV, text or Word files.",
+  "@orgErrorUnsupportedFile": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "orgErrorNothingExtracted": "No sessions found in these files. Add the agenda and try again.",
+  "orgErrorInvalid": "Some details aren't valid. Check the sessions and try again.",
+  "orgErrorRateLimited": "Too many requests. Wait a few seconds and try again.",
+  "orgErrorAiBusy": "The AI couldn't read your files right now. Try again in a moment.",
+  "orgErrorFailed": "Something went wrong. Try again.",
+  "devStatusTitle": "System status",
+  "backendLabel": "Backend",
+  "authLabel": "Sign-in",
+  "statusOk": "OK",
+  "statusChecking": "Checking…",
+  "statusError": "Error: {message}",
+  "@statusError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "signedInAnonymously": "Anonymous user {uid}",
+  "@signedInAnonymously": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
+  "notSignedIn": "Not signed in",
+  "retry": "Try again",
+  "eventTitle": "Event {eventId}",
+  "@eventTitle": {
+    "placeholders": {
+      "eventId": {
+        "type": "String"
+      }
+    }
+  },
+  "backendUnavailable": "The server is not reachable right now. Check your connection and try again.",
+  "openEventLabel": "Event ID",
+  "openEvent": "Open map",
+  "echoThinking": "Echo is thinking…",
+  "echoRetry": "Try again",
+  "echoErrorAiBusy": "Echo couldn't answer right now.",
+  "echoErrorRateLimited": "Lots of requests right now. Wait a moment and try again.",
+  "echoErrorOffline": "Echo can't be reached. Check your connection.",
+  "echoErrorNoTranscript": "This talk has no live transcript yet.",
+  "echoErrorFailed": "Something went wrong.",
+  "echoWaitingForTalk": "Waiting for the talk to start…",
+  "echoTranscriptUnavailable": "The live transcript isn't available right now.",
+  "echoLiveAt": "Live · {stage}",
+  "@echoLiveAt": {
+    "description": "Echo header overline while the talk is live (upper-cased in the UI).",
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "echoEndedAt": "Ended · {stage}",
+  "@echoEndedAt": {
+    "description": "Echo header overline after the talk ended (upper-cased in the UI).",
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "echoTranslatedBanner": "Translated live from English · tap SR for the original",
+  "@echoTranslatedBanner": {
+    "description": "Banner under the Echo header while translate is on and the talk is live."
+  },
+  "echoTranslatedBannerEnded": "Translated from English · tap SR for the original",
+  "@echoTranslatedBannerEnded": {
+    "description": "Banner under the Echo header while translate is on and the talk has ended (no \"live\")."
+  },
+  "echoLangOriginal": "EN",
+  "@echoLangOriginal": {
+    "description": "Translate pill label: transcript in the original language."
+  },
+  "echoLangTranslated": "SR",
+  "@echoLangTranslated": {
+    "description": "Translate pill label: transcript translated to Serbian."
+  },
+  "echoSend": "Send",
+  "echoQuestionsFor": "Questions for {name}",
+  "@echoQuestionsFor": {
+    "description": "Q&A sheet title; name is the speaker's first name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "echoQuestionsMeta": "{count, plural, =0{No questions yet} =1{1 question} other{{count} questions}} · shown to the speaker at the end",
+  "@echoQuestionsMeta": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "echoSortTop": "Top",
+  "@echoSortTop": {
+    "description": "Q&A sort chip: most votes first."
+  },
+  "echoSortNewest": "Newest",
+  "@echoSortNewest": {
+    "description": "Q&A sort chip."
+  },
+  "echoSortMine": "Mine",
+  "@echoSortMine": {
+    "description": "Q&A sort chip: only my questions."
+  },
+  "echoNoQuestions": "No questions yet. Ask the first one.",
+  "echoNoMyQuestions": "You haven't asked anything yet.",
+  "echoAskNameHint": "Ask {name} a question…",
+  "@echoAskNameHint": {
+    "description": "Ask-speaker input in the Q&A sheet.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "echoUpvote": "Upvote",
+  "echoSendQuestion": "Send question",
+  "echoPaywallTitle": "Missed something? Get the whole talk in 2 minutes.",
+  "echoPaywallBody": "An AI summary with key points, trade-offs and takeaways, built from the full transcript.",
+  "echoPaywallThisTalk": "This talk",
+  "echoPaywallEveryTalk": "Every talk at {event}",
+  "@echoPaywallEveryTalk": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      }
+    }
+  },
+  "echoPaywallEveryTalkSubtitle": "{count, plural, =1{1 talk} other{{count} talks}}, all stages",
+  "@echoPaywallEveryTalkSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "echoPriceTalk": "€2.99",
+  "@echoPriceTalk": {
+    "description": "Mock price for one talk summary (paywall is mocked; real price TBD)."
+  },
+  "echoPriceEvent": "€9.99",
+  "@echoPriceEvent": {
+    "description": "Mock price for every talk at the event (paywall is mocked; real price TBD)."
+  },
+  "echoUnlockSummary": "Unlock summary",
+  "echoSummaryBadge": "AI summary · Premium",
+  "@echoSummaryBadge": {
+    "description": "Badge on the summary screen (upper-cased in the UI)."
+  },
+  "echoTakeaway": "Takeaway",
+  "@echoTakeaway": {
+    "description": "Overline of the dark takeaway card (upper-cased in the UI)."
+  },
+  "echoKeyPoints": "Key points",
+  "echoTradeoffs": "Trade-offs and fixes",
+  "echoTalkMinutes": "{minutes} min talk",
+  "@echoTalkMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "echoReadMinutes": "{minutes} min read",
+  "@echoReadMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "echoCopySummary": "Copy summary",
+  "echoSummaryCopied": "Summary copied"
+}

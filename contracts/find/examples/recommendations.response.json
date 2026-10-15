@@ -1,0 +1,25 @@
+{
+  "matches": [
+    {
+      "person": {
+        "id": "k7Qm2xLp",
+        "name": "Teodora Nikolić",
+        "headline": "ML researcher, Univ. of Belgrade",
+        "interests": ["AI / ML", "Data"],
+        "lookingFor": "Industry partners for speech models"
+      },
+      "why": "Works on speech models and wants industry partners; you ship ML on Android."
+    },
+    {
+      "person": {
+        "id": "b3Vn8sTe",
+        "name": "Nina Popović",
+        "headline": "Designer at Talas AI",
+        "interests": ["Design", "AI / ML"],
+        "lookingFor": "Mobile devs to prototype with"
+      },
+      "why": "Looking for mobile developers to prototype AI products with."
+    }
+  ],
+  "model": "gemma-4-26b-a4b-it"
+}

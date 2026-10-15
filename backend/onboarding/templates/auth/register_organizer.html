@@ -1,0 +1,36 @@
+{{define "content"}}
+<section class="card narrow">
+  <h1>{{t "reg.organizer.title"}}</h1>
+  <form method="post" action="/register/organizer" novalidate>
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    <label>{{t "field.full_name"}}
+      <input type="text" name="full_name" value="{{.Form.Get "full_name"}}" autocomplete="name" required>
+      {{with index .Errors "full_name"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <label>{{t "field.email"}}
+      <input type="email" name="email" value="{{.Form.Get "email"}}" autocomplete="email" required>
+      {{with index .Errors "email"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <label>{{t "field.org_name"}}
+      <input type="text" name="org_name" value="{{.Form.Get "org_name"}}" autocomplete="organization" required>
+      {{with index .Errors "org_name"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <label>{{t "field.website"}} <span class="muted">{{t "field.optional"}}</span>
+      <input type="text" name="website" value="{{.Form.Get "website"}}" autocomplete="url">
+      <span class="hint">{{t "hint.website"}}</span>
+      {{with index .Errors "website"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <label>{{t "field.password"}}
+      <input type="password" name="password" autocomplete="new-password" required>
+      <span class="hint">{{t "hint.password"}}</span>
+      {{with index .Errors "password"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <label>{{t "field.password_confirm"}}
+      <input type="password" name="password_confirm" autocomplete="new-password" required>
+      {{with index .Errors "password_confirm"}}<span class="field-error" role="alert">{{t .}}</span>{{end}}
+    </label>
+    <button class="btn btn-primary" type="submit">{{t "reg.organizer.submit"}}</button>
+  </form>
+  <p class="muted"><a href="/login">{{t "reg.have_account"}}</a></p>
+</section>
+{{end}}

@@ -1,0 +1,102 @@
+import 'package:eho/app.dart';
+import 'package:eho/features/dev/dev_shot_routes.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+
+/// Every `/dev/shot/<state>` route builds without exceptions and shows its
+/// key text (see `features/dev/dev_shot_routes.dart`).
+void main() {
+  // State name -> text that must be on screen.
+  const expected = <String, String>{
+    'echo-qa': 'Questions for Mara',
+    'echo-qa-own': 'YOUR QUESTION',
+    'echo-selected': 'Ask about this',
+    'echo-answer': 'Based on the talk so far',
+    'echo-jump-live': 'Jump to live',
+    'echo-paywall': 'Missed something? Get the whole talk in 2 minutes.',
+    'echo-summary': 'AI SUMMARY · PREMIUM',
+    'echo-translated': 'Translated live from English · tap SR for the original',
+    'echo-ended': 'Premium · AI summary of the whole talk',
+    'echo-ended-unlocked': 'Unlocked',
+    'person-none': 'Send contact request',
+    'person-pending': 'Request sent · waiting for Ana',
+    'person-connected': 'Ana accepted · Message',
+    'messages-spot': 'Ana Petrović',
+    'messages-spot-picker': 'Suggest a meeting spot',
+    'find-results': 'Speaker · ML Engineer, Lumen Labs',
+    'find-live': 'Recommended for you',
+    'myevents-live': 'LIVE · DAY 1',
+    'organizer-review': 'Review your event',
+    'organizer-review-issues': 'No room given for this session',
+    'organizer-upload-files': 'sava-centar-ground-floor.png',
+    'organizer-upload-progress':
+        'Found 3 stages, 6 sessions, 6 speakers so far',
+    'organizer-published': 'PUBLISHED',
+    'organizer-published-warnings': 'CHECK BEFORE THE EVENT',
+  };
+
+  Future<void> open(WidgetTester tester, String location) async {
+    tester.view.physicalSize = const Size(1080, 9000);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: EhoApp(
+          router: GoRouter(initialLocation: location, routes: devShotRoutes()),
+        ),
+      ),
+    );
+    // Echo transcripts and sheets open on timers; let them run.
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+  }
+
+  test('every state has a test expectation', () {
+    expect(devShots.map((s) => s.name).toSet(), expected.keys.toSet());
+  });
+
+  for (final e in expected.entries) {
+    testWidgets('/dev/shot/${e.key} builds', (tester) async {
+      await open(tester, '/dev/shot/${e.key}');
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining(e.value), findsWidgets);
+    });
+  }
+
+  testWidgets('/dev/shot/echo-qa shows no question of yours', (tester) async {
+    await open(tester, '/dev/shot/echo-qa');
+    expect(find.textContaining('Questions for Mara'), findsWidgets);
+    expect(find.text('YOUR QUESTION'), findsNothing);
+  });
+
+  testWidgets('/dev/shot/echo-qa-own shows your question', (tester) async {
+    await open(tester, '/dev/shot/echo-qa-own');
+    expect(find.text('YOUR QUESTION'), findsOneWidget);
+  });
+
+  testWidgets('/dev/shot/echo-selected shows the AI answer inline', (
+    tester,
+  ) async {
+    await open(tester, '/dev/shot/echo-selected');
+    expect(find.text('What is the main advice of the talk?'), findsOneWidget);
+    expect(find.textContaining('Based on the talk so far'), findsWidgets);
+  });
+
+  testWidgets('/dev/shot lists every state as a link', (tester) async {
+    await open(tester, '/dev/shot');
+    for (final s in devShots) {
+      expect(find.text('/dev/shot/${s.name}'), findsOneWidget);
+    }
+    await tester.tap(find.text('/dev/shot/person-none'));
+    await tester.pumpAndSettle();
+    expect(find.text('Send contact request'), findsOneWidget);
+  });
+
+  testWidgets('unknown state shows the index', (tester) async {
+    await open(tester, '/dev/shot/nope');
+    expect(find.text('Unknown state "nope".'), findsOneWidget);
+    expect(find.text('/dev/shot/echo-qa'), findsOneWidget);
+  });
+}

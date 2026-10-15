@@ -1,0 +1,24 @@
+{{define "content"}}
+{{$d := .Data}}{{$v := $d.Extra}}{{$id := $d.Event.ID}}
+<div class="page-head"><h1>{{$d.Event.Title}}</h1></div>
+{{template "wizard" $d}}
+
+<section class="card">
+  <h2>{{t "venue.plan"}}</h2>
+  {{if $v.HasMap}}
+    <div class="plan-wrap">{{template "venue_svg" $v.Plan}}</div>
+    {{if $v.Rooms}}<p class="meta">{{t "venue.rooms"}} {{join $v.Rooms ", "}}</p>{{end}}
+  {{else}}
+    <p class="empty">{{t "venue.not_published"}}</p>
+  {{end}}
+  <p class="hint">{{t "venue.from_app"}}</p>
+  <div class="actions">
+    <a class="btn" href="{{$v.EditorURL}}" target="_blank" rel="noopener">{{t "venue.open_editor"}}</a>
+  </div>
+</section>
+
+<div class="actions">
+  <a class="btn" href="/org/events/{{$id}}/edit">{{t "btn.back"}}</a>
+  <a class="btn btn-primary" href="/org/events/{{$id}}/schedule">{{t "btn.next"}}</a>
+</div>
+{{end}}

@@ -1,0 +1,7 @@
+{
+  "code": "validation_failed",
+  "message": "input is invalid",
+  "details": [
+    { "field": "geometry.coords", "message": "polygon must not intersect itself and must have an area" }
+  ]
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Eho · Onboarding step 2</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2F4BFF}a:hover{color:#1A33D6}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F9; color: #0D1321; font-family: 'Instrument Sans', sans-serif; display: flex; flex-direction: column; padding: 20px 24px 28px; gap: 22px">
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="OnboardingName.dc.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; color: #0D1321; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></a>
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+<div style="height: 6px; border-radius: 3px; background: #2F4BFF"></div>
+<div style="height: 6px; border-radius: 3px; background: #2F4BFF"></div>
+<div style="height: 6px; border-radius: 3px; background: #DDE2EB"></div>
+</div>
+<div style="font-size: 14px; color: #4A5468">2 of 3</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.05; letter-spacing: -0.5px">What are you into?</h1>
+<p style="margin: 0; font-size: 16px; line-height: 1.45; color: #4A5468">We use this to recommend talks and people. Pick a few.</p>
+</div>
+<div role="group" aria-label="Interests" style="display: flex; flex-wrap: wrap; gap: 10px">
+<button aria-pressed="true" style="height: 42px; padding: 0 16px; border: 0; border-radius: 21px; background: #2F4BFF; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">AI / ML</button>
+<button aria-pressed="true" style="height: 42px; padding: 0 16px; border: 0; border-radius: 21px; background: #2F4BFF; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">Mobile</button>
+<button aria-pressed="false" style="height: 42px; padding: 0 16px; border: 1.5px solid #C9D0DC; border-radius: 21px; background: #FFFFFF; color: #0D1321; font: 500 15px 'Instrument Sans', sans-serif">Backend</button>
+<button aria-pressed="false" style="height: 42px; padding: 0 16px; border: 1.5px solid #C9D0DC; border-radius: 21px; background: #FFFFFF; color: #0D1321; font: 500 15px 'Instrument Sans', sans-serif">Design</button>
+<button aria-pressed="true" style="height: 42px; padding: 0 16px; border: 0; border-radius: 21px; background: #2F4BFF; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">Startups</button>
+<button aria-pressed="false" style="height: 42px; padding: 0 16px; border: 1.5px solid #C9D0DC; border-radius: 21px; background: #FFFFFF; color: #0D1321; font: 500 15px 'Instrument Sans', sans-serif">Cloud</button>
+<button aria-pressed="false" style="height: 42px; padding: 0 16px; border: 1.5px solid #C9D0DC; border-radius: 21px; background: #FFFFFF; color: #0D1321; font: 500 15px 'Instrument Sans', sans-serif">Product</button>
+<button aria-pressed="false" style="height: 42px; padding: 0 16px; border: 1.5px solid #C9D0DC; border-radius: 21px; background: #FFFFFF; color: #0D1321; font: 500 15px 'Instrument Sans', sans-serif">Data</button>
+<button aria-pressed="false" style="height: 42px; padding: 0 16px; border: 1.5px solid #C9D0DC; border-radius: 21px; background: #FFFFFF; color: #0D1321; font: 500 15px 'Instrument Sans', sans-serif">Security</button>
+<button aria-pressed="false" style="height: 42px; padding: 0 16px; border: 1.5px solid #C9D0DC; border-radius: 21px; background: #FFFFFF; color: #0D1321; font: 500 15px 'Instrument Sans', sans-serif">Hiring</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="meet" style="font-size: 14px; font-weight: 600">Who do you want to meet?</label>
+<textarea id="meet" style="height: 104px; box-sizing: border-box; border: 1.5px solid #C9D0DC; border-radius: 16px; background: #FFFFFF; padding: 14px 16px; font: 400 16px/1.45 'Instrument Sans', sans-serif; color: #0D1321; resize: none; outline: none">People building AI features on mobile, and maybe a co-founder.</textarea>
+<div style="display: flex; gap: 6px; align-items: center; font-size: 13px; color: #4A5468"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#2F4BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"></path></svg>The AI reads this to find your matches.</div>
+</div>
+<div style="flex-grow: 1"></div>
+<a href="Onboarding.dc.html" style="text-decoration: none; height: 56px; border-radius: 16px; background: #2F4BFF; color: #FFFFFF; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center">Continue</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

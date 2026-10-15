@@ -1,0 +1,63 @@
+{{define "content"}}
+{{$d := .Data}}{{$id := $d.Event.ID}}
+<div class="page-head"><h1>{{$d.Event.Title}}</h1></div>
+{{if $d.Event.Editable $d.Now}}{{template "wizard" $d}}{{end}}
+
+{{if $d.Event.Editable $d.Now}}
+<section class="card">
+  <h2>{{t "inv.add"}}</h2>
+  {{with $d.Result}}
+    <div class="notice" role="status">
+      <p>{{t "inv.result" .Added .Duplicates}}</p>
+      {{if .Invalid}}<p class="field-error">{{t "inv.invalid" (len .Invalid)}}</p>{{end}}
+    </div>
+  {{end}}
+  <form method="post" action="/org/events/{{$id}}/invitations" novalidate>
+    {{template "csrf" .CSRF}}
+    <label>{{t "inv.emails"}}
+      <textarea name="emails" rows="5" placeholder="ana@primer.rs&#10;marko@primer.rs">{{.Form.Get "emails"}}</textarea>
+      <span class="hint">{{t "inv.emails_hint"}}</span>
+    </label>
+    <div class="actions"><button class="btn btn-primary" type="submit">{{t "inv.send"}}</button></div>
+  </form>
+  <p class="hint">{{t "inv.mail_note"}}</p>
+</section>
+{{end}}
+
+<section class="card">
+  <h2>{{t "inv.list"}}</h2>
+  <nav class="tabs" aria-label="{{t "events.status"}}">
+    <a href="/org/events/{{$id}}/invitations" class="{{if not $d.Filter}}active{{end}}">{{t "events.all"}} ({{$d.Total}})</a>
+    {{range $d.Statuses}}
+      <a href="/org/events/{{$id}}/invitations?status={{.}}" class="{{if eq (printf "%s" .) $d.Filter}}active{{end}}">{{t (printf "inv.status.%s" .)}} ({{index $d.Counts .}})</a>
+    {{end}}
+  </nav>
+  {{if $d.Rows}}
+  <div class="table-wrap">
+    <table class="invitations">
+      <thead><tr><th>{{t "field.email"}}</th><th>{{t "events.status"}}</th><th>{{t "inv.link"}}</th><th>{{t "inv.sent_at"}}</th><th>{{t "inv.responded_at"}}</th></tr></thead>
+      <tbody>
+        {{range $d.Rows}}
+        <tr>
+          <td>{{.Email}}</td>
+          <td><span class="badge inv-{{.Effective}}">{{t (printf "inv.status.%s" .Effective)}}</span></td>
+          <td><input class="copy" type="text" readonly value="{{.Link}}" aria-label="{{t "inv.link"}}"></td>
+          <td>{{date .CreatedAt}}</td>
+          <td>{{date .RespondedAt}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+    <p class="empty">{{t "inv.empty"}}</p>
+  {{end}}
+</section>
+
+{{if $d.Event.Editable $d.Now}}
+<div class="actions">
+  <a class="btn" href="/org/events/{{$id}}/schedule">{{t "btn.back"}}</a>
+  <a class="btn btn-primary" href="/org/events/{{$id}}/publish">{{t "btn.next"}}</a>
+</div>
+{{end}}
+{{end}}

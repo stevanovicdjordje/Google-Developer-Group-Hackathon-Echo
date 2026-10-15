@@ -1,0 +1,10 @@
+{
+  "code": "validation_failed",
+  "message": "input is invalid",
+  "details": [
+    {
+      "field": "sessions[0].start",
+      "message": "must be HH:mm"
+    }
+  ]
+}

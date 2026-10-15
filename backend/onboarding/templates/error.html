@@ -1,0 +1,7 @@
+{{define "content"}}
+<section class="card narrow">
+  <h1>{{.Data}}</h1>
+  <p>{{t (printf "error.%d" .Data)}}</p>
+  <p><a class="btn" href="/">{{t "error.home"}}</a></p>
+</section>
+{{end}}

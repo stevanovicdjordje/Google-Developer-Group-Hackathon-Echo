@@ -1,0 +1,6 @@
+{
+  "publishedVersion": 3,
+  "warnings": [
+    { "code": "no_entrance", "message": "\"Info pult\" has no entrance node; routing to it is not possible", "featureId": "k3j2m4n5p6q7r8s9", "floorId": "f-ground" }
+  ]
+}

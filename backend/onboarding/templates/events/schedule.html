@@ -1,0 +1,92 @@
+{{define "content"}}
+{{$d := .Data}}{{$s := $d.Extra}}{{$id := $d.Event.ID}}
+<div class="page-head"><h1>{{$d.Event.Title}}</h1></div>
+{{template "wizard" $d}}
+
+<section class="card">
+  <h2>{{t "wizard.step.schedule"}}</h2>
+  {{if $s.Conflicts}}<p class="alert" role="alert">⚠ {{t "schedule.conflict_summary"}}</p>{{end}}
+  {{template "schedule" $s}}
+  <p class="hint">{{t "schedule.shared_note"}}</p>
+</section>
+
+{{if $s.Sessions}}
+<section class="card">
+  <h2>{{t "schedule.sessions"}}</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>{{t "session.title"}}</th><th>{{t "session.time"}}</th><th>{{t "session.zone"}}</th><th>{{t "session.speaker"}}</th><th></th></tr></thead>
+      <tbody>
+        {{range $s.Sessions}}
+        <tr class="{{if index $s.Conflicts .ID}}row-conflict{{end}}">
+          <td>{{.Title}}{{if index $s.Conflicts .ID}} <span class="warn">⚠</span>{{end}}</td>
+          <td>{{day .StartsAt}} {{clock .StartsAt}}–{{clock .EndsAt}}</td>
+          <td>{{with .Stage}}{{.}}{{else}}—{{end}}</td>
+          <td>{{.Speaker}}</td>
+          <td>
+            <form method="post" action="/org/events/{{$id}}/sessions/{{.ID}}/delete" class="inline">
+              {{template "csrf" $.CSRF}}
+              <button class="btn btn-link danger" type="submit">{{t "btn.delete"}}</button>
+            </form>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{end}}
+
+<section class="card">
+  <h2>{{t "schedule.add"}}</h2>
+  {{if not $s.Stages}}<p class="hint">{{t "schedule.no_halls_hint"}}</p>{{end}}
+  <form method="post" action="/org/events/{{$id}}/sessions" novalidate>
+    {{template "csrf" .CSRF}}
+    <div class="grid-2">
+      <label>{{t "session.title"}}
+        <input type="text" name="title" value="{{.Form.Get "title"}}" maxlength="160" required>
+        {{template "ferr" (index .Errors "title")}}
+      </label>
+      <label>{{t "session.speaker"}} <span class="muted">{{t "field.optional"}}</span>
+        <input type="text" name="speaker" value="{{.Form.Get "speaker"}}" maxlength="80">
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>{{t "session.zone"}}
+        <select name="stage">
+          <option value="">{{t "schedule.no_hall"}}</option>
+          {{range $s.Stages}}<option value="{{.}}" {{if eq ($.Form.Get "stage") .}}selected{{end}}>{{.}}</option>{{end}}
+        </select>
+        {{template "ferr" (index .Errors "stage")}}
+      </label>
+      <label>{{t "schedule.stage_new"}} <span class="muted">{{t "field.optional"}}</span>
+        <input type="text" name="stage_new" value="{{.Form.Get "stage_new"}}" maxlength="80">
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>{{t "session.starts_at"}}
+        <input type="datetime-local" name="starts_at" value="{{.Form.Get "starts_at"}}" required>
+        {{template "ferr" (index .Errors "starts_at")}}
+      </label>
+      <label>{{t "session.ends_at"}}
+        <input type="datetime-local" name="ends_at" value="{{.Form.Get "ends_at"}}" required>
+        {{template "ferr" (index .Errors "ends_at")}}
+      </label>
+    </div>
+    <label>{{t "session.tags"}} <span class="muted">{{t "field.optional"}}</span>
+      <input type="text" name="tags" value="{{.Form.Get "tags"}}" placeholder="{{t "session.tags_placeholder"}}">
+      {{template "ferr" (index .Errors "tags")}}
+    </label>
+    <label>{{t "session.description"}} <span class="muted">{{t "field.optional"}}</span>
+      <textarea name="description" rows="3" maxlength="600">{{.Form.Get "description"}}</textarea>
+      {{template "ferr" (index .Errors "description")}}
+    </label>
+    <div class="actions"><button class="btn" type="submit">{{t "schedule.add"}}</button></div>
+  </form>
+</section>
+
+<div class="actions">
+  <a class="btn" href="/org/events/{{$id}}/venue">{{t "btn.back"}}</a>
+  <a class="btn btn-primary" href="/org/events/{{$id}}/invitations">{{t "btn.next"}}</a>
+</div>
+{{end}}

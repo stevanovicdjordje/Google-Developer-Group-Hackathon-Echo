@@ -1,0 +1,78 @@
+{{define "csrf"}}<input type="hidden" name="csrf_token" value="{{.}}">{{end}}
+
+{{define "ferr"}}{{with .}}<span class="field-error" role="alert">{{t .}}</span>{{end}}{{end}}
+
+{{/* Wizard navigation. Expects a value with .Event and .Step. */}}
+{{define "wizard"}}
+{{$id := .Event.ID}}{{$s := .Step}}
+<nav class="wizard" aria-label="{{t "wizard.nav"}}">
+  <ol>
+    <li class="{{if eq $s "basics"}}current{{end}}">{{if $id}}<a href="/org/events/{{$id}}/edit">{{end}}<span class="n">1</span> {{t "wizard.step.basics"}}{{if $id}}</a>{{end}}</li>
+    <li class="{{if eq $s "venue"}}current{{end}}">{{if $id}}<a href="/org/events/{{$id}}/venue">{{end}}<span class="n">2</span> {{t "wizard.step.venue"}}{{if $id}}</a>{{end}}</li>
+    <li class="{{if eq $s "schedule"}}current{{end}}">{{if $id}}<a href="/org/events/{{$id}}/schedule">{{end}}<span class="n">3</span> {{t "wizard.step.schedule"}}{{if $id}}</a>{{end}}</li>
+    <li class="{{if eq $s "invitations"}}current{{end}}">{{if $id}}<a href="/org/events/{{$id}}/invitations">{{end}}<span class="n">4</span> {{t "wizard.step.invitations"}}{{if $id}}</a>{{end}}</li>
+    <li class="{{if eq $s "publish"}}current{{end}}">{{if $id}}<a href="/org/events/{{$id}}/publish">{{end}}<span class="n">5</span> {{t "wizard.step.publish"}}{{if $id}}</a>{{end}}</li>
+  </ol>
+</nav>
+{{end}}
+
+{{/* Published venue map (from the map editor), drawn as SVG on the server. Expects events.PlanView. */}}
+{{define "venue_svg"}}
+{{$lb := .LinkBase}}{{$sel := .Selected}}{{$many := gt (len .Floors) 1}}
+{{range .Floors}}{{$fs := .FontSize}}
+<figure class="floor">
+  {{if $many}}<figcaption>{{.Floor.Name}}</figcaption>{{end}}
+  <svg class="plan" viewBox="0 0 {{.Floor.Width}} {{.Floor.Height}}" role="img" aria-label="{{t "venue.plan_alt"}}">
+    <image href="{{.ImageURL}}" x="0" y="0" width="{{.Floor.Width}}" height="{{.Floor.Height}}"></image>
+    {{range .Shapes}}
+      {{if $lb}}<a href="{{$lb}}{{.FeatureID}}">{{end}}
+      {{if eq .Kind "rect"}}
+        <rect class="zone zone-{{.Type}}{{if eq .FeatureID $sel}} selected{{end}}" x="{{num .X}}" y="{{num .Y}}" width="{{num .W}}" height="{{num .H}}" rx="6"><title>{{.Name}}</title></rect>
+      {{else if eq .Kind "polygon"}}
+        <polygon class="zone zone-{{.Type}}{{if eq .FeatureID $sel}} selected{{end}}" points="{{.Points}}"><title>{{.Name}}</title></polygon>
+      {{else}}
+        <circle class="zone zone-{{.Type}}{{if eq .FeatureID $sel}} selected{{end}}" cx="{{num .CX}}" cy="{{num .CY}}" r="{{num .R}}"><title>{{.Name}}</title></circle>
+      {{end}}
+      {{if .ShowLabel}}<text class="zone-label" x="{{num .CX}}" y="{{num .CY}}" font-size="{{num $fs}}" text-anchor="middle" dominant-baseline="middle">{{.Name}}</text>{{end}}
+      {{if $lb}}</a>{{end}}
+    {{end}}
+  </svg>
+</figure>
+{{end}}
+{{end}}
+
+{{/* Time table per day and hall. Expects the events schedule data. */}}
+{{define "schedule"}}
+{{range .Days}}
+  <h3 class="day">{{weekday .Date}}, {{day .Date}}</h3>
+  <div class="table-wrap">
+    <table class="schedule">
+      <thead><tr><th scope="col">{{t "schedule.time"}}</th>{{range .Columns}}<th scope="col">{{if .Name}}{{.Name}}{{else}}{{t "schedule.no_hall"}}{{end}}</th>{{end}}</tr></thead>
+      <tbody>
+        {{range .Rows}}
+        <tr>
+          <th scope="row">{{clock .Start}}</th>
+          {{range .Cells}}
+          <td>
+            {{range .}}
+            <div class="slot{{if .Conflict}} conflict{{end}}{{if .IsBreak}} break{{end}}">
+              <strong>{{.Title}}</strong>
+              <span class="muted">{{clock .StartsAt}}–{{clock .EndsAt}}</span>
+              {{with .Speaker}}<span>{{.}}</span>{{end}}
+              {{if .Conflict}}<span class="warn">⚠ {{t "schedule.conflict"}}</span>{{end}}
+              {{with .Tags}}<span class="tags">{{range .}}<span class="tag">{{.}}</span>{{end}}</span>{{end}}
+            </div>
+            {{end}}
+          </td>
+          {{end}}
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+{{else}}
+  <p class="empty">{{t "schedule.empty"}}</p>
+{{end}}
+{{end}}
+
+{{define "status_badge"}}<span class="badge badge-{{.}}">{{t (printf "status.%s" .)}}</span>{{end}}

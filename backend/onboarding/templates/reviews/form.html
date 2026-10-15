@@ -1,0 +1,49 @@
+{{define "content"}}
+{{$d := .Data}}
+<section class="card narrow">
+  <p class="muted">{{t "review.for"}}</p>
+  <h1>{{$d.Event.Title}}</h1>
+  {{if $d.Problem}}
+    <p class="notice">{{t $d.Problem}}</p>
+    <p><a class="btn" href="/me/events/{{$d.Event.ID}}">{{t "btn.back"}}</a></p>
+  {{else}}
+  {{if $d.Existing}}<p class="notice">{{t "review.existing"}}</p>{{end}}
+  <form method="post" action="/me/events/{{$d.Event.ID}}/review" novalidate>
+    {{template "csrf" .CSRF}}
+    <fieldset>
+      <legend>{{t "review.overall"}}</legend>
+      {{template "ferr" (index .Errors "rating")}}
+      <div class="stars">
+        {{range seq 1 5}}
+          <label class="choice"><input type="radio" name="rating" value="{{.}}" {{if eq ($.Form.Get "rating") (printf "%d" .)}}checked{{end}}> {{.}} ★</label>
+        {{end}}
+      </div>
+    </fieldset>
+    <label>{{t "review.comment"}} <span class="muted">{{t "field.optional"}}</span>
+      <textarea name="comment" rows="5" maxlength="2000">{{.Form.Get "comment"}}</textarea>
+      {{template "ferr" (index .Errors "comment")}}
+    </label>
+    {{if $d.Sessions}}
+    <fieldset>
+      <legend>{{t "review.sessions"}} <span class="muted">{{t "field.optional"}}</span></legend>
+      {{template "ferr" (index .Errors "sessions")}}
+      {{range $d.Sessions}}
+        {{$name := printf "s_%s" .ID}}
+        <label class="session-rating">{{.Title}}{{with .Speaker}} <span class="muted">· {{.}}</span>{{end}}
+          <select name="{{$name}}">
+            <option value="">—</option>
+            {{range seq 1 5}}<option value="{{.}}" {{if eq ($.Form.Get $name) (printf "%d" .)}}selected{{end}}>{{.}} ★</option>{{end}}
+          </select>
+        </label>
+      {{end}}
+    </fieldset>
+    {{end}}
+    <label class="choice"><input type="checkbox" name="anonymous" value="on" {{if eq (.Form.Get "anonymous") "on"}}checked{{end}}> {{t "review.anonymous"}}</label>
+    <div class="actions">
+      <a class="btn" href="/me/events/{{$d.Event.ID}}">{{t "btn.back"}}</a>
+      <button class="btn btn-primary" type="submit">{{t "review.submit"}}</button>
+    </div>
+  </form>
+  {{end}}
+</section>
+{{end}}

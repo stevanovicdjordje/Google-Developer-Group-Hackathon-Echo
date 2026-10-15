@@ -1,0 +1,11 @@
+{
+  "type": "stand",
+  "floorId": "f-ground",
+  "name": "Primer Robotika",
+  "company": "Primer d.o.o.",
+  "category": "Robotika",
+  "sponsorTier": "gold",
+  "link": "https://example.com",
+  "geometry": { "kind": "rect", "coords": [{ "x": 380, "y": 120 }, { "x": 440, "y": 170 }] },
+  "entranceNodeId": "n12"
+}

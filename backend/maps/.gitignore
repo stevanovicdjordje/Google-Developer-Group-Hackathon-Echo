@@ -1,0 +1,4 @@
+firebase/.emulator-data/
+firebase/*-debug.log
+/api
+firebase/.hosting/

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Eho · Map</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2F4BFF}a:hover{color:#1A33D6}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E9EDF3; color: #0D1321; font-family: 'Instrument Sans', sans-serif; display: flex; flex-direction: column; position: relative; overflow: hidden">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 700px">
+<div style="position: absolute; left: 20px; top: 130px; width: 160px; height: 200px; background: #FFFFFF; border: 2px solid #C9D0DC; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #4A5468">Sala A</div>
+<div style="position: absolute; left: 20px; top: 350px; width: 160px; height: 170px; background: #FFFFFF; border: 2px solid #C9D0DC; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #4A5468">Sala B</div>
+<div style="position: absolute; left: 210px; top: 130px; width: 160px; height: 240px; background: #E6EAFF; border: 2px solid #2F4BFF; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 14px; font-weight: 600; color: #1A33D6"><div>Glavna sala</div><div style="font-size: 12px; font-weight: 500">On-device AI · now</div></div>
+<div style="position: absolute; left: 210px; top: 390px; width: 72px; height: 54px; background: #FFFFFF; border: 1.5px dashed #9AA4B5; border-radius: 8px; font-size: 11px; color: #4A5468; display: flex; align-items: center; justify-content: center; text-align: center">Lumen Labs</div>
+<div style="position: absolute; left: 298px; top: 390px; width: 72px; height: 54px; background: #FFFFFF; border: 1.5px dashed #9AA4B5; border-radius: 8px; font-size: 11px; color: #4A5468; display: flex; align-items: center; justify-content: center; text-align: center">Orbita</div>
+<div style="position: absolute; left: 210px; top: 460px; width: 160px; height: 60px; background: #FFFFFF; border: 1.5px dashed #9AA4B5; border-radius: 8px; font-size: 12px; color: #4A5468; display: flex; align-items: center; justify-content: center">Info pult</div>
+<div style="position: absolute; left: 20px; top: 540px; width: 350px; height: 70px; background: #FFFFFF; border: 2px solid #C9D0DC; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #4A5468">Hrana i piće · Toalet</div>
+<div style="position: absolute; left: 268px; top: 448px; display: flex; flex-direction: column; align-items: center">
+<div style="background: #E85D1F; color: #FFFFFF; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 10px; white-space: nowrap">Meeting: Ana · 15:20</div>
+<div style="width: 2px; height: 10px; background: #E85D1F"></div>
+<div style="width: 14px; height: 14px; border-radius: 7px; background: #E85D1F; border: 3px solid #FFFFFF"></div>
+</div>
+<div style="position: absolute; left: 92px; top: 612px; width: 20px; height: 20px; border-radius: 10px; background: #2F4BFF; border: 3px solid #FFFFFF; box-shadow: 0 0 0 10px rgba(47,75,255,0.18)"></div>
+</div>
+<div style="position: relative; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 10px; height: 52px; background: #FFFFFF; border-radius: 16px; padding: 0 16px; box-shadow: 0 2px 10px rgba(13,19,33,0.08)">
+<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#4A5468" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+<label for="mapsearch" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Search the venue</label>
+<input id="mapsearch" placeholder="Search stands, rooms, food…" style="flex-grow: 1; border: 0; outline: none; background: transparent; font: 400 16px 'Instrument Sans', sans-serif">
+</div>
+<div style="display: flex; gap: 8px">
+<button style="height: 34px; padding: 0 12px; border: 0; border-radius: 17px; background: #0D1321; color: #FFFFFF; font: 600 13px 'Instrument Sans', sans-serif">Ground floor</button>
+<button style="height: 34px; padding: 0 12px; border: 0; border-radius: 17px; background: #FFFFFF; color: #0D1321; font: 500 13px 'Instrument Sans', sans-serif">Sponsors</button>
+<button style="height: 34px; padding: 0 12px; border: 0; border-radius: 17px; background: #FFFFFF; color: #0D1321; font: 500 13px 'Instrument Sans', sans-serif">Food</button>
+</div>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="position: relative; margin: 0 12px 10px; background: #FFFFFF; border-radius: 20px; padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 16px rgba(13,19,33,0.12)">
+<div style="width: 40px; height: 40px; border-radius: 20px; background: #FFEDE3; color: #C2410C; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg></div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+<div style="font-size: 16px; font-weight: 600">Meeting Ana Petrović</div>
+<div style="font-size: 14px; color: #4A5468">Info pult · 15:20 · 3 min walk</div>
+</div>
+<button style="height: 40px; padding: 0 14px; border: 0; border-radius: 12px; background: #2F4BFF; color: #FFFFFF; font: 600 14px 'Instrument Sans', sans-serif">Route</button>
+</div>
+<nav aria-label="Event tabs" style="position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #DDE2EB; padding: 8px 8px 18px">
+<a href="Agenda.dc.html" style="text-decoration: none; color: #4A5468; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 6px 0">
+<div style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></div>Agenda</a>
+<a href="Map.dc.html" aria-current="page" style="text-decoration: none; color: #2F4BFF; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 6px 0">
+<div style="width: 56px; height: 30px; border-radius: 15px; background: #E6EAFF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4l-6 3v13l6-3 6 3 6-3V4l-6 3-6-3z"></path><path d="M9 4v13M15 7v13"></path></svg></div>Map</a>
+<a href="Find.dc.html" style="text-decoration: none; color: #4A5468; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 6px 0">
+<div style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><circle cx="17.5" cy="9" r="2.5"></circle><path d="M17 14.5a5 5 0 0 1 4.5 5"></path></svg></div>Find</a>
+<a href="Profile.dc.html" style="text-decoration: none; color: #4A5468; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 6px 0">
+<div style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></div>Profile</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

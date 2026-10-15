@@ -1,0 +1,50 @@
+{{define "content"}}
+{{$d := .Data}}{{$e := $d.Event}}
+<div class="page-head">
+  <h1>{{$e.Title}}</h1>
+  {{template "status_badge" $d.Status}}
+</div>
+
+<section class="card">
+  <p class="meta">📅 {{date $e.StartsAt}} – {{date $e.EndsAt}}</p>
+  <p class="meta">📍 {{$e.Address}}</p>
+  {{with $e.Description}}<p class="pre">{{.}}</p>{{end}}
+  {{if eq (printf "%s" $d.Status) "finished"}}
+    <div class="actions"><a class="btn btn-primary" href="/me/events/{{$e.ID}}/review">{{t "participant.review"}}</a></div>
+  {{end}}
+</section>
+
+{{if $d.MapEmbed}}
+<section class="card">
+  <h2>{{t "event.location"}}</h2>
+  <iframe class="map-embed" src="{{$d.MapEmbed}}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="{{t "event.location"}}"></iframe>
+</section>
+{{end}}
+
+<section class="card">
+  <h2>{{t "venue.plan"}}</h2>
+  {{if $d.HasMap}}
+    <p class="hint">{{t "participant.map_hint"}}</p>
+    <div class="plan-wrap">{{template "venue_svg" $d.Plan}}</div>
+    {{with $d.Zone}}
+      <div class="zone-detail" id="zone">
+        <h3>{{.Name}} <span class="zone-chip zone-{{.Type}}">{{t (printf "feature.%s" .Type)}}</span></h3>
+        {{with .Description}}<p>{{.}}</p>{{end}}
+        {{if $d.ZoneSess}}
+          <ul class="plain">{{range $d.ZoneSess}}<li><strong>{{clock .StartsAt}}–{{clock .EndsAt}}</strong> {{.Title}}{{with .Speaker}} · {{.}}{{end}}</li>{{end}}</ul>
+        {{else}}
+          <p class="muted">{{t "participant.zone_no_sessions"}}</p>
+        {{end}}
+      </div>
+    {{end}}
+  {{else}}
+    <p class="muted">{{t "venue.not_published_participant"}}</p>
+  {{end}}
+  <div class="actions"><a class="btn" href="{{$d.AppLink}}" target="_blank" rel="noopener">{{t "participant.open_app"}}</a></div>
+</section>
+
+<section class="card">
+  <h2>{{t "wizard.step.schedule"}}</h2>
+  {{template "schedule" $d.Schedule}}
+</section>
+{{end}}

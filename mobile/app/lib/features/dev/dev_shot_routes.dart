@@ -1,0 +1,688 @@
+import 'package:eho_maps/eho_maps.dart' show publishedEventProvider;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/providers.dart';
+import '../../data/app_state.dart';
+import '../../data/echo_api_repository.dart' show anonymousIdToken;
+import '../../data/find_api_repository.dart';
+import '../../data/demo_data.dart' as demo;
+import '../../data/models.dart';
+import '../../data/repositories.dart';
+import '../echo/echo_paywall.dart';
+import '../echo/echo_qa_sheet.dart';
+import '../echo/echo_screen.dart';
+import '../echo/echo_summary_screen.dart';
+import '../event/event_shell.dart';
+import '../find/find_screens.dart';
+import '../join/join_screens.dart';
+import '../organizer/organizer_screens.dart';
+
+/// Mounts the `/dev/shot` routes. Build with `--dart-define=DEV_ROUTES=false`
+/// to leave them out.
+const devRoutesEnabled = bool.fromEnvironment('DEV_ROUTES', defaultValue: true);
+
+/// Dev-only routes that open an interactive app state (sheet open, contact
+/// state, seeded draft, ...) directly from a URL, so `mobile/scripts/shots.sh`
+/// (which only loads pages, it cannot tap) can screenshot it.
+///
+/// `/dev/shot` lists every state; `/dev/shot/<state>` opens one with the demo
+/// event and demo data. The states are seeded with a nested [ProviderScope]
+/// (the real screens are used as they are).
+List<RouteBase> devShotRoutes() => [
+  GoRoute(
+    path: '/dev/shot',
+    builder: (c, s) => const _ShotIndex(),
+    routes: [
+      GoRoute(
+        path: ':state',
+        builder: (c, s) => _shotScreen(s.pathParameters['state']!),
+      ),
+    ],
+  ),
+];
+
+/// A state a screenshot route can open: name and one-line description.
+class DevShot {
+  const DevShot(this.name, this.description, this.build);
+
+  final String name;
+  final String description;
+  final Widget Function() build;
+}
+
+const _event = demoEventId;
+const _session = demo.keynoteId;
+
+/// Person on the person/messages shots (`demo.people`).
+const _personId = 'p1';
+
+final devShots = <DevShot>[
+  DevShot('echo-qa', 'Echo, "Questions for the speaker" sheet open (other people\'s questions only)', () {
+    return _EchoShot(
+      ended: false,
+      onReady: (c) => _openQuestions(c, own: false),
+    );
+  }),
+  DevShot('echo-qa-own', 'Echo, questions sheet with one of your own questions (q2 is seeded as yours)', () {
+    return _EchoShot(
+      ended: false,
+      onReady: (c) => _openQuestions(c, own: true),
+    );
+  }),
+  DevShot(
+    'echo-selected',
+    'Echo live, a line selected ("Ask about this") and an AI answer inline',
+    () => _EchoShot(
+      ended: false,
+      // The second-to-last line; the answer lands below it.
+      selectLine: demo.keynoteTranscript.length - 2,
+      ask: 'What is the main advice of the talk?',
+    ),
+  ),
+  DevShot(
+    'echo-answer',
+    'Echo live, an AI answer card after "Ask"',
+    () => const _EchoShot(
+      ended: false,
+      initialQuestion: 'What is the main advice of the talk?',
+    ),
+  ),
+  DevShot(
+    'echo-jump-live',
+    'Echo live scrolled up, "Jump to live" pill visible',
+    () => const _EchoShot(ended: false, scrolledUp: true),
+  ),
+  DevShot('echo-paywall', 'Echo, ended, "Missed something?" paywall sheet', () {
+    return _EchoShot(
+      ended: true,
+      onReady: (c) => showEchoPaywall(c, eventId: _event, sessionId: _session),
+    );
+  }),
+  DevShot(
+    'echo-summary',
+    'Echo full summary page (after unlock)',
+    () => const _EchoSummaryShot(),
+  ),
+  DevShot(
+    'echo-translated',
+    'Echo live, translate on',
+    () => const _EchoShot(ended: false, translated: true),
+  ),
+  DevShot(
+    'echo-ended',
+    'Echo after the talk, summary card locked',
+    () => const _EchoShot(ended: true),
+  ),
+  DevShot(
+    'echo-ended-unlocked',
+    'Echo after the talk, summary card unlocked',
+    () => const _EchoShot(ended: true, unlocked: true),
+  ),
+  DevShot(
+    'person-none',
+    'Person (in event tabs), no contact yet',
+    () => const _PersonShot(ContactState.none),
+  ),
+  DevShot(
+    'person-pending',
+    'Person, contact request sent',
+    () => const _PersonShot(ContactState.requested),
+  ),
+  DevShot(
+    'person-connected',
+    'Person, connected',
+    () => const _PersonShot(ContactState.accepted),
+  ),
+  DevShot(
+    'messages-spot',
+    'Messages with a meeting-spot card',
+    () => const _MessagesShot(),
+  ),
+  DevShot(
+    'messages-spot-picker',
+    'Messages with the meeting-spot picker sheet open',
+    () => const _MessagesShot(openSpotPicker: true),
+  ),
+  DevShot(
+    'find-results',
+    'Find tab with results for a sample prompt',
+    () => const _FindShot(),
+  ),
+  DevShot(
+    'find-live',
+    'Find tab from the real Find service (profile seeded as onboarded)',
+    () => const _FindLiveShot(),
+  ),
+  DevShot(
+    'myevents-live',
+    'My events with the live card',
+    () => const _MyEventsShot(),
+  ),
+  DevShot(
+    'organizer-review',
+    'Organizer review, draft with a flagged empty-stage row',
+    () => const _OrganizerReviewShot(),
+  ),
+  DevShot(
+    'organizer-review-issues',
+    'Organizer review, server issues: flagged rows with messages + "To check" block',
+    () => const _OrganizerReviewIssuesShot(),
+  ),
+  DevShot(
+    'organizer-upload-files',
+    'Organizer upload, three files chosen',
+    () => OrganizerUploadScreen(initialFiles: _uploadedFiles),
+  ),
+  DevShot(
+    'organizer-upload-progress',
+    'Organizer upload, extraction progress ("Found 3 stages, 6 sessions, ...")',
+    () => OrganizerUploadScreen(
+      initialFiles: _uploadedFiles,
+      foundSoFar: _foundSoFar,
+      progress: 0.62,
+    ),
+  ),
+  DevShot(
+    'organizer-published',
+    'Organizer published (link + QR)',
+    () => OrganizerPublishedScreen(
+      url: '${linkBase()}/e/$_event',
+      name: demo.demoEventName,
+    ),
+  ),
+  DevShot(
+    'organizer-published-warnings',
+    'Organizer published, with publish warnings ("Check before the event")',
+    () => const _OrganizerPublishedWarningsShot(),
+  ),
+];
+
+Widget _shotScreen(String name) {
+  for (final s in devShots) {
+    if (s.name == name) return s.build();
+  }
+  return _ShotIndex(unknown: name);
+}
+
+// -------------------------------------------------------------------- index
+
+class _ShotIndex extends StatelessWidget {
+  const _ShotIndex({this.unknown});
+
+  final String? unknown;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Screenshot states')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (unknown != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Unknown state "$unknown".',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          for (final s in devShots)
+            ListTile(
+              title: Text('/dev/shot/${s.name}'),
+              subtitle: Text(s.description),
+              onTap: () => context.go('/dev/shot/${s.name}'),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// --------------------------------------------------------------------- Echo
+
+/// Echo with the whole keynote transcript delivered at once. It never ends
+/// unless [ended]. Real demo data for everything else.
+class _ShotEchoRepository extends DemoEchoRepository {
+  _ShotEchoRepository({required this.ended});
+
+  final bool ended;
+
+  @override
+  Stream<List<TranscriptLine>> transcript(String eventId, String sessionId) =>
+      Stream<List<TranscriptLine>>.multi((c) {
+        c.add(demo.keynoteTranscript);
+        if (ended) c.close();
+      });
+}
+
+class _Unlocked extends UnlockedNotifier {
+  @override
+  Set<String> build() => {_session};
+}
+
+/// The Echo screen over [_ShotEchoRepository]; [onReady] runs once it has
+/// been on screen for a moment (to open a sheet).
+class _EchoShot extends StatelessWidget {
+  const _EchoShot({
+    required this.ended,
+    this.translated = false,
+    this.unlocked = false,
+    this.selectLine,
+    this.ask,
+    this.initialQuestion,
+    this.scrolledUp = false,
+    this.onReady,
+  });
+
+  final bool ended;
+  final bool translated;
+  final bool unlocked;
+  final int? selectLine;
+  final String? ask;
+  final String? initialQuestion;
+  final bool scrolledUp;
+  final void Function(BuildContext context)? onReady;
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      echoRepositoryProvider.overrideWithValue(
+        _ShotEchoRepository(ended: ended),
+      ),
+      if (unlocked) unlockedSummariesProvider.overrideWith(_Unlocked.new),
+    ],
+    child: _AfterFirstFrame(
+      run: onReady,
+      child: EchoScreen(
+        eventId: _event,
+        sessionId: _session,
+        startTranslated: translated,
+        devSelectLine: selectLine,
+        devAsk: ask,
+        initialQuestion: initialQuestion,
+        startScrolledUp: scrolledUp,
+      ),
+    ),
+  );
+}
+
+/// Calls [run] shortly after the first frame, so the screen behind a sheet
+/// has loaded.
+class _AfterFirstFrame extends StatefulWidget {
+  const _AfterFirstFrame({required this.run, required this.child});
+
+  final void Function(BuildContext context)? run;
+  final Widget child;
+
+  @override
+  State<_AfterFirstFrame> createState() => _AfterFirstFrameState();
+}
+
+class _AfterFirstFrameState extends State<_AfterFirstFrame> {
+  @override
+  void initState() {
+    super.initState();
+    final run = widget.run;
+    if (run == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      if (mounted) run(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+/// Opens the questions sheet with the seeded demo questions. The demo data
+/// has one question that is yours and voted (the second one); without [own]
+/// it is shown as someone else's, so no "Your question" card appears.
+Future<void> _openQuestions(BuildContext context, {required bool own}) async {
+  final repo = ProviderScope.containerOf(context).read(echoRepositoryProvider);
+  final seeded = await repo.questions(_event, _session);
+  final loaded = own
+      ? seeded
+      : [
+          for (final q in seeded)
+            SpeakerQuestion(
+              id: q.id,
+              text: q.text,
+              votes: q.votes,
+              voted: q.voted,
+              mergedCount: q.mergedCount,
+            ),
+        ];
+  if (!context.mounted) return;
+  final questions = ValueNotifier<List<SpeakerQuestion>>(loaded);
+  final name = demo.sessions
+      .where((s) => s.id == _session)
+      .firstOrNull
+      ?.speakers
+      .firstOrNull
+      ?.name
+      .split(' ')
+      .first;
+  await showEchoQuestions(
+    context,
+    questions: questions,
+    speakerName: name,
+    onVote: (_) {},
+    onAsk: (_) async => null,
+  );
+}
+
+class _EchoSummaryShot extends StatelessWidget {
+  const _EchoSummaryShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      echoRepositoryProvider.overrideWithValue(
+        _ShotEchoRepository(ended: true),
+      ),
+      unlockedSummariesProvider.overrideWith(_Unlocked.new),
+    ],
+    child: EchoSummaryScreen(
+      eventId: _event,
+      sessionId: _session,
+      session: demo.sessions.where((s) => s.id == _session).firstOrNull,
+      // Every time links to a line, as when the transcript is loaded.
+      lineAt: (seconds) => 0,
+    ),
+  );
+}
+
+// ------------------------------------------------------------ People / Find
+
+class _Contact extends ContactsNotifier {
+  _Contact(this.state0);
+
+  final ContactState state0;
+
+  @override
+  Map<String, ContactState> build() => {_personId: state0};
+}
+
+class _Spot extends MeetingSpotNotifier {
+  @override
+  MeetingSpot? build() => MeetingSpot(
+    personName: demo.people.firstWhere((p) => p.id == _personId).name,
+    place: 'Info pult',
+    time: demo.demoMeetingTime,
+    floor: demo.demoFloorName,
+  );
+}
+
+/// [child] inside the event bottom navigation, like the real tab routes.
+Widget _inShell(String location, Widget child) =>
+    EventShell(eventId: _event, location: location, child: child);
+
+class _PersonShot extends StatelessWidget {
+  const _PersonShot(this.contact);
+
+  final ContactState contact;
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      _demoFind,
+      contactsProvider.overrideWith(() => _Contact(contact)),
+    ],
+    child: _inShell(
+      '/e/$_event/find/person/$_personId',
+      PersonScreen(
+        eventId: _event,
+        personId: _personId,
+        why: demo.fitLines[_personId],
+      ),
+    ),
+  );
+}
+
+class _MessagesShot extends StatelessWidget {
+  const _MessagesShot({this.openSpotPicker = false});
+
+  final bool openSpotPicker;
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      _demoFind,
+      contactsProvider.overrideWith(() => _Contact(ContactState.accepted)),
+      meetingSpotProvider.overrideWith(_Spot.new),
+      // No map sign-in: the picker lists the demo places.
+      publishedEventProvider(_event)
+          .overrideWith((ref) => const Stream.empty()),
+    ],
+    child: MessagesScreen(
+      eventId: _event,
+      personId: _personId,
+      openSpotPicker: openSpotPicker,
+    ),
+  );
+}
+
+/// Demo people whatever service is running, so the shots are stable.
+final _demoFind = findRepositoryProvider.overrideWithValue(
+  DemoFindRepository(),
+);
+
+class _FindShot extends StatelessWidget {
+  const _FindShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [_demoFind],
+    child: _inShell(
+      '/e/$_event/find',
+      const FindScreen(
+        eventId: _event,
+        initialPrompt: 'On-device ML on Android',
+      ),
+    ),
+  );
+}
+
+class _OnboardedProfile extends ProfileNotifier {
+  @override
+  Profile build() => const Profile(
+    name: 'Dev Tester',
+    headline: 'Mobile dev',
+    interests: ['AI / ML', 'Mobile'],
+    lookingFor: 'People building on-device ML apps',
+    visibleInFind: true,
+    allowContact: true,
+    shareMeetingSpot: true,
+    onboarded: true,
+  );
+}
+
+/// Find from the real service (same wiring as `findRepositoryProvider`, which
+/// must be rebuilt here to read the seeded profile), with an onboarded profile.
+class _FindLiveShot extends StatelessWidget {
+  const _FindLiveShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      profileProvider.overrideWith(_OnboardedProfile.new),
+      findRepositoryProvider.overrideWith((ref) {
+        final config = ref.watch(appConfigProvider);
+        var firebaseUp = false;
+        try {
+          firebaseUp = Firebase.apps.isNotEmpty;
+        } catch (_) {}
+        if (!config.useFindApi || !firebaseUp) return DemoFindRepository();
+        return FallbackFindRepository(
+          primary: FindApiRepository(
+            baseUrl: config.findApiBaseUrl,
+            tokenProvider: anonymousIdToken(ref.watch(firebaseAuthProvider)),
+            profile: () => ref.read(profileProvider),
+          ),
+          fallback: DemoFindRepository(),
+        );
+      }),
+    ],
+    child: _inShell('/e/$_event/find', const FindScreen(eventId: _event)),
+  );
+}
+
+// ------------------------------------------------------- My events / organizer
+
+class _JoinedDemo extends JoinedEventsNotifier {
+  @override
+  List<EventSummary> build() => const [
+    EventSummary(
+      id: _event,
+      name: demo.demoEventName,
+      dates: demo.demoEventDates,
+      venue: demo.demoEventVenue,
+    ),
+    demo.pastEvent,
+  ];
+}
+
+class _MyEventsShot extends StatelessWidget {
+  const _MyEventsShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [joinedEventsProvider.overrideWith(_JoinedDemo.new)],
+    child: const MyEventsScreen(),
+  );
+}
+
+/// The files on the upload shots (the design's three).
+const _uploadedFiles = [
+  UploadedFile(name: 'devfest-agenda-final-v3.pdf', sizeBytes: 412 * 1024),
+  UploadedFile(name: 'speakers.xlsx', sizeBytes: 38 * 1024),
+  UploadedFile(name: 'sava-centar-ground-floor.png', sizeBytes: 1258291),
+];
+
+/// What the extraction has found so far on the progress shot: 3 stages,
+/// 6 sessions, 6 speakers (as in the design).
+final _foundSoFar = EventDraft(
+  name: demo.demoEventName,
+  dates: demo.demoEventDates,
+  venue: demo.demoEventVenue,
+  stages: demo.stages,
+  sessions: demo.sessions.take(6).toList(),
+  speakers: demo.speakers,
+);
+
+class _FileCount extends OrganizerFileCountNotifier {
+  @override
+  int build() => _uploadedFiles.length;
+}
+
+/// The demo draft with one session without a stage (a flagged row).
+class _FlaggedDraft extends DraftNotifier {
+  @override
+  EventDraft? build() {
+    final sessions = demo.sessions.where((s) => !s.isBreak).toList();
+    final i = sessions.indexWhere(
+      (s) => s.id == demo.organizerFlaggedSessionId,
+    );
+    final s = sessions[i < 0 ? 0 : i];
+    sessions[i < 0 ? 0 : i] = Session(
+      id: s.id,
+      title: s.title,
+      stage: '',
+      start: s.start,
+      end: s.end,
+      speakers: s.speakers,
+      description: s.description,
+      track: s.track,
+      isLive: s.isLive,
+    );
+    return EventDraft(
+      name: demo.demoEventName,
+      dates: demo.demoEventDates,
+      venue: demo.demoEventVenue,
+      stages: demo.stages,
+      sessions: sessions,
+      speakers: demo.speakers,
+    );
+  }
+}
+
+class _OrganizerReviewShot extends StatelessWidget {
+  const _OrganizerReviewShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      organizerDraftProvider.overrideWith(_FlaggedDraft.new),
+      organizerFileCountProvider.overrideWith(_FileCount.new),
+    ],
+    child: const OrganizerReviewScreen(),
+  );
+}
+
+/// What the server flagged on the issues shot: a row without a room, a row
+/// with another problem, and one issue about the event as a whole.
+const _draftIssues = [
+  DraftIssue(
+    sessionId: demo.organizerFlaggedSessionId,
+    field: 'sessions[2].stage',
+    message: 'No room given for this session',
+  ),
+  DraftIssue(
+    sessionId: 's5',
+    field: 'sessions[4].speakers',
+    message: 'Speaker not found in the speakers list',
+  ),
+  DraftIssue(
+    field: 'sessions',
+    message: '2 sessions overlap in Sala A at 11:00',
+  ),
+];
+
+/// [_FlaggedDraft] with the server's [_draftIssues].
+class _IssuesDraft extends _FlaggedDraft {
+  @override
+  EventDraft? build() => super.build()?.withIssues(_draftIssues);
+}
+
+class _OrganizerReviewIssuesShot extends StatelessWidget {
+  const _OrganizerReviewIssuesShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [
+      organizerDraftProvider.overrideWith(_IssuesDraft.new),
+      organizerFileCountProvider.overrideWith(_FileCount.new),
+    ],
+    child: const OrganizerReviewScreen(),
+  );
+}
+
+/// The warnings of the last publish on the published shot.
+const _publishWarnings = [
+  "Session s3 has no room; attendees won't see it on the map",
+  'Speaker "Dr. Petrov" has no photo or bio',
+];
+
+class _PublishWarnings extends OrganizerWarningsNotifier {
+  @override
+  List<String> build() => _publishWarnings;
+}
+
+class _OrganizerPublishedWarningsShot extends StatelessWidget {
+  const _OrganizerPublishedWarningsShot();
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+    overrides: [organizerWarningsProvider.overrideWith(_PublishWarnings.new)],
+    child: OrganizerPublishedScreen(
+      url: '${linkBase()}/e/$_event',
+      name: demo.demoEventName,
+    ),
+  );
+}

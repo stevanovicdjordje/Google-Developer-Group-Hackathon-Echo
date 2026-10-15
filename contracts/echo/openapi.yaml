@@ -1,0 +1,460 @@
+openapi: 3.1.0
+info:
+  title: Eho Echo API
+  version: 0.3.1
+  summary: Talk companion (transcript AI, translation, audience Q&A).
+  description: |
+    Contract between the app's Echo screens (`mobile/app/lib/features/echo`,
+    `EchoRepository`) and the Echo service (`backend/echo/`). Requested by
+    `mobile#5` (API-5 … API-8 and translation in `mobile/docs/api-needs.md`).
+
+    **The transcript itself is not an HTTP operation.** It is a pre-recorded
+    transcript replayed as if live (`team-captions-and-stt`), written line by
+    line to Firestore; clients read it with a snapshot listener. Paths and
+    shapes: `realtime.md`.
+
+    Every AI operation works on the transcript **revealed so far** (the lines
+    already in Firestore), never on lines the audience hasn't heard yet.
+    `basedOnLines` says how many lines that was. `model` names the model that
+    produced the text, or `offline` when the service runs without an AI key
+    (deterministic extractive fallback for local development).
+
+    All operations need a signed-in caller (attendees are anonymous) and a
+    **published** event (`publishedVersion > 0`, see `contracts/maps`).
+    A session without a transcript answers `404 no_transcript`.
+
+    **Errors** always use the `Error` schema.
+servers:
+  - url: http://localhost:8082
+    description: Local (`backend/echo`, `make dev`)
+security:
+  - firebaseIdToken: []
+tags:
+  - name: ai
+  - name: questions
+paths:
+  /healthz:
+    get:
+      operationId: echoHealthz
+      summary: Liveness check.
+      security: []
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, model]
+                properties:
+                  status: { type: string, const: ok }
+                  model:
+                    type: string
+                    description: AI model behind Ask, Catch up, Summary and question grouping, or `offline`.
+                  translationModel:
+                    type: string
+                    description: AI model behind Translate (may differ from `model`), or `offline`.
+  /v1/events/{eventId}/sessions/{sessionId}/ask:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/sessionId"
+    post:
+      operationId: askTalk
+      tags: [ai]
+      summary: Answer a question about the talk, grounded in the transcript so far (API-6).
+      description: |
+        The answer only uses what the speaker has said. If the transcript
+        doesn't cover the question, the answer says so instead of guessing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AskRequest" }
+            example: { $ref: "examples/ask.request.json" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiText" }
+              example: { $ref: "examples/ask.response.json" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "502": { $ref: "#/components/responses/AiUnavailable" }
+  /v1/events/{eventId}/sessions/{sessionId}/catch-up:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/sessionId"
+      - $ref: "#/components/parameters/language"
+    get:
+      operationId: getCatchUp
+      tags: [ai]
+      summary: Short summary of the talk so far, for someone who just walked in (API-5).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiText" }
+              example: { $ref: "examples/catch-up.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "502": { $ref: "#/components/responses/AiUnavailable" }
+  /v1/events/{eventId}/sessions/{sessionId}/summary:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/sessionId"
+      - $ref: "#/components/parameters/language"
+    get:
+      operationId: getSummary
+      tags: [ai]
+      summary: Full summary of the talk (premium, API-8).
+      description: |
+        Since 0.3.0 the response also has `summary` (`TalkSummary`): takeaway,
+        key points and "problem → fix" rows that link back to the transcript
+        time (`EchoSummary` design, `mobile#9`). `text` stays, rendered from
+        the same content. `summary` is absent before the talk has started.
+
+        The paywall is mocked in the app (`docs/MVP.md`); the server does not
+        check payment. Works on the transcript so far, so it is complete once
+        the replay has ended (`EchoSession.status` = `ended`).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiText" }
+              example: { $ref: "examples/summary.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "502": { $ref: "#/components/responses/AiUnavailable" }
+  /v1/events/{eventId}/sessions/{sessionId}/translate:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/sessionId"
+    post:
+      operationId: translateTranscript
+      tags: [ai]
+      summary: Translate transcript lines into the attendee's language (Gemma).
+      description: |
+        Translates the revealed lines with `index >= fromIndex` (at most 50
+        per call; `nextIndex` says where to continue). Translations are cached
+        per session and language, so a line is translated once for everyone.
+        Call it again with `fromIndex = nextIndex` when new lines arrive.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslateRequest" }
+            example: { $ref: "examples/translate.request.json" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Translation" }
+              example: { $ref: "examples/translate.response.json" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "502": { $ref: "#/components/responses/AiUnavailable" }
+  /v1/events/{eventId}/sessions/{sessionId}/questions:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/sessionId"
+    get:
+      operationId: listQuestions
+      tags: [questions]
+      summary: Audience questions for the speaker, most votes first (API-7).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [questions]
+                properties:
+                  questions:
+                    type: array
+                    items: { $ref: "#/components/schemas/Question" }
+              example: { $ref: "examples/questions.response.json" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      operationId: submitQuestion
+      tags: [questions]
+      summary: Ask the speaker a question. The author's vote is counted.
+      description: |
+        Since 0.3.0 the AI checks whether the question asks the same thing as
+        an existing one (any wording or language). If so it is merged into
+        that question instead of being posted: the response is `200` with the
+        existing question, `merged: true`, the caller counted as an asker
+        (`mine`) and a voter. Grouping is best effort; if the AI is unavailable
+        the question is posted as new (`201`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QuestionInput" }
+            example: { $ref: "examples/submit-question.request.json" }
+      responses:
+        "200":
+          description: Merged into an existing, similar question (`merged` = true).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Question" }
+              example: { $ref: "examples/submit-question-merged.response.json" }
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Question" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /v1/events/{eventId}/sessions/{sessionId}/questions/{questionId}/vote:
+    parameters:
+      - $ref: "#/components/parameters/eventId"
+      - $ref: "#/components/parameters/sessionId"
+      - name: questionId
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      operationId: voteQuestion
+      tags: [questions]
+      summary: Upvote a question. Idempotent (one vote per user).
+      responses:
+        "200":
+          description: The question after the vote.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Question" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: unvoteQuestion
+      tags: [questions]
+      summary: Take the caller's vote back. Idempotent.
+      responses:
+        "200":
+          description: The question after the vote was removed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Question" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+components:
+  securitySchemes:
+    firebaseIdToken:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+      description: Firebase Auth ID token (`team-auth`). Attendees sign in anonymously.
+  parameters:
+    eventId:
+      name: eventId
+      in: path
+      required: true
+      schema: { type: string }
+    sessionId:
+      name: sessionId
+      in: path
+      required: true
+      description: Agenda session ID (the same ID the agenda uses, e.g. `s1`).
+      schema: { type: string, pattern: "^[A-Za-z0-9_-]{1,64}$" }
+    language:
+      name: language
+      in: query
+      required: false
+      description: Language of the generated text. Default `en`.
+      schema: { $ref: "#/components/schemas/Language" }
+  responses:
+    BadRequest:
+      description: "Malformed JSON or unknown field (`code` = `invalid_json`)."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthenticated:
+      description: "Missing or invalid ID token (`code` = `unauthenticated`)."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: "`code` = `not_found` (event missing or not published, unknown question) or `no_transcript` (the session has no transcript yet)."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationFailed:
+      description: "`code` = `validation_failed`, `details` = FieldError[]."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { $ref: "examples/validation-error.response.json" }
+    RateLimited:
+      description: "`code` = `rate_limited`. Too many AI calls or questions from this user; retry after `Retry-After` seconds."
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    AiUnavailable:
+      description: "`code` = `ai_unavailable`. The model failed, timed out (20 s) or returned something unusable. Safe to retry."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          description: "validation_failed → FieldError[]; invalid_json → parser message (string); otherwise absent."
+          oneOf:
+            - type: string
+            - type: array
+              items: { $ref: "#/components/schemas/FieldError" }
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field: { type: string }
+        message: { type: string }
+    Language:
+      type: string
+      description: |
+        Target language code. `sr` is Serbian in Latin script, `sr-Cyrl` in
+        Cyrillic.
+      enum: [en, sr, sr-Cyrl, de, fr, es, it, ru, hu, mk, hr, sl, bs]
+    AskRequest:
+      type: object
+      additionalProperties: false
+      required: [question]
+      properties:
+        question: { type: string, minLength: 1, maxLength: 500 }
+        language:
+          $ref: "#/components/schemas/Language"
+          description: Language of the answer. Default `en`.
+    AiText:
+      type: object
+      required: [text, model, basedOnLines]
+      properties:
+        text:
+          type: string
+          description: Plain text; `summary` may use `•` bullet lines. At most 4000 characters.
+        model: { type: string, examples: [gemma-4-26b-a4b-it, offline] }
+        basedOnLines:
+          type: integer
+          minimum: 0
+          description: Number of transcript lines the text is based on.
+        summary:
+          $ref: "#/components/schemas/TalkSummary"
+          description: Only on `getSummary` (since 0.3.0).
+    TalkSummary:
+      type: object
+      required: [takeaway, keyPoints, tradeoffs]
+      properties:
+        takeaway: { type: string, minLength: 1, maxLength: 300, description: "The speaker's main message or advice." }
+        keyPoints:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items: { type: string, minLength: 1, maxLength: 300 }
+        tradeoffs:
+          type: array
+          maxItems: 5
+          description: Problems the speaker named, each with its fix.
+          items:
+            type: object
+            required: [topic, issue, fix, atSeconds]
+            properties:
+              topic: { type: string, minLength: 1, maxLength: 40, examples: [Battery] }
+              issue: { type: string, minLength: 1, maxLength: 300 }
+              fix: { type: string, minLength: 1, maxLength: 300 }
+              atSeconds:
+                type: integer
+                minimum: 0
+                description: Start time of the transcript line where the problem is stated (always a real line).
+    TranslateRequest:
+      type: object
+      additionalProperties: false
+      required: [language]
+      properties:
+        language: { $ref: "#/components/schemas/Language" }
+        fromIndex: { type: integer, minimum: 0, default: 0 }
+    Translation:
+      type: object
+      required: [language, lines, nextIndex, model]
+      properties:
+        language: { $ref: "#/components/schemas/Language" }
+        lines:
+          type: array
+          items:
+            type: object
+            required: [index, text]
+            properties:
+              index: { type: integer, minimum: 0 }
+              text: { type: string }
+        nextIndex:
+          type: integer
+          minimum: 0
+          description: First line index not included. Equals the revealed line count when caught up.
+        model: { type: string }
+    QuestionInput:
+      type: object
+      additionalProperties: false
+      required: [text]
+      properties:
+        text: { type: string, minLength: 3, maxLength: 300 }
+    Question:
+      type: object
+      required: [id, text, votes, mine, voted, mergedCount, createdAt]
+      properties:
+        id: { type: string }
+        text: { type: string }
+        votes: { type: integer, minimum: 0 }
+        mine:
+          type: boolean
+          description: The caller asked it, or asked a similar question merged into it. Askers are never revealed to others.
+        voted: { type: boolean, description: The caller has voted for it. }
+        mergedCount:
+          type: integer
+          minimum: 0
+          description: How many similar questions were merged into this one (since 0.3.0). The design shows "3 similar questions merged".
+        merged:
+          type: boolean
+          description: Only in the `submitQuestion` response, true when the caller's question was merged into this one.
+        createdAt: { type: string, format: date-time }
+    EchoSession:
+      description: Firestore document `events/{eventId}/published/echo/sessions/{sessionId}` (`realtime.md`). Timestamps are Firestore timestamps.
+      type: object
+      required: [status, lineCount, language]
+      properties:
+        status: { type: string, enum: [live, ended] }
+        lineCount: { type: integer, minimum: 0 }
+        language: { $ref: "#/components/schemas/Language" }
+        title: { type: string, description: "Talk title (since 0.2.0, optional)." }
+        speaker: { type: string, description: "Speaker name(s) (since 0.2.0, optional)." }
+    TranscriptLine:
+      description: Firestore document `…/sessions/{sessionId}/lines/{index}` (`realtime.md`).
+      type: object
+      required: [index, atSeconds, text]
+      properties:
+        index: { type: integer, minimum: 0 }
+        atSeconds: { type: integer, minimum: 0 }
+        text: { type: string, minLength: 1 }

@@ -1,0 +1,117 @@
+{{define "content"}}
+{{$d := .Data}}{{$r := $d.Report}}{{$e := $r.Event}}
+<div class="page-head">
+  <div>
+    <p class="muted">{{t "report.title"}}</p>
+    <h1>{{$e.Title}}</h1>
+    {{if $e.StartsAt}}<p class="meta">📅 {{date $e.StartsAt}} – {{date $e.EndsAt}} · 📍 {{$e.Address}}</p>{{end}}
+  </div>
+  {{if not $d.NotReady}}
+  <div class="actions no-print">
+    <a class="btn btn-primary" href="/org/events/{{$e.ID}}/report.pdf" download>{{t "report.pdf"}}</a>
+    {{if $d.Print}}
+      <a class="btn" href="/org/events/{{$e.ID}}/report">{{t "report.screen"}}</a>
+    {{else}}
+      <a class="btn" href="/org/events/{{$e.ID}}/report?print=1">{{t "report.print"}}</a>
+    {{end}}
+  </div>
+  {{end}}
+</div>
+
+{{if $d.NotReady}}
+  <section class="card empty"><p>{{t "report.not_ready"}}</p><p><a class="btn" href="/org/events/{{$e.ID}}/edit">{{t "events.edit"}}</a></p></section>
+{{else}}
+{{$s := $d.Summary}}
+<section class="card impression">
+  <h2>{{t "report.impression"}}</h2>
+  <div class="impression-head">
+    <div class="big-rating">
+      {{if $r.Reviews}}<span class="value">{{rating $r.AvgRating}}</span><span class="of">/ 5</span>{{else}}<span class="value">—</span>{{end}}
+      <svg class="stars-bar" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+        <rect class="track" x="0" y="0" width="100" height="20" rx="10"></rect>
+        <rect class="fill" x="0" y="0" width="{{num (mul (div $r.AvgRating 5.0) 100.0)}}" height="20" rx="10"></rect>
+      </svg>
+      <span class="muted">{{t "report.based_on" $r.Reviews}}</span>
+    </div>
+    <p class="headline">{{$s.Headline}}</p>
+  </div>
+  <div class="impression-cols">
+    <div><h3>👍 {{t "report.liked"}}</h3>{{if $s.Liked}}<ul>{{range $s.Liked}}<li>{{.}}</li>{{end}}</ul>{{else}}<p class="muted">—</p>{{end}}</div>
+    <div><h3>👎 {{t "report.disliked"}}</h3>{{if $s.Disliked}}<ul>{{range $s.Disliked}}<li>{{.}}</li>{{end}}</ul>{{else}}<p class="muted">—</p>{{end}}</div>
+    <div><h3>💡 {{t "report.recommendations"}}</h3>{{if $s.Recommendations}}<ul>{{range $s.Recommendations}}<li>{{.}}</li>{{end}}</ul>{{else}}<p class="muted">—</p>{{end}}</div>
+  </div>
+  <p class="hint">{{t "report.summary_note"}}</p>
+</section>
+
+<section class="card">
+  <h2>{{t "report.turnout"}}</h2>
+  <div class="tiles">
+    <div class="tile"><span class="v">{{$r.Invited}}</span><span class="k">{{t "events.invited"}}</span></div>
+    <div class="tile"><span class="v">{{$r.Accepted}}</span><span class="k">{{t "events.accepted"}}</span></div>
+    <div class="tile"><span class="v">{{$r.Declined}}</span><span class="k">{{t "report.declined"}}</span></div>
+    <div class="tile"><span class="v">{{add $r.Pending $r.Expired}}</span><span class="k">{{t "report.no_answer"}}</span></div>
+    <div class="tile accent"><span class="v">{{pct $r.AcceptanceRate}}</span><span class="k">{{t "report.acceptance_rate"}}</span></div>
+    <div class="tile"><span class="v">{{$r.Reviews}}</span><span class="k">{{t "report.reviews"}}</span></div>
+    <div class="tile accent"><span class="v">{{pct $r.ResponseRate}}</span><span class="k">{{t "report.response_rate"}}</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>{{t "report.distribution"}}</h2>
+  <div class="bars">
+    {{range $r.Distribution}}
+    <div class="bar-row">
+      <span class="bar-label">{{.Stars}} ★</span>
+      <svg class="bar" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+        <rect class="track" x="0" y="0" width="100" height="10"></rect>
+        <rect class="fill s{{.Stars}}" x="0" y="0" width="{{num (mul .Share 100.0)}}" height="10"></rect>
+      </svg>
+      <span class="bar-value">{{.Count}} <span class="muted">({{pct .Share}})</span></span>
+    </div>
+    {{end}}
+  </div>
+</section>
+
+<section class="card">
+  <h2>{{t "report.sessions"}}</h2>
+  {{if $r.Sessions}}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>{{t "session.title"}}</th><th>{{t "session.zone"}}</th><th>{{t "report.avg"}}</th><th class="wide"></th><th>{{t "report.ratings"}}</th></tr></thead>
+      <tbody>
+        {{range $i, $s := $r.Sessions}}
+        <tr>
+          <td>{{if $s.Count}}{{add $i 1}}{{else}}—{{end}}</td>
+          <td>{{$s.Session.Title}}{{with $s.Session.Speaker}}<br><span class="muted">{{.}}</span>{{end}}</td>
+          <td>{{with $s.ZoneName}}{{.}}{{else}}—{{end}}</td>
+          <td><strong>{{if $s.Count}}{{rating $s.Avg}}{{else}}—{{end}}</strong></td>
+          <td class="wide">
+            <svg class="bar" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+              <rect class="track" x="0" y="0" width="100" height="10"></rect>
+              <rect class="fill" x="0" y="0" width="{{num (mul (div $s.Avg 5.0) 100.0)}}" height="10"></rect>
+            </svg>
+          </td>
+          <td>{{$s.Count}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}<p class="muted">{{t "report.no_sessions"}}</p>{{end}}
+</section>
+
+<section class="card">
+  <h2>{{t "report.comments"}} <span class="count">{{len $r.Comments}}</span></h2>
+  {{if $r.Comments}}
+  <ul class="comments">
+    {{range $r.Comments}}
+    <li>
+      <div class="comment-head"><strong>{{if .Author}}{{.Author}}{{else}}{{t "report.anonymous"}}{{end}}</strong><span class="badge">{{.Rating}} ★</span><span class="muted">{{day .At}}</span></div>
+      <p class="pre">{{.Text}}</p>
+    </li>
+    {{end}}
+  </ul>
+  {{else}}<p class="muted">{{t "report.no_comments"}}</p>{{end}}
+</section>
+{{end}}
+{{end}}

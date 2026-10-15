@@ -1,0 +1,46 @@
+{{define "content"}}
+{{$d := .Data}}{{$e := $d.Event}}{{$tok := $d.Invitation.Token}}
+<section class="card narrow">
+  <p class="muted">{{t "invite.you_are_invited"}}</p>
+  <h1>{{$e.Title}}</h1>
+  {{if ne $d.Problem "invite.not_open"}}
+    <p class="meta">📅 {{date $e.StartsAt}} – {{date $e.EndsAt}}</p>
+    <p class="meta">📍 {{$e.Address}}</p>
+    {{with $e.Description}}<p class="pre">{{.}}</p>{{end}}
+  {{end}}
+  <p>{{t "invite.status"}} <span class="badge inv-{{$d.Effective}}">{{t (printf "inv.status.%s" $d.Effective)}}</span></p>
+
+  {{if $d.Problem}}
+    <p class="notice">{{t $d.Problem}}</p>
+  {{else if not .Principal}}
+    <p>{{t "invite.need_account"}}</p>
+    <div class="actions stack">
+      <a class="btn btn-primary" href="/register/participant?invite={{$tok}}">{{t "invite.accept_register"}}</a>
+      <a class="btn" href="/login?next=/i/{{$tok}}">{{t "invite.have_account"}}</a>
+    </div>
+    <form method="post" action="/i/{{$tok}}/decline" class="decline">
+      {{template "csrf" .CSRF}}
+      <button class="btn btn-link" type="submit">{{t "invite.decline"}}</button>
+    </form>
+  {{else if eq .Principal.Role "participant"}}
+    <div class="actions">
+      <form method="post" action="/i/{{$tok}}/decline" class="inline">
+        {{template "csrf" .CSRF}}
+        <button class="btn" type="submit">{{t "invite.decline"}}</button>
+      </form>
+      <form method="post" action="/i/{{$tok}}/accept" class="inline">
+        {{template "csrf" .CSRF}}
+        <button class="btn btn-primary" type="submit">{{t "invite.accept"}}</button>
+      </form>
+    </div>
+    {{if eq (printf "%s" $d.Effective) "accepted"}}<p><a href="/me/events/{{$e.ID}}">{{t "invite.open_event"}}</a></p>{{end}}
+  {{else}}
+    <p class="notice">{{t "invite.organizer_view"}}</p>
+  {{end}}
+</section>
+{{if $d.MapEmbed}}
+<section class="card narrow">
+  <iframe class="map-embed" src="{{$d.MapEmbed}}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="{{t "event.location"}}"></iframe>
+</section>
+{{end}}
+{{end}}

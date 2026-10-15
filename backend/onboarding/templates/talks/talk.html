@@ -1,0 +1,40 @@
+{{define "content"}}
+{{$d := .Data}}{{$s := $d.Session}}
+<p class="muted"><a href="/talks">← {{t "talks.title"}}</a></p>
+<div class="talk-layout">
+  <section class="card">
+    <p class="overline">{{t "talk.report_title"}} · {{$d.Event.Title}}</p>
+    <h1>{{$s.Title}}</h1>
+    <p class="meta">{{with $s.Speaker}}{{.}} · {{end}}{{with $s.Stage}}{{.}} · {{end}}{{date $s.StartsAt}}–{{clock $s.EndsAt}}</p>
+    {{with $s.Description}}<p class="pre">{{.}}</p>{{end}}
+    {{if $d.Ratings}}<p class="rated">★ {{t "talk.rated" (rating $d.Avg) $d.Ratings}}</p>{{end}}
+
+    <h2>{{t "talk.inside"}}</h2>
+    <ul class="checklist">
+      <li class="ok">{{t "talk.inside_1"}}</li>
+      <li class="ok">{{t "talk.inside_2"}}</li>
+      <li class="ok">{{t "talk.inside_3"}}</li>
+    </ul>
+    <p class="hint">{{t "talk.inside_note"}}</p>
+  </section>
+
+  <aside class="card buy-box">
+    {{if not $d.Ended}}
+      <p class="notice">{{t "talk.not_ended"}}</p>
+    {{else if $d.CanDownload}}
+      {{if $d.Purchase}}
+        <p class="badge inv-accepted">{{t "talks.owned"}}</p>
+        <p class="receipt">{{t "talk.receipt" $d.Paid $d.Purchase.CardBrand $d.Purchase.CardLast4 (day $d.Purchase.CreatedAt)}}</p>
+        <p class="hint">{{t "talk.payment_id"}} {{$d.Purchase.PaymentID}}{{if eq $d.Purchase.Mode "test"}} · {{t "talk.test_receipt"}}{{end}}</p>
+      {{else}}
+        <p class="badge inv-accepted">{{t "talks.free_owner"}}</p>
+      {{end}}
+      <a class="btn btn-primary btn-block" href="/talks/{{$d.Event.ID}}/{{$s.ID}}/report.pdf" download>{{t "talks.download"}}</a>
+    {{else}}
+      <p class="price">{{$d.Price}}</p>
+      <p class="hint">{{t "talk.price_note"}}</p>
+      <a class="btn btn-primary btn-block" href="/talks/{{$d.Event.ID}}/{{$s.ID}}/checkout">{{t "talks.buy" $d.Price}}</a>
+    {{end}}
+  </aside>
+</div>
+{{end}}

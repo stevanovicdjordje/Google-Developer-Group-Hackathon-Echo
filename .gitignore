@@ -1,0 +1,114 @@
+# ---------------------------------------------------------------
+# Eho — root .gitignore (technology-agnostic baseline).
+# Modules may add their own .gitignore once their stack is chosen.
+# Do NOT ignore source directories or contracts/.
+# ---------------------------------------------------------------
+
+# --- Secrets & credentials (never commit) ---
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+!debug.keystore
+service-account*.json
+*-credentials.json
+credentials.json
+client_secret*.json
+google-services.json
+GoogleService-Info.plist
+secrets.properties
+local.properties
+.secrets/
+*.secret
+
+# --- Node / web ---
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/install-state.gz
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+.turbo/
+coverage/
+*.tsbuildinfo
+.eslintcache
+
+# --- Android / Kotlin / Gradle ---
+.gradle/
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# --- iOS / Xcode (if ever used) ---
+xcuserdata/
+DerivedData/
+*.xcuserstate
+Pods/
+
+# --- Flutter / Dart (if ever used) ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# --- Python (Gemma experiments, scripts) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+
+# --- Model weights / large local artifacts ---
+*.gguf
+*.safetensors
+models/cache/
+
+# --- IDEs ---
+# Ignore personal JetBrains state but allow a module owner to commit
+# shared team settings (e.g. codeStyles/) by un-ignoring them locally.
+.idea/
+!.idea/codeStyles/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.fleet/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs & temp ---
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+tmp/
+*.tmp
+
+# --- Local AI agent state ---
+.claude/settings.local.json
+
+# --- Claude Code worktrees for parallel agents ---
+.claude/worktrees/

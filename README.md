@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+
 # Google-Developer-Group-Hackathon-Echo
 
 > **Status: Draft / planned / undecided.** Nothing in this repository is implemented yet. This README describes intent, structure and team rules — not working features.
@@ -33,13 +35,13 @@ Eho is planned as **two apps that share one server**, plus an agreed rulebook fo
                 └─────────────┘
 ```
 
-| Part | What it is | Who uses it | What it does (planned, nothing is built yet) |
-| --- | --- | --- | --- |
-| **`mobile/`** | The **attendee app** | People attending the event | Join the event (QR/link), see the agenda and venue map, follow talks and ask questions, optionally meet other attendees |
-| **`organizer-web/`** | The **organizer website** | The people running the event | Create the event, upload the agenda/speakers/map/slides, generate the join QR code, see questions and activity |
-| **`backend/`** | The **server** both apps talk to | Nobody directly. The two apps use it. | Stores the event data, checks who's allowed to do what, and is the **only place that talks to the AI** (Gemma) and speech-to-text |
-| **`contracts/`** | The **agreement between the apps and the server** | The agents building the three parts above | Lists exactly what the server offers (e.g. "give me the agenda for event X") and what the answer looks like, plus fake sample answers so the apps can be built before the server is ready. If an app needs something new, the change is agreed here first. |
-| **`docs/`** | **Project knowledge** | Everyone, mostly the agents | What we're building and why, the demo plan, privacy rules, and a record of every decision (`docs/decisions/`) |
+| Part                 | What it is                                        | Who uses it                               | What it does (planned, nothing is built yet)                                                                                                                                                                                                               |
+| -------------------- | ------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`mobile/`**        | The **attendee app**                              | People attending the event                | Join the event (QR/link), see the agenda and venue map, follow talks and ask questions, optionally meet other attendees                                                                                                                                    |
+| **`organizer-web/`** | The **organizer website**                         | The people running the event              | Create the event, upload the agenda/speakers/map/slides, generate the join QR code, see questions and activity                                                                                                                                             |
+| **`backend/`**       | The **server** both apps talk to                  | Nobody directly. The two apps use it.     | Stores the event data, checks who's allowed to do what, and is the **only place that talks to the AI** (Gemma) and speech-to-text                                                                                                                          |
+| **`contracts/`**     | The **agreement between the apps and the server** | The agents building the three parts above | Lists exactly what the server offers (e.g. "give me the agenda for event X") and what the answer looks like, plus fake sample answers so the apps can be built before the server is ready. If an app needs something new, the change is agreed here first. |
+| **`docs/`**          | **Project knowledge**                             | Everyone, mostly the agents               | What we're building and why, the demo plan, privacy rules, and a record of every decision (`docs/decisions/`)                                                                                                                                              |
 
 Each app folder also has a **`STATUS.md`**, that module's noticeboard: what works right now, how to use it, and messages for the other agents. The agents keep these up to date. Humans can read them but never have to.
 
@@ -47,18 +49,18 @@ Each app folder also has a **`STATUS.md`**, that module's noticeboard: what work
 
 This is a deliberately simple monorepo: plain folders, no Nx/Turborepo, no submodules, no shared build system. Each module is opened and built independently in its owner's preferred IDE.
 
-| Path | Purpose | Status |
-| --- | --- | --- |
-| [`mobile/`](mobile/) | Attendee app (join, agenda, map, transcript/Q&A, networking — candidates) | Not initialized — mobile owner decides stack |
-| [`backend/`](backend/) | API, persistence, Gemma adapter, STT adapter, auth/roles | Not initialized — backend owner decides framework |
-| [`organizer-web/`](organizer-web/) | Organizer setup, file import, dashboard | Not initialized — organizer-web owner decides framework |
-| [`contracts/`](contracts/) | Shared OpenAPI contract, fixtures, CHANGELOG (the integration boundary) | Empty, valid OpenAPI skeleton — no endpoints agreed |
-| [`docs/`](docs/) | Product, architecture, MVP, ownership, research, privacy, integration | Draft |
-| [`docs/decisions/`](docs/decisions/) | One file per decision, each with status and writer | All open/proposed |
-| `*/STATUS.md` | Each module's live state, interface, announcements and requests | Initialized, nothing implemented |
-| [`docs/COORDINATION.md`](docs/COORDINATION.md) | How agents in different clones coordinate + change impact map | Active |
-| `AGENTS.md`, `CLAUDE.md` | Rules for AI coding agents (READ GLOBAL, WRITE LOCAL) | Active |
-| `.githooks/` | Optional pre-commit scope guard | Opt-in (see `ONBOARDING.md`) |
+| Path                                           | Purpose                                                                   | Status                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [`mobile/`](mobile/)                           | Attendee app (join, agenda, map, transcript/Q&A, networking — candidates) | Not initialized — mobile owner decides stack            |
+| [`backend/`](backend/)                         | API, persistence, Gemma adapter, STT adapter, auth/roles                  | Not initialized — backend owner decides framework       |
+| [`organizer-web/`](organizer-web/)             | Organizer setup, file import, dashboard                                   | Not initialized — organizer-web owner decides framework |
+| [`contracts/`](contracts/)                     | Shared OpenAPI contract, fixtures, CHANGELOG (the integration boundary)   | Empty, valid OpenAPI skeleton — no endpoints agreed     |
+| [`docs/`](docs/)                               | Product, architecture, MVP, ownership, research, privacy, integration     | Draft                                                   |
+| [`docs/decisions/`](docs/decisions/)           | One file per decision, each with status and writer                        | All open/proposed                                       |
+| `*/STATUS.md`                                  | Each module's live state, interface, announcements and requests           | Initialized, nothing implemented                        |
+| [`docs/COORDINATION.md`](docs/COORDINATION.md) | How agents in different clones coordinate + change impact map             | Active                                                  |
+| `AGENTS.md`, `CLAUDE.md`                       | Rules for AI coding agents (READ GLOBAL, WRITE LOCAL)                     | Active                                                  |
+| `.githooks/`                                   | Optional pre-commit scope guard                                           | Opt-in (see `ONBOARDING.md`)                            |
 
 ## Getting started (team members)
 

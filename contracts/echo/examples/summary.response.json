@@ -1,0 +1,32 @@
+{
+  "text": "• Cost: local inference drops the marginal cost per user close to zero.\n• Privacy: data never leaves the device, which can unblock health and finance apps.\n• Battery: continuous transcription cost 12%; batching audio fixed it.\n• Size: quantization brings models to 1–2 GB with a small quality loss.\n• Hybrid router: easy questions on the device, hard ones in the cloud; 80% stay local.\n• Advice: start hybrid, measure, and move work to the device over time.",
+  "model": "gemma-4-26b-a4b-it",
+  "basedOnLines": 18,
+  "summary": {
+    "takeaway": "Start hybrid, measure, and move work down to the device over time.",
+    "keyPoints": [
+      "Moving summarization to the phone cut inference cost by 70% and first-token latency from 900 ms to 120 ms.",
+      "Data never leaves the device, which unblocked two hospital customers."
+    ],
+    "tradeoffs": [
+      {
+        "topic": "Battery",
+        "issue": "12% battery hit for continuous transcription",
+        "fix": "Batch audio in 2-second chunks (down to 4%)",
+        "atSeconds": 44
+      },
+      {
+        "topic": "Model size",
+        "issue": "About 4 GB at 16-bit precision",
+        "fix": "4-bit quantization to 1.4 GB, under 2% quality loss",
+        "atSeconds": 60
+      },
+      {
+        "topic": "Hard questions",
+        "issue": "The small model can't answer everything",
+        "fix": "Hybrid router: below 0.7 confidence goes to the cloud; 80% stay on device",
+        "atSeconds": 71
+      }
+    ]
+  }
+}

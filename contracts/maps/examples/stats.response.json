@@ -1,0 +1,31 @@
+{
+  "from": "2026-10-10",
+  "to": "2026-10-12",
+  "totals": { "searches": 41, "searchesNoResults": 9, "featureViews": 63, "routes": 27, "qrScans": 18 },
+  "days": [
+    { "date": "2026-10-10", "searches": 12, "searchesNoResults": 3, "featureViews": 20, "routes": 8, "qrScans": 6 },
+    { "date": "2026-10-11", "searches": 29, "searchesNoResults": 6, "featureViews": 43, "routes": 19, "qrScans": 12 },
+    { "date": "2026-10-12", "searches": 0, "searchesNoResults": 0, "featureViews": 0, "routes": 0, "qrScans": 0 }
+  ],
+  "topSearches": [
+    { "query": "kafa", "count": 7 },
+    { "query": "čačak", "count": 5 },
+    { "query": "toalet", "count": 4 }
+  ],
+  "topNoResults": [
+    { "query": "kafa", "count": 7 },
+    { "query": "punjač", "count": 2 }
+  ],
+  "topFeatures": [
+    { "featureId": "b7k2mq4xw9zt3hpn", "name": "Čačak Dev", "type": "stand", "count": 14 },
+    { "featureId": "h3ll4x7qp2mz9wdk", "name": "Glavna sala", "type": "room", "count": 11 },
+    { "featureId": "r3m0v3dxxxxxxxxx", "name": "", "type": "", "count": 2 }
+  ],
+  "topRouteTargets": [
+    { "featureId": "h3ll4x7qp2mz9wdk", "name": "Glavna sala", "type": "room", "count": 9 },
+    { "featureId": "b7k2mq4xw9zt3hpn", "name": "Čačak Dev", "type": "stand", "count": 6 }
+  ],
+  "qrScans": [
+    { "featureId": "zvewi4sb3dq3ya6r", "name": "Ulaz (QR)", "type": "marker", "count": 18 }
+  ]
+}

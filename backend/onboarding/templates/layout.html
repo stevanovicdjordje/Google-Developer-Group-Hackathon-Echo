@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{t .Title}} · Echo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&family=Instrument+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body{{with .BodyClass}} class="{{.}}"{{end}}>
+  <header class="topbar">
+    <a class="brand" href="/">Echo</a>
+    <nav>
+      {{with .Principal}}
+        {{if eq .Role "organizer"}}
+          <a href="/org/events">{{t "nav.my_events"}}</a>
+          <a href="/talks">{{t "nav.talks"}}</a>
+        {{else if .Onboarded}}
+          <a href="/me/events">{{t "nav.my_events"}}</a>
+          <a href="/talks">{{t "nav.talks"}}</a>
+          <a href="/me/profile">{{t "nav.profile"}}</a>
+        {{end}}
+        <span class="who">{{.Name}}</span>
+        <form method="post" action="/logout" class="inline">
+          {{template "csrf" $.CSRF}}
+          <button class="btn btn-link" type="submit">{{t "nav.logout"}}</button>
+        </form>
+      {{else}}
+        <a href="/login">{{t "nav.login"}}</a>
+      {{end}}
+    </nav>
+  </header>
+  <main class="container">
+    {{with .Flash}}<p class="flash" role="status">{{t .}}</p>{{end}}
+    {{block "content" .}}{{end}}
+  </main>
+</body>
+</html>
