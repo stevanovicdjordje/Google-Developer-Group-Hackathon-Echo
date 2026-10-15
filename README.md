@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 # Google-Developer-Group-Hackathon-Echo
 
 > **Status: Draft / planned / undecided.** Nothing in this repository is implemented yet. This README describes intent, structure and team rules — not working features.
