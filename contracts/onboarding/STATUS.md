@@ -3,7 +3,7 @@
 > **Single writer:** the `feature:onboarding` holder and their agent. Everyone else reads.
 > Protocol: [`../../docs/COORDINATION.md`](../../docs/COORDINATION.md) (§1a feature scopes). Newest entries at the top of each log.
 
-**Last updated:** 2026-10-11 11:40 · **Owner:** @stevanovicdjordje · **Scopes held:** feature:onboarding
+**Last updated:** 2026-10-11 12:14 · **Owner:** @stevanovicdjordje · **Scopes held:** feature:onboarding
 
 ## Current state
 
@@ -36,6 +36,8 @@ It runs on the **shared Firebase project** (Auth, Firestore, Storage; locally th
 ## Announcements (newest first)
 
 <!-- - YYYY-MM-DD HH:MM · BREAKING|ACTION|INFO · for: <modules> · <what changed> · <link> -->
+- 2026-10-11 12:14 · ACTION · for: mobile, product, feature:maps, feature:echo, feature:events · **Product name is now "Echo" (not "Eho")**, at @stevanovicdjordje's direction (pitch deck already uses it). Onboarding renamed every user-visible "Eho" (UI in en/sr, PDFs, page titles, seed names). Code identifiers stay: repo/module paths, `EHO_*` env vars, `eho_session` cookie. Please rename user-visible "Eho" in your modules. Note: "Echo" is also the in-talk feature's name; the deck calls that feature "Live talk" to avoid confusion. feature:echo decides its own UI label. Decision record requested: onboarding#3.
+- 2026-10-11 12:14 · INFO · for: feature:echo · echo#2 done: the portal's *Open the map editor* now links to `{EHO_APP_URL}/o`.
 - 2026-10-11 11:40 · INFO · for: all · **Paid talk reports** on the web portal (`/talks`): anyone signed in can buy the PDF report of any ended talk for €2.99 (AI summary from Echo + audience rating + top questions); organizers get their own talks free. **Test checkout only** (Stripe test cards, no money moves). New Firestore collection `purchases/*` (Admin-only). Echo is called with a service account (`svc-onboarding`, custom token). See `docs/decisions/feature-onboarding-talk-reports.md`.
 - 2026-10-11 11:20 · INFO · for: all · Event report: one-click **PDF download** (`/org/events/{id}/report.pdf`); the CSV export was removed.
 - 2026-10-11 11:00 · ACTION · for: mobile, feature:maps · **Flutter web dev port 5000 → 5050**, at @stevanovicdjordje's explicit request: on macOS port 5000 is taken by the AirPlay Receiver, so `flutter run` fails there. Changed (one line each): `mobile/scripts/dev_all.sh`, `mobile/README.md`, `backend/maps/cmd/seed` (printed links), `contracts/maps/KAKO-RADI.md`, `contracts/maps/PLAN.md`; onboarding's `EHO_APP_URL` default. Backends already allow any localhost port (CORS `localhost:*`). Revert in your files if you object; nothing depends on 5000.
@@ -46,6 +48,7 @@ It runs on the **shared Firebase project** (Auth, Firestore, Storage; locally th
 
 | ID | To | What / why | Status | Updated |
 | --- | --- | --- | --- | --- |
+| onboarding#3 | product | Please record the product name decision (our human: the product is called **Echo**, not "Eho") as `docs/decisions/product-name.md` and rename user-visible "Eho" in `docs/**` and root files. Identifiers (`eho` repo, `EHO_*` env vars) can stay. | open | 2026-10-11 |
 | onboarding#2 | product | Please add purchase records to `docs/DATA_PRIVACY.md`: `purchases/{uid}_{eventId}_{sessionId}` keeps user, talk, amount, card brand + last four digits, payment ID, time (no card number/CVC). Retention TBD. (`feature-onboarding-talk-reports`) | open | 2026-10-11 |
 | onboarding#1 | feature:maps | Organizer check: please also accept/deny on the `role` custom claim (`organizer` / `participant`). Today every non-anonymous account counts as an organizer, so an attendee who signed up on the web portal (email/password, `role: participant`) could create events in the map editor. Accounts without the claim can keep today's rule. | open | 2026-10-11 |
 
@@ -53,6 +56,7 @@ It runs on the **shared Firebase project** (Auth, Firestore, Storage; locally th
 
 | ID | From | Response / resolution | Status | Updated |
 | --- | --- | --- | --- | --- |
+| echo#2 | feature:echo | Venue page link to the map editor changed from `/organizer` to `/o` (`backend/onboarding/internal/events/http.go`); test updated. | done | 2026-10-11 |
 | mobile#21 | mobile (integration) | (a) registered here; (b) port **8085**; (c) `cmd/seed` adds **`devfest-report`**, a finished "DevFest Belgrade 2026" whose sessions are read from `backend/events/cmd/seed/agenda.json` (same IDs, titles, rooms, speakers), 15 fake reviews + per-session ratings; (d) English UI (`EHO_LANG=en` default; all pages, not only the report); (e) summary labeled "Statistical summary … (not AI)". Also: the module now reads events, agenda and map live from Firestore, so the "own SQLite / can't show devfest" gaps in `team-post-event-report` no longer apply. | done | 2026-10-11 |
 
 ## Acks (our responses to other modules' breaking proposals)

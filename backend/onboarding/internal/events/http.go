@@ -223,7 +223,7 @@ func (h *Handlers) venue(w http.ResponseWriter, r *http.Request) {
 		h.Fail(w, r, err)
 		return
 	}
-	vd := venueData{HasMap: !m.Empty(), Rooms: m.RoomNames(), EditorURL: strings.TrimRight(h.AppURL, "/") + "/organizer"}
+	vd := venueData{HasMap: !m.Empty(), Rooms: m.RoomNames(), EditorURL: strings.TrimRight(h.AppURL, "/") + "/o"}
 	if vd.HasMap {
 		vd.Plan = NewPlanView(ev.ID, m, "", "")
 	}

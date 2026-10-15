@@ -104,7 +104,7 @@ func TestWritePDF(t *testing.T) {
 	// Serbian letters and enough comments to need a second page.
 	for i := 0; i < 40; i++ {
 		in.Reviews = append(in.Reviews, reviews.WithAuthor{Review: reviews.Review{ID: fmt.Sprint("x", i), Rating: 1 + i%5,
-			Comment: "Čačak, Đorđe, šećer i žurka – odlična organizacija „Eho“.", UpdatedAt: now}, AuthorName: "Đurđa Šović"})
+			Comment: "Čačak, Đorđe, šećer i žurka – odlična organizacija „Echo“.", UpdatedAt: now}, AuthorName: "Đurđa Šović"})
 	}
 	b := i18n.New("sr")
 	rep := Compute(in)

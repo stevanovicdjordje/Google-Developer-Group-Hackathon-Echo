@@ -36,7 +36,7 @@ var en = map[string]string{
 	"weekday.6": "Saturday",
 
 	// landing
-	"landing.title":           "Welcome to Eho",
+	"landing.title":           "Welcome to Echo",
 	"landing.lead":            "Live captions, smart audience questions and a live event map in one place.",
 	"landing.cta_organizer":   "I organize events",
 	"landing.cta_participant": "I'm attending an event",
@@ -223,7 +223,7 @@ var en = map[string]string{
 	"venue.plan_alt":                  "Venue map with zones",
 	"venue.not_published":             "The venue map isn't published yet.",
 	"venue.not_published_participant": "The organizer hasn't published the venue map yet.",
-	"venue.from_app":                  "The venue map (floors, rooms, stands and walkways) is made in the map editor of the Eho app and shared across Eho: attendees see it in the app, and its rooms are offered here in the schedule.",
+	"venue.from_app":                  "The venue map (floors, rooms, stands and walkways) is made in the map editor of the Echo app and shared across Echo: attendees see it in the app, and its rooms are offered here in the schedule.",
 	"venue.open_editor":               "Open the map editor",
 	"venue.rooms":                     "Rooms on the map:",
 	"feature.room":                    "Room",
@@ -239,7 +239,7 @@ var en = map[string]string{
 	"schedule.add":              "Add session",
 	"schedule.no_halls_hint":    "Tip: rooms from the venue map appear here once you publish the map in the editor. Until then you can type a room name.",
 	"schedule.stage_new":        "or a new room",
-	"schedule.shared_note":      "This is the same schedule as in the Eho app: changes are visible to attendees right away.",
+	"schedule.shared_note":      "This is the same schedule as in the Echo app: changes are visible to attendees right away.",
 
 	"session.title":            "Session title",
 	"session.time":             "Time",
@@ -303,7 +303,7 @@ var en = map[string]string{
 	"participant.event_title":      "Event",
 	"participant.map_hint":         "Click a zone to see what's happening there.",
 	"participant.zone_no_sessions": "No sessions in this zone.",
-	"participant.open_app":         "Open in the Eho app",
+	"participant.open_app":         "Open in the Echo app",
 
 	// reviews
 	"review.title":        "Review",

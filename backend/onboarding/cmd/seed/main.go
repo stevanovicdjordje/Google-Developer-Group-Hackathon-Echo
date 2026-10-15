@@ -114,7 +114,7 @@ func (s *seeder) run(ctx context.Context) error {
 	if s.orgUID, err = s.account(ctx, orgEmail, "Olivera Organizović", users.RoleOrganizer); err != nil {
 		return err
 	}
-	if err := s.users.SaveOrganization(ctx, users.Organization{OwnerUID: s.orgUID, Name: "Eho Demo Konferencije",
+	if err := s.users.SaveOrganization(ctx, users.Organization{OwnerUID: s.orgUID, Name: "Echo Demo Konferencije",
 		Website: "https://eho.test", CreatedAt: s.now}); err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (s *seeder) run(ctx context.Context) error {
 	today := time.Date(s.now.In(s.loc).Year(), s.now.In(s.loc).Month(), s.now.In(s.loc).Day(), 0, 0, 0, 0, s.loc)
 
 	summitDay := today.AddDate(0, 0, -10)
-	if err := s.seedEvent(ctx, summitID, "Eho Dev Summit 2026",
+	if err := s.seedEvent(ctx, summitID, "Echo Dev Summit 2026",
 		"Godišnja konferencija o razvoju softvera: veb, cloud i veštačka inteligencija.",
 		"Bulevar Mihajla Pupina 10, Beograd", 44.8176, 20.4569, summitDay.Add(9*time.Hour), summitDay.Add(18*time.Hour), 1); err != nil {
 		return err
@@ -172,7 +172,7 @@ func (s *seeder) run(ctx context.Context) error {
                 %q (finished, 13 reviews), %q (upcoming), %s
 
 Open %s
-`, s.cfg.ProjectID, orgEmail, demoPassword, demoPassword, "DevFest Belgrade 2026", reportID, "Eho Dev Summit 2026", "Startap vikend Novi Sad", devfestNote, s.cfg.BaseURL)
+`, s.cfg.ProjectID, orgEmail, demoPassword, demoPassword, "DevFest Belgrade 2026", reportID, "Echo Dev Summit 2026", "Startap vikend Novi Sad", devfestNote, s.cfg.BaseURL)
 	return nil
 }
 

@@ -132,7 +132,7 @@ func (f *FirebaseIdentity) signInWithCustomToken(ctx context.Context, custom str
 }
 
 // ServiceToken returns an ID token for this server's own service account
-// user, to call other Eho services (Echo). It is cached until shortly
+// user, to call other Echo services (Echo). It is cached until shortly
 // before it expires.
 type ServiceToken struct {
 	Identity *FirebaseIdentity

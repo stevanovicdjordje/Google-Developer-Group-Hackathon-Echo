@@ -249,7 +249,7 @@ func (h *Handlers) checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p := httpx.PrincipalFrom(r.Context())
-	ch, err := h.Payments.Charge(r.Context(), PriceCents, Currency, card, "Eho talk report: "+d.Session.Title)
+	ch, err := h.Payments.Charge(r.Context(), PriceCents, Currency, card, "Echo talk report: "+d.Session.Title)
 	if err != nil {
 		key := "err.pay_failed"
 		switch {

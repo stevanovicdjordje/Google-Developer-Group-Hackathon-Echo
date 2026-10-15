@@ -1,6 +1,6 @@
 // Package events: the organizer's events, their agenda (schedule) and the
 // published venue map. Events are the shared events/{eventId} documents of
-// the Eho backend (backend/maps, backend/events), so an event created here
+// the Echo backend (backend/maps, backend/events), so an event created here
 // also appears in the map editor and the Flutter app, and vice versa.
 package events
 

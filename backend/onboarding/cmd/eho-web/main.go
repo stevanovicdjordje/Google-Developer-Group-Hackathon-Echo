@@ -1,4 +1,4 @@
-// Command eho-web runs the Eho onboarding web app (server-rendered) against
+// Command eho-web runs the Echo onboarding web app (server-rendered) against
 // Firebase Auth, Firestore and Storage, or their local emulators.
 package main
 

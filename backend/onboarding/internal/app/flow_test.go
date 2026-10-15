@@ -84,7 +84,7 @@ func TestFullEventLifecycle(t *testing.T) {
 
 	// Step 2: no map yet; it is made in the app's editor.
 	_, body := org.get(base + "/venue")
-	mustContain(t, body, "Mapa prostora još nije objavljena", "http://app.test/organizer")
+	mustContain(t, body, "Mapa prostora još nije objavljena", "http://app.test/o\"")
 
 	// backend/maps publishes a map for the same event: it shows up here.
 	m, imgs := demoMap()

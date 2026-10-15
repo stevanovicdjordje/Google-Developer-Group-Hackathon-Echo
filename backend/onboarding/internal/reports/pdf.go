@@ -111,14 +111,14 @@ func WritePDF(w io.Writer, rep Report, sum Summary, tx PDFText) error {
 	p.SetMargins(margin, margin, margin)
 	p.SetAutoPageBreak(true, 18)
 	p.SetTitle(fmt.Sprintf("%s – %s", tx.T("report.title"), rep.Event.Title), true)
-	p.SetCreator("Eho", true)
+	p.SetCreator("Echo", true)
 	p.AliasNbPages("{nb}")
 	d := &pdfDoc{Fpdf: p, tx: tx}
 	p.SetFooterFunc(func() {
 		d.SetY(-12)
 		d.font(false, 8)
 		d.text(cMuted)
-		d.CellFormat(contentW/2, 5, "Eho · "+rep.Event.Title, "", 0, "L", false, 0, "")
+		d.CellFormat(contentW/2, 5, "Echo · "+rep.Event.Title, "", 0, "L", false, 0, "")
 		d.CellFormat(contentW/2, 5, fmt.Sprintf("%d / {nb}", d.PageNo()), "", 0, "R", false, 0, "")
 	})
 	p.AddPage()

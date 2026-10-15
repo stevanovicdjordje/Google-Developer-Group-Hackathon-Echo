@@ -36,7 +36,7 @@ var sr = map[string]string{
 	"weekday.6": "Subota",
 
 	// landing
-	"landing.title":           "Dobrodošli u Eho",
+	"landing.title":           "Dobrodošli u Echo",
 	"landing.lead":            "Titlovi uživo, pametna pitanja publike i živa mapa eventa na jednom mestu.",
 	"landing.cta_organizer":   "Organizujem evente",
 	"landing.cta_participant": "Dolazim na event",
@@ -223,7 +223,7 @@ var sr = map[string]string{
 	"venue.plan_alt":                  "Plan prostora sa zonama",
 	"venue.not_published":             "Mapa prostora još nije objavljena.",
 	"venue.not_published_participant": "Organizator još nije objavio mapu prostora.",
-	"venue.from_app":                  "Mapa prostora (spratovi, sale, štandovi i putanje) pravi se u editoru mape u Eho aplikaciji i deli se sa celim Eho-om: učesnici je vide u aplikaciji, a sale sa mape nude se ovde u satnici.",
+	"venue.from_app":                  "Mapa prostora (spratovi, sale, štandovi i putanje) pravi se u editoru mape u Echo aplikaciji i deli se sa celim Echo-om: učesnici je vide u aplikaciji, a sale sa mape nude se ovde u satnici.",
 	"venue.open_editor":               "Otvori editor mape",
 	"venue.rooms":                     "Sale na mapi:",
 	"feature.room":                    "Sala",
@@ -239,7 +239,7 @@ var sr = map[string]string{
 	"schedule.add":              "Dodaj sesiju",
 	"schedule.no_halls_hint":    "Savet: sale sa mape prostora pojaviće se ovde kada mapu objavite u editoru. Do tada možete upisati naziv sale.",
 	"schedule.stage_new":        "ili nova sala",
-	"schedule.shared_note":      "Satnica je ista kao u Eho aplikaciji: izmene su odmah vidljive učesnicima.",
+	"schedule.shared_note":      "Satnica je ista kao u Echo aplikaciji: izmene su odmah vidljive učesnicima.",
 
 	"session.title":            "Naziv sesije",
 	"session.time":             "Vreme",
@@ -303,7 +303,7 @@ var sr = map[string]string{
 	"participant.event_title":      "Event",
 	"participant.map_hint":         "Kliknite na zonu da vidite šta se u njoj dešava.",
 	"participant.zone_no_sessions": "U ovoj zoni nema sesija.",
-	"participant.open_app":         "Otvori u Eho aplikaciji",
+	"participant.open_app":         "Otvori u Echo aplikaciji",
 
 	// reviews
 	"review.title":        "Recenzija",

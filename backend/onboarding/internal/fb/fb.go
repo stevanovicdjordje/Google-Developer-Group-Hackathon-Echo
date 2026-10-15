@@ -1,5 +1,5 @@
 // Package fb creates the Firebase clients (Auth, Firestore, Storage) shared
-// with the rest of the Eho backend. Locally they talk to the Firebase
+// with the rest of the Echo backend. Locally they talk to the Firebase
 // emulators started by backend/maps (project demo-eho).
 package fb
 

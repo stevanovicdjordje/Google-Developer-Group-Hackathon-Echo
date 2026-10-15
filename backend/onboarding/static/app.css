@@ -1,6 +1,6 @@
-/* Eho — single palette, defined once. */
+/* Echo — single palette, defined once. */
 :root {
-  /* Tokens from the Eho app design (mobile/docs/design/README.md). */
+  /* Tokens from the Echo app design (mobile/docs/design/README.md). */
   --c-bg: #F3F5F9;
   --c-surface: #FFFFFF;
   --c-text: #0D1321;

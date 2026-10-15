@@ -90,14 +90,14 @@ func WriteTalkPDF(w io.Writer, tr TalkReport, tx PDFText) error {
 	p.SetMargins(margin, margin, margin)
 	p.SetAutoPageBreak(true, 18)
 	p.SetTitle(tx.T("talk.report_title")+" – "+tr.Session.Title, true)
-	p.SetCreator("Eho", true)
+	p.SetCreator("Echo", true)
 	p.AliasNbPages("{nb}")
 	d := &pdfDoc{Fpdf: p, tx: tx}
 	p.SetFooterFunc(func() {
 		d.SetY(-12)
 		d.font(false, 8)
 		d.text(cMuted)
-		d.CellFormat(contentW*0.75, 5, "Eho · "+tr.Event.Title+" · "+tr.Session.Title, "", 0, "L", false, 0, "")
+		d.CellFormat(contentW*0.75, 5, "Echo · "+tr.Event.Title+" · "+tr.Session.Title, "", 0, "L", false, 0, "")
 		d.CellFormat(contentW*0.25, 5, fmt.Sprintf("%d / {nb}", d.PageNo()), "", 0, "R", false, 0, "")
 	})
 	p.AddPage()

@@ -1,11 +1,11 @@
-# backend/onboarding — Eho onboarding module
+# backend/onboarding — Echo onboarding module
 
-Server-rendered Go web app for the part of Eho around an event: organizer and
+Server-rendered Go web app for the part of Echo around an event: organizer and
 participant registration, participant onboarding, the organizer's event list
 and wizard, invitations, the participant panel, reviews and the post-event
 report ("ukupan utisak").
 
-It runs on the **same Firebase project as the rest of Eho** (Firebase Auth,
+It runs on the **same Firebase project as the rest of Echo** (Firebase Auth,
 Firestore, Storage; locally the emulators from `backend/maps`):
 
 - **Same accounts** as the Flutter app and the other services. Organizers and
@@ -57,7 +57,7 @@ Demo events:
   17 accepted, 15 fake reviews with per-session ratings.
 - "DevFest Belgrade 2026" (`devfest`, today, live): the map and agenda from
   `backend/maps` / `backend/events`; 14 participants invited.
-- "Eho Dev Summit 2026" (finished 10 days ago, Serbian reviews) and "Startap
+- "Echo Dev Summit 2026" (finished 10 days ago, Serbian reviews) and "Startap
   vikend Novi Sad" (in 14 days).
 
 `make seed` can be re-run; it replaces its own data.

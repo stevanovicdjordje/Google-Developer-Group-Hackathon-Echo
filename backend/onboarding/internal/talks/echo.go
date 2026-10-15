@@ -20,7 +20,7 @@ type Echo interface {
 	Questions(ctx context.Context, eventID, sessionID string) ([]reports.TalkQuestion, error)
 }
 
-// TokenSource gives an ID token to call other Eho services with.
+// TokenSource gives an ID token to call other Echo services with.
 type TokenSource interface {
 	Token(ctx context.Context) (string, error)
 }
